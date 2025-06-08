@@ -764,7 +764,7 @@
                 const user = userCredential.user;
                 console.log('Usuário logado com sucesso:', user);
 
-                await loadUserDataAndNavigate(user.uid, user.email);
+                await loadUserDataAndNavigate(user.uid, user.email); // Esta função já renderiza a tela correta
 
             } catch (error) {
                 console.error('Erro no login:', error.code, error.message);
@@ -775,10 +775,11 @@
                     errorMessage = 'Senha incorreta.';
                 } else if (error.code === 'auth/invalid-email') {
                     errorMessage = 'Email inválido.';
-                } else if (error.code === 'auth/invalid-credential') { 
+                } else if (error.code === 'auth/invalid-credential') { // Erro genérico para credenciais inválidas (a partir do Firebase v9)
                     errorMessage = 'Credenciais inválidas. Verifique seu email e senha.';
                 }
                 alert(errorMessage);
+                // Não chama renderApp aqui, loadUserDataAndNavigate fará isso ou o fluxo de erro já está na tela de login
             }
         }
 
@@ -798,7 +799,7 @@
                 alert('O telefone deve conter exatamente 11 dígitos numéricos (com DDD).');
                 return;
             }
-            if (senha.length < 6) { 
+            if (senha.length < 6) { // Firebase Auth mínimo de 6 caracteres para senha
                  alert('A senha deve ter no mínimo 6 caracteres.');
                  return;
             }
@@ -817,8 +818,8 @@
                     email: email,
                     sexo: sexo,
                     foguinhos: 1, // Inicializa com 1 foguinho ao cadastrar!
-                    lastCheckInDate: null, 
-                    pareadoCom: null, 
+                    lastCheckInDate: null, // Inicializa data do check-in
+                    pareadoCom: null, // Inicializa sem pareamento
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 console.log("Dados do usuário salvos com sucesso no Firestore!");
@@ -830,12 +831,13 @@
                     nome,
                     telefone,
                     sexo,
-                    foguinhos: 1, 
+                    foguinhos: 1, // Atualiza o estado local também
                     lastCheckInDate: null,
                     pareadoCom: null
                 };
-                state.etapa = 'parear'; 
+                state.etapa = 'parear'; // Vai para a tela de pareamento após o cadastro
                 renderApp();
+                // Apenas uma mensagem de sucesso, sem alert de erro anterior.
                 alert('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.');
 
             } catch (error) {
@@ -926,6 +928,7 @@
                 state.usuario.lastCheckInDate = firebase.firestore.FieldValue.serverTimestamp();
                 
                 // Recarrega os dados do usuário para garantir que o estado local esteja 100% sincronizado com o Firestore
+                // Isso também irá atualizar a UI corretamente (desabilitando o botão de Presentear).
                 await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
 
 
