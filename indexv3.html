@@ -105,17 +105,6 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.05);
         }
-        /* Footer custom style */
-        .app-footer {
-            background: linear-gradient(90deg, #FF3547 0%, #FF6B7C 100%);
-            color: white; /* Texto branco */
-            text-shadow: 0 1px 2px rgba(0,0,0,0.4); /* Sombra para contraste */
-            padding: 16px;
-            font-size: 14px;
-            text-align: center;
-            margin-top: 40px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
     </style>
 </head>
 <body class="bg-black text-white font-sans">
@@ -590,6 +579,14 @@
                                     <i class="fas fa-fire"></i> ${state.usuario.foguinhos || 0}
                                 </div>
 
+                                ${state.pareado ? `
+                                    <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''}
+                                        class="text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-2
+                                        ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}">
+                                        <i class="fas fa-calendar-day text-xs"></i> Check-in Diário
+                                    </button>
+                                ` : ''}
+
                                 ${!state.pareado ? `
                                     <button onclick="renderPareamento()" class="text-sm bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
                                         <i class="fas fa-heart text-xs"></i> Parear
@@ -611,13 +608,6 @@
                                                 <p class="bg-gray-900 px-3 py-1 rounded text-sm mb-2">${state.parceiroNome || 'Carregando...'}</p>
                                                 <p class="text-sm text-gray-300 mb-1">Telefone:</p>
                                                 <p class="bg-gray-900 px-3 py-1 rounded text-sm mb-4">${state.parceiroCodigo || 'Carregando...'}</p>
-                                                
-                                                <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''}
-                                                    class="w-full text-sm px-3 py-2 rounded-lg font-medium transition mb-2
-                                                    ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}">
-                                                    <i class="fas fa-gift text-xs"></i> Presentear 🔥
-                                                </button>
-
                                                 <button onclick="desparearParceiro()" class="w-full text-sm bg-red-800 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition">
                                                     Desfazer Pareamento
                                                 </button>
@@ -681,16 +671,16 @@
                                     </div>
                                     <div class="p-4">
                                         <h3 class="font-medium">${momento.nome}</h3>
-                                        <div class="flex justify-between items-center mt-4">
-                                            <div class="flex flex-col">
-                                                <div class="flex items-center gap-1 mb-1">
-                                                    <span class="text-gray-500 text-sm">Intensidade:</span>
-                                                    <span class="text-pink-400">${'🔥'.repeat(momento.intensidade)}</span>
-                                                </div>
-                                                <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
-                                                    <i class="fas fa-fire"></i> ${momento.intensidade} Foguinhos
-                                                </span>
+                                        <div class="mb-4">
+                                            <div class="flex items-center gap-1 mb-1">
+                                                <span class="text-gray-500 text-sm">Intensidade:</span>
+                                                <span class="text-pink-400">${'🔥'.repeat(momento.intensidade)}</span>
                                             </div>
+                                        </div>
+                                        <div class="flex justify-between items-center mt-4">
+                                            <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
+                                                <i class="fas fa-fire"></i> ${momento.intensidade} Foguinhos
+                                            </span>
                                             <button onclick="adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, '&quot;')})" 
                                                 class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
                                                 Resgatar
@@ -775,7 +765,7 @@
                     errorMessage = 'Senha incorreta.';
                 } else if (error.code === 'auth/invalid-email') {
                     errorMessage = 'Email inválido.';
-                } else if (error.code === 'auth/invalid-credential') { // Erro genérico para credenciais inválidas (a partir do Firebase v9)
+                } else if (error.code === 'auth/invalid-credential') { // Erro genérico para credenciais inválidas
                     errorMessage = 'Credenciais inválidas. Verifique seu email e senha.';
                 }
                 alert(errorMessage);
@@ -817,7 +807,7 @@
                     telefone: telefone,
                     email: email,
                     sexo: sexo,
-                    foguinhos: 1, // Inicializa com 1 foguinho ao cadastrar!
+                    foguinhos: 0, // Inicializa foguinhos
                     lastCheckInDate: null, // Inicializa data do check-in
                     pareadoCom: null, // Inicializa sem pareamento
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -831,7 +821,7 @@
                     nome,
                     telefone,
                     sexo,
-                    foguinhos: 1, // Atualiza o estado local também
+                    foguinhos: 0,
                     lastCheckInDate: null,
                     pareadoCom: null
                 };
@@ -870,7 +860,7 @@
                 state.parceiroNome = null;
                 state.showPartnerInfo = false;
                 state.pendingPairingRequest = null;
-                state.showCartSidebar = false; 
+                state.showCartSidebar = false; // Resetar também o estado do carrinho
                 renderApp(); // Volta para a tela inicial
             } catch (error) {
                 console.error('Erro ao deslogar:', error);
@@ -892,7 +882,7 @@
             // Verifica se o check-in já foi feito hoje
             const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
             if (lastCheckIn && isSameDay(lastCheckIn, new Date())) {
-                alert('Você já Presenteou hoje. Volte amanhã para Presentear seu parceiro(a) novamente!');
+                alert('Você já fez o Check-in hoje. Volte amanhã para liberar mais foguinhos para seu parceiro!');
                 return;
             }
 
@@ -922,19 +912,19 @@
                     foguinhos: parceiroFoguinhosAtuais + 1
                 });
 
-                alert(`Presenteou! Seu parceiro(a) ${state.parceiroNome} ganhou 1 foguinho 🔥.`);
+                alert(`Check-in realizado! Seu parceiro(a) ${state.parceiroNome} ganhou 1 foguinho 🔥.`);
 
                 // Atualiza o estado local do usuário que fez o check-in
                 state.usuario.lastCheckInDate = firebase.firestore.FieldValue.serverTimestamp();
                 
                 // Recarrega os dados do usuário para garantir que o estado local esteja 100% sincronizado com o Firestore
-                // Isso também irá atualizar a UI corretamente (desabilitando o botão de Presentear).
+                // Isso também irá atualizar a UI corretamente.
                 await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
 
 
             } catch (error) {
-                console.error('Erro ao realizar Presentear (Check-in) diário:', error);
-                alert('Erro ao Presentear. Tente novamente.');
+                console.error('Erro ao realizar Check-in diário:', error);
+                alert('Erro ao realizar o Check-in. Tente novamente.');
             }
         }
 
@@ -1035,11 +1025,11 @@
         }
 
         async function desparearParceiro() {
-            if (confirm('Tem certeza que deseja desfazer o pareamento? Isso irá resetar os foguinhos de ambos os usuários para 0.')) { 
+            if (confirm('Tem certeza que deseja desfazer o pareamento? Isso irá resetar os foguinhos de ambos os usuários para 0.')) { // Adiciona aviso sobre foguinhos
                 try {
                     const usuarioUid = state.usuario.uid;
                     const usuarioTelefone = state.usuario.telefone;
-                    const parceiroTelefone = state.parceiroCodigo; 
+                    const parceiroTelefone = state.parceiroCodigo; // telefone do parceiro armazenado
 
                     // 1. Encontrar o UID do parceiro pelo telefone
                     let parceiroUid = null;
@@ -1078,7 +1068,7 @@
                     const request1Id = [usuarioUid, parceiroUid].sort().join('_');
                     const requestDocRef = db.collection('pairingRequests').doc(request1Id);
                     batch.delete(requestDocRef); // Tenta deletar se existir
-                    
+
                     await batch.commit(); // Executa todas as operações em um lote
 
                     // Resetar estado local
@@ -1087,11 +1077,11 @@
                     state.parceiroTelefone = null;
                     state.parceiroNome = null;
                     state.showPartnerInfo = false;
-                    state.usuario.pareadoCom = null; 
-                    state.usuario.foguinhos = 0; 
-                    state.usuario.lastCheckInDate = null; 
-                    state.carrinho = []; 
-                    state.showCartSidebar = false; 
+                    state.usuario.pareadoCom = null;
+                    state.usuario.foguinhos = 0; // Resetar localmente
+                    state.usuario.lastCheckInDate = null; // Resetar localmente
+                    state.carrinho = []; // Limpa o carrinho ao desfazer pareamento
+                    state.showCartSidebar = false; // Garante que o carrinho está fechado
                     alert('Pareamento desfeito com sucesso! Foguinhos resetados para ambos.');
                     renderApp(); // Re-renderiza a tela principal
 
@@ -1136,7 +1126,7 @@
             renderApp();
         }
 
-        // Função para alternar a visibilidade do carrinho
+        // Nova função para alternar a visibilidade do carrinho
         function toggleCartSidebar() {
             state.showCartSidebar = !state.showCartSidebar;
             renderApp(); // Re-renderiza para exibir/esconder a sidebar
@@ -1170,10 +1160,6 @@
             state.etapa = newStep;
             // Ao mudar de etapa, fechamos a sidebar do carrinho por segurança
             state.showCartSidebar = false; 
-            // Resetar o estado de digitação de código ao mudar de etapa, a menos que seja para 'parear' e 'codigoDigitando' seja true
-            if (newStep !== 'parear' || !state.codigoDigitando) {
-                state.codigoDigitando = false;
-            }
             renderApp();
         }
 
@@ -1184,6 +1170,10 @@
                 if (userDoc.exists) {
                     state.usuario = { uid: uid, email: email, ...userDoc.data() };
                     
+                    // Converte Firestore Timestamp para objeto Date se existir para lógica de isSameDay
+                    // A propriedade lastCheckInDate já é um Timestamp do Firebase e não precisa ser convertida aqui para a lógica.
+                    // O método .toDate() será chamado quando for comparado com isSameDay.
+
                     // Verifica status de pareamento: não é nulo E não começa com 'pending_'
                     state.pareado = !!state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_');
                     
@@ -1205,7 +1195,7 @@
                             state.parceiroCodigo = null;
                             state.parceiroTelefone = null;
                             state.parceiroNome = null;
-                            state.usuario.pareadoCom = null; 
+                            state.usuario.pareadoCom = null; // Zera no estado local
                         }
                     } else {
                         // Limpa info do parceiro se não estiver pareado
@@ -1301,12 +1291,20 @@
             window.removerDoCarrinho = removerDoCarrinho;
             window.finalizarPedido = finalizarPedido;
             window.desparearParceiro = desparearParceiro;
-            window.toggleCartSidebar = toggleCartSidebar; 
+            window.toggleCartSidebar = toggleCartSidebar; // Renomeada para clareza
 
             init(); // Inicia o aplicativo
         };
     </script>
-<footer class="app-footer">
+<footer style="
+    text-align: center;
+    padding: 16px;
+    font-size: 14px;
+    color: #888;
+    background-color: #f4f4f4;
+    margin-top: 40px;
+    border-top: 1px solid #ddd;
+">
     © 2025 Nosso Momento. Todos os direitos reservados.
 </footer>
 </body>
