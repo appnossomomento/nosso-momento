@@ -142,8 +142,7 @@
             parceiroNome: null,        // Nome do parceiro pareado
             showPartnerInfo: false,    // Mostra informações do parceiro
             // Nova propriedade para armazenar solicitações de pareamento recebidas
-            pendingPairingRequest: null, // {id, senderUid, senderName, senderPhone}
-            showCartSidebar: false     // Nova flag para controlar a visibilidade do carrinho
+            pendingPairingRequest: null // {id, senderUid, senderName, senderPhone}
         };
 
         // DOM elements
@@ -156,7 +155,7 @@
                    d1.getDate() === d2.getDate();
         }
 
-        // --- Funções de Renderização ---
+        // --- Novas Funções de Renderização ---
 
         function renderLandingPage() {
             appContainer.innerHTML = `
@@ -253,10 +252,11 @@
             `;
         }
 
+        // Refatorada a função validarCodigo para sendPairingRequest
         async function sendPairingRequest() {
             const codigoDigitado = document.getElementById('codigoParceiro').value;
 
-            if (!codigoDigitado || codigoDigitado.length !== 11 || !/^\d+$/.test(codigoDigitado)) {
+            if (!codigoDigitado || codigoDigitado.length !== 11) {
                 alert('Por favor, digite um número de telefone completo com 11 dígitos (com DDD).');
                 return;
             }
@@ -283,41 +283,40 @@
                 const parceiroNome = parceiroDoc.data().nome;
 
                 // 2. Verificar se já existe uma solicitação pendente entre os dois
-                const requestId = [state.usuario.uid, parceiroUid].sort().join('_'); 
-                const existingRequestDoc = await db.collection('pairingRequests').doc(requestId).get();
+                const existingRequestQuery = await db.collection('pairingRequests')
+                    .where('senderUid', '==', state.usuario.uid)
+                    .where('receiverUid', '==', parceiroUid)
+                    .where('status', '==', 'pending')
+                    .limit(1)
+                    .get();
 
-                if (existingRequestDoc.exists && existingRequestDoc.data().status === 'pending') {
+                if (!existingRequestQuery.empty) {
                     alert('Você já enviou uma solicitação de pareamento para este parceiro e ela está pendente.');
                     return;
                 }
-                
-                // 3. Verificar se o parceiro já está pareado ou se ele já tem uma solicitação de pareamento pendente para outra pessoa
-                if (parceiroDoc.data().pareadoCom && typeof parceiroDoc.data().pareadoCom === 'string' && !parceiroDoc.data().pareadoCom.startsWith('pending_')) {
+
+                 // 3. Verificar se o parceiro já está pareado
+                if (parceiroDoc.data().pareadoCom) {
                     alert(`O parceiro(a) ${parceiroNome} já está pareado(a) com outra pessoa.`);
                     return;
                 }
 
                 // 4. Criar a solicitação de pareamento no Firestore
-                await db.collection('pairingRequests').doc(requestId).set({
+                await db.collection('pairingRequests').add({
                     senderUid: state.usuario.uid,
                     senderName: state.usuario.nome,
                     senderPhone: state.usuario.telefone,
                     receiverUid: parceiroUid,
-                    receiverName: parceiroNome, 
-                    receiverPhone: codigoDigitado, 
+                    receiverName: parceiroNome, // Para uso futuro na notificação do remetente
+                    receiverPhone: codigoDigitado, // Para uso futuro
                     status: 'pending',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // Opcional: Marcar no perfil do sender que uma solicitação está pendente
-                await db.collection('usuarios').doc(state.usuario.uid).update({
-                    pareadoCom: `pending_${codigoDigitado}` // Marcador temporário
-                });
-                state.usuario.pareadoCom = `pending_${codigoDigitado}`; // Atualiza o estado local
-
                 alert(`Solicitação de pareamento enviada para ${parceiroNome}! Aguardando aceitação.`);
-                state.etapa = 'parear'; 
-                state.codigoDigitando = false; 
+                // Atualiza o estado para refletir a solicitação pendente
+                state.etapa = 'parear'; // Fica na tela de pareamento, mas com uma nova mensagem
+                state.codigoDigitando = false; // Volta para a tela inicial de pareamento (sem o input)
                 renderApp();
 
             } catch (error) {
@@ -326,51 +325,43 @@
             }
         }
 
+
+        // Nova função para aceitar solicitação de pareamento
         async function acceptPairingRequest(requestId, senderUid, senderPhone) {
             try {
-                // Verificar se o usuário já não está pareado antes de aceitar
-                if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
-                    alert('Você já está pareado com outra pessoa. Desfaça o pareamento atual para aceitar esta solicitação.');
-                    return;
-                }
-
                 // 1. Atualizar status da solicitação para 'accepted'
                 await db.collection('pairingRequests').doc(requestId).update({
                     status: 'accepted'
                 });
 
                 // 2. Atualizar o usuário logado (receiver)
-                await db.collection('usuarios').doc(state.usuario.uid).update({ 
+                await db.collection('usuarios').doc(state.usuario.uid).set({
                     pareadoCom: senderPhone
-                });
+                }, { merge: true });
 
                 // 3. Atualizar o remetente da solicitação
-                await db.collection('usuarios').doc(senderUid).update({ 
+                await db.collection('usuarios').doc(senderUid).set({
                     pareadoCom: state.usuario.telefone
-                });
+                }, { merge: true });
 
                 // 4. Criar/atualizar a collection "pareamentos"
                 const telefones = [state.usuario.telefone, senderPhone].sort();
-                const idPareamento = telefones.join('_'); 
-                
-                // Buscar UIDs dos dois usuários para a coleção 'pareamentos'
-                let uid1 = state.usuario.uid;
-                let uid2 = senderUid;
+                const idPareamento = telefones.join('_');
 
                 await db.collection('pareamentos').doc(idPareamento).set({
                     pessoa1: telefones[0],
                     pessoa2: telefones[1],
-                    pessoa1Uid: telefones[0] === state.usuario.telefone ? uid1 : uid2,
-                    pessoa2Uid: telefones[1] === state.usuario.telefone ? uid1 : uid2,
+                    pessoa1Uid: telefones[0] === state.usuario.telefone ? state.usuario.uid : senderUid,
+                    pessoa2Uid: telefones[1] === state.usuario.telefone ? state.usuario.uid : senderUid,
                     dataPareamento: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true }); 
+                }, { merge: true });
 
                 alert('Pareamento aceito com sucesso! Vocês estão agora pareados.');
 
                 // Atualiza o estado local para refletir o pareamento
                 state.pareado = true;
                 state.parceiroCodigo = senderPhone;
-                state.usuario.pareadoCom = senderPhone; 
+                state.parceiroTelefone = '55' + senderPhone.replace(/\D/g, '');
                 
                 // Busca o nome do parceiro aceito
                 const parceiroAcceptedQuery = await db.collection('usuarios')
@@ -378,9 +369,7 @@
                     .limit(1)
                     .get();
                 if (!parceiroAcceptedQuery.empty) {
-                    const parceiroData = parceiroAcceptedQuery.docs[0].data();
-                    state.parceiroNome = parceiroData.nome;
-                    state.parceiroTelefone = '55' + parceiroData.telefone.replace(/\D/g, '');
+                    state.parceiroNome = parceiroAcceptedQuery.docs[0].data().nome;
                 }
 
                 state.pendingPairingRequest = null; // Limpa a solicitação pendente
@@ -393,26 +382,12 @@
             }
         }
 
+        // Nova função para rejeitar solicitação de pareamento
         async function rejectPairingRequest(requestId) {
             try {
-                // Atualiza o status da solicitação para 'rejected'
                 await db.collection('pairingRequests').doc(requestId).update({
                     status: 'rejected'
                 });
-                
-                // Opcional: Limpar o 'pareadoCom' do sender se ele estava marcado como 'pending_'
-                const requestDoc = await db.collection('pairingRequests').doc(requestId).get();
-                if (requestDoc.exists) {
-                    const senderUid = requestDoc.data().senderUid;
-                    // Busca o documento do sender para remover o marcador 'pending_'
-                    const senderDoc = await db.collection('usuarios').doc(senderUid).get();
-                    if (senderDoc.exists && senderDoc.data().pareadoCom && senderDoc.data().pareadoCom.startsWith('pending_')) {
-                        await db.collection('usuarios').doc(senderUid).update({
-                            pareadoCom: firebase.firestore.FieldValue.delete() // Remove o campo
-                        });
-                    }
-                }
-
                 alert('Solicitação de pareamento rejeitada.');
                 state.pendingPairingRequest = null; // Limpa a solicitação pendente
                 renderApp(); // Re-renderiza para limpar a notificação
@@ -428,7 +403,7 @@
             
             let content = '';
 
-            // Se houver uma solicitação pendente para o usuário logado (ele recebeu)
+            // Se houver uma solicitação pendente para o usuário logado
             if (state.pendingPairingRequest) {
                 content = `
                     <div class="text-center mb-6">
@@ -448,7 +423,7 @@
                     </div>
                 `;
             }
-            // Se o usuário já enviou uma solicitação e está pendente (ele enviou)
+            // Se o usuário já enviou uma solicitação e está pendente
             else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
                 const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
                 content = `
@@ -571,10 +546,6 @@
                                 <div class="w-2 h-2 rounded-full bg-pink-500 opacity-70 animate-pulse ml-1"></div>
                             </div>
                             <div class="flex items-center gap-4">
-                                ${state.usuario && state.usuario.nome ? `
-                                    <span class="text-gray-300 text-sm font-medium">Olá, ${state.usuario.nome}!</span>
-                                ` : ''}
-
                                 <div class="flex items-center gap-2 bg-gray-800/60 px-3 py-2 rounded-lg text-yellow-400 font-semibold">
                                     <i class="fas fa-fire"></i> ${state.usuario.foguinhos || 0}
                                 </div>
@@ -616,17 +587,13 @@
                                     </div>
                                 `}
                                 <div class="relative">
-                                    <button class="flex items-center gap-2 relative" onclick="toggleCartSidebar(); event.stopPropagation()">
+                                    <button class="flex items-center gap-2 relative" onclick="renderApp(); event.stopPropagation()">
                                         <i class="fas fa-shopping-cart text-lg"></i>
                                         ${state.carrinho.length > 0 ? `
                                             <span class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                                                 ${state.carrinho.length}/2
                                             </span>
-                                        ` : `
-                                            <span class="absolute -top-2 -right-2 bg-gray-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-70">
-                                                0/2
-                                            </span>
-                                        `}
+                                        ` : ''}
                                     </button>
                                 </div>
                                 <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
@@ -671,19 +638,19 @@
                                     </div>
                                     <div class="p-4">
                                         <h3 class="font-medium">${momento.nome}</h3>
-                                        <div class="mb-4">
-                                            <div class="flex items-center gap-1 mb-1">
+                                        <div class="mb-2">
+                                            <div class="flex items-center gap-1">
                                                 <span class="text-gray-500 text-sm">Intensidade:</span>
                                                 <span class="text-pink-400">${'🔥'.repeat(momento.intensidade)}</span>
                                             </div>
-                                        </div>
-                                        <div class="flex justify-between items-center mt-4">
-                                            <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
+                                            <span class="text-yellow-400 text-sm flex items-center gap-1">
                                                 <i class="fas fa-fire"></i> ${momento.intensidade} Foguinhos
                                             </span>
-                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, '&quot;')})" 
+                                        </div>
+                                        <div class="flex justify-between items-center mt-4">
+                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, '&quot;')})"
                                                 class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
-                                                Resgatar
+                                                Adicionar
                                             </button>
                                         </div>
                                     </div>
@@ -692,20 +659,18 @@
                         </div>
                     </main>
 
-                    ${state.showCartSidebar ? `
-                        <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+                    ${state.carrinho.length > 0 && `
+                        <div class="fixed inset-0 bg-black/50 z-20" onclick="renderApp()"></div>
                         <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
                             <div class="flex justify-between items-center mb-6">
                                 <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
-                                <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white">
+                                <button onclick="toggleCart()" class="text-gray-400 hover:text-white">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
 
                             <div class="space-y-3">
-                                ${state.carrinho.length === 0 ? `
-                                    <p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>
-                                ` : state.carrinho.map((item, index) => `
+                                ${state.carrinho.map((item, index) => `
                                     <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
                                         <div>
                                             <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
@@ -722,18 +687,16 @@
                             </div>
 
                             <div class="mt-8 pt-6 border-t border-gray-800">
-                                <button onclick="finalizarPedido()" 
-                                    class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all
-                                    ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
-                                    ${state.carrinho.length === 0 ? 'disabled' : ''}>
+                                <button onclick="finalizarPedido()"
+                                    class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all">
                                     Finalizar Pedido
                                 </button>
-                                <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
-                                    Continuar Resgatando
+                                <button onclick="toggleCart()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+                                    Continuar Comprando
                                 </button>
                             </div>
                         </div>
-                    ` : ''}
+                    `}
                 </div>
             `;
         }
@@ -754,7 +717,7 @@
                 const user = userCredential.user;
                 console.log('Usuário logado com sucesso:', user);
 
-                await loadUserDataAndNavigate(user.uid, user.email); // Esta função já renderiza a tela correta
+                await loadUserDataAndNavigate(user.uid, user.email);
 
             } catch (error) {
                 console.error('Erro no login:', error.code, error.message);
@@ -765,11 +728,8 @@
                     errorMessage = 'Senha incorreta.';
                 } else if (error.code === 'auth/invalid-email') {
                     errorMessage = 'Email inválido.';
-                } else if (error.code === 'auth/invalid-credential') { // Erro genérico para credenciais inválidas
-                    errorMessage = 'Credenciais inválidas. Verifique seu email e senha.';
                 }
                 alert(errorMessage);
-                // Não chama renderApp aqui, loadUserDataAndNavigate fará isso ou o fluxo de erro já está na tela de login
             }
         }
 
@@ -780,7 +740,6 @@
             const senha = document.getElementById('registerSenha').value;
             const sexo = document.getElementById('registerSexo').value;
 
-            // Validação de Frontend
             if (!nome || !email || !telefone || !senha || !sexo) {
                 alert('Por favor, preencha todos os campos.');
                 return;
@@ -789,11 +748,6 @@
                 alert('O telefone deve conter exatamente 11 dígitos numéricos (com DDD).');
                 return;
             }
-            if (senha.length < 6) { // Firebase Auth mínimo de 6 caracteres para senha
-                 alert('A senha deve ter no mínimo 6 caracteres.');
-                 return;
-            }
-
 
             try {
                 // 1. Criar usuário no Firebase Authentication
@@ -814,7 +768,6 @@
                 });
                 console.log("Dados do usuário salvos com sucesso no Firestore!");
 
-                // Atualiza o estado local com os dados do novo usuário
                 state.usuario = {
                     uid: user.uid,
                     email: user.email,
@@ -827,7 +780,6 @@
                 };
                 state.etapa = 'parear'; // Vai para a tela de pareamento após o cadastro
                 renderApp();
-                // Apenas uma mensagem de sucesso, sem alert de erro anterior.
                 alert('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.');
 
             } catch (error) {
@@ -848,7 +800,7 @@
             try {
                 await auth.signOut();
                 console.log('Usuário deslogado com sucesso!');
-                // Resetar todo o estado da aplicação para o padrão inicial
+                // Resetar o estado da aplicação
                 state.usuario = null;
                 state.pareado = false;
                 state.etapa = 'landing';
@@ -860,7 +812,6 @@
                 state.parceiroNome = null;
                 state.showPartnerInfo = false;
                 state.pendingPairingRequest = null;
-                state.showCartSidebar = false; // Resetar também o estado do carrinho
                 renderApp(); // Volta para a tela inicial
             } catch (error) {
                 console.error('Erro ao deslogar:', error);
@@ -917,9 +868,8 @@
                 // Atualiza o estado local do usuário que fez o check-in
                 state.usuario.lastCheckInDate = firebase.firestore.FieldValue.serverTimestamp();
                 
-                // Recarrega os dados do usuário para garantir que o estado local esteja 100% sincronizado com o Firestore
-                // Isso também irá atualizar a UI corretamente.
-                await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
+                // Recarrega os dados do usuário e do parceiro para garantir consistência
+                await loadUserDataAndNavigate(auth.currentUser.uid, auth.currentUser.email);
 
 
             } catch (error) {
@@ -953,13 +903,13 @@
             }
 
             if (!state.pareado) {
-                alert('Você precisa estar pareado com seu parceiro(a) para resgatar momentos.');
+                alert('Você precisa estar pareado com seu parceiro(a) para adicionar momentos ao carrinho.');
                 return;
             }
 
             const custo = momento.intensidade;
             if ((state.usuario.foguinhos || 0) < custo) {
-                alert(`Você precisa de ${custo} foguinhos para resgatar este momento. Você tem apenas ${state.usuario.foguinhos || 0} 🔥.`);
+                alert(`Você precisa de ${custo} foguinhos para este momento. Você tem apenas ${state.usuario.foguinhos || 0} 🔥.`);
                 return;
             }
 
@@ -984,7 +934,7 @@
                 document.body.appendChild(animElement);
                 setTimeout(() => animElement.remove(), 2000);
 
-                renderApp(); // Re-renderiza para atualizar foguinhos e carrinho
+                renderApp();
 
             } catch (error) {
                 console.error('Erro ao adicionar momento ao carrinho e consumir foguinhos:', error);
@@ -1017,7 +967,7 @@
                 document.body.appendChild(animElement);
                 setTimeout(() => animElement.remove(), 2000);
 
-                renderApp(); // Re-renderiza para atualizar foguinhos e carrinho
+                renderApp();
             } catch (error) {
                 console.error('Erro ao remover do carrinho e devolver foguinhos:', error);
                 alert('Erro ao remover item. Tente novamente.');
@@ -1025,11 +975,10 @@
         }
 
         async function desparearParceiro() {
-            if (confirm('Tem certeza que deseja desfazer o pareamento? Isso irá resetar os foguinhos de ambos os usuários para 0.')) { // Adiciona aviso sobre foguinhos
+            if (confirm('Tem certeza que deseja desfazer o pareamento?')) {
                 try {
                     const usuarioUid = state.usuario.uid;
-                    const usuarioTelefone = state.usuario.telefone;
-                    const parceiroTelefone = state.parceiroCodigo; // telefone do parceiro armazenado
+                    const parceiroTelefone = state.parceiroCodigo; // telefone do parceiro
 
                     // 1. Encontrar o UID do parceiro pelo telefone
                     let parceiroUid = null;
@@ -1038,51 +987,48 @@
                         parceiroUid = parceiroQuery.docs[0].id;
                     }
 
-                    const batch = db.batch();
-
-                    // 2. Remover pareamento do usuário atual no Firestore e resetar foguinhos
-                    const userDocRef = db.collection('usuarios').doc(usuarioUid);
-                    batch.update(userDocRef, {
-                        pareadoCom: firebase.firestore.FieldValue.delete(),
-                        foguinhos: 0,
-                        lastCheckInDate: null
+                    // 2. Remover pareamento do usuário atual no Firestore
+                    await db.collection('usuarios').doc(usuarioUid).update({
+                        pareadoCom: firebase.firestore.FieldValue.delete()
                     });
 
-                    // 3. Remover pareamento do parceiro (se o UID for encontrado) e resetar foguinhos
+                    // 3. Remover pareamento do parceiro (se o UID for encontrado)
                     if (parceiroUid) {
-                        const parceiroDocRef = db.collection('usuarios').doc(parceiroUid);
-                        batch.update(parceiroDocRef, {
-                            pareadoCom: firebase.firestore.FieldValue.delete(),
-                            foguinhos: 0,
-                            lastCheckInDate: null
+                        await db.collection('usuarios').doc(parceiroUid).update({
+                            pareadoCom: firebase.firestore.FieldValue.delete()
                         });
                     }
 
                     // 4. Remover documento da coleção 'pareamentos'
-                    const telefonesOrdenados = [usuarioTelefone, parceiroTelefone].sort();
+                    // Precisamos buscar o ID do documento de pareamento que contém os dois telefones
+                    const telefonesOrdenados = [state.usuario.telefone, parceiroTelefone].sort();
                     const idPareamento = telefonesOrdenados.join('_');
-                    const pareamentoDocRef = db.collection('pareamentos').doc(idPareamento);
-                    batch.delete(pareamentoDocRef);
+                    await db.collection('pareamentos').doc(idPareamento).delete();
 
                     // 5. Limpar quaisquer solicitações de pareamento pendentes entre os dois
-                    const request1Id = [usuarioUid, parceiroUid].sort().join('_');
-                    const requestDocRef = db.collection('pairingRequests').doc(request1Id);
-                    batch.delete(requestDocRef); // Tenta deletar se existir
+                    const requestsQuery = await db.collection('pairingRequests')
+                        .where('status', '==', 'pending')
+                        .where(firebase.firestore.FieldPath.documentId(), 'in', [
+                            `${usuarioUid}_${parceiroUid}`, // se foi enviado por mim
+                            `${parceiroUid}_${usuarioUid}`  // se foi enviado pelo outro
+                        ])
+                        .get();
 
-                    await batch.commit(); // Executa todas as operações em um lote
+                    if (!requestsQuery.empty) {
+                        const batch = db.batch();
+                        requestsQuery.docs.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+                    }
 
-                    // Resetar estado local
+
                     state.pareado = false;
                     state.parceiroCodigo = null;
                     state.parceiroTelefone = null;
                     state.parceiroNome = null;
                     state.showPartnerInfo = false;
-                    state.usuario.pareadoCom = null;
-                    state.usuario.foguinhos = 0; // Resetar localmente
-                    state.usuario.lastCheckInDate = null; // Resetar localmente
-                    state.carrinho = []; // Limpa o carrinho ao desfazer pareamento
-                    state.showCartSidebar = false; // Garante que o carrinho está fechado
-                    alert('Pareamento desfeito com sucesso! Foguinhos resetados para ambos.');
+                    alert('Pareamento desfeito com sucesso!');
                     renderApp(); // Re-renderiza a tela principal
 
                 } catch (error) {
@@ -1098,12 +1044,12 @@
                 return;
             }
             if (state.carrinho.length === 0) {
-                alert('Seu carrinho está vazio. Adicione momentos para finalizar o pedido.');
+                alert('Seu carrinho está vazio.');
                 return;
             }
 
-            const momentos = state.carrinho.map(m => `${m.emoji} ${m.nome} (Intensidade: ${m.intensidade}🔥)`).join(' | ');
-            const mensagem = encodeURIComponent(`💑 Pedido de Momentos Especiais 💑\n\nOlá, ${state.parceiroNome || 'parceiro(a)'}!\n\nEu escolhi os seguintes momentos para nós:\n\n${momentos}\n\nEnviei esta mensagem pelo app Nosso Momento! 😊`);
+            const momentos = state.carrinho.map(m => `${m.emoji} ${m.nome}`).join(' | ');
+            const mensagem = encodeURIComponent(`💑 Pedido de Momentos Especiais 💑\n\nMeus momentos escolhidos:\n${momentos}\n\n✉️ Entrega pessoal requerida! 😊`);
 
             const telefoneWhatsapp = state.parceiroTelefone; // Já está formatado com 55DDD
             const whatsappLink = `https://wa.me/${telefoneWhatsapp}?text=${mensagem}`;
@@ -1121,15 +1067,14 @@
                 window.open(whatsappLink, '_blank');
             }, 1500);
 
-            state.carrinho = []; // Limpa o carrinho após finalizar o pedido
-            state.showCartSidebar = false; // Fecha a sidebar do carrinho
+            state.carrinho = [];
             renderApp();
         }
 
-        // Nova função para alternar a visibilidade do carrinho
-        function toggleCartSidebar() {
-            state.showCartSidebar = !state.showCartSidebar;
-            renderApp(); // Re-renderiza para exibir/esconder a sidebar
+        function toggleCart() {
+            // Não limpa o carrinho ao fechar, apenas esconde a sidebar.
+            // Para limpar, o usuário precisa finalizar o pedido ou remover itens manualmente.
+            renderApp(); // Re-renderiza a página principal sem o carrinho
         }
 
         // --- Função Central de Renderização (Gerencia as etapas) ---
@@ -1158,8 +1103,6 @@
         // Função para mudar a etapa da aplicação
         function changeStep(newStep) {
             state.etapa = newStep;
-            // Ao mudar de etapa, fechamos a sidebar do carrinho por segurança
-            state.showCartSidebar = false; 
             renderApp();
         }
 
@@ -1168,18 +1111,18 @@
             try {
                 const userDoc = await db.collection('usuarios').doc(uid).get();
                 if (userDoc.exists) {
-                    state.usuario = { uid: uid, email: email, ...userDoc.data() };
-                    
-                    // Converte Firestore Timestamp para objeto Date se existir para lógica de isSameDay
-                    // A propriedade lastCheckInDate já é um Timestamp do Firebase e não precisa ser convertida aqui para a lógica.
-                    // O método .toDate() será chamado quando for comparado com isSameDay.
+                    state.usuario = { uid: user.uid, email: user.email, ...userDoc.data() };
+                    // Converte Firestore Timestamp para objeto Date se existir
+                    if (state.usuario.lastCheckInDate && typeof state.usuario.lastCheckInDate.toDate === 'function') {
+                        state.usuario.lastCheckInDate = state.usuario.lastCheckInDate; // Já é um Timestamp, manter assim para renderMain
+                    }
 
-                    // Verifica status de pareamento: não é nulo E não começa com 'pending_'
+                    // Verifica status de pareamento
                     state.pareado = !!state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_');
-                    
-                    // Se pareado, preenche as informações do parceiro
-                    if (state.pareado && state.usuario.pareadoCom) {
-                        state.parceiroCodigo = state.usuario.pareadoCom; // Telefone do parceiro
+                    state.parceiroCodigo = state.usuario.pareadoCom; // Telefone do parceiro
+
+                    // Se pareado, busca o nome e telefone do parceiro
+                    if (state.pareado && state.parceiroCodigo) {
                         const parceiroQuery = await db.collection('usuarios')
                             .where('telefone', '==', state.parceiroCodigo)
                             .limit(1)
@@ -1188,23 +1131,10 @@
                             const parceiroData = parceiroQuery.docs[0].data();
                             state.parceiroNome = parceiroData.nome;
                             state.parceiroTelefone = '55' + parceiroData.telefone.replace(/\D/g, ''); // Garante formato para WhatsApp
-                        } else {
-                            // Se pareado mas o parceiro não é encontrado, algo está errado, desfaz o pareamento localmente
-                            console.warn('Parceiro pareado não encontrado no Firestore. Desfazendo pareamento localmente.');
-                            state.pareado = false;
-                            state.parceiroCodigo = null;
-                            state.parceiroTelefone = null;
-                            state.parceiroNome = null;
-                            state.usuario.pareadoCom = null; // Zera no estado local
                         }
-                    } else {
-                        // Limpa info do parceiro se não estiver pareado
-                        state.parceiroCodigo = null;
-                        state.parceiroTelefone = null;
-                        state.parceiroNome = null;
                     }
 
-                    // Verifica se há solicitações de pareamento pendentes para o usuário logado (ele é o receiver)
+                    // Verifica se há solicitações de pareamento pendentes para o usuário logado
                     const pendingRequestQuery = await db.collection('pairingRequests')
                         .where('receiverUid', '==', uid)
                         .where('status', '==', 'pending')
@@ -1219,12 +1149,10 @@
                         };
                         state.etapa = 'parear'; // Redireciona para a tela de pareamento para exibir a solicitação
                     } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
-                         // Se o usuário tem um pareamento pendente (ele enviou a solicitação)
+                         // Se o usuário tem um pareamento pendente (ele enviou)
                         state.etapa = 'parear';
-                        state.pendingPairingRequest = null; // Garante que não há solicitação recebida ativa no estado
                     }
                     else {
-                        state.pendingPairingRequest = null; // Limpa qualquer solicitação pendente anterior
                         state.etapa = 'main'; // Se não há solicitações pendentes e não está pendente, vai para main
                     }
 
@@ -1246,14 +1174,12 @@
 
         // Initialize app
         function init() {
-            // Monitora o estado de autenticação do Firebase ao carregar a página
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
                     console.log('Usuário já logado:', user.email, user.uid);
                     await loadUserDataAndNavigate(user.uid, user.email);
                 } else {
                     console.log('Nenhum usuário logado. Redirecionando para landing page.');
-                    // Limpa todo o estado do usuário ao deslogar
                     state.usuario = null;
                     state.pareado = false;
                     state.etapa = 'landing';
@@ -1265,7 +1191,6 @@
                     state.parceiroNome = null;
                     state.showPartnerInfo = false;
                     state.pendingPairingRequest = null;
-                    state.showCartSidebar = false;
                     renderApp();
                 }
             });
@@ -1275,15 +1200,15 @@
         // Start the app
         window.onload = function() {
             // Make functions global for onclick events
-            window.isSameDay = isSameDay; 
-            window.changeStep = changeStep; 
-            window.handleSignIn = handleSignIn; 
-            window.handleRegister = handleRegister; 
-            window.handleLogout = handleLogout; 
-            window.sendPairingRequest = sendPairingRequest; 
-            window.acceptPairingRequest = acceptPairingRequest; 
-            window.rejectPairingRequest = rejectPairingRequest; 
-            window.handleDailyCheckIn = handleDailyCheckIn; 
+            window.isSameDay = isSameDay; // Para uso no HTML se necessário
+            window.changeStep = changeStep;
+            window.handleSignIn = handleSignIn;
+            window.handleRegister = handleRegister;
+            window.handleLogout = handleLogout;
+            window.sendPairingRequest = sendPairingRequest; // Antiga validarCodigo
+            window.acceptPairingRequest = acceptPairingRequest; // Nova função
+            window.rejectPairingRequest = rejectPairingRequest; // Nova função
+            window.handleDailyCheckIn = handleDailyCheckIn; // Nova função
 
             window.handleContinuarSemParear = handleContinuarSemParear;
             window.filtrarMomentos = filtrarMomentos;
@@ -1291,9 +1216,9 @@
             window.removerDoCarrinho = removerDoCarrinho;
             window.finalizarPedido = finalizarPedido;
             window.desparearParceiro = desparearParceiro;
-            window.toggleCartSidebar = toggleCartSidebar; // Renomeada para clareza
+            window.toggleCart = toggleCart;
 
-            init(); // Inicia o aplicativo
+            init();
         };
     </script>
 <footer style="
