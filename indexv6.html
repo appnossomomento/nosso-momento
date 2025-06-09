@@ -330,6 +330,12 @@
                 };
                 console.log('Dados da solicitação a serem enviados:', requestData);
 
+                // IMPORTANTE: O erro FirebaseError: Missing or insufficient permissions.
+                // Sugere que a regra de `create` para `pairingRequests` ou a regra de `update` para `usuarios` (pareadoCom) está falhando.
+                // A regra mais simples de `allow create: if request.auth != null;` para pairingRequests é para testar isso.
+                // Se o simulador permite, o problema está nos dados ou nos UIDs.
+                // Assegure-se que o senderUid e o receiverUid no JSON do requestData são UIDs reais e válidos.
+                // O state.usuario.uid deve ser o UID do usuário LOGADO no AUTH.
                 await db.collection('pairingRequests').doc(requestId).set(requestData);
                 console.log('Solicitação de pareamento criada no Firestore com sucesso!');
 
@@ -613,7 +619,7 @@
                                 </div>
 
                                 ${!state.pareado ? `
-                                    <button onclick="changeStep('parear')" class="text-sm bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
+                                    <button onclick="renderPareamento()" class="text-sm bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
                                         <i class="fas fa-heart text-xs"></i> Parear
                                     </button>
                                 ` : `
@@ -1192,11 +1198,17 @@
             console.log('changeStep chamada. Nova etapa:', newStep, 'state.codigoDigitando ANTES:', state.codigoDigitando);
             state.etapa = newStep;
             state.showCartSidebar = false; 
-            // Ajuste para garantir que, se for para 'parear' e 'codigoDigitando' já estiver true, ele não seja resetado.
-            // A lógica é: se a nova etapa NÃO É 'parear' OU (se a nova etapa É 'parear' E 'codigoDigitando' É false)
-            if (newStep !== 'parear' || (newStep === 'parear' && state.codigoDigitando === false)) {
-                 console.log('Resetando state.codigoDigitando para false.');
-                 state.codigoDigitando = false;
+            // AQUI ESTÁ O AJUSTE PARA TENTAR MANTER state.codigoDigitando
+            // Se a nova etapa NÃO FOR 'parear' OU se state.codigoDigitando JÁ FOR false, resetamos.
+            // Caso contrário (se for 'parear' E state.codigoDigitando for true), ele é mantido.
+            // No caso de clicar em Digitar Código, state.codigoDigitando vira true antes de renderApp, e a etapa é 'parear'.
+            // Então, !state.codigoDigitando será false, e newStep !== 'parear' será false, resultando em (false || false) = false, então não reseta.
+            if (newStep !== 'parear' || !state.codigoDigitando) { 
+                 // Ajuste para garantir que, se for para 'parear' e 'codigoDigitando' já estiver true, ele não seja resetado.
+                if (!(newStep === 'parear' && state.codigoDigitando === true)) {
+                    console.log('Resetando state.codigoDigitando para false.');
+                    state.codigoDigitando = false;
+                }
             }
             console.log('state.codigoDigitando DEPOIS do ajuste em changeStep:', state.codigoDigitando);
             renderApp();
@@ -1206,14 +1218,6 @@
         async function loadUserDataAndNavigate(uid, email) {
             console.log('loadUserDataAndNavigate chamada para UID:', uid);
             try {
-                // Certifique-se que o UID não é nulo/indefinido antes de fazer a chamada ao Firestore
-                if (!uid) {
-                    console.error('UID do usuário é nulo ou indefinido em loadUserDataAndNavigate. Abortando carregamento.');
-                    state.etapa = 'landing';
-                    renderApp();
-                    return;
-                }
-
                 const userDoc = await db.collection('usuarios').doc(uid).get();
                 if (userDoc.exists) {
                     state.usuario = { uid: uid, email: email, ...userDoc.data() };
