@@ -278,6 +278,10 @@
             }
 
             try {
+                console.log('--- Iniciando sendPairingRequest ---');
+                console.log('Usuário Logado (state.usuario):', state.usuario);
+                console.log('Telefone do Parceiro Digitado:', codigoDigitado);
+
                 // 1. Buscar o UID e nome do parceiro pelo telefone
                 const parceiroQuery = await db.collection('usuarios')
                     .where('telefone', '==', codigoDigitado)
@@ -290,12 +294,17 @@
                 }
 
                 const parceiroDoc = parceiroQuery.docs[0];
-                const parceiroUid = parceiroDoc.id;
+                const parceiroUid = parceiroDoc.id; // Este é o UID do parceiro!
                 const parceiroNome = parceiroDoc.data().nome;
+
+                console.log('Parceiro Encontrado - UID:', parceiroUid, 'Nome:', parceiroNome);
 
                 // 2. Verificar se já existe uma solicitação pendente entre os dois
                 const requestId = [state.usuario.uid, parceiroUid].sort().join('_'); 
                 const existingRequestDoc = await db.collection('pairingRequests').doc(requestId).get();
+
+                console.log('ID da Solicitação (RequestId):', requestId);
+                console.log('Solicitação Existente:', existingRequestDoc.exists ? existingRequestDoc.data() : 'Nenhuma');
 
                 if (existingRequestDoc.exists && existingRequestDoc.data().status === 'pending') {
                     alert('Você já enviou uma solicitação de pareamento para este parceiro e ela está pendente.');
@@ -309,7 +318,7 @@
                 }
 
                 // 4. Criar a solicitação de pareamento no Firestore
-                await db.collection('pairingRequests').doc(requestId).set({
+                const requestData = {
                     senderUid: state.usuario.uid,
                     senderName: state.usuario.nome,
                     senderPhone: state.usuario.telefone,
@@ -318,13 +327,18 @@
                     receiverPhone: codigoDigitado, 
                     status: 'pending',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                };
+                console.log('Dados da solicitação a serem enviados:', requestData);
+
+                await db.collection('pairingRequests').doc(requestId).set(requestData);
+                console.log('Solicitação de pareamento criada no Firestore com sucesso!');
 
                 // Opcional: Marcar no perfil do sender que uma solicitação está pendente
                 await db.collection('usuarios').doc(state.usuario.uid).update({
                     pareadoCom: `pending_${codigoDigitado}` // Marcador temporário
                 });
                 state.usuario.pareadoCom = `pending_${codigoDigitado}`; // Atualiza o estado local
+                console.log('Status do usuário atualizado para pendente.');
 
                 alert(`Solicitação de pareamento enviada para ${parceiroNome}! Aguardando aceitação.`);
                 state.etapa = 'parear'; 
@@ -333,11 +347,21 @@
 
             } catch (error) {
                 console.error('Erro ao enviar solicitação de pareamento:', error);
-                alert('Erro ao enviar solicitação de pareamento. Tente novamente.');
+                // Captura e exibe a mensagem de erro específica do Firebase
+                if (error.code) {
+                    alert(`Erro Firebase: ${error.code} - ${error.message}`);
+                } else {
+                    alert('Erro ao enviar solicitação de pareamento. Tente novamente.');
+                }
             }
+            console.log('--- Fim sendPairingRequest ---');
         }
 
         async function acceptPairingRequest(requestId, senderUid, senderPhone) {
+            console.log('--- Iniciando acceptPairingRequest ---');
+            console.log('requestId:', requestId, 'senderUid:', senderUid, 'senderPhone:', senderPhone);
+            console.log('state.usuario.uid (receiverUid):', state.usuario.uid, 'state.usuario.telefone:', state.usuario.telefone);
+
             try {
                 // Verificar se o usuário já não está pareado antes de aceitar
                 if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
@@ -346,35 +370,48 @@
                 }
 
                 // 1. Atualizar status da solicitação para 'accepted'
+                console.log('Tentando atualizar status da solicitação de pareamento...');
                 await db.collection('pairingRequests').doc(requestId).update({
                     status: 'accepted'
                 });
+                console.log('Status da solicitação de pareamento atualizado para accepted.');
 
                 // 2. Atualizar o usuário logado (receiver)
+                console.log('Tentando atualizar pareadoCom do receiver (usuário logado)...');
                 await db.collection('usuarios').doc(state.usuario.uid).update({ 
                     pareadoCom: senderPhone
                 });
+                console.log('pareadoCom do receiver atualizado.');
 
                 // 3. Atualizar o remetente da solicitação
+                console.log('Tentando atualizar pareadoCom do sender...');
                 await db.collection('usuarios').doc(senderUid).update({ 
                     pareadoCom: state.usuario.telefone
                 });
+                console.log('pareadoCom do sender atualizado.');
 
                 // 4. Criar/atualizar a collection "pareamentos"
                 const telefones = [state.usuario.telefone, senderPhone].sort();
                 const idPareamento = telefones.join('_'); 
                 
                 // Buscar UIDs dos dois usuários para a coleção 'pareamentos'
-                let uid1 = state.usuario.uid;
-                let uid2 = senderUid;
+                let uid1 = state.usuario.uid; // UID do receptor
+                let uid2 = senderUid; // UID do remetente
 
-                await db.collection('pareamentos').doc(idPareamento).set({
+                const pareamentoData = {
                     pessoa1: telefones[0],
                     pessoa2: telefones[1],
                     pessoa1Uid: telefones[0] === state.usuario.telefone ? uid1 : uid2,
                     pessoa2Uid: telefones[1] === state.usuario.telefone ? uid1 : uid2,
                     dataPareamento: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true }); 
+                };
+                console.log('Tentando criar/atualizar documento na coleção pareamentos...');
+                console.log('ID do documento pareamentos:', idPareamento);
+                console.log('Dados do documento pareamentos:', pareamentoData);
+
+                await db.collection('pareamentos').doc(idPareamento).set(pareamentoData, { merge: true }); 
+                console.log('Documento na coleção pareamentos criado/atualizado com sucesso!');
+
 
                 alert('Pareamento aceito com sucesso! Vocês estão agora pareados.');
 
@@ -400,8 +437,14 @@
 
             } catch (error) {
                 console.error('Erro ao aceitar pareamento:', error);
-                alert('Erro ao aceitar pareamento. Tente novamente.');
+                // Captura e exibe a mensagem de erro específica do Firebase
+                if (error.code) {
+                    alert(`Erro Firebase: ${error.code} - ${error.message}`);
+                } else {
+                    alert('Erro ao aceitar pareamento. Tente novamente.');
+                }
             }
+            console.log('--- Fim acceptPairingRequest ---');
         }
 
         async function rejectPairingRequest(requestId) {
@@ -435,6 +478,7 @@
 
 
         function renderPareamento() {
+            console.log('renderPareamento chamada. state.codigoDigitando:', state.codigoDigitando);
             const codigoUsuario = state.usuario.telefone.replace(/\D/g, '');
             
             let content = '';
@@ -536,6 +580,7 @@
 
 
         function renderMain() {
+            console.log('renderMain chamada.');
             const categorias = [
                 { nome: 'Quentes', emoji: '🥵', color: 'bg-pink-900' },
                 { nome: 'Lovezin', emoji: '💗', color: 'bg-red-900' },
@@ -591,7 +636,7 @@
                                 </div>
 
                                 ${!state.pareado ? `
-                                    <button onclick="renderPareamento()" class="text-sm bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
+                                    <button onclick="changeStep('parear')" class="text-sm bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
                                         <i class="fas fa-heart text-xs"></i> Parear
                                     </button>
                                 ` : `
@@ -1135,12 +1180,15 @@
 
         // Função para alternar a visibilidade do carrinho
         function toggleCartSidebar() {
+            console.log('toggleCartSidebar chamada. state.showCartSidebar ANTES:', state.showCartSidebar);
             state.showCartSidebar = !state.showCartSidebar;
+            console.log('state.showCartSidebar DEPOIS:', state.showCartSidebar);
             renderApp(); // Re-renderiza para exibir/esconder a sidebar
         }
 
         // --- Função Central de Renderização (Gerencia as etapas) ---
         function renderApp() {
+            console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar);
             switch (state.etapa) {
                 case 'landing':
                     renderLandingPage();
@@ -1164,19 +1212,31 @@
 
         // Função para mudar a etapa da aplicação
         function changeStep(newStep) {
+            console.log('changeStep chamada. Nova etapa:', newStep, 'state.codigoDigitando ANTES:', state.codigoDigitando);
             state.etapa = newStep;
-            // Ao mudar de etapa, fechamos a sidebar do carrinho por segurança
             state.showCartSidebar = false; 
-            // Resetar o estado de digitação de código ao mudar de etapa, a menos que seja para 'parear' e 'codigoDigitando' seja true
-            if (newStep !== 'parear' || !state.codigoDigitando) {
-                state.codigoDigitando = false;
+            // Ajuste para garantir que, se for para 'parear' e 'codigoDigitando' já estiver true, ele não seja resetado.
+            // A lógica é: se a nova etapa NÃO É 'parear' OU (se a nova etapa É 'parear' E 'codigoDigitando' É false)
+            if (newStep !== 'parear' || (newStep === 'parear' && state.codigoDigitando === false)) {
+                 console.log('Resetando state.codigoDigitando para false.');
+                 state.codigoDigitando = false;
             }
+            console.log('state.codigoDigitando DEPOIS do ajuste em changeStep:', state.codigoDigitando);
             renderApp();
         }
 
         // Carrega dados do usuário e do parceiro se pareado
         async function loadUserDataAndNavigate(uid, email) {
+            console.log('loadUserDataAndNavigate chamada para UID:', uid);
             try {
+                // Certifique-se que o UID não é nulo/indefinido antes de fazer a chamada ao Firestore
+                if (!uid) {
+                    console.error('UID do usuário é nulo ou indefinido em loadUserDataAndNavigate. Abortando carregamento.');
+                    state.etapa = 'landing';
+                    renderApp();
+                    return;
+                }
+
                 const userDoc = await db.collection('usuarios').doc(uid).get();
                 if (userDoc.exists) {
                     state.usuario = { uid: uid, email: email, ...userDoc.data() };
@@ -1187,6 +1247,7 @@
                     // Se pareado, preenche as informações do parceiro
                     if (state.pareado && state.usuario.pareadoCom) {
                         state.parceiroCodigo = state.usuario.pareadoCom; // Telefone do parceiro
+                        console.log('Usuário pareado com telefone:', state.parceiroCodigo);
                         const parceiroQuery = await db.collection('usuarios')
                             .where('telefone', '==', state.parceiroCodigo)
                             .limit(1)
@@ -1195,6 +1256,7 @@
                             const parceiroData = parceiroQuery.docs[0].data();
                             state.parceiroNome = parceiroData.nome;
                             state.parceiroTelefone = '55' + parceiroData.telefone.replace(/\D/g, ''); // Garante formato para WhatsApp
+                            console.log('Dados do parceiro carregados:', state.parceiroNome, state.parceiroTelefone);
                         } else {
                             // Se pareado mas o parceiro não é encontrado, algo está errado, desfaz o pareamento localmente
                             console.warn('Parceiro pareado não encontrado no Firestore. Desfazendo pareamento localmente.');
@@ -1206,6 +1268,7 @@
                         }
                     } else {
                         // Limpa info do parceiro se não estiver pareado
+                        console.log('Usuário não está pareado ou pareamento pendente.');
                         state.parceiroCodigo = null;
                         state.parceiroTelefone = null;
                         state.parceiroNome = null;
@@ -1217,6 +1280,8 @@
                         .where('status', '==', 'pending')
                         .limit(1)
                         .get();
+                    console.log('Verificando solicitações pendentes para receiverUid:', uid, 'Resultado:', pendingRequestQuery.empty ? 'Nenhuma' : 'Encontrada');
+
 
                     if (!pendingRequestQuery.empty) {
                         const requestDoc = pendingRequestQuery.docs[0];
@@ -1225,24 +1290,28 @@
                             ...requestDoc.data()
                         };
                         state.etapa = 'parear'; // Redireciona para a tela de pareamento para exibir a solicitação
+                        console.log('Solicitação de pareamento RECEBIDA encontrada. Redirecionando para parear.');
                     } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
                          // Se o usuário tem um pareamento pendente (ele enviou a solicitação)
                         state.etapa = 'parear';
                         state.pendingPairingRequest = null; // Garante que não há solicitação recebida ativa no estado
+                        console.log('Solicitação de pareamento ENVIADA pendente. Redirecionando para parear.');
                     }
                     else {
                         state.pendingPairingRequest = null; // Limpa qualquer solicitação pendente anterior
                         state.etapa = 'main'; // Se não há solicitações pendentes e não está pendente, vai para main
+                        console.log('Nenhuma solicitação pendente. Redirecionando para main.');
                     }
 
                 } else {
                     // Usuário logado via Auth, mas sem dados no Firestore (deveria ir para cadastro completo)
+                    console.log('Usuário logado via Auth, mas sem documento de perfil no Firestore.');
                     state.usuario = { uid: uid, email: email };
                     state.etapa = 'register';
                     alert('Por favor, complete seu cadastro para acessar todas as funcionalidades.');
                 }
             } catch (error) {
-                console.error('Erro ao carregar dados do usuário:', error);
+                console.error('Erro ao carregar dados do usuário em loadUserDataAndNavigate:', error);
                 alert('Erro ao carregar seu perfil. Por favor, tente novamente.');
                 state.etapa = 'landing'; // Volta para o início em caso de erro
             } finally {
@@ -1256,10 +1325,10 @@
             // Monitora o estado de autenticação do Firebase ao carregar a página
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
-                    console.log('Usuário já logado:', user.email, user.uid);
+                    console.log('init: Usuário já logado no Auth:', user.email, user.uid);
                     await loadUserDataAndNavigate(user.uid, user.email);
                 } else {
-                    console.log('Nenhum usuário logado. Redirecionando para landing page.');
+                    console.log('init: Nenhum usuário logado no Auth. Redirecionando para landing page.');
                     // Limpa todo o estado do usuário ao deslogar
                     state.usuario = null;
                     state.pareado = false;
