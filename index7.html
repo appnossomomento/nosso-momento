@@ -358,10 +358,6 @@
         }
 
         async function acceptPairingRequest(requestId, senderUid, senderPhone) {
-            console.log('--- Iniciando acceptPairingRequest ---');
-            console.log('requestId:', requestId, 'senderUid:', senderUid, 'senderPhone:', senderPhone);
-            console.log('state.usuario.uid (receiverUid):', state.usuario.uid, 'state.usuario.telefone:', state.usuario.telefone);
-
             try {
                 // Verificar se o usuário já não está pareado antes de aceitar
                 if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
@@ -370,48 +366,35 @@
                 }
 
                 // 1. Atualizar status da solicitação para 'accepted'
-                console.log('Tentando atualizar status da solicitação de pareamento...');
                 await db.collection('pairingRequests').doc(requestId).update({
                     status: 'accepted'
                 });
-                console.log('Status da solicitação de pareamento atualizado para accepted.');
 
                 // 2. Atualizar o usuário logado (receiver)
-                console.log('Tentando atualizar pareadoCom do receiver (usuário logado)...');
                 await db.collection('usuarios').doc(state.usuario.uid).update({ 
                     pareadoCom: senderPhone
                 });
-                console.log('pareadoCom do receiver atualizado.');
 
                 // 3. Atualizar o remetente da solicitação
-                console.log('Tentando atualizar pareadoCom do sender...');
                 await db.collection('usuarios').doc(senderUid).update({ 
                     pareadoCom: state.usuario.telefone
                 });
-                console.log('pareadoCom do sender atualizado.');
 
                 // 4. Criar/atualizar a collection "pareamentos"
                 const telefones = [state.usuario.telefone, senderPhone].sort();
                 const idPareamento = telefones.join('_'); 
                 
                 // Buscar UIDs dos dois usuários para a coleção 'pareamentos'
-                let uid1 = state.usuario.uid; // UID do receptor
-                let uid2 = senderUid; // UID do remetente
+                let uid1 = state.usuario.uid;
+                let uid2 = senderUid;
 
-                const pareamentoData = {
+                await db.collection('pareamentos').doc(idPareamento).set({
                     pessoa1: telefones[0],
                     pessoa2: telefones[1],
                     pessoa1Uid: telefones[0] === state.usuario.telefone ? uid1 : uid2,
                     pessoa2Uid: telefones[1] === state.usuario.telefone ? uid1 : uid2,
                     dataPareamento: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                console.log('Tentando criar/atualizar documento na coleção pareamentos...');
-                console.log('ID do documento pareamentos:', idPareamento);
-                console.log('Dados do documento pareamentos:', pareamentoData);
-
-                await db.collection('pareamentos').doc(idPareamento).set(pareamentoData, { merge: true }); 
-                console.log('Documento na coleção pareamentos criado/atualizado com sucesso!');
-
+                }, { merge: true }); 
 
                 alert('Pareamento aceito com sucesso! Vocês estão agora pareados.');
 
@@ -437,14 +420,8 @@
 
             } catch (error) {
                 console.error('Erro ao aceitar pareamento:', error);
-                // Captura e exibe a mensagem de erro específica do Firebase
-                if (error.code) {
-                    alert(`Erro Firebase: ${error.code} - ${error.message}`);
-                } else {
-                    alert('Erro ao aceitar pareamento. Tente novamente.');
-                }
+                alert('Erro ao aceitar pareamento. Tente novamente.');
             }
-            console.log('--- Fim acceptPairingRequest ---');
         }
 
         async function rejectPairingRequest(requestId) {
@@ -536,7 +513,7 @@
                         </div>
 
                         <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                            <button onclick="state.codigoDigitando = true; renderApp();" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded text-white font-semibold transition">
+                            <button onclick="state.codigoDigitando = true; console.log('Clicou Digitar Código. state.codigoDigitando AGORA:', state.codigoDigitando); renderApp();" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded text-white font-semibold transition">
                                 Digitar Código
                             </button>
                             <button onclick="handleContinuarSemParear()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">
