@@ -122,6 +122,124 @@
     <div id="app">
         </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .product-card {
+            transition: all 0.3s ease-out;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 53, 71, 0.2);
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .product-img {
+            height: 160px;
+            object-fit: cover;
+            width: 100%;
+        }
+        .product-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 32px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .carrinho-item {
+            animation: fadeIn 0.5s ease-out;
+            border-radius: 12px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-red {
+            background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 20px rgba(255, 53, 71, 0.3);
+            padding: 14px 24px;
+            border: none;
+            outline: none;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        .btn-red:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(255, 53, 71, 0.4);
+            background: linear-gradient(135deg, #FF4252 0%, #FF7B8A 100%);
+        }
+        .bg-overlay {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        /* Modern button styles */
+        .btn-modern {
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        /* Input styles */
+        input {
+            border-radius: 12px !important;
+            padding: 14px 16px !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            background: rgba(255,255,255,0.05) !important;
+            color: white !important;
+        }
+        input::placeholder {
+            color: rgba(255,255,255,0.5) !important;
+        }
+        /* Card styles */
+        .card {
+            border-radius: 20px;
+            background: rgba(30,30,30,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        /* Footer custom style */
+        .app-footer {
+            background: linear-gradient(90deg, #FF3547 0%, #FF6B7C 100%);
+            color: white; /* Texto branco */
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4); /* Sombra para contraste */
+            padding: 16px;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body class="bg-black text-white font-sans">
+    <div id="app">
+        </div>
+
 <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAppTP2vJuLofr9ueWsK3djbwSeEm5qb2c",
