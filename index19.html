@@ -212,7 +212,7 @@
     </style>
 </head>
 <body class="bg-black text-white font-sans">
-    <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800" style="display: none;">
+    <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
             <div class="flex items-center gap-1">
                 <div class="relative">
@@ -836,7 +836,7 @@
                                                     <i class="fas fa-fire"></i> ${momentosComCustoAjustado.find(m => m.nome === momento.nome).custoFoguinhos} Foguinhos
                                                 </span>
                                             </div>
-                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, '&quot;')})" 
+                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momentosComCustoAjustado.find(m => m.nome === momento.nome)).replace(/"/g, '&quot;')})" 
                                                 class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
                                                 Resgatar
                                             </button>
@@ -1109,7 +1109,7 @@
                 return;
             }
 
-            const custo = momento.custoFoguinhos; // Usar a propriedade custoFoguinhos
+            const custo = momento.intensidade;
             if ((state.usuario.foguinhos || 0) < custo) {
                 alert(`Você precisa de ${custo} foguinhos para resgatar este momento. Você tem apenas ${state.usuario.foguinhos || 0} 🔥.`);
                 return;
@@ -1146,7 +1146,7 @@
 
         async function removerDoCarrinho(index) {
             const momentoRemovido = state.carrinho[index];
-            const custo = momentoRemovido.custoFoguinhos; // Usar a propriedade custoFoguinhos
+            const custo = momentoRemovido.intensidade;
 
             try {
                 // Devolve os foguinhos ao usuário no Firestore
@@ -1533,7 +1533,6 @@
             init(); // Inicia o aplicativo
         };
     </script>
-
 <nav class="bottom-nav-bar" id="bottom-nav-bar">
     <button class="bottom-nav-item" onclick="changeStep('main');">
         <i class="fas fa-home"></i>
