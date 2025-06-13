@@ -815,7 +815,7 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-                            ${(state.filtro ? momentos.filter(m => m.categoria === state.filtro) : momentos).map(momento => `
+                            ${(state.filtro ? momentosAjustados.filter(m => m.categoria === state.filtro) : momentosAjustados).map(momento => `
                                 <div class="product-card group">
                                     <div class="relative overflow-hidden">
                                         <img src="${momento.img}" alt="${momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
@@ -830,7 +830,7 @@
                                                     <span class="text-pink-400">${'🔥'.repeat(momento.intensidade)}</span>
                                                 </div>
                                                 <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
-                                                    <i class="fas fa-fire"></i> ${momentosAjustados.find(m => m.nome === momento.nome).intensidade} Foguinhos
+                                                    <i class="fas fa-fire"></i> ${momento.intensidade} Foguinhos
                                                 </span>
                                             </div>
                                             <button onclick="adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, '&quot;')})" 
@@ -1329,15 +1329,16 @@
 
         // Nova função para atualizar elementos da UI fixa (header e footer)
         function updateFixedUI() {
-            // userNameDisplay e os badge elements são inicializados no window.onload
-            // Então, precisamos verificar se eles já existem antes de tentar atualizar.
-            // Isso previne erros se a função for chamada antes de window.onload.
-            if (userNameDisplay) { 
+            // Atualizar nome do usuário na header
+            if (userNameDisplay) { // Verifica se o elemento existe
                 userNameDisplay.textContent = state.usuario && state.usuario.nome ? `Olá, ${state.usuario.nome}!` : '';
             }
 
+            // Atualizar badges no footer
+            // Certifique-se que os elementos existem antes de tentar atualizar
+            const currentFoguinhos = state.usuario ? state.usuario.foguinhos : 0;
             if (foguinhosBadge) {
-                foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
+                foguinhosBadge.textContent = currentFoguinhos;
             }
             if (carrinhoBadge) {
                 carrinhoBadge.textContent = state.carrinho.length;
@@ -1485,7 +1486,6 @@
         // Start the app
         window.onload = function() {
             // Atribui os elementos globais após o DOM estar carregado
-            // É importante que esses elementos existam no HTML no momento que o script roda.
             userNameDisplay = document.getElementById('userNameDisplay');
             foguinhosBadge = document.getElementById('foguinhosBadge');
             carrinhoBadge = document.getElementById('carrinhoBadge');
