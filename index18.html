@@ -596,6 +596,14 @@
                 alert('Solicitação de pareamento rejeitada.');
                 state.pendingPairingRequest = null; // Limpa a solicitação pendente
                 renderApp(); // Re-renderiza para limpar a notificação
+            } @index:566:17
+            
+            ```
+```html
+<script>
+    // ... Código JavaScript restante (cortado para brevidade)
+    // Continuação do trecho JavaScript que foi cortado na mensagem anterior
+
             } catch (error) {
                 console.error('Erro ao rejeitar pareamento:', error);
                 alert('Erro ao rejeitar pareamento. Tente novamente.');
@@ -821,11 +829,11 @@
                             ${(state.filtro ? momentos.filter(m => m.categoria === state.filtro) : momentos).map(momento => `
                                 <div class="product-card group">
                                     <div class="relative overflow-hidden">
-                                        <img src="${momento.img}" alt="${momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
-                                        <span class="product-badge">${momento.emoji} ${momento.categoria}</span>
-                                    </div>
-                                    <div class="p-4">
-                                        <h3 class="font-medium">${momento.nome}</h3>
+                                        <img src="<span class="math-inline">\{momento\.img\}" alt\="</span>{momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
+                                        <span class="product-badge">${momento.emoji} <span class="math-inline">\{momento\.categoria\}</span\>
+</div\>
+<div class\="p\-4"\>
+<h3 class\="font\-medium"\></span>{momento.nome}</h3>
                                         <div class="flex justify-between items-center mt-4">
                                             <div class="flex flex-col">
                                                 <div class="flex items-center gap-1 mb-1">
@@ -833,10 +841,10 @@
                                                     <span class="text-pink-400">${'🔥'.repeat(momento.intensidade)}</span>
                                                 </div>
                                                 <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
-                                                    <i class="fas fa-fire"></i> ${momentosComCustoAjustado.find(m => m.nome === momento.nome).custoFoguinhos} Foguinhos
-                                                </span>
-                                            </div>
-                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momentosComCustoAjustado.find(m => m.nome === momento.nome)).replace(/"/g, '&quot;')})" 
+                                                    <i class="fas fa-fire"></i> <span class="math-inline">\{momentosComCustoAjustado\.find\(m \=\> m\.nome \=\=\= momento\.nome\)\.custoFoguinhos\} Foguinhos
+</span\>
+</div\>
+<button onclick\="adicionarAoCarrinho\(</span>{JSON.stringify(momentosComCustoAjustado.find(m => m.nome === momento.nome)).replace(/"/g, '&quot;')})" 
                                                 class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
                                                 Resgatar
                                             </button>
@@ -1363,6 +1371,7 @@
             bottomNavItems.forEach(item => {
                 item.classList.remove('active'); // Remove active de todos primeiro
                 // O botão Home foi removido, então verificamos apenas Parear e Carrinho para "active"
+                // O botão Home foi removido, então verificamos apenas Parear e Carrinho para "active"
                 if (item.querySelector('.fas.fa-heart') && state.etapa === 'parear') {
                     item.classList.add('active');
                 } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) { // Carrinho ativo quando a sidebar estiver aberta
@@ -1533,6 +1542,7 @@
             init(); // Inicia o aplicativo
         };
     </script>
+
 <nav class="bottom-nav-bar" id="bottom-nav-bar">
     <button class="bottom-nav-item" onclick="changeStep('main');">
         <i class="fas fa-home"></i>
