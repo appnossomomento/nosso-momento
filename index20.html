@@ -272,8 +272,7 @@
             showPartnerInfo: false,    // Mostra informações do parceiro
             // Nova propriedade para armazenar solicitações de pareamento recebidas
             pendingPairingRequest: null, // {id, senderUid, senderName, senderPhone}
-            showCartSidebar: false,     // Nova flag para controlar a visibilidade do carrinho
-            showFoguinhosPopup: false // Nova flag para controlar a visibilidade do pop-up de foguinhos
+            showCartSidebar: false     // Nova flag para controlar a visibilidade do carrinho
         };
 
         // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
@@ -657,29 +656,20 @@
             // Se houver uma solicitação pendente para o usuário logado (ele recebeu)
             if (state.pendingPairingRequest) {
                 content = `
-                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-                        <div class="card p-8 max-w-md w-full relative overflow-hidden">
-                            <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-                            <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-                            <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                                <i class="fas fa-heart mr-2"></i> Pareamento
-                            </h2>
-                            <div class="text-center mb-6">
-                                <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
-                                <div class="text-3xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">
-                                    ${state.pendingPairingRequest.senderName} (${state.pendingPairingRequest.senderPhone})
-                                </div>
-                                <p class="mt-4 text-sm text-gray-300">Deseja aceitar ou rejeitar?</p>
-                            </div>
-                            <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                                <button onclick="acceptPairingRequest('${state.pendingPairingRequest.id}', '${state.pendingPairingRequest.senderUid}', '${state.pendingPairingRequest.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">
-                                    Aceitar <i class="fas fa-check-circle ml-2"></i>
-                                </button>
-                                <button onclick="rejectPairingRequest('${state.pendingPairingRequest.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">
-                                    Rejeitar <i class="fas fa-times-circle ml-2"></i>
-                                </button>
-                            </div>
+                    <div class="text-center mb-6">
+                        <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
+                        <div class="text-3xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">
+                            ${state.pendingPairingRequest.senderName} (${state.pendingPairingRequest.senderPhone})
                         </div>
+                        <p class="mt-4 text-sm text-gray-300">Deseja aceitar ou rejeitar?</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+                        <button onclick="acceptPairingRequest('${state.pendingPairingRequest.id}', '${state.pendingPairingRequest.senderUid}', '${state.pendingPairingRequest.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">
+                            Aceitar <i class="fas fa-check-circle ml-2"></i>
+                        </button>
+                        <button onclick="rejectPairingRequest('${state.pendingPairingRequest.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">
+                            Rejeitar <i class="fas fa-times-circle ml-2"></i>
+                        </button>
                     </div>
                 `;
             }
@@ -687,116 +677,80 @@
             else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
                 const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
                 content = `
-                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-                        <div class="card p-8 max-w-md w-full relative overflow-hidden">
-                            <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-                            <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-                            <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                                <i class="fas fa-heart mr-2"></i> Pareamento
-                            </h2>
-                            <div class="text-center mb-6">
-                                <p class="mb-4">Sua solicitação de pareamento para ${pendingPhone} está pendente.</p>
-                                <p class="text-sm text-gray-300">Aguardando aceitação do seu parceiro(a)...</p>
-                            </div>
-                            <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                                <button onclick="changeStep('main')" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
-                                    Voltar para Principal
-                                </button>
-                                <button onclick="cancelPendingPairingRequest()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">
-                                    Cancelar Solicitação
-                                </button>
-                            </div>
-                        </div>
+                    <div class="text-center mb-6">
+                        <p class="mb-4">Sua solicitação de pareamento para ${pendingPhone} está pendente.</p>
+                        <p class="text-sm text-gray-300">Aguardando aceitação do seu parceiro(a)...</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+                        <button onclick="changeStep('main')" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
+                            Voltar para Principal
+                        </button>
+                        <button onclick="cancelPendingPairingRequest()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">
+                            Cancelar Solicitação
+                        </button>
                     </div>
                 `;
             }
             // Estado padrão de pareamento (onde se digita/compartilha o código)
             else {
                 content = `
-                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-                        <div class="card p-8 max-w-md w-full relative overflow-hidden">
-                            <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-                            <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-                            <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                                <i class="fas fa-heart mr-2"></i> Pareamento
-                            </h2>
-                            ${!state.codigoDigitando ? `
-                                <div class="text-center mb-6">
-                                    <p class="mb-4">Seu código de pareamento é:</p>
-                                    <div class="text-4xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">
-                                        ${codigoUsuario}
-                                    </div>
-                                    <p class="mt-4 text-sm text-gray-300">Compartilhe este código com seu parceiro(a)</p>
-                                </div>
-
-                                <div class="mb-6 text-center">
-                                    <p>OU</p>
-                                    <p class="mt-2">Digite o código do seu parceiro(a)</p>
-                                </div>
-
-                                <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                                    <button onclick="state.codigoDigitando = true; renderApp();" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded text-white font-semibold transition">
-                                        Digitar Código
-                                    </button>
-                                    <button onclick="handleContinuarSemParear()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">
-                                        Fazer Isso Depois
-                                    </button>
-                                </div>
-                            ` : `
-                                <div class="mb-6">
-                                    <label class="block mb-2">Digite o código do seu parceiro(a)</label>
-                                    <input id="codigoParceiro" type="text" class="w-full p-3 rounded text-white" placeholder="11999991111" maxlength="11" />
-                                </div>
-                                <div class="flex gap-4">
-                                    <button onclick="state.codigoDigitando = false; renderApp();" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white font-semibold transition">
-                                        Voltar
-                                    </button>
-                                    <button onclick="sendPairingRequest()" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">
-                                        Enviar Solicitação
-                                    </button>
-                                </div>
-                            `}
+                    ${!state.codigoDigitando ? `
+                        <div class="text-center mb-6">
+                            <p class="mb-4">Seu código de pareamento é:</p>
+                            <div class="text-4xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">
+                                ${codigoUsuario}
+                            </div>
+                            <p class="mt-4 text-sm text-gray-300">Compartilhe este código com seu parceiro(a)</p>
                         </div>
-                    </div>
+
+                        <div class="mb-6 text-center">
+                            <p>OU</p>
+                            <p class="mt-2">Digite o código do seu parceiro(a)</p>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+                            <button onclick="state.codigoDigitando = true; renderApp();" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded text-white font-semibold transition">
+                                Digitar Código
+                            </button>
+                            <button onclick="handleContinuarSemParear()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">
+                                Fazer Isso Depois
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="mb-6">
+                            <label class="block mb-2">Digite o código do seu parceiro(a)</label>
+                            <input id="codigoParceiro" type="text" class="w-full p-3 rounded text-white" placeholder="11999991111" maxlength="11" />
+                        </div>
+                        <div class="flex gap-4">
+                            <button onclick="state.codigoDigitando = false; renderApp();" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white font-semibold transition">
+                                Voltar
+                            </button>
+                            <button onclick="sendPairingRequest()" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">
+                                Enviar Solicitação
+                            </button>
+                        </div>
+                    `}
                 `;
             }
 
-            appContainer.innerHTML = content; /* Agora content já contém o wrapper div.min-h-screen */
-
-            if (!state.codigoUsuario) {
-                state.codigoUsuario = codigoUsuario;
-            }
-        }
-
-        // Nova função para renderizar o pop-up de Foguinhos
-        function renderFoguinhosPopupContent() {
             appContainer.innerHTML = `
                 <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
                     <div class="card p-8 max-w-md w-full relative overflow-hidden">
                         <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
                         <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
                         <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                            <i class="fas fa-fire mr-2"></i> Seus Foguinhos
+                            <i class="fas fa-heart mr-2"></i> Pareamento
                         </h2>
-                        <div class="text-center mb-6">
-                            <p class="mb-4 text-xl">Você tem:</p>
-                            <div class="relative inline-block">
-                                <i class="fas fa-fire text-6xl text-yellow-400 animate-pulse"></i>
-                                <span class="badge-notification badge-yellow text-2xl" style="top: 0px; right: -20px; min-width: 40px; height: 40px;">
-                                    ${state.usuario ? state.usuario.foguinhos : 0}
-                                </span>
-                            </div>
-                            <p class="mt-4 text-sm text-gray-300">Use-os para resgatar momentos!</p>
-                        </div>
-                        <div class="flex justify-center">
-                            <button onclick="toggleFoguinhosPopup();" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
-                                Voltar
-                            </button>
-                        </div>
+                        ${content}
                     </div>
                 </div>
             `;
+
+            if (!state.codigoUsuario) {
+                state.codigoUsuario = codigoUsuario;
+            }
         }
+
 
         function renderMain() {
             console.log('renderMain chamada.');
@@ -882,7 +836,7 @@
                                                     <i class="fas fa-fire"></i> ${momentosComCustoAjustado.find(m => m.nome === momento.nome).custoFoguinhos} Foguinhos
                                                 </span>
                                             </div>
-                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momentosComCustoAjustado.find(m => m.nome === momento.nome)).replace(/"/g, '&quot;')})" 
+                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, '&quot;')})" 
                                                 class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
                                                 Resgatar
                                             </button>
@@ -1335,7 +1289,7 @@
 
         // --- Função Central de Renderização (Gerencia as etapas) ---
         function renderApp() {
-            console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar, 'state.showFoguinhosPopup:', state.showFoguinhosPopup);
+            console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar);
             // Atualiza os elementos da header e footer que são fixos no DOM
             updateFixedUI();
             
@@ -1356,10 +1310,6 @@
                 case 'main':
                     renderMain();
                     break;
-                // Novo caso para o pop-up de Foguinhos
-                case 'foguinhosPopup':
-                    renderFoguinhosPopupContent();
-                    break;
                 default:
                     renderLandingPage(); // Fallback
             }
@@ -1370,7 +1320,6 @@
             console.log('changeStep chamada. Nova etapa:', newStep, 'state.codigoDigitando ANTES:', state.codigoDigitando);
             state.etapa = newStep;
             state.showCartSidebar = false; 
-            state.showFoguinhosPopup = false; // Garante que o pop-up de foguinhos fecha ao mudar de tela principal
             // Ajuste para garantir que, se for para 'parear' e 'codigoDigitando' já estiver true, ele não seja resetado.
             // A lógica é: se a nova etapa NÃO É 'parear' OU (se a nova etapa É 'parear' E 'codigoDigitando' É false)
             if (newStep !== 'parear' || (newStep === 'parear' && state.codigoDigitando === false)) {
@@ -1399,12 +1348,12 @@
 
             // Controla a visibilidade da barra de navegação inferior e da header
             if (bottomNavBar && mainHeader) { // Certifica-se que os elementos existem
-                if (state.etapa === 'main' || state.etapa === 'parear' || state.etapa === 'foguinhosPopup') { // Header e footer visíveis nas telas pós-login
+                if (state.etapa === 'main' || state.etapa === 'parear') { // Ou outras etapas onde o footer e header devem aparecer
                     bottomNavBar.style.display = 'flex';
-                    mainHeader.style.display = 'flex'; 
+                    mainHeader.style.display = 'flex'; // Header também fica visível
                 } else {
                     bottomNavBar.style.display = 'none';
-                    mainHeader.style.display = 'none'; 
+                    mainHeader.style.display = 'none'; // Header também fica oculta
                 }
             }
 
@@ -1413,32 +1362,18 @@
             const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item');
             bottomNavItems.forEach(item => {
                 item.classList.remove('active'); // Remove active de todos primeiro
-                if (item.querySelector('.fas.fa-home') && state.etapa === 'main') {
-                    item.classList.add('active');
-                } else if (item.querySelector('.fas.fa-heart') && state.etapa === 'parear') {
+                // O botão Home foi removido, então verificamos apenas Parear e Carrinho para "active"
+                if (item.querySelector('.fas.fa-heart') && state.etapa === 'parear') {
                     item.classList.add('active');
                 } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) { // Carrinho ativo quando a sidebar estiver aberta
                     item.classList.add('active');
-                } else if (item.querySelector('.fas.fa-fire') && state.etapa === 'foguinhosPopup') { // Foguinhos ativo quando o pop-up estiver aberto
+                } else if (item.querySelector('.fas.fa-home') && state.etapa === 'main') { // Adiciona o botão Home (agora presente) e sua lógica de active
                     item.classList.add('active');
                 }
+                // Foguinhos não têm estado "ativo" de navegação, é mais um display.
             });
         }
 
-        // Função para alternar a visibilidade do pop-up de Foguinhos
-        function toggleFoguinhosPopup() {
-            console.log('toggleFoguinhosPopup chamada. state.showFoguinhosPopup ANTES:', state.showFoguinhosPopup);
-            // Ao invés de usar showFoguinhosPopup para o display direto, vamos mudar a etapa para 'foguinhosPopup'
-            // Isso é porque o pop-up de foguinhos substitui a tela principal.
-            if (state.etapa === 'foguinhosPopup') {
-                state.etapa = 'main'; // Volta para a tela principal
-            } else {
-                state.etapa = 'foguinhosPopup'; // Vai para a tela do pop-up
-            }
-            state.showFoguinhosPopup = !state.showFoguinhosPopup; // Atualiza a flag para logs/referência
-            renderApp();
-            console.log('state.showFoguinhosPopup DEPOIS:', state.showFoguinhosPopup);
-        }
 
         // Carrega dados do usuário e do parceiro se pareado
         async function loadUserDataAndNavigate(uid, email) {
@@ -1557,7 +1492,6 @@
                     state.showPartnerInfo = false;
                     state.pendingPairingRequest = null;
                     state.showCartSidebar = false;
-                    state.showFoguinhosPopup = false;
                     renderApp();
                 }
             });
@@ -1595,13 +1529,12 @@
             window.desparearParceiro = desparearParceiro;
             window.toggleCartSidebar = toggleCartSidebar; 
             window.cancelPendingPairingRequest = cancelPendingPairingRequest; 
-            window.toggleFoguinhosPopup = toggleFoguinhosPopup; // Torna a nova função global
 
             init(); // Inicia o aplicativo
         };
     </script>
 
-<nav class="bottom-nav-bar" id="bottom-nav-bar" style="display: none;">
+<nav class="bottom-nav-bar" id="bottom-nav-bar">
     <button class="bottom-nav-item" onclick="changeStep('main');">
         <i class="fas fa-home"></i>
     </button>
@@ -1612,7 +1545,7 @@
         <i class="fas fa-shopping-cart"></i>
         <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
     </button>
-    <button class="bottom-nav-item" onclick="toggleFoguinhosPopup();"> 
+    <button class="bottom-nav-item" onclick="changeStep('main');"> 
         <i class="fas fa-fire"></i>
         <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
     </button>
