@@ -1498,7 +1498,7 @@
                     } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
                          // Se o usuário tem um pareamento pendente (ele enviou a solicitação)
                         state.etapa = 'parear';
-                        state.pendingRequestQuery = null; // Limpa qualquer solicitação pendente para o próximo load
+                        state.pendingPairingRequest = null; // Garante que não há solicitação recebida ativa no estado
                         console.log('Solicitação de pareamento ENVIADA pendente. Redirecionando para parear.');
                     }
                     else {
