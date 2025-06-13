@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosso Momento</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            padding-bottom: 80px; 
+            overflow-x: hidden; 
+        }
+        .product-card {
+            transition: all 0.3s ease-out;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 53, 71, 0.2);
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .product-img {
+            height: 160px;
+            object-fit: cover;
+            width: 100%;
+        }
+        .product-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 32px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .carrinho-item {
+            animation: fadeIn 0.5s ease-out;
+            border-radius: 12px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-red {
+            background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 20px rgba(255, 53, 71, 0.3);
+            padding: 14px 24px;
+            border: none;
+            outline: none;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        .btn-red:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(255, 53, 71, 0.4);
+            background: linear-gradient(135deg, #FF4252 0%, #FF7B8A 100%);
+        }
+        .bg-overlay {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .btn-modern {
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        input {
+            border-radius: 12px !important;
+            padding: 14px 16px !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            background: rgba(255,255,255,0.05) !important;
+            color: white !important;
+        }
+        input::placeholder {
+            color: rgba(255,255,255,0.5) !important;
+        }
+        .card {
+            border-radius: 20px;
+            background: rgba(30,30,30,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .bottom-nav-bar {
+            background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(0,0,0,0.95) 100%);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px; 
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100; 
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.4);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.6);
+            transition: color 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            height: 100%;
+            flex-grow: 1;
+            text-align: center;
+        }
+        .bottom-nav-item.active {
+            color: #FF6B7C;
+        }
+        .bottom-nav-item:hover {
+            color: #FF6B7C;
+        }
+        .bottom-nav-item i {
+            font-size: 20px;
+        }
+        .badge-notification {
+            position: absolute;
+            top: 5px; 
+            right: 5px; 
+            min-width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            pointer-events: none; 
+            transform: translate(50%, -50%);
+        }
+        .badge-yellow { background-color: #f59e0b; }
+        .badge-gray { background-color: #6b7280; }
+
+        body {
+            overflow-x: hidden;
+        }
+        @media (max-width: 640px) {
+            .header-content {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+                align-items: center;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .header-content > div:nth-child(2) {
+                display: flex;
+                gap: 0.5rem;
+            }
+            .header-content h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-black text-white font-sans">
+    <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800" style="display: none;">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
+            <div class="flex items-center gap-1">
+                <div class="relative">
+                    <div class="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-red-600 shadow-lg">
+                        <i class="fas fa-heart-beat text-white text-xs"></i>
+                    </div>
+                    <div class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
+                </div>
+                <h1 class="text-2xl font-bold">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 font-extrabold tracking-tight" style="text-shadow: 0 2px 4px rgba(255,53,71,0.3);">NOSSO</span>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-pink-500 font-extrabold tracking-tight" style="text-shadow: 0 2px 4px rgba(255,53,71,0.3);">MOMENTO</span>
+                </h1>
+                <div class="w-2 h-2 rounded-full bg-pink-500 opacity-70 animate-pulse ml-1"></div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userNameDisplay" class="text-gray-300 text-sm font-medium hidden sm:inline"></span>
+
+                <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
+                    <i class="fas fa-sign-out-alt text-xs"></i> <span class="hidden sm:inline">Sair</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="app">
+        </div>
+
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAppTP2vJuLofr9ueWsK3djbwSeEm5qb2c",
+      authDomain: "nosso-momento-app.firebaseapp.com",
+      projectId: "nosso-momento-app",
+      storageBucket: "nosso-momento-app.firebasestorage.app",
+      messagingSenderId: "503855316994",
+      appId: "1:503855316994:web:7d5ee171b44c4f8b86a71b",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    console.log("✅ Firebase: Initialized com sucesso!");
+    const db = firebase.firestore();
+    const auth = firebase.auth(); 
+  </script>
+
+    <script>
+        const state = {
+            usuario: null,
+            pareado: false,
+            etapa: 'landing',
+            carrinho: [],
+            codigoUsuario: null,
+            codigoDigitando: false,
+            parceiroCodigo: null,
+            parceiroTelefone: null,
+            parceiroNome: null,
+            showPartnerInfo: false,
+            pendingPairingRequest: null,
+            showCartSidebar: false,
+            showFoguinhosPopup: false,
+            showPartnerInfoPopup: false
+        };
+
+        let appContainer;
+        let userNameDisplay; 
+        let foguinhosBadge;
+        let carrinhoBadge;
+        let bottomNavBar;
+        let mainHeader;
+        let heartIcon; // <- Adicionado para referência direta ao ícone
+
+        function isSameDay(d1, d2) {
+            return d1.getFullYear() === d2.getFullYear() &&
+                   d1.getMonth() === d2.getMonth() &&
+                   d1.getDate() === d2.getDate();
+        }
+
+        // --- Funções de Renderização ---
+
+        function renderLandingPage() {
+            appContainer.innerHTML = `
+                <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                    <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                        <div class="text-center mb-10">
+                            <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">NOSSO MOMENTO</h2>
+                            <p class="text-gray-300 tracking-wider">Apimente a relação.<br>Deixe tudo mais gostoso!</p>
+                        </div>
+                        <div class="space-y-5">
+                            <button onclick="changeStep('signIn')" class="btn-red w-full py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3">
+                                <span class="text-lg">ENTRAR</span>
+                                <i class="fas fa-sign-in-alt"></i>
+                            </button>
+                            <button onclick="changeStep('register')" class="btn-red w-full py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: none;">
+                                <span class="text-lg">CADASTRO</span>
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSignIn() {
+            appContainer.innerHTML = `
+                <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                    <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                        <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
+                            <i class="fas fa-arrow-left mr-2"></i> Voltar
+                        </button>
+                        <div class="text-center mb-10">
+                            <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">ENTRAR</h2>
+                            <p class="text-gray-300 tracking-wider">Acesse sua conta para continuar</p>
+                        </div>
+                        <div class="space-y-5">
+                            <div>
+                                <input id="signInEmail" type="email" placeholder="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                            <div>
+                                <input id="signInPassword" type="password" placeholder="Senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                        </div>
+                        <button onclick="handleSignIn()" class="btn-red w-full mt-8 py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3">
+                            <span class="text-lg">LOGIN</span>
+                            <i class="fas fa-sign-in-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRegister() {
+            appContainer.innerHTML = `
+                <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                    <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                        <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
+                            <i class="fas fa-arrow-left mr-2"></i> Voltar
+                        </button>
+                        <div class="text-center mb-10">
+                            <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">CADASTRO</h2>
+                            <p class="text-gray-300 tracking-wider">Crie sua conta para começar a apimentar!</p>
+                        </div>
+                        <div class="space-y-5">
+                            <div>
+                                <input id="registerNome" placeholder="Seu nome" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                            <div>
+                                <input id="registerEmail" type="email" placeholder="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                            <div>
+                                <input id="registerTelefone" type="tel" placeholder="Telefone (apenas números, ex: 11999991111)" pattern="[0-9]{11}" required class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                            <div>
+                                <input id="registerSenha" type="password" placeholder="Crie uma senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                            <div>
+                                <select id="registerSexo" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300">
+                                    <option value="" disabled selected>Selecione seu sexo</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Feminino">Feminino</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="handleRegister()" class="btn-red w-full mt-8 py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3">
+                            <span class="text-lg">CADASTRAR</span>
+                            <i class="fas fa-arrow-right-long"></i>
+                        </button>
+                        <p class="text-center mt-6 text-gray-400 text-sm">
+                            Ao continuar, você concorda com nossos <a href="#" class="text-pink-400 hover:underline">Termos</a> e <a href="#" class="text-pink-400 hover:underline">Política de Privacidade</a>
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPareamento() {
+            const codigoUsuario = state.usuario.telefone.replace(/\D/g, '');
+            let content = '';
+            
+            // CORREÇÃO: O IF aqui estava checando por `state.pendingRequestQuery`, que não existe. Corrigido para `state.pendingRequest`.
+            if (state.pendingRequest) {
+                content = `
+                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                        <div class="card p-8 max-w-md w-full relative overflow-hidden">
+                            <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
+                                <i class="fas fa-heart mr-2"></i> Solicitação Recebida
+                            </h2>
+                            <div class="text-center mb-6">
+                                <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
+                                <div class="text-2xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">
+                                    ${state.pendingRequest.senderName}
+                                </div>
+                                <p class="mt-2 text-sm text-gray-400">${state.pendingRequest.senderPhone}</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+                                <button onclick="acceptPairingRequest('${state.pendingRequest.id}', '${state.pendingRequest.senderUid}', '${state.pendingRequest.senderPhone}')" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg text-white font-semibold transition flex-1">
+                                    Aceitar <i class="fas fa-check-circle ml-2"></i>
+                                </button>
+                                <button onclick="rejectPairingRequest('${state.pendingRequest.id}')" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg text-white font-semibold transition flex-1">
+                                    Rejeitar <i class="fas fa-times-circle ml-2"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
+                const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
+                content = `
+                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                        <div class="card p-8 max-w-md w-full text-center">
+                            <h2 class="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+                                <i class="fas fa-hourglass-half mr-2"></i> Solicitação Pendente
+                            </h2>
+                            <p class="mb-4 text-lg">Sua solicitação para <span class="font-bold">${pendingPhone}</span> foi enviada.</p>
+                            <p class="text-gray-300">Aguardando aceitação do seu parceiro(a)...</p>
+                            <div class="mt-8 flex flex-col gap-4">
+                                 <button onclick="cancelPendingPairingRequest()" class="w-full bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg text-white font-semibold transition">
+                                    Cancelar Solicitação
+                                </button>
+                                <button onclick="changeStep('main')" class="w-full bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg text-white font-semibold transition">
+                                    Voltar
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            } else {
+                content = `
+                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                        <div class="card p-8 max-w-md w-full relative overflow-hidden">
+                            <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
+                                <i class="fas fa-link mr-2"></i> Conecte-se
+                            </h2>
+                            ${!state.codigoDigitando ? `
+                                <div class="text-center mb-6">
+                                    <p class="mb-2">Seu código de pareamento é:</p>
+                                    <div class="text-4xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block tracking-widest">
+                                        ${codigoUsuario}
+                                    </div>
+                                    <p class="mt-4 text-sm text-gray-300">Peça para seu parceiro(a) digitar este código.</p>
+                                </div>
+                                <div class="my-8 text-center text-gray-400">ou</div>
+                                <div class="flex flex-col gap-4">
+                                    <button onclick="state.codigoDigitando = true; renderApp();" class="w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg text-white font-semibold transition">
+                                        Digitar o Código do Parceiro(a)
+                                    </button>
+                                    <button onclick="handleContinuarSemParear()" class="w-full bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg text-white font-semibold transition">
+                                        Fazer Isso Depois
+                                    </button>
+                                </div>
+                            ` : `
+                                <div class="mb-6">
+                                    <label class="block mb-2 text-gray-300">Digite o código do seu parceiro(a)</label>
+                                    <input id="codigoParceiro" type="text" class="w-full p-3 rounded text-white text-center text-2xl tracking-widest" placeholder="11999991111" maxlength="11" />
+                                </div>
+                                <div class="flex flex-col gap-4 mt-8">
+                                     <button onclick="sendPairingRequest()" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg text-white font-semibold transition flex-1">
+                                        Enviar Solicitação
+                                    </button>
+                                    <button onclick="state.codigoDigitando = false; renderApp();" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-white font-semibold transition">
+                                        Voltar
+                                    </button>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }
+            appContainer.innerHTML = content;
+        }
+
+        function renderMain() {
+            // ... (A função renderMain continua a mesma, sem alterações)
+        }
+
+        // --- Funções que estavam faltando (CORREÇÃO DA TELA PRETA) ---
+        function toggleFoguinhosPopup() {
+            if (state.etapa === 'foguinhosPopup') {
+                state.etapa = 'main';
+            } else {
+                state.etapa = 'foguinhosPopup';
+            }
+            renderApp();
+        }
+
+        function togglePartnerInfoPopup() {
+            // Esta função pode ser expandida para mostrar um pop-up com informações do parceiro
+            // Por enquanto, ela apenas redireciona para a tela de pareamento, que já mostra o status
+            changeStep('parear');
+        }
+
+        function renderFoguinhosPopupContent() {
+            // Um pop-up simples para mostrar os foguinhos e as opções
+            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+            const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
+
+            appContainer.innerHTML += `
+                <div class="fixed inset-0 bg-black/80 flex justify-center items-center z-50" onclick="toggleFoguinhosPopup()">
+                    <div class="card p-6 max-w-sm w-11/12" onclick="event.stopPropagation()">
+                        <div class="text-center">
+                            <h2 class="text-2xl font-bold mb-2"><i class="fas fa-fire text-yellow-400"></i> Foguinhos</h2>
+                            <p class="text-gray-300 mb-6">Sua moeda para resgatar momentos.</p>
+                            <p class="text-6xl font-bold text-yellow-400 my-4">${state.usuario.foguinhos || 0}</p>
+                        </div>
+                        
+                        <div class="mt-6 pt-6 border-t border-gray-700">
+                             <h3 class="font-semibold text-center text-lg mb-4">Ganhe mais foguinhos!</h3>
+                             <button onclick="handleDailyCheckIn()" 
+                                     class="w-full text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-3
+                                     ${canCheckIn ? 'bg-pink-600 hover:bg-pink-700' : 'bg-gray-600 cursor-not-allowed opacity-60'}"
+                                     ${!canCheckIn ? 'disabled' : ''}>
+                                 <i class="fas fa-gift"></i>
+                                 <span>${canCheckIn ? 'Presentear Parceiro(a) (+1🔥)' : 'Já presenteou hoje'}</span>
+                             </button>
+                             <p class="text-xs text-gray-400 text-center mt-2">Você pode presentear seu/sua parceiro(a) com 1 foguinho uma vez por dia.</p>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+        }
+
+
+        // --- Função Central de Renderização ---
+        function renderApp() {
+            console.log('renderApp chamada. Etapa atual:', state.etapa);
+            updateFixedUI();
+            
+            const mainContentContainer = document.getElementById('app');
+            mainContentContainer.innerHTML = ''; // Limpa o conteúdo principal antes de renderizar a nova tela
+
+            switch (state.etapa) {
+                case 'landing':
+                    renderLandingPage();
+                    break;
+                case 'signIn':
+                    renderSignIn();
+                    break;
+                case 'register':
+                    renderRegister();
+                    break;
+                case 'parear':
+                    renderPareamento();
+                    break;
+                case 'main':
+                    renderMain(); // A função renderMain continua a mesma
+                    break;
+                case 'foguinhosPopup':
+                    renderMain(); // Renderiza a tela principal por baixo
+                    renderFoguinhosPopupContent(); // E o pop-up por cima
+                    break;
+                default:
+                    renderLandingPage();
+            }
+        }
+        
+        function changeStep(newStep) {
+            state.etapa = newStep;
+            state.showCartSidebar = false;
+            state.showFoguinhosPopup = false;
+            state.showPartnerInfoPopup = false;
+            state.codigoDigitando = false;
+            renderApp();
+        }
+
+        function updateFixedUI() {
+            if (!mainHeader || !bottomNavBar || !heartIcon) return; // Garante que os elementos existam
+
+            // Mostra/esconde header e footer
+            if (['main', 'parear', 'foguinhosPopup'].includes(state.etapa)) {
+                bottomNavBar.style.display = 'flex';
+                mainHeader.style.display = 'flex'; 
+            } else {
+                bottomNavBar.style.display = 'none';
+                mainHeader.style.display = 'none'; 
+            }
+
+            // Atualiza nome de usuário e badges
+            userNameDisplay.textContent = state.usuario ? `Olá, ${state.usuario.nome}!` : '';
+            foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos || 0 : 0;
+            carrinhoBadge.textContent = state.carrinho.length;
+
+            // --- LÓGICA DE COR DO CORAÇÃO ---
+            heartIcon.classList.remove('text-green-400', 'text-yellow-400', 'text-gray-400'); // Limpa cores antigas
+            
+            if (state.pareado) {
+                heartIcon.classList.add('text-green-400'); // Verde se pareado
+            } else if (state.usuario && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
+                heartIcon.classList.add('text-yellow-400'); // Amarelo se pendente
+            } else {
+                heartIcon.classList.add('text-gray-400'); // Cinza como padrão
+            }
+
+            // Atualiza estado 'active' dos botões (cor de destaque)
+            const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item');
+            bottomNavItems.forEach(item => {
+                item.classList.remove('active');
+                const icon = item.querySelector('i');
+                if (icon) {
+                    if (icon.classList.contains('fa-home') && state.etapa === 'main') item.classList.add('active');
+                    if (icon.classList.contains('fa-heart') && state.etapa === 'parear') item.classList.add('active');
+                    if (icon.classList.contains('fa-shopping-cart') && state.showCartSidebar) item.classList.add('active');
+                    if (icon.classList.contains('fa-fire') && state.etapa === 'foguinhosPopup') item.classList.add('active');
+                }
+            });
+        }
+
+
+        // --- Funções de Manipulação e Lógica (a maioria permanece a mesma) ---
+        // handleSignIn, handleRegister, handleLogout, sendPairingRequest, etc.
+        // ... (todo o resto do seu JavaScript lógico vai aqui, sem alterações)...
+        async function handleSignIn() {
+            const email = document.getElementById('signInEmail').value;
+            const password = document.getElementById('signInPassword').value;
+
+            if (!email || !password) {
+                alert('Por favor, preencha o email e a senha.');
+                return;
+            }
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                await loadUserDataAndNavigate(user.uid, user.email);
+
+            } catch (error) {
+                console.error('Erro no login:', error.code, error.message);
+                let errorMessage = 'Erro ao fazer login. Verifique seu email e senha.';
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                    errorMessage = 'Email ou senha incorretos.';
+                }
+                alert(errorMessage);
+            }
+        }
+        // ... e assim por diante para todas as suas outras funções. Elas não precisam de alteração para esta correção.
+
+
+        // --- Inicialização ---
+        function init() {
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    await loadUserDataAndNavigate(user.uid, user.email);
+                } else {
+                    state.usuario = null;
+                    state.pareado = false;
+                    state.etapa = 'landing';
+                    state.carrinho = [];
+                    // ... etc, resetar todo o estado
+                    renderApp();
+                }
+            });
+        }
+
+        window.onload = function() {
+            appContainer = document.getElementById('app'); 
+            userNameDisplay = document.getElementById('userNameDisplay');
+            foguinhosBadge = document.getElementById('foguinhosBadge');
+            carrinhoBadge = document.getElementById('carrinhoBadge');
+            bottomNavBar = document.getElementById('bottom-nav-bar'); 
+            mainHeader = document.getElementById('mainHeader');
+            heartIcon = document.getElementById('heartIcon'); // Atribui o ícone do coração
+
+            // Funções globais para onclick
+            window.isSameDay = isSameDay; 
+            window.changeStep = changeStep; 
+            window.handleSignIn = handleSignIn; 
+            window.handleRegister = handleRegister; 
+            window.handleLogout = handleLogout; 
+            window.sendPairingRequest = sendPairingRequest; 
+            window.acceptPairingRequest = acceptPairingRequest; 
+            window.rejectPairingRequest = rejectPairingRequest; 
+            window.handleDailyCheckIn = handleDailyCheckIn;
+            window.handleContinuarSemParear = handleContinuarSemParear;
+            window.filtrarMomentos = filtrarMomentos;
+            window.adicionarAoCarrinho = adicionarAoCarrinho;
+            window.removerDoCarrinho = removerDoCarrinho;
+            window.finalizarPedido = finalizarPedido;
+            window.desparearParceiro = desparearParceiro;
+            window.toggleCartSidebar = toggleCartSidebar; 
+            window.cancelPendingPairingRequest = cancelPendingPairingRequest; 
+            window.toggleFoguinhosPopup = toggleFoguinhosPopup;
+            window.togglePartnerInfoPopup = togglePartnerInfoPopup;
+
+            init();
+        };
+    </script>
+    
+    <nav class="bottom-nav-bar" id="bottom-nav-bar" style="display: none;">
+        <button class="bottom-nav-item" onclick="changeStep('main');">
+            <i class="fas fa-home"></i>
+        </button>
+        <button class="bottom-nav-item" onclick="togglePartnerInfoPopup()">
+            <i id="heartIcon" class="fas fa-heart text-gray-400"></i> </button>
+        <button class="bottom-nav-item relative" onclick="toggleCartSidebar();">
+            <i class="fas fa-shopping-cart"></i>
+            <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
+        </button>
+        <button class="bottom-nav-item" onclick="toggleFoguinhosPopup();"> 
+            <i class="fas fa-fire"></i>
+            <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
+        </button>
+    </nav>
+
+</body>
+</html>
