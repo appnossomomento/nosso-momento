@@ -109,7 +109,7 @@
             border: 1px solid rgba(255,255,255,0.05);
         }
         /* Footer custom style */
-        /* REMOVIDO: .app-footer style is no longer needed for the fixed footer structure */
+        /* REMOVED: .app-footer style is no longer needed for the fixed footer structure */
         /*
         .app-footer {
             background: linear-gradient(90deg, #FF3547 0%, #FF6B7C 100%);
@@ -273,8 +273,7 @@
             // Nova propriedade para armazenar solicitações de pareamento recebidas
             pendingPairingRequest: null, // {id, senderUid, senderName, senderPhone}
             showCartSidebar: false,     // Nova flag para controlar a visibilidade do carrinho
-            showFoguinhosPopup: false, // Nova flag para controlar a visibilidade do pop-up de foguinhos
-            showPartnerInfoPopup: false // Nova flag para o pop-up de informações do parceiro
+            showFoguinhosPopup: false // Nova flag para controlar a visibilidade do pop-up de foguinhos
         };
 
         // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
@@ -769,6 +768,73 @@
             }
         }
 
+        // Nova função para renderizar o pop-up de Foguinhos
+        function renderFoguinhosPopupContent() {
+            appContainer.innerHTML = `
+                <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                    <div class="card p-8 max-w-md w-full relative overflow-hidden">
+                        <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
+                        <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
+                        <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
+                            <i class="fas fa-fire mr-2"></i> Seus Foguinhos
+                        </h2>
+                        <div class="text-center mb-6">
+                            <p class="mb-4 text-xl">Você tem:</p>
+                            <div class="relative inline-block">
+                                <i class="fas fa-fire text-6xl text-yellow-400 animate-pulse"></i>
+                                <span class="badge-notification badge-yellow text-2xl" style="top: 0px; right: -20px; min-width: 40px; height: 40px;">
+                                    ${state.usuario ? state.usuario.foguinhos : 0}
+                                </span>
+                            </div>
+                            <p class="mt-4 text-sm text-gray-300">Use-os para resgatar momentos!</p>
+                        </div>
+                        <div class="flex justify-center">
+                            <button onclick="toggleFoguinhosPopup();" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
+                                Voltar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
+        function renderPartnerInfoPopup() {
+            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+            const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
+
+            appContainer.innerHTML = `
+                <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                    <div class="card p-8 max-w-md w-full relative overflow-hidden">
+                        <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
+                        <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
+                        <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-500">
+                            <i class="fas fa-user-heart mr-2"></i> Seu Parceiro
+                        </h2>
+                        <div class="text-center mb-6">
+                            <p class="mb-2 text-xl">Nome: <span class="font-bold text-green-400">${state.parceiroNome || 'N/A'}</span></p>
+                            <p class="mb-4 text-md text-gray-300">Telefone: ${state.parceiroCodigo || 'N/A'}</p>
+                        </div>
+                        <div class="space-y-4">
+                            <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''}
+                                class="w-full text-sm px-6 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2
+                                ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}">
+                                <i class="fas fa-gift text-xs"></i> Presentear 🔥
+                            </button>
+
+                            <button onclick="desparearParceiro()" class="w-full text-sm bg-red-800 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition">
+                                <i class="fas fa-unlink text-xs"></i> Desfazer Pareamento
+                            </button>
+
+                            <button onclick="togglePartnerInfoPopup();" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition w-full">
+                                Voltar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
 
         function renderMain() {
             console.log('renderMain chamada.');
@@ -854,7 +920,7 @@
                                                     <i class="fas fa-fire"></i> ${momentosComCustoAjustado.find(item => item.nome === momento.nome).custoFoguinhos} Foguinhos
                                                 </span>
                                             </div>
-                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, '&quot;')})" 
+                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momentosComCustoAjustado.find(item => item.nome === momento.nome)).replace(/"/g, '&quot;')})" 
                                                 class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
                                                 Resgatar
                                             </button>
@@ -1033,7 +1099,6 @@
                 state.pendingPairingRequest = null;
                 state.showCartSidebar = false; 
                 state.showFoguinhosPopup = false; // Resetar pop-up de foguinhos
-                state.showPartnerInfoPopup = false; // Resetar pop-up de informações do parceiro
                 renderApp(); // Volta para a tela inicial
             } catch (error) {
                 console.error('Erro ao deslogar:', error);
@@ -1255,7 +1320,6 @@
                     state.usuario.lastCheckInDate = null; 
                     state.carrinho = []; 
                     state.showCartSidebar = false; 
-                    state.showPartnerInfoPopup = false; // Fecha o pop-up de info do parceiro ao desfazer
                     alert('Pareamento desfeito com sucesso! Foguinhos resetados para ambos.');
                     renderApp(); // Re-renderiza a tela principal
 
@@ -1310,7 +1374,7 @@
 
         // --- Função Central de Renderização (Gerencia as etapas) ---
         function renderApp() {
-            console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar, 'state.showFoguinhosPopup:', state.showFoguinhosPopup, 'state.showPartnerInfoPopup:', state.showPartnerInfoPopup);
+            console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar, 'state.showFoguinhosPopup:', state.showFoguinhosPopup);
             // Atualiza os elementos da header e footer que são fixos no DOM
             updateFixedUI();
             
@@ -1334,10 +1398,6 @@
                 // Novo caso para o pop-up de Foguinhos
                 case 'foguinhosPopup':
                     renderFoguinhosPopupContent();
-                    break;
-                // Novo caso para o pop-up de Informações do Parceiro
-                case 'partnerInfoPopup':
-                    renderPartnerInfoPopup();
                     break;
                 default:
                     renderLandingPage(); // Fallback
@@ -1398,19 +1458,18 @@
                     item.classList.add('active');
                 } 
                 // Botão Parear
-                else if (item.querySelector('.fas.fa-heart')) { // Seleciona o botão do coração
-                    if(state.etapa === 'parear' || state.etapa === 'partnerInfoPopup'){ // Ativo se estiver na tela de pareamento ou no popup de info do parceiro
-                         item.classList.add('active');
-                    }
+                else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
+                    item.classList.add('active');
+                    // Cor do ícone de coração: verde se pareado, amarelo se pendente
                     const heartIcon = item.querySelector('.fas.fa-heart');
                     if(heartIcon){
                         heartIcon.classList.remove('text-green-400', 'text-yellow-400', 'text-gray-400'); // Limpa cores anteriores
-                        if(state.pareado){ // Se está pareado, fica verde
+                        if(state.pareado){
                             heartIcon.classList.add('text-green-400');
-                        } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) { // Se tem solicitação pendente, fica amarelo
+                        } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
                             heartIcon.classList.add('text-yellow-400');
-                        } else { // Padrão cinza se não pareado nem pendente
-                            heartIcon.classList.add('text-gray-400');
+                        } else {
+                            heartIcon.classList.add('text-gray-400'); // Cor padrão se não pareado/pendente
                         }
                     }
                 } 
@@ -1425,6 +1484,31 @@
             });
         }
 
+        // Função para alternar a visibilidade do pop-up de Foguinhos
+        function toggleFoguinhosPopup() {
+            console.log('toggleFoguinhosPopup chamada. state.showFoguinhosPopup ANTES:', state.showFoguinhosPopup);
+            if (state.etapa === 'foguinhosPopup') {
+                state.etapa = 'main'; // Volta para a tela principal
+            } else {
+                state.etapa = 'foguinhosPopup'; // Vai para a tela do pop-up
+            }
+            state.showFoguinhosPopup = !state.showFoguinhosPopup; // Atualiza a flag para logs/referência
+            renderApp();
+            console.log('state.showFoguinhosPopup DEPOIS:', state.showFoguinhosPopup);
+        }
+
+        // Função para alternar a visibilidade do pop-up de Informações do Parceiro Pareado
+        function togglePartnerInfoPopup() {
+            console.log('togglePartnerInfoPopup chamada. state.showPartnerInfoPopup ANTES:', state.showPartnerInfoPopup);
+            if (state.etapa === 'partnerInfoPopup') {
+                state.etapa = 'main'; // Volta para a tela principal
+            } else {
+                state.etapa = 'partnerInfoPopup'; // Vai para a tela do pop-up de informações do parceiro
+            }
+            state.showPartnerInfoPopup = !state.showPartnerInfoPopup; // Atualiza a flag
+            renderApp();
+            console.log('state.showPartnerInfoPopup DEPOIS:', state.showPartnerInfoPopup);
+        }
 
         // Carrega dados do usuário e do parceiro se pareado
         async function loadUserDataAndNavigate(uid, email) {
@@ -1593,13 +1677,7 @@
     <button class="bottom-nav-item" onclick="changeStep('main');">
         <i class="fas fa-home"></i>
     </button>
-    <button class="bottom-nav-item" onclick="
-        if(state.pareado){ 
-            togglePartnerInfoPopup(); 
-        } else { 
-            changeStep('parear'); 
-        }
-    ">
+    <button class="bottom-nav-item" onclick="changeStep('parear');">
         <i class="fas fa-heart"></i>
     </button>
     <button class="bottom-nav-item relative" onclick="toggleCartSidebar();">
