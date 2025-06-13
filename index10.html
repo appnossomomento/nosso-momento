@@ -13,179 +13,6 @@
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            /* Adicionado padding-bottom para que o conteúdo não fique por baixo do footer fixo */
-            padding-bottom: 80px; /* Altura aproximada do footer */
-        }
-        .product-card {
-            transition: all 0.3s ease-out;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 16px;
-            overflow: hidden;
-            position: relative;
-        }
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(255, 53, 71, 0.2);
-            background: rgba(255,255,255,0.05);
-            border-color: rgba(255,255,255,0.2);
-        }
-        .product-img {
-            height: 160px;
-            object-fit: cover;
-            width: 100%;
-        }
-        .product-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 32px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .carrinho-item {
-            animation: fadeIn 0.5s ease-out;
-            border-radius: 12px;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .btn-red {
-            background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 50px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            box-shadow: 0 10px 20px rgba(255, 53, 71, 0.3);
-            padding: 14px 24px;
-            border: none;
-            outline: none;
-            text-transform: uppercase;
-            font-size: 14px;
-        }
-        .btn-red:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(255, 53, 71, 0.4);
-            background: linear-gradient(135deg, #FF4252 0%, #FF7B8A 100%);
-        }
-        .bg-overlay {
-            background-color: rgba(0, 0, 0, 0.8);
-        }
-        /* Modern button styles */
-        .btn-modern {
-            border-radius: 50px;
-            padding: 12px 24px;
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .btn-modern:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-        /* Input styles */
-        input {
-            border-radius: 12px !important;
-            padding: 14px 16px !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            background: rgba(255,255,255,0.05) !important;
-            color: white !important;
-        }
-        input::placeholder {
-            color: rgba(255,255,255,0.5) !important;
-        }
-        /* Card styles */
-        .card {
-            border-radius: 20px;
-            background: rgba(30,30,30,0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        /* Footer custom style */
-        .app-footer {
-            background: linear-gradient(90deg, #FF3547 0%, #FF6B7C 100%);
-            color: white; /* Texto branco */
-            text-shadow: 0 1px 2px rgba(0,0,0,0.4); /* Sombra para contraste */
-            padding: 16px;
-            font-size: 14px;
-            text-align: center;
-            /* Adicionado para fixar no rodapé */
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            z-index: 100; /* Garante que fique acima de outros elementos */
-        }
-
-        /* Novo estilo para a barra de navegação inferior (footer) */
-        .bottom-nav-bar {
-            background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(0,0,0,0.95) 100%);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.08);
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 70px; /* Altura da barra */
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 50; /* Abaixo da sidebar do carrinho */
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.4);
-        }
-        .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            color: rgba(255,255,255,0.6);
-            font-size: 11px;
-            font-weight: 500;
-            transition: color 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            height: 100%; /* Para centralizar o conteúdo verticalmente */
-            flex-grow: 1; /* Para que os itens se espalhem igualmente */
-        }
-        .bottom-nav-item.active {
-            color: #FF6B7C; /* Cor de destaque */
-        }
-        .bottom-nav-item:hover {
-            color: #FF6B7C; /* Cor de destaque no hover */
-        }
-        .bottom-nav-item i {
-            font-size: 20px;
-            margin-bottom: 2px;
-        }
-
-        /* Esconder a barra de rolagem horizontal se algo escapar */
-        body {
-            overflow-x: hidden;
-        }
-    </style>
-</head>
-<body class="bg-black text-white font-sans">
-    <div id="app">
-        </div>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            /* Adicionado padding-bottom para que o conteúdo não fique por baixo do footer fixo */
-            padding-bottom: 80px; /* Altura aproximada do footer */
         }
         .product-card {
             transition: all 0.3s ease-out;
@@ -288,69 +115,6 @@
             text-align: center;
             margin-top: 40px;
             border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* Novo estilo para a barra de navegação inferior (footer) */
-        .bottom-nav-bar {
-            background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(0,0,0,0.95) 100%);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.08);
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 70px; /* Altura da barra */
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 50; /* Abaixo da sidebar do carrinho */
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.4);
-        }
-        .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            color: rgba(255,255,255,0.6);
-            font-size: 11px;
-            font-weight: 500;
-            transition: color 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            height: 100%; /* Para centralizar o conteúdo verticalmente */
-            flex-grow: 1; /* Para que os itens se espalhem igualmente */
-        }
-        .bottom-nav-item.active {
-            color: #FF6B7C; /* Cor de destaque */
-        }
-        .bottom-nav-item:hover {
-            color: #FF6B7C; /* Cor de destaque no hover */
-        }
-        .bottom-nav-item i {
-            font-size: 20px;
-            margin-bottom: 2px;
-        }
-
-        /* Esconder a barra de rolagem horizontal se algo escapar */
-        body {
-            overflow-x: hidden;
-        }
-
-        /* Ajuste para telas pequenas - header */
-        @media (max-width: 640px) { /* sm breakpoint no Tailwind */
-            .header-content {
-                display: flex;
-                justify-content: space-between;
-                width: 100%;
-                align-items: center;
-                padding-left: 1rem; /* px-4 */
-                padding-right: 1rem; /* px-4 */
-            }
-            .header-content > div:nth-child(2) { /* Ações à direita */
-                display: flex;
-                gap: 0.5rem; /* Menor gap para caber tudo */
-            }
         }
     </style>
 </head>
@@ -713,49 +477,6 @@
             }
         }
 
-        // Função para cancelar uma solicitação de pareamento pendente (do lado do sender)
-        async function cancelPendingPairingRequest() {
-            if (confirm('Tem certeza que deseja cancelar esta solicitação de pareamento?')) {
-                try {
-                    const senderUid = state.usuario.uid;
-                    const receiverPhone = state.usuario.pareadoCom.replace('pending_', ''); // O telefone do receiver está no marcador
-                    
-                    // Buscar o UID do receiver
-                    const receiverQuery = await db.collection('usuarios')
-                        .where('telefone', '==', receiverPhone)
-                        .limit(1)
-                        .get();
-                    if (receiverQuery.empty) {
-                        alert('Erro: Não foi possível encontrar o destinatário da solicitação para cancelar.');
-                        return;
-                    }
-                    const receiverUid = receiverQuery.docs[0].id;
-
-                    // O ID da solicitação é [senderUid, receiverUid].sort().join('_')
-                    const requestId = [senderUid, receiverUid].sort().join('_');
-                    
-                    // 1. Deletar a solicitação de pareamento
-                    await db.collection('pairingRequests').doc(requestId).delete();
-                    console.log('Solicitação de pareamento deletada no Firestore.');
-
-                    // 2. Remover o marcador 'pending_' do perfil do usuário logado (sender)
-                    await db.collection('usuarios').doc(senderUid).update({
-                        pareadoCom: firebase.firestore.FieldValue.delete()
-                    });
-                    console.log('Marcador pending_ removido do perfil do sender.');
-
-                    alert('Solicitação de pareamento cancelada com sucesso.');
-                    state.usuario.pareadoCom = null; // Atualiza o estado local
-                    state.etapa = 'parear'; // Volta para a tela de pareamento inicial
-                    renderApp();
-
-                } catch (error) {
-                    console.error('Erro ao cancelar solicitação de pareamento:', error);
-                    alert('Erro ao cancelar solicitação. Tente novamente.');
-                }
-            }
-        }
-
 
         function renderPareamento() {
             console.log('renderPareamento chamada. state.codigoDigitando:', state.codigoDigitando);
@@ -791,12 +512,9 @@
                         <p class="mb-4">Sua solicitação de pareamento para ${pendingPhone} está pendente.</p>
                         <p class="text-sm text-gray-300">Aguardando aceitação do seu parceiro(a)...</p>
                     </div>
-                    <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+                    <div class="flex justify-center">
                         <button onclick="changeStep('main')" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
                             Voltar para Principal
-                        </button>
-                        <button onclick="cancelPendingPairingRequest()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">
-                            Cancelar Solicitação
                         </button>
                     </div>
                 `;
@@ -888,13 +606,6 @@
                 { nome: 'Jantar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://www.rbsdirect.com.br/filestore/0/7/2/9/4/9/4_1b48f02f18ac345/4949270_5de2a64f5b53f27.jpg?format=webp&w=1600&h=900&a=c', intensidade: 1 }
             ];
 
-            // Dobra o custo dos foguinhos para momentos com intensidade maior que 1
-            const momentosAjustados = momentos.map(m => ({
-                ...m,
-                intensidade: m.intensidade > 1 ? m.intensidade * 2 : m.intensidade
-            }));
-
-
             // Determina se o botão de check-in deve estar habilitado
             const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
             const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
@@ -902,7 +613,7 @@
             appContainer.innerHTML = `
                 <div class="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
                     <header class="sticky top-0 z-10 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
-                        <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
+                        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
                             <div class="flex items-center gap-1">
                                 <div class="relative">
                                     <div class="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-red-600 shadow-lg">
@@ -918,11 +629,64 @@
                             </div>
                             <div class="flex items-center gap-4">
                                 ${state.usuario && state.usuario.nome ? `
-                                    <span class="text-gray-300 text-sm font-medium hidden sm:inline">Olá, ${state.usuario.nome}!</span>
+                                    <span class="text-gray-300 text-sm font-medium">Olá, ${state.usuario.nome}!</span>
                                 ` : ''}
 
+                                <div class="flex items-center gap-2 bg-gray-800/60 px-3 py-2 rounded-lg text-yellow-400 font-semibold">
+                                    <i class="fas fa-fire"></i> ${state.usuario.foguinhos || 0}
+                                </div>
+
+                                ${!state.pareado ? `
+                                    <button onclick="changeStep('parear')" class="text-sm bg-pink-600 hover:bg-pink-700 px-4 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
+                                        <i class="fas fa-heart text-xs"></i> Parear
+                                    </button>
+                                ` : `
+                                    <div class="relative">
+                                        <button onclick="state.showPartnerInfo = !state.showPartnerInfo; renderApp()" class="text-sm bg-green-900/60 hover:bg-green-800/60 text-green-400 px-3 py-2 rounded-lg font-medium flex items-center gap-2 transition">
+                                            <i class="fas fa-user-heart text-xs"></i> Pareado
+                                        </button>
+                                        ${state.showPartnerInfo ? `
+                                            <div class="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 p-4">
+                                                <div class="flex justify-between items-start mb-2">
+                                                    <h4 class="font-medium text-green-400">Parceiro Pareado</h4>
+                                                    <button onclick="state.showPartnerInfo = false; renderApp()" class="text-gray-400 hover:text-white">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                                <p class="text-sm text-gray-300 mb-1">Nome:</p>
+                                                <p class="bg-gray-900 px-3 py-1 rounded text-sm mb-2">${state.parceiroNome || 'Carregando...'}</p>
+                                                <p class="text-sm text-gray-300 mb-1">Telefone:</p>
+                                                <p class="bg-gray-900 px-3 py-1 rounded text-sm mb-4">${state.parceiroCodigo || 'Carregando...'}</p>
+                                                
+                                                <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''}
+                                                    class="w-full text-sm px-3 py-2 rounded-lg font-medium transition mb-2
+                                                    ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}">
+                                                    <i class="fas fa-gift text-xs"></i> Presentear 🔥
+                                                </button>
+
+                                                <button onclick="desparearParceiro()" class="w-full text-sm bg-red-800 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition">
+                                                    Desfazer Pareamento
+                                                </button>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `}
+                                <div class="relative">
+                                    <button class="flex items-center gap-2 relative" onclick="toggleCartSidebar(); event.stopPropagation()">
+                                        <i class="fas fa-shopping-cart text-lg"></i>
+                                        ${state.carrinho.length > 0 ? `
+                                            <span class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                                ${state.carrinho.length}/2
+                                            </span>
+                                        ` : `
+                                            <span class="absolute -top-2 -right-2 bg-gray-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-70">
+                                                0/2
+                                            </span>
+                                        `}
+                                    </button>
+                                </div>
                                 <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
-                                    <i class="fas fa-sign-out-alt text-xs"></i> <span class="hidden sm:inline">Sair</span>
+                                    <i class="fas fa-sign-out-alt text-xs"></i> Sair
                                 </button>
                             </div>
                         </div>
@@ -955,7 +719,7 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-                            ${(state.filtro ? momentosAjustados.filter(m => m.categoria === state.filtro) : momentosAjustados).map(momento => `
+                            ${(state.filtro ? momentos.filter(m => m.categoria === state.filtro) : momentos).map(momento => `
                                 <div class="product-card group">
                                     <div class="relative overflow-hidden">
                                         <img src="${momento.img}" alt="${momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
@@ -1606,7 +1370,6 @@
             window.finalizarPedido = finalizarPedido;
             window.desparearParceiro = desparearParceiro;
             window.toggleCartSidebar = toggleCartSidebar; 
-            window.cancelPendingPairingRequest = cancelPendingPairingRequest; // Nova função
 
             init(); // Inicia o aplicativo
         };
@@ -1614,30 +1377,5 @@
 <footer class="app-footer">
     © 2025 Nosso Momento. Todos os direitos reservados.
 </footer>
-
-<nav class="bottom-nav-bar" id="bottom-nav-bar">
-    <button class="bottom-nav-item" onclick="changeStep('main');">
-        <i class="fas fa-home"></i>
-        <span>Home</span>
-    </button>
-    <button class="bottom-nav-item" onclick="changeStep('parear');">
-        <i class="fas fa-heart"></i>
-        <span>Parear</span>
-    </button>
-    <button class="bottom-nav-item relative" onclick="toggleCartSidebar();">
-        <i class="fas fa-shopping-cart"></i>
-        <span>Carrinho</span>
-        ${state.carrinho.length > 0 ? `
-            <span class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                ${state.carrinho.length}
-            </span>
-        ` : ''}
-    </button>
-    <button class="bottom-nav-item" onclick="state.showPartnerInfo = !state.showPartnerInfo; renderApp()">
-        <i class="fas fa-fire"></i>
-        <span>${state.usuario && state.usuario.foguinhos !== undefined ? state.usuario.foguinhos : '-'}</span>
-    </button>
-</nav>
-
 </body>
 </html>
