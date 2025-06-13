@@ -854,7 +854,7 @@
                                                     <i class="fas fa-fire"></i> ${momentosComCustoAjustado.find(item => item.nome === momento.nome).custoFoguinhos} Foguinhos
                                                 </span>
                                             </div>
-                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momentosComCustoAjustado.find(item => item.nome === momento.nome)).replace(/"/g, '&quot;')})" 
+                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, '&quot;')})" 
                                                 class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
                                                 Resgatar
                                             </button>
@@ -1305,9 +1305,6 @@
             console.log('toggleCartSidebar chamada. state.showCartSidebar ANTES:', state.showCartSidebar);
             state.showCartSidebar = !state.showCartSidebar;
             console.log('state.showCartSidebar DEPOIS:', state.showCartSidebar);
-            // Fechar outros pop-ups ao abrir o carrinho
-            state.showFoguinhosPopup = false;
-            state.showPartnerInfoPopup = false;
             renderApp(); // Re-renderiza para exibir/esconder a sidebar
         }
 
@@ -1400,7 +1397,7 @@
                 if (item.querySelector('.fas.fa-home') && state.etapa === 'main') {
                     item.classList.add('active');
                 } 
-                // Botão Parear (coração)
+                // Botão Parear
                 else if (item.querySelector('.fas.fa-heart')) { // Seleciona o botão do coração
                     if(state.etapa === 'parear' || state.etapa === 'partnerInfoPopup'){ // Ativo se estiver na tela de pareamento ou no popup de info do parceiro
                          item.classList.add('active');
@@ -1603,7 +1600,8 @@
             changeStep('parear'); 
         }
     ">
-        <i id="heartIcon" class="fas fa-heart"></i> </button>
+        <i class="fas fa-heart"></i>
+    </button>
     <button class="bottom-nav-item relative" onclick="toggleCartSidebar();">
         <i class="fas fa-shopping-cart"></i>
         <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
