@@ -187,9 +187,7 @@
 
 
         /* Esconder a barra de rolagem horizontal se algo escapar */
-        body {
-            overflow-x: hidden;
-        }
+        /* REMOVED: body { overflow-x: hidden; } JÁ ESTÁ NA REGRA PRINCIPAL DO BODY */
 
         /* Ajuste para telas pequenas - header */
         @media (max-width: 640px) { /* sm breakpoint no Tailwind */
@@ -275,12 +273,12 @@
             showCartSidebar: false     // Nova flag para controlar a visibilidade do carrinho
         };
 
-        // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
-        let appContainer;
-        let userNameDisplay; 
+        // DOM elements
+        const appContainer = document.getElementById('app');
+        // Novos elementos para atualização direta do DOM no footer
+        let userNameDisplay; // Declarar como let para atribuir depois do DOM carregar
         let foguinhosBadge;
         let carrinhoBadge;
-        let bottomNavBar; // Referência para a barra de navegação inferior
 
 
         // --- Utils para datas ---
@@ -780,7 +778,7 @@
             // Dobra o custo dos foguinhos para momentos com intensidade maior que 1
             const momentosAjustados = momentos.map(m => ({
                 ...m,
-                custoFoguinhos: m.intensidade > 1 ? m.intensidade * 2 : m.intensidade // Nova propriedade para o custo
+                intensidade: m.intensidade > 1 ? m.intensidade * 2 : m.intensidade
             }));
 
 
@@ -832,10 +830,10 @@
                                                     <span class="text-pink-400">${'🔥'.repeat(momento.intensidade)}</span>
                                                 </div>
                                                 <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
-                                                    <i class="fas fa-fire"></i> ${momentosAjustados.find(m => m.nome === momento.nome).custoFoguinhos} Foguinhos
+                                                    <i class="fas fa-fire"></i> ${momentosAjustados.find(m => m.nome === momento.nome).intensidade} Foguinhos
                                                 </span>
                                             </div>
-                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momentosAjustados.find(m => m.nome === momento.nome)).replace(/"/g, '&quot;')})" 
+                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, '&quot;')})" 
                                                 class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
                                                 Resgatar
                                             </button>
@@ -865,7 +863,7 @@
                                             <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
                                             <small class="text-gray-400 text-sm">${item.categoria}</small>
                                             <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1">
-                                                <i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos
+                                                <i class="fas fa-fire"></i> ${item.intensidade} Foguinhos
                                             </div>
                                         </div>
                                         <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300">
@@ -1345,24 +1343,15 @@
                 carrinhoBadge.textContent = state.carrinho.length;
             }
 
-            // Controla a visibilidade da barra de navegação inferior
-            if (bottomNavBar) { // Certifica-se que o elemento existe
-                if (state.etapa === 'main' || state.etapa === 'parear') { // Ou outras etapas onde o footer deve aparecer
-                    bottomNavBar.style.display = 'flex';
-                } else {
-                    bottomNavBar.style.display = 'none';
-                }
-            }
-
-
             // Atualizar estado ativo dos botões no footer (cor)
             const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item');
             bottomNavItems.forEach(item => {
                 item.classList.remove('active'); // Remove active de todos primeiro
-                // O botão Home foi removido, então verificamos apenas Parear e Carrinho para "active"
-                if (item.querySelector('.fas.fa-heart') && state.etapa === 'parear') {
+                if (item.querySelector('.fa-home') && state.etapa === 'main') {
                     item.classList.add('active');
-                } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) { // Carrinho ativo quando a sidebar estiver aberta
+                } else if (item.querySelector('.fa-heart') && state.etapa === 'parear') {
+                    item.classList.add('active');
+                } else if (item.querySelector('.fa-shopping-cart') && state.showCartSidebar) { // Carrinho ativo quando a sidebar estiver aberta
                     item.classList.add('active');
                 }
                 // Foguinhos não têm estado "ativo" de navegação, é mais um display.
@@ -1497,11 +1486,10 @@
         window.onload = function() {
             // Atribui os elementos globais após o DOM estar carregado
             // É importante que esses elementos existam no HTML no momento que o script roda.
-            appContainer = document.getElementById('app'); // Atribuir appContainer aqui também
             userNameDisplay = document.getElementById('userNameDisplay');
             foguinhosBadge = document.getElementById('foguinhosBadge');
             carrinhoBadge = document.getElementById('carrinhoBadge');
-            bottomNavBar = document.getElementById('bottom-nav-bar'); // Atribui o elemento do footer
+
 
             // Make functions global for onclick events
             window.isSameDay = isSameDay; 
