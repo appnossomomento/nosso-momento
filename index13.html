@@ -276,9 +276,9 @@
         // DOM elements
         const appContainer = document.getElementById('app');
         // Novos elementos para atualização direta do DOM no footer
-        let userNameDisplay; // Declarar como let para atribuir depois do DOM carregar
-        let foguinhosBadge;
-        let carrinhoBadge;
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const foguinhosBadge = document.getElementById('foguinhosBadge');
+        const carrinhoBadge = document.getElementById('carrinhoBadge');
 
 
         // --- Utils para datas ---
@@ -1135,6 +1135,14 @@
 
                 renderApp(); // Re-renderiza para atualizar foguinhos e carrinho
 
+            } @index:566:17
+            
+            ```
+```html
+<script>
+    // ... Código JavaScript restante (cortado para brevidade)
+    // Continuação do trecho JavaScript que foi cortado na mensagem anterior
+
             } catch (error) {
                 console.error('Erro ao adicionar momento ao carrinho e consumir foguinhos:', error);
                 alert('Erro ao adicionar momento. Tente novamente.');
@@ -1290,7 +1298,6 @@
             // Atualiza os elementos da header e footer que são fixos no DOM
             updateFixedUI();
             
-            // Renderiza o conteúdo principal dentro da #app
             switch (state.etapa) {
                 case 'landing':
                     renderLandingPage();
@@ -1335,27 +1342,24 @@
             }
 
             // Atualizar badges no footer
-            // Certifique-se que os elementos existem antes de tentar atualizar
-            const currentFoguinhos = state.usuario ? state.usuario.foguinhos : 0;
             if (foguinhosBadge) {
-                foguinhosBadge.textContent = currentFoguinhos;
+                foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
             }
             if (carrinhoBadge) {
                 carrinhoBadge.textContent = state.carrinho.length;
             }
 
-            // Atualizar estado ativo dos botões no footer (cor)
+            // Atualizar estado ativo dos botões no footer
             const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item');
             bottomNavItems.forEach(item => {
-                item.classList.remove('active'); // Remove active de todos primeiro
+                // Apenas para os botões de navegação real (Home, Parear)
                 if (item.querySelector('.fa-home') && state.etapa === 'main') {
                     item.classList.add('active');
                 } else if (item.querySelector('.fa-heart') && state.etapa === 'parear') {
                     item.classList.add('active');
-                } else if (item.querySelector('.fa-shopping-cart') && state.showCartSidebar) { // Carrinho ativo quando a sidebar estiver aberta
-                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
                 }
-                // Foguinhos não têm estado "ativo" de navegação, é mais um display.
             });
         }
 
@@ -1485,12 +1489,6 @@
 
         // Start the app
         window.onload = function() {
-            // Atribui os elementos globais após o DOM estar carregado
-            userNameDisplay = document.getElementById('userNameDisplay');
-            foguinhosBadge = document.getElementById('foguinhosBadge');
-            carrinhoBadge = document.getElementById('carrinhoBadge');
-
-
             // Make functions global for onclick events
             window.isSameDay = isSameDay; 
             window.changeStep = changeStep; 
@@ -1514,6 +1512,10 @@
             init(); // Inicia o aplicativo
         };
     </script>
+<footer class="app-footer">
+    © 2025 Nosso Momento. Todos os direitos reservados.
+</footer>
+
 <nav class="bottom-nav-bar" id="bottom-nav-bar">
     <button class="bottom-nav-item" onclick="changeStep('main');">
         <i class="fas fa-home"></i>
@@ -1525,7 +1527,8 @@
         <i class="fas fa-shopping-cart"></i>
         <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
     </button>
-    <button class="bottom-nav-item" onclick="changeStep('main');"> <i class="fas fa-fire"></i>
+    <button class="bottom-nav-item" onclick="changeStep('main');">
+        <i class="fas fa-fire"></i>
         <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
     </button>
 </nav>
