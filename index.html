@@ -109,7 +109,7 @@
             border: 1px solid rgba(255,255,255,0.05);
         }
         /* Footer custom style */
-        /* REMOVED: .app-footer style is no longer needed for the fixed footer structure */
+        /* REMOVIDO: .app-footer style is no longer needed for the fixed footer structure */
         /*
         .app-footer {
             background: linear-gradient(90deg, #FF3547 0%, #FF6B7C 100%);
@@ -273,7 +273,8 @@
             // Nova propriedade para armazenar solicitações de pareamento recebidas
             pendingPairingRequest: null, // {id, senderUid, senderName, senderPhone}
             showCartSidebar: false,     // Nova flag para controlar a visibilidade do carrinho
-            showFoguinhosPopup: false // Nova flag para controlar a visibilidade do pop-up de foguinhos
+            showFoguinhosPopup: false, // Nova flag para controlar a visibilidade do pop-up de foguinhos
+            showPartnerInfoPopup: false // Nova flag para o pop-up de informações do parceiro
         };
 
         // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
@@ -283,6 +284,7 @@
         let carrinhoBadge;
         let bottomNavBar; // Referência para a barra de navegação inferior
         let mainHeader; // Referência para o cabeçalho principal
+        let heartIcon; // Referência para o ícone do coração para mudança de cor
 
 
         // --- Utils para datas ---
@@ -655,7 +657,7 @@
             let content = '';
 
             // Se houver uma solicitação pendente para o usuário logado (ele recebeu)
-            if (state.pendingPairingRequest) {
+            if (state.pendingRequestQuery) { // Usar state.pendingRequestQuery para evitar re-busca e ter a info na renderizacao
                 content = `
                     <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
                         <div class="card p-8 max-w-md w-full relative overflow-hidden">
@@ -667,15 +669,15 @@
                             <div class="text-center mb-6">
                                 <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
                                 <div class="text-3xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">
-                                    ${state.pendingPairingRequest.senderName} (${state.pendingPairingRequest.senderPhone})
+                                    ${state.pendingRequest.senderName} (${state.pendingRequest.senderPhone})
                                 </div>
                                 <p class="mt-4 text-sm text-gray-300">Deseja aceitar ou rejeitar?</p>
                             </div>
                             <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                                <button onclick="acceptPairingRequest('${state.pendingPairingRequest.id}', '${state.pendingPairingRequest.senderUid}', '${state.pendingPairingRequest.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">
+                                <button onclick="acceptPairingRequest('${state.pendingRequest.id}', '${state.pendingRequest.senderUid}', '${state.pendingRequest.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">
                                     Aceitar <i class="fas fa-check-circle ml-2"></i>
                                 </button>
-                                <button onclick="rejectPairingRequest('${state.pendingPairingRequest.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">
+                                <button onclick="rejectPairingRequest('${state.pendingRequest.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">
                                     Rejeitar <i class="fas fa-times-circle ml-2"></i>
                                 </button>
                             </div>
@@ -766,73 +768,6 @@
             if (!state.codigoUsuario) {
                 state.codigoUsuario = codigoUsuario;
             }
-        }
-
-        // Nova função para renderizar o pop-up de Foguinhos
-        function renderFoguinhosPopupContent() {
-            appContainer.innerHTML = `
-                <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-                    <div class="card p-8 max-w-md w-full relative overflow-hidden">
-                        <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-                        <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-                        <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                            <i class="fas fa-fire mr-2"></i> Seus Foguinhos
-                        </h2>
-                        <div class="text-center mb-6">
-                            <p class="mb-4 text-xl">Você tem:</p>
-                            <div class="relative inline-block">
-                                <i class="fas fa-fire text-6xl text-yellow-400 animate-pulse"></i>
-                                <span class="badge-notification badge-yellow text-2xl" style="top: 0px; right: -20px; min-width: 40px; height: 40px;">
-                                    ${state.usuario ? state.usuario.foguinhos : 0}
-                                </span>
-                            </div>
-                            <p class="mt-4 text-sm text-gray-300">Use-os para resgatar momentos!</p>
-                        </div>
-                        <div class="flex justify-center">
-                            <button onclick="toggleFoguinhosPopup();" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
-                                Voltar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
-        function renderPartnerInfoPopup() {
-            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
-            const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
-
-            appContainer.innerHTML = `
-                <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-                    <div class="card p-8 max-w-md w-full relative overflow-hidden">
-                        <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-                        <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-                        <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-500">
-                            <i class="fas fa-user-heart mr-2"></i> Seu Parceiro
-                        </h2>
-                        <div class="text-center mb-6">
-                            <p class="mb-2 text-xl">Nome: <span class="font-bold text-green-400">${state.parceiroNome || 'N/A'}</span></p>
-                            <p class="mb-4 text-md text-gray-300">Telefone: ${state.parceiroCodigo || 'N/A'}</p>
-                        </div>
-                        <div class="space-y-4">
-                            <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''}
-                                class="w-full text-sm px-6 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2
-                                ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}">
-                                <i class="fas fa-gift text-xs"></i> Presentear 🔥
-                            </button>
-
-                            <button onclick="desparearParceiro()" class="w-full text-sm bg-red-800 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition">
-                                <i class="fas fa-unlink text-xs"></i> Desfazer Pareamento
-                            </button>
-
-                            <button onclick="togglePartnerInfoPopup();" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition w-full">
-                                Voltar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
         }
 
 
@@ -1099,6 +1034,7 @@
                 state.pendingPairingRequest = null;
                 state.showCartSidebar = false; 
                 state.showFoguinhosPopup = false; // Resetar pop-up de foguinhos
+                state.showPartnerInfoPopup = false; // Resetar pop-up de informações do parceiro
                 renderApp(); // Volta para a tela inicial
             } catch (error) {
                 console.error('Erro ao deslogar:', error);
@@ -1320,6 +1256,7 @@
                     state.usuario.lastCheckInDate = null; 
                     state.carrinho = []; 
                     state.showCartSidebar = false; 
+                    state.showPartnerInfoPopup = false; // Fecha o pop-up de info do parceiro ao desfazer
                     alert('Pareamento desfeito com sucesso! Foguinhos resetados para ambos.');
                     renderApp(); // Re-renderiza a tela principal
 
@@ -1369,6 +1306,9 @@
             console.log('toggleCartSidebar chamada. state.showCartSidebar ANTES:', state.showCartSidebar);
             state.showCartSidebar = !state.showCartSidebar;
             console.log('state.showCartSidebar DEPOIS:', state.showCartSidebar);
+            // Fechar outros pop-ups ao abrir o carrinho
+            state.showFoguinhosPopup = false;
+            state.showPartnerInfoPopup = false;
             renderApp(); // Re-renderiza para exibir/esconder a sidebar
         }
 
@@ -1457,19 +1397,21 @@
                 if (item.querySelector('.fas.fa-home') && state.etapa === 'main') {
                     item.classList.add('active');
                 } 
-                // Botão Parear
-                else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
-                    item.classList.add('active');
-                    // Cor do ícone de coração: verde se pareado, amarelo se pendente
+                // Botão Parear (coração)
+                else if (item.querySelector('.fas.fa-heart')) { // Seleciona o botão do coração
+                    // Se a etapa atual é pareamento ou o popup de parceiro está aberto, ou o usuário está pareado ou tem solicitação pendente
+                    if(state.etapa === 'parear' || state.etapa === 'partnerInfoPopup' || state.pareado || (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_'))){
+                         item.classList.add('active'); // Ativa o botão para manter a cor de destaque
+                    }
                     const heartIcon = item.querySelector('.fas.fa-heart');
                     if(heartIcon){
                         heartIcon.classList.remove('text-green-400', 'text-yellow-400', 'text-gray-400'); // Limpa cores anteriores
-                        if(state.pareado){
+                        if(state.pareado){ // Se está pareado, fica verde
                             heartIcon.classList.add('text-green-400');
-                        } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+                        } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) { // Se tem solicitação pendente, fica amarelo
                             heartIcon.classList.add('text-yellow-400');
-                        } else {
-                            heartIcon.classList.add('text-gray-400'); // Cor padrão se não pareado/pendente
+                        } else { // Padrão cinza se não pareado nem pendente
+                            heartIcon.classList.add('text-gray-400');
                         }
                     }
                 } 
@@ -1484,31 +1426,6 @@
             });
         }
 
-        // Função para alternar a visibilidade do pop-up de Foguinhos
-        function toggleFoguinhosPopup() {
-            console.log('toggleFoguinhosPopup chamada. state.showFoguinhosPopup ANTES:', state.showFoguinhosPopup);
-            if (state.etapa === 'foguinhosPopup') {
-                state.etapa = 'main'; // Volta para a tela principal
-            } else {
-                state.etapa = 'foguinhosPopup'; // Vai para a tela do pop-up
-            }
-            state.showFoguinhosPopup = !state.showFoguinhosPopup; // Atualiza a flag para logs/referência
-            renderApp();
-            console.log('state.showFoguinhosPopup DEPOIS:', state.showFoguinhosPopup);
-        }
-
-        // Função para alternar a visibilidade do pop-up de Informações do Parceiro Pareado
-        function togglePartnerInfoPopup() {
-            console.log('togglePartnerInfoPopup chamada. state.showPartnerInfoPopup ANTES:', state.showPartnerInfoPopup);
-            if (state.etapa === 'partnerInfoPopup') {
-                state.etapa = 'main'; // Volta para a tela principal
-            } else {
-                state.etapa = 'partnerInfoPopup'; // Vai para a tela do pop-up de informações do parceiro
-            }
-            state.showPartnerInfoPopup = !state.showPartnerInfoPopup; // Atualiza a flag
-            renderApp();
-            console.log('state.showPartnerInfoPopup DEPOIS:', state.showPartnerInfoPopup);
-        }
 
         // Carrega dados do usuário e do parceiro se pareado
         async function loadUserDataAndNavigate(uid, email) {
@@ -1570,7 +1487,7 @@
 
                     if (!pendingRequestQuery.empty) {
                         const requestDoc = pendingRequestQuery.docs[0];
-                        state.pendingPairingRequest = {
+                        state.pendingRequest = { // Usando pendingRequest para a info da request
                             id: requestDoc.id,
                             ...requestDoc.data()
                         };
@@ -1579,11 +1496,11 @@
                     } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
                          // Se o usuário tem um pareamento pendente (ele enviou a solicitação)
                         state.etapa = 'parear';
-                        state.pendingPairingRequest = null; // Garante que não há solicitação recebida ativa no estado
+                        state.pendingRequest = null; // Garante que não há solicitação recebida ativa no estado
                         console.log('Solicitação de pareamento ENVIADA pendente. Redirecionando para parear.');
                     }
                     else {
-                        state.pendingRequestQuery = null; // Limpa qualquer solicitação pendente para o próximo load
+                        state.pendingRequest = null; // Limpa qualquer solicitação pendente para o próximo load
                         state.etapa = 'main'; // Se não há solicitações pendentes e não está pendente, vai para main
                         console.log('Nenhuma solicitação pendente. Redirecionando para main.');
                     }
@@ -1625,7 +1542,7 @@
                     state.parceiroTelefone = null;
                     state.parceiroNome = null;
                     state.showPartnerInfo = false;
-                    state.pendingPairingRequest = null;
+                    state.pendingRequest = null;
                     state.showCartSidebar = false;
                     state.showFoguinhosPopup = false;
                     state.showPartnerInfoPopup = false; // Resetar pop-up de parceiro
@@ -1677,9 +1594,16 @@
     <button class="bottom-nav-item" onclick="changeStep('main');">
         <i class="fas fa-home"></i>
     </button>
-    <button class="bottom-nav-item" onclick="changeStep('parear');">
-        <i class="fas fa-heart"></i>
-    </button>
+    <button class="bottom-nav-item" onclick="
+        if(state.pareado){ 
+            togglePartnerInfoPopup(); 
+        } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+            changeStep('parear'); // Vai para a tela de status de solicitação enviada
+        } else { 
+            changeStep('parear'); // Vai para a tela de pareamento normal
+        }
+    ">
+        <i id="heartIcon" class="fas fa-heart"></i> </button>
     <button class="bottom-nav-item relative" onclick="toggleCartSidebar();">
         <i class="fas fa-shopping-cart"></i>
         <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
