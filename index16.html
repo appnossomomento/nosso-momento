@@ -212,7 +212,7 @@
     </style>
 </head>
 <body class="bg-black text-white font-sans">
-    <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
+    <header class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
             <div class="flex items-center gap-1">
                 <div class="relative">
@@ -281,7 +281,6 @@
         let foguinhosBadge;
         let carrinhoBadge;
         let bottomNavBar; // Referência para a barra de navegação inferior
-        let mainHeader; // Referência para o cabeçalho principal
 
 
         // --- Utils para datas ---
@@ -596,14 +595,6 @@
                 alert('Solicitação de pareamento rejeitada.');
                 state.pendingPairingRequest = null; // Limpa a solicitação pendente
                 renderApp(); // Re-renderiza para limpar a notificação
-            } @index:566:17
-            
-            ```
-```html
-<script>
-    // ... Código JavaScript restante (cortado para brevidade)
-    // Continuação do trecho JavaScript que foi cortado na mensagem anterior
-
             } catch (error) {
                 console.error('Erro ao rejeitar pareamento:', error);
                 alert('Erro ao rejeitar pareamento. Tente novamente.');
@@ -787,7 +778,7 @@
             ];
 
             // Dobra o custo dos foguinhos para momentos com intensidade maior que 1
-            const momentosComCustoAjustado = momentos.map(m => ({
+            const momentosAjustados = momentos.map(m => ({
                 ...m,
                 custoFoguinhos: m.intensidade > 1 ? m.intensidade * 2 : m.intensidade // Nova propriedade para o custo
             }));
@@ -829,11 +820,11 @@
                             ${(state.filtro ? momentos.filter(m => m.categoria === state.filtro) : momentos).map(momento => `
                                 <div class="product-card group">
                                     <div class="relative overflow-hidden">
-                                        <img src="<span class="math-inline">\{momento\.img\}" alt\="</span>{momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
-                                        <span class="product-badge">${momento.emoji} <span class="math-inline">\{momento\.categoria\}</span\>
-</div\>
-<div class\="p\-4"\>
-<h3 class\="font\-medium"\></span>{momento.nome}</h3>
+                                        <img src="${momento.img}" alt="${momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
+                                        <span class="product-badge">${momento.emoji} ${momento.categoria}</span>
+                                    </div>
+                                    <div class="p-4">
+                                        <h3 class="font-medium">${momento.nome}</h3>
                                         <div class="flex justify-between items-center mt-4">
                                             <div class="flex flex-col">
                                                 <div class="flex items-center gap-1 mb-1">
@@ -841,10 +832,10 @@
                                                     <span class="text-pink-400">${'🔥'.repeat(momento.intensidade)}</span>
                                                 </div>
                                                 <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
-                                                    <i class="fas fa-fire"></i> <span class="math-inline">\{momentosComCustoAjustado\.find\(m \=\> m\.nome \=\=\= momento\.nome\)\.custoFoguinhos\} Foguinhos
-</span\>
-</div\>
-<button onclick\="adicionarAoCarrinho\(</span>{JSON.stringify(momentosComCustoAjustado.find(m => m.nome === momento.nome)).replace(/"/g, '&quot;')})" 
+                                                    <i class="fas fa-fire"></i> ${momentosAjustados.find(m => m.nome === momento.nome).custoFoguinhos} Foguinhos
+                                                </span>
+                                            </div>
+                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momentosAjustados.find(m => m.nome === momento.nome)).replace(/"/g, '&quot;')})" 
                                                 class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
                                                 Resgatar
                                             </button>
@@ -1354,14 +1345,12 @@
                 carrinhoBadge.textContent = state.carrinho.length;
             }
 
-            // Controla a visibilidade da barra de navegação inferior e da header
-            if (bottomNavBar && mainHeader) { // Certifica-se que os elementos existem
-                if (state.etapa === 'main' || state.etapa === 'parear') { // Ou outras etapas onde o footer e header devem aparecer
+            // Controla a visibilidade da barra de navegação inferior
+            if (bottomNavBar) { // Certifica-se que o elemento existe
+                if (state.etapa === 'main' || state.etapa === 'parear') { // Ou outras etapas onde o footer deve aparecer
                     bottomNavBar.style.display = 'flex';
-                    mainHeader.style.display = 'flex'; // Header também fica visível
                 } else {
                     bottomNavBar.style.display = 'none';
-                    mainHeader.style.display = 'none'; // Header também fica oculta
                 }
             }
 
@@ -1371,12 +1360,9 @@
             bottomNavItems.forEach(item => {
                 item.classList.remove('active'); // Remove active de todos primeiro
                 // O botão Home foi removido, então verificamos apenas Parear e Carrinho para "active"
-                // O botão Home foi removido, então verificamos apenas Parear e Carrinho para "active"
                 if (item.querySelector('.fas.fa-heart') && state.etapa === 'parear') {
                     item.classList.add('active');
                 } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) { // Carrinho ativo quando a sidebar estiver aberta
-                    item.classList.add('active');
-                } else if (item.querySelector('.fas.fa-home') && state.etapa === 'main') { // Adiciona o botão Home (agora presente) e sua lógica de active
                     item.classList.add('active');
                 }
                 // Foguinhos não têm estado "ativo" de navegação, é mais um display.
@@ -1511,13 +1497,11 @@
         window.onload = function() {
             // Atribui os elementos globais após o DOM estar carregado
             // É importante que esses elementos existam no HTML no momento que o script roda.
-            appContainer = document.getElementById('app'); 
+            appContainer = document.getElementById('app'); // Atribuir appContainer aqui também
             userNameDisplay = document.getElementById('userNameDisplay');
             foguinhosBadge = document.getElementById('foguinhosBadge');
             carrinhoBadge = document.getElementById('carrinhoBadge');
-            bottomNavBar = document.getElementById('bottom-nav-bar'); 
-            mainHeader = document.getElementById('mainHeader'); // Atribui o elemento do cabeçalho
-
+            bottomNavBar = document.getElementById('bottom-nav-bar'); // Atribui o elemento do footer
 
             // Make functions global for onclick events
             window.isSameDay = isSameDay; 
@@ -1542,7 +1526,6 @@
             init(); // Inicia o aplicativo
         };
     </script>
-
 <nav class="bottom-nav-bar" id="bottom-nav-bar">
     <button class="bottom-nav-item" onclick="changeStep('main');">
         <i class="fas fa-home"></i>
@@ -1554,8 +1537,7 @@
         <i class="fas fa-shopping-cart"></i>
         <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
     </button>
-    <button class="bottom-nav-item" onclick="changeStep('main');"> 
-        <i class="fas fa-fire"></i>
+    <button class="bottom-nav-item" onclick="changeStep('main');"> <i class="fas fa-fire"></i>
         <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
     </button>
 </nav>
