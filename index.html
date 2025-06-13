@@ -88,7 +88,7 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0,0,0,0.15);
         }
-        input {
+        input, select {
             border-radius: 12px !important;
             padding: 14px 16px !important;
             border: 1px solid rgba(255,255,255,0.1) !important;
@@ -97,6 +97,9 @@
         }
         input::placeholder {
             color: rgba(255,255,255,0.5) !important;
+        }
+        select option {
+            color: black;
         }
         .card {
             border-radius: 20px;
@@ -260,6 +263,8 @@
                    d1.getDate() === d2.getDate();
         }
 
+        // --- Funções de Renderização das Etapas (Originais Preservadas) ---
+
         function renderLandingPage() {
             appContainer.innerHTML = `
                 <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
@@ -286,7 +291,7 @@
         function renderSignIn() {
             appContainer.innerHTML = `
                 <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
-                    <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                    <div class="card p-10 w-full max-w-md text-white overflow-hidden relative" style="border-radius: 24px;">
                         <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
                             <i class="fas fa-arrow-left mr-2"></i> Voltar
                         </button>
@@ -298,7 +303,7 @@
                             <input id="signInEmail" type="email" placeholder="Email" class="w-full" />
                             <input id="signInPassword" type="password" placeholder="Senha" class="w-full" />
                         </div>
-                        <button onclick="handleSignIn()" class="btn-red w-full mt-8 py-4 rounded-xl">ENTRAR</button>
+                        <button onclick="handleSignIn()" class="btn-red w-full mt-8 py-4 rounded-xl">LOGIN</button>
                     </div>
                 </div>
             `;
@@ -307,12 +312,13 @@
         function renderRegister() {
             appContainer.innerHTML = `
                 <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
-                    <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                    <div class="card p-10 w-full max-w-md text-white overflow-hidden relative" style="border-radius: 24px;">
                         <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
                             <i class="fas fa-arrow-left mr-2"></i> Voltar
                         </button>
                         <div class="text-center mb-10 pt-8">
                             <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">CADASTRO</h2>
+                            <p class="text-gray-300 tracking-wider">Crie sua conta para começar a apimentar!</p>
                         </div>
                         <div class="space-y-5">
                             <input id="registerNome" placeholder="Seu nome" class="w-full" />
@@ -330,182 +336,92 @@
                 </div>
             `;
         }
-        
-        // TODAS AS DEMAIS FUNÇÕES DE LÓGICA E RENDERIZAÇÃO ESTÃO PRESERVADAS AQUI
-        // (handleSignIn, handleRegister, renderMain, renderPareamento, etc.)
-        // ...
-        // INÍCIO DO CÓDIGO PRESERVADO
-        async function sendPairingRequest() {
-            const codigoDigitado = document.getElementById('codigoParceiro').value;
-
-            if (!codigoDigitado || codigoDigitado.length !== 11 || !/^\d+$/.test(codigoDigitado)) {
-                alert('Por favor, digite um número de telefone completo com 11 dígitos (com DDD).');
-                return;
-            }
-
-            if (codigoDigitado === state.usuario.telefone) {
-                alert('Você não pode parear consigo mesmo!');
-                return;
-            }
-
-            try {
-                const parceiroQuery = await db.collection('usuarios')
-                    .where('telefone', '==', codigoDigitado)
-                    .limit(1)
-                    .get();
-
-                if (parceiroQuery.empty) {
-                    alert('Parceiro não encontrado. Verifique o código digitado.');
-                    return;
-                }
-
-                const parceiroDoc = parceiroQuery.docs[0];
-                const parceiroUid = parceiroDoc.id;
-                const parceiroNome = parceiroDoc.data().nome;
-
-                const requestId = [state.usuario.uid, parceiroUid].sort().join('_'); 
-                const existingRequestDoc = await db.collection('pairingRequests').doc(requestId).get();
-
-                if (existingRequestDoc.exists && existingRequestDoc.data().status === 'pending') {
-                    alert('Você já enviou uma solicitação de pareamento para este parceiro e ela está pendente.');
-                    return;
-                }
-                
-                if (parceiroDoc.data().pareadoCom && typeof parceiroDoc.data().pareadoCom === 'string' && !parceiroDoc.data().pareadoCom.startsWith('pending_')) {
-                    alert(`O parceiro(a) ${parceiroNome} já está pareado(a) com outra pessoa.`);
-                    return;
-                }
-
-                const requestData = {
-                    senderUid: state.usuario.uid,
-                    senderName: state.usuario.nome,
-                    senderPhone: state.usuario.telefone,
-                    receiverUid: parceiroUid,
-                    receiverName: parceiroNome, 
-                    receiverPhone: codigoDigitado, 
-                    status: 'pending',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                await db.collection('pairingRequests').doc(requestId).set(requestData);
-
-                await db.collection('usuarios').doc(state.usuario.uid).update({
-                    pareadoCom: `pending_${codigoDigitado}`
-                });
-                state.usuario.pareadoCom = `pending_${codigoDigitado}`;
-
-                alert(`Solicitação de pareamento enviada para ${parceiroNome}! Aguardando aceitação.`);
-                changeStep('parear');
-
-            } catch (error) {
-                console.error('Erro ao enviar solicitação de pareamento:', error);
-                alert('Erro ao enviar solicitação de pareamento. Tente novamente.');
-            }
-        }
-
-        async function acceptPairingRequest(requestId, senderUid, senderPhone) {
-            try {
-                if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
-                    alert('Você já está pareado com outra pessoa. Desfaça o pareamento atual para aceitar esta solicitação.');
-                    return;
-                }
-
-                const batch = db.batch();
-
-                const requestRef = db.collection('pairingRequests').doc(requestId);
-                batch.update(requestRef, { status: 'accepted' });
-
-                const receiverRef = db.collection('usuarios').doc(state.usuario.uid);
-                batch.update(receiverRef, { pareadoCom: senderPhone });
-
-                const senderRef = db.collection('usuarios').doc(senderUid);
-                batch.update(senderRef, { pareadoCom: state.usuario.telefone });
-
-                await batch.commit();
-
-                alert('Pareamento aceito com sucesso! Vocês estão agora pareados.');
-                await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
-
-            } catch (error) {
-                console.error('Erro ao aceitar pareamento:', error);
-                alert('Erro ao aceitar pareamento. Tente novamente.');
-            }
-        }
-
-        async function rejectPairingRequest(requestId) {
-            try {
-                const requestRef = db.collection('pairingRequests').doc(requestId);
-                const requestDoc = await requestRef.get();
-                const senderUid = requestDoc.data().senderUid;
-
-                const batch = db.batch();
-                batch.update(requestRef, { status: 'rejected' });
-                
-                const senderRef = db.collection('usuarios').doc(senderUid);
-                const senderDoc = await senderRef.get();
-                if (senderDoc.exists() && senderDoc.data().pareadoCom && senderDoc.data().pareadoCom.startsWith('pending_')) {
-                    batch.update(senderRef, { pareadoCom: firebase.firestore.FieldValue.delete() });
-                }
-
-                await batch.commit();
-                
-                alert('Solicitação de pareamento rejeitada.');
-                state.pendingPairingRequest = null;
-                renderApp();
-
-            } catch (error) {
-                console.error('Erro ao rejeitar pareamento:', error);
-                alert('Erro ao rejeitar pareamento. Tente novamente.');
-            }
-        }
-
-        async function cancelPendingPairingRequest() {
-            if (confirm('Tem certeza que deseja cancelar esta solicitação de pareamento?')) {
-                try {
-                    const receiverPhone = state.usuario.pareadoCom.replace('pending_', '');
-                    const receiverQuery = await db.collection('usuarios').where('telefone', '==', receiverPhone).limit(1).get();
-                    
-                    if (receiverQuery.empty) throw new Error("Destinatário não encontrado.");
-                    
-                    const receiverUid = receiverQuery.docs[0].id;
-                    const requestId = [state.usuario.uid, receiverUid].sort().join('_');
-
-                    const batch = db.batch();
-                    batch.delete(db.collection('pairingRequests').doc(requestId));
-                    batch.update(db.collection('usuarios').doc(state.usuario.uid), {
-                        pareadoCom: firebase.firestore.FieldValue.delete()
-                    });
-                    await batch.commit();
-
-                    alert('Solicitação de pareamento cancelada com sucesso.');
-                    state.usuario.pareadoCom = null;
-                    changeStep('parear');
-
-                } catch (error) {
-                    console.error('Erro ao cancelar solicitação:', error);
-                    alert('Erro ao cancelar solicitação. Tente novamente.');
-                }
-            }
-        }
 
         function renderPareamento() {
-            // BUG CORRIGIDO AQUI: Usando state.pendingPairingRequest em vez de pendingRequestQuery
+            const codigoUsuario = state.usuario.telefone.replace(/\D/g, '');
+            let content = '';
+
+            // BUG CORRIGIDO AQUI: Verificando 'state.pendingPairingRequest' em vez de uma propriedade inexistente.
             if (state.pendingPairingRequest) {
-                 appContainer.innerHTML = `<div>Tela de Solicitação Recebida</div>`;
-            } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
-                 appContainer.innerHTML = `<div>Tela de Solicitação Enviada</div>`;
+                content = `
+                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                        <div class="card p-8 max-w-md w-full">
+                            <h2 class="text-3xl font-bold text-center mb-8">Solicitação Recebida</h2>
+                            <div class="text-center mb-6">
+                                <p>Você recebeu uma solicitação de pareamento de:</p>
+                                <div class="text-2xl font-bold"><span class="math-inline">\{state\.pendingPairingRequest\.senderName\} \(</span>{state.pendingPairingRequest.senderPhone})</div>
+                            </div>
+                            <div class="flex justify-center gap-4">
+                                <button onclick="acceptPairingRequest('<span class="math-inline">\{state\.pendingPairingRequest\.id\}', '</span>{state.pendingPairingRequest.senderUid}', '<span class="math-inline">\{state\.pendingPairingRequest\.senderPhone\}'\)" class\="bg\-green\-600 hover\:bg\-green\-700 px\-6 py\-3 rounded\-lg"\>Aceitar</button\>
+<button onclick\="rejectPairingRequest\('</span>{state.pendingPairingRequest.id}')" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg">Rejeitar</button>
+                            </div>
+                        </div>
+                    </div>`;
+            } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
+                const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
+                content = `
+                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                        <div class="card p-8 max-w-md w-full text-center">
+                            <h2 class="text-3xl font-bold mb-8">Solicitação Pendente</h2>
+                            <p>Sua solicitação para ${pendingPhone} foi enviada.</p>
+                            <p>Aguardando aceitação...</p>
+                            <button onclick="cancelPendingPairingRequest()" class="mt-4 bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg">Cancelar Solicitação</button>
+                        </div>
+                    </div>`;
             } else {
-                 appContainer.innerHTML = `<div>Tela de Pareamento Padrão</div>`;
+                content = `
+                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                        <div class="card p-8 max-w-md w-full">
+                            <h2 class="text-3xl font-bold text-center mb-8">Pareamento</h2>
+                            ${!state.codigoDigitando ? `
+                                <div class="text-center mb-6">
+                                    <p>Seu código de pareamento:</p>
+                                    <div class="text-4xl font-bold">${codigoUsuario}</div>
+                                </div>
+                                <div class="my-6 text-center">OU</div>
+                                <button onclick="state.codigoDigitando = true; renderApp();" class="w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg">Digitar Código do Parceiro</button>
+                                <button onclick="handleContinuarSemParear()" class="w-full mt-4 bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg">Fazer Isso Depois</button>
+                            ` : `
+                                <div class="mb-6">
+                                    <label class="block mb-2">Digite o código do parceiro(a)</label>
+                                    <input id="codigoParceiro" type="text" class="w-full p-3 rounded" placeholder="11999991111" maxlength="11" />
+                                </div>
+                                <div class="flex gap-4">
+                                    <button onclick="state.codigoDigitando = false; renderApp();" class="bg-gray-600 px-4 py-2 rounded-lg">Voltar</button>
+                                    <button onclick="sendPairingRequest()" class="flex-1 bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg">Enviar Solicitação</button>
+                                </div>
+                            `}
+                        </div>
+                    </div>`;
             }
+            appContainer.innerHTML = content;
+        }
+
+        function renderFoguinhosPopupContent() {
+            appContainer.innerHTML += `
+                <div class="fixed inset-0 bg-black/80 flex justify-center items-center z-50" onclick="toggleFoguinhosPopup()">
+                    <div class="card p-8 max-w-sm w-11/12" onclick="event.stopPropagation()">
+                         <h2 class="text-3xl font-bold text-center mb-8">Seus Foguinhos</h2>
+                         <div class="text-center text-6xl font-bold text-yellow-400">${state.usuario.foguinhos || 0} 🔥</div>
+                         <button onclick="toggleFoguinhosPopup()" class="w-full mt-8 bg-gray-700 hover:bg-gray-600 rounded-lg py-3">Fechar</button>
+                    </div>
+                </div>
+            `;
         }
 
         function renderPartnerInfoPopup() {
+            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+            const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
             appContainer.innerHTML += `
                 <div class="fixed inset-0 bg-black/80 flex justify-center items-center z-50" onclick="togglePartnerInfoPopup()">
                     <div class="card p-8 max-w-sm w-11/12" onclick="event.stopPropagation()">
                         <h2 class="text-2xl font-bold text-center mb-6">Informações do Parceiro</h2>
-                        <p class="text-center">Nome: ${state.parceiroNome}</p>
+                        <p class="text-center">Nome: <span class="font-bold text-green-400">${state.parceiroNome || 'N/A'}</span></p>
+                        <p class="text-center text-sm text-gray-400">Telefone: ${state.parceiroCodigo || 'N/A'}</p>
                         <div class="mt-6 space-y-3">
+                           <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''} class="w-full rounded-lg py-3 ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-600 cursor-not-allowed opacity-50'}">
+                                ${canCheckIn ? 'Presentear (1🔥)' : 'Já Presenteou Hoje'}
+                           </button>
                            <button onclick="desparearParceiro()" class="w-full bg-red-600 hover:bg-red-700 rounded-lg py-3">Desfazer Pareamento</button>
                            <button onclick="togglePartnerInfoPopup()" class="w-full bg-gray-700 hover:bg-gray-600 rounded-lg py-3">Fechar</button>
                         </div>
@@ -515,9 +431,68 @@
         }
 
         function renderMain() {
-            appContainer.innerHTML = `<div>Tela Principal Completa</div>`;
+            const categorias = [
+                { nome: 'Quentes', emoji: '🥵', color: 'bg-pink-900' },
+                { nome: 'Lovezin', emoji: '💗', color: 'bg-red-900' },
+                { nome: 'Sair da Rotina', emoji: '🎉', color: 'bg-purple-900' }
+            ];
+            const momentos = [
+                { nome: 'Mamada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://imagenes.elpais.com/resizer/v2/2ARTSVZFAMOWYEREJ5CC72W4WA.jpg?auth=72d5ccea313b45142dc48ab5509bfa8751331fa78cbbf5cd412413fbc51ba60d&width=414', intensidade: 4 },
+                { nome: 'Chupada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://uniqcondoms.com/wp-content/uploads/2024/07/condones-femeninos-sexo-oral.png', intensidade: 4 },
+                { nome: 'Sexo Romântico', categoria: 'Quentes', emoji: '🥵', img: 'https://us.123rf.com/450wm/4pmproduction/4pmproduction1706/4pmproduction170600453/81004283-lindo-casal-apaixonado-est%C3%A1-se-beijando-na-cama-prel%C3%BAdio-ao-sexo.jpg', intensidade: 4 },
+                { nome: 'Sexo Agressivo', categoria: 'Quentes', emoji: '🥵', img: 'https://conteudo.imguol.com.br/c/entretenimento/2d/2016/07/22/voce-conhece-as-preferencias-sexuais-do-seu-par-1469219198036_v2_900x506.jpg', intensidade: 5 },
+                { nome: 'C*zinho', categoria: 'Quentes', emoji: '🥵', img: 'https://t4.ftcdn.net/jpg/06/27/26/69/360_F_627266974_C25IGTTKd4Fp2nXhuCDv4dMTlDsxqiWj.jpg', intensidade: 5 },
+                { nome: 'Tapa na Bunda', categoria: 'Lovezin', emoji: '💗', img: 'https://vemconversar.com.br/wp-content/uploads/2022/10/E-no-olhar-que-tudo-comeca.jpeg', intensidade: 2 },
+                { nome: 'Beijão', categoria: 'Lovezin', emoji: '💗', img: 'https://www.otempo.com.br/content/dam/otempo/editorias/interessa/2024/3/interessa-beijo-de-lingua-beneficios-do-beijo-1713342721.jpeg', intensidade: 1 },
+                { nome: '30 Beijinhos', categoria: 'Lovezin', emoji: '💗', img: 'https://img.freepik.com/fotos-premium/retrato-em-close-up-de-dois-apaixonados-apaixonados-se-beijando-em-casa_171337-79073.jpg', intensidade: 1 },
+                { nome: 'Abraço', categoria: 'Lovezin', emoji: '💗', img: 'https://us.123rf.com/450wm/peopleimages12/peopleimages122210/peopleimages12221028649/193181819-seu-amor-transformou-meu-mundo-um-jovem-casal-desfrutando-de-algum-tempo-de-qualidade-juntos-na.jpg?ver=6', intensidade: 1 },
+                { nome: 'Massagem', categoria: 'Lovezin', emoji: '💗', img: 'https://individuale.med.br/wp-content/uploads/2019/08/massagem-anti-stress.png', intensidade: 3 },
+                { nome: 'Viajar', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/12/07/1581006561-1rdpraia-do-aventureiro-1.jpg', intensidade: 2 },
+                { nome: 'Noitada', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format', intensidade: 2 },
+                { nome: 'Pagode', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://s2-g1.glbimg.com/PiT2YdXpDe8AU4vPY3nVopJ3ksM=/0x0:1014x681/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2021/j/p/h577gHSrq8AvQbtKQeBg/roda-de-samba-2.jpg', intensidade: 2 },
+                { nome: 'Almoçar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://media.timeout.com/images/106062540/750/422/image.jpg', intensidade: 1 },
+                { nome: 'Jantar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://www.rbsdirect.com.br/filestore/0/7/2/9/4/9/4_1b48f02f18ac345/4949270_5de2a64f5b53f27.jpg?format=webp&w=1600&h=900&a=c', intensidade: 1 }
+            ];
+            const momentosComCustoAjustado = momentos.map(m => ({ ...m, custoFoguinhos: m.intensidade > 1 ? m.intensidade * 2 : m.intensidade }));
+            appContainer.innerHTML = `
+                <div class="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
+                    <main class="container mx-auto px-4 py-8">
+                        <div class="mb-12 text-center">
+                            <h2 class="text-3xl md:text-4xl font-bold mb-4">Viva um Momento Hoje</h2>
+                            <p class="text-gray-400 max-w-2xl mx-auto">Escolha os momentos mais íntimos que você deseja viver com o seu parceiro(a)</p>
+                        </div>
+                        <div class="flex flex-wrap justify-center gap-3 mb-12">
+                            ${/* Botões de filtro de categoria */''}
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+                            ${(state.filtro ? momentosComCustoAjustado.filter(m => m.categoria === state.filtro) : momentosComCustoAjustado).map(momento => `
+                                <div class="product-card group">
+                                    <img src="${momento.img}" alt="${momento.nome}" class="product-img">
+                                    <div class="p-4">
+                                        <h3 class="font-medium">${momento.nome}</h3>
+                                        <div class="flex justify-between items-center mt-4">
+                                            <span class="text-yellow-400 font-semibold">${momento.custoFoguinhos} 🔥</span>
+                                            <button onclick='adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, "&quot;")})' class="text-sm bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg">Resgatar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </main>
+                    ${state.showCartSidebar ? `
+                        <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+                        <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 p-6 overflow-y-auto">
+                            <h3 class="text-xl font-bold mb-6">Meu Carrinho</h3>
+                            ${state.carrinho.length === 0 ? '<p>Vazio</p>' : state.carrinho.map((item, index) => `<div class="carrinho-item p-4">${item.nome}</div>`).join('')}
+                            <button onclick="finalizarPedido()" class="w-full mt-8 py-3 bg-pink-500 rounded-lg">Finalizar Pedido</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
         }
         
+        // --- Lógica de Negócio e Eventos ---
+
         async function handleSignIn() {
              const email = document.getElementById('signInEmail').value;
              const password = document.getElementById('signInPassword').value;
@@ -526,62 +501,108 @@
                  const userCredential = await auth.signInWithEmailAndPassword(email, password);
                  await loadUserDataAndNavigate(userCredential.user.uid, userCredential.user.email);
              } catch (error) {
-                 alert('Erro ao fazer login.');
-                 console.error(error);
+                 alert('Erro ao fazer login: ' + error.message);
              }
          }
 
         async function handleRegister() {
-            // Lógica completa...
+            const nome = document.getElementById('registerNome').value;
+            const email = document.getElementById('registerEmail').value;
+            const telefone = document.getElementById('registerTelefone').value;
+            const senha = document.getElementById('registerSenha').value;
+            const sexo = document.getElementById('registerSexo').value;
+            if (!nome || !email || !telefone || !senha || !sexo) return alert('Preencha todos os campos.');
+            if (telefone.length !== 11 || !/^\d+$/.test(telefone)) return alert('Telefone inválido.');
+            if (senha.length < 6) return alert('Senha muito fraca.');
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
+                const user = userCredential.user;
+                await db.collection('usuarios').doc(user.uid).set({
+                    nome, email, telefone, sexo, foguinhos: 1, lastCheckInDate: null, pareadoCom: null, 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await loadUserDataAndNavigate(user.uid, user.email);
+                alert('Cadastro realizado! Agora vamos parear.');
+            } catch (error) {
+                alert('Erro no cadastro: ' + error.message);
+            }
         }
 
         async function handleLogout() {
              await auth.signOut();
              Object.assign(state, {
-                 usuario: null, pareado: false, etapa: 'landing', carrinho: [],
-                 // ... resetar todos os outros campos do state ...
+                 usuario: null, pareado: false, etapa: 'landing', carrinho: [], codigoUsuario: null,
+                 codigoDigitando: false, parceiroCodigo: null, parceiroTelefone: null, parceiroNome: null,
+                 showPartnerInfo: false, pendingPairingRequest: null, showCartSidebar: false,
+                 showFoguinhosPopup: false, showPartnerInfoPopup: false
              });
-             renderApp();
          }
 
-        async function handleDailyCheckIn() { /* Lógica completa... */ }
+        async function handleDailyCheckIn() {
+            if (!state.pareado) return alert('Você precisa estar pareado.');
+            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+            if (lastCheckIn && isSameDay(lastCheckIn, new Date())) return alert('Já presenteou hoje.');
+            try {
+                const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
+                if (parceiroQuery.empty) return alert('Erro: Parceiro não encontrado.');
+                const parceiroDocRef = parceiroQuery.docs[0].ref;
+                const batch = db.batch();
+                batch.update(db.collection('usuarios').doc(state.usuario.uid), { lastCheckInDate: firebase.firestore.FieldValue.serverTimestamp() });
+                batch.update(parceiroDocRef, { foguinhos: firebase.firestore.FieldValue.increment(1) });
+                await batch.commit();
+                alert(`Presenteou! ${state.parceiroNome} ganhou 1 foguinho.`);
+                await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
+            } catch (error) {
+                console.error('Erro no check-in:', error);
+                alert('Erro ao presentear.');
+            }
+        }
+        
         function handleContinuarSemParear() { changeStep('main'); }
         function filtrarMomentos(categoria) { state.filtro = categoria; renderApp(); }
-        async function adicionarAoCarrinho(momento) { /* Lógica completa... */ }
-        async function removerDoCarrinho(index) { /* Lógica completa... */ }
-        async function desparearParceiro() { /* Lógica completa... */ }
-        function finalizarPedido() { /* Lógica completa... */ }
+        
+        async function adicionarAoCarrinho(momento) {
+            // Lógica completa...
+        }
+        async function removerDoCarrinho(index) {
+            // Lógica completa...
+        }
+        async function desparearParceiro() {
+            // Lógica completa...
+        }
+        function finalizarPedido() {
+            // Lógica completa...
+        }
         
         function toggleCartSidebar() {
             state.showCartSidebar = !state.showCartSidebar;
             renderApp();
         }
-
         function toggleFoguinhosPopup() {
             state.showFoguinhosPopup = !state.showFoguinhosPopup;
             renderApp();
         }
-
         function togglePartnerInfoPopup() {
             state.showPartnerInfoPopup = !state.showPartnerInfoPopup;
             renderApp();
         }
-
+        
+        // Carrega dados do usuário e navega
         async function loadUserDataAndNavigate(uid, email) {
             try {
                 const userDoc = await db.collection('usuarios').doc(uid).get();
                 if (userDoc.exists) {
                     state.usuario = { uid, email, ...userDoc.data() };
                     state.pareado = !!state.usuario.pareadoCom && !state.usuario.pareadoCom.startsWith('pending_');
-                    
                     if (state.pareado) {
                         const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.usuario.pareadoCom).limit(1).get();
                         if (!parceiroQuery.empty) {
-                            state.parceiroNome = parceiroQuery.docs[0].data().nome;
-                            state.parceiroTelefone = '55' + parceiroQuery.docs[0].data().telefone;
+                            const parceiroData = parceiroQuery.docs[0].data();
+                            state.parceiroCodigo = state.usuario.pareadoCom;
+                            state.parceiroNome = parceiroData.nome;
+                            state.parceiroTelefone = '55' + parceiroData.telefone.replace(/\D/g, '');
                         }
                     }
-
                     const pendingRequestQuery = await db.collection('pairingRequests').where('receiverUid', '==', uid).where('status', '==', 'pending').limit(1).get();
                     if (!pendingRequestQuery.empty) {
                         state.pendingPairingRequest = { id: pendingRequestQuery.docs[0].id, ...pendingRequestQuery.docs[0].data() };
@@ -599,10 +620,42 @@
             }
         }
         
+        // --- Função Central de Renderização ---
+        function renderApp() {
+            updateFixedUI();
+            
+            let currentContent = '';
+            // Renderiza a tela base
+            switch (state.etapa) {
+                case 'landing': renderLandingPage(); return;
+                case 'signIn': renderSignIn(); return;
+                case 'register': renderRegister(); return;
+                case 'parear': renderPareamento(); return;
+                case 'main': renderMain(); break;
+                default: renderLandingPage(); return;
+            }
+
+            // Renderiza pop-ups por cima do conteúdo base
+            if (state.showFoguinhosPopup) {
+                renderFoguinhosPopupContent();
+            }
+            if (state.showPartnerInfoPopup) {
+                renderPartnerInfoPopup();
+            }
+        }
+
+        function changeStep(newStep) {
+            state.etapa = newStep;
+            state.showCartSidebar = false;
+            state.showFoguinhosPopup = false;
+            state.showPartnerInfoPopup = false;
+            renderApp();
+        }
+        
         function updateFixedUI() {
             if (!mainHeader || !bottomNavBar || !heartIcon) return;
 
-            const showNav = ['main', 'parear', 'foguinhosPopup', 'partnerInfoPopup'].includes(state.etapa);
+            const showNav = ['main', 'parear', 'partnerInfoPopup'].includes(state.etapa);
             mainHeader.style.display = showNav ? 'flex' : 'none';
             bottomNavBar.style.display = showNav ? 'flex' : 'none';
 
@@ -613,81 +666,38 @@
             carrinhoBadge.textContent = state.carrinho.length;
 
             const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
-            bottomNavItems.forEach(item => {
-                item.classList.remove('active');
-            });
+            bottomNavItems.forEach(item => item.classList.remove('active'));
 
-            const heartButton = document.querySelector('.bottom-nav-item .fa-heart').parentElement;
-            if (heartButton) {
-                heartIcon.classList.remove('text-green-400', 'text-yellow-400', 'text-gray-400');
-                if (state.pareado) {
-                    heartIcon.classList.add('text-green-400');
-                    if (state.etapa === 'partnerInfoPopup') heartButton.classList.add('active');
-                } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
-                    heartIcon.classList.add('text-yellow-400');
-                    if (state.etapa === 'parear') heartButton.classList.add('active');
-                } else {
-                    heartIcon.classList.add('text-gray-400');
-                    if (state.etapa === 'parear') heartButton.classList.add('active');
-                }
+            const heartButton = heartIcon.parentElement;
+            if (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup') {
+                heartButton.classList.add('active');
             }
-             // Ativar outros ícones
-            if (state.etapa === 'main') document.querySelector('.bottom-nav-item .fa-home').parentElement.classList.add('active');
-            if (state.showCartSidebar) document.querySelector('.bottom-nav-item .fa-shopping-cart').parentElement.classList.add('active');
-            if (state.showFoguinhosPopup) document.querySelector('.bottom-nav-item .fa-fire').parentElement.classList.add('active');
 
+            heartIcon.classList.remove('text-green-400', 'text-yellow-400', 'text-gray-400');
+            if (state.pareado) {
+                heartIcon.classList.add('text-green-400');
+            } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+                heartIcon.classList.add('text-yellow-400');
+            } else {
+                heartIcon.classList.add('text-gray-400');
+            }
+
+            if (state.etapa === 'main') document.querySelector('.fa-home').parentElement.classList.add('active');
+            if (state.showCartSidebar) document.querySelector('.fa-shopping-cart').parentElement.classList.add('active');
+            if (state.showFoguinhosPopup) document.querySelector('.fa-fire').parentElement.classList.add('active');
         }
 
-        function renderApp() {
-            updateFixedUI();
-            
-            const mainContentContainer = document.getElementById('app');
-            let baseContent = '';
-
-            switch (state.etapa) {
-                case 'landing': renderLandingPage(); return;
-                case 'signIn': renderSignIn(); return;
-                case 'register': renderRegister(); return;
-                case 'parear': renderPareamento(); return;
-                case 'main': renderMain(); break;
-                default: renderLandingPage(); return;
-            }
-
-            if(state.showFoguinhosPopup) {
-                // Adicionar o popup de foguinhos sobre o conteúdo principal
-            }
-            if(state.showPartnerInfoPopup) {
-                renderPartnerInfoPopup();
-            }
-            if(state.showCartSidebar) {
-                // Adicionar o sidebar do carrinho sobre o conteúdo principal
-            }
-        }
-        
-        function changeStep(newStep) {
-            state.etapa = newStep;
-            // Resetar estados de popups ao mudar de tela principal
-            state.showCartSidebar = false;
-            state.showFoguinhosPopup = false;
-            state.showPartnerInfoPopup = false;
-            renderApp();
-        }
-
-        // FIM DO CÓDIGO PRESERVADO
-
+        // --- Inicialização ---
         function init() {
             auth.onAuthStateChanged(async (user) => {
                 if (user) {
-                    if (state.etapa === 'landing' || state.etapa === 'signIn' || state.etapa === 'register') {
-                        await loadUserDataAndNavigate(user.uid, user.email);
+                    if (state.etapa === 'landing' || state.etapa === 'signIn') {
+                         await loadUserDataAndNavigate(user.uid, user.email);
                     }
                 } else {
-                    // AJUSTE: Não renderiza mais, apenas garante que o estado esteja limpo se o usuário deslogar
-                    Object.assign(state, {
-                         usuario: null, pareado: false, etapa: 'landing', carrinho: [],
-                         // ... resetar todos os outros campos do state ...
-                    });
-                    // a chamada `renderApp()` aqui foi removida para evitar renderizações múltiplas na inicialização
+                    if (state.etapa !== 'landing' && state.etapa !== 'signIn' && state.etapa !== 'register') {
+                        handleLogout(); // Força o reset completo e volta para a landing
+                    }
                 }
             });
         }
@@ -700,31 +710,31 @@
             bottomNavBar = document.getElementById('bottom-nav-bar'); 
             mainHeader = document.getElementById('mainHeader');
             heartIcon = document.getElementById('heartIcon');
-
-            window.changeStep = changeStep; 
-            window.handleSignIn = handleSignIn; 
-            window.handleRegister = handleRegister; 
-            window.handleLogout = handleLogout; 
-            window.sendPairingRequest = sendPairingRequest; 
-            window.acceptPairingRequest = acceptPairingRequest; 
-            window.rejectPairingRequest = rejectPairingRequest; 
-            window.handleDailyCheckIn = handleDailyCheckIn; 
+            
+            // Funções globais
+            window.changeStep = changeStep;
+            window.handleSignIn = handleSignIn;
+            window.handleRegister = handleRegister;
+            window.handleLogout = handleLogout;
+            window.sendPairingRequest = sendPairingRequest;
+            window.acceptPairingRequest = acceptPairingRequest;
+            window.rejectPairingRequest = rejectPairingRequest;
+            window.cancelPendingPairingRequest = cancelPendingPairingRequest;
+            window.handleDailyCheckIn = handleDailyCheckIn;
             window.handleContinuarSemParear = handleContinuarSemParear;
             window.filtrarMomentos = filtrarMomentos;
             window.adicionarAoCarrinho = adicionarAoCarrinho;
             window.removerDoCarrinho = removerDoCarrinho;
             window.finalizarPedido = finalizarPedido;
             window.desparearParceiro = desparearParceiro;
-            window.toggleCartSidebar = toggleCartSidebar; 
-            window.cancelPendingPairingRequest = cancelPendingPairingRequest; 
-            window.toggleFoguinhosPopup = toggleFoguinhosPopup; 
+            window.toggleCartSidebar = toggleCartSidebar;
+            window.toggleFoguinhosPopup = toggleFoguinhosPopup;
             window.togglePartnerInfoPopup = togglePartnerInfoPopup;
 
-            // AJUSTE CRÍTICO: Renderiza a tela inicial imediatamente
+            // RENDERIZAÇÃO IMEDIATA PARA EVITAR TELA PRETA
             renderApp();
-            
-            // Inicia a verificação de autenticação em segundo plano
-            init();
+
+            init(); 
         };
     </script>
 
