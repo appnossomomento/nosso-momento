@@ -798,44 +798,6 @@
             `;
         }
 
-        // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
-        function renderPartnerInfoPopup() {
-            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
-            const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
-
-            appContainer.innerHTML = `
-                <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-                    <div class="card p-8 max-w-md w-full relative overflow-hidden">
-                        <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-                        <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-                        <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-500">
-                            <i class="fas fa-user-heart mr-2"></i> Seu Parceiro
-                        </h2>
-                        <div class="text-center mb-6">
-                            <p class="mb-2 text-xl">Nome: <span class="font-bold text-green-400">${state.parceiroNome || 'N/A'}</span></p>
-                            <p class="mb-4 text-md text-gray-300">Telefone: ${state.parceiroCodigo || 'N/A'}</p>
-                        </div>
-                        <div class="space-y-4">
-                            <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''}
-                                class="w-full text-sm px-6 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2
-                                ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}">
-                                <i class="fas fa-gift text-xs"></i> Presentear 🔥
-                            </button>
-
-                            <button onclick="desparearParceiro()" class="w-full text-sm bg-red-800 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition">
-                                <i class="fas fa-unlink text-xs"></i> Desfazer Pareamento
-                            </button>
-
-                            <button onclick="togglePartnerInfoPopup();" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition w-full">
-                                Voltar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-
         function renderMain() {
             console.log('renderMain chamada.');
             const categorias = [
@@ -917,10 +879,10 @@
                                                     <span class="text-pink-400">${'🔥'.repeat(momento.intensidade)}</span>
                                                 </div>
                                                 <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
-                                                    <i class="fas fa-fire"></i> ${momentosComCustoAjustado.find(item => item.nome === momento.nome).custoFoguinhos} Foguinhos
+                                                    <i class="fas fa-fire"></i> ${momentosComCustoAjustado.find(m => m.nome === momento.nome).custoFoguinhos} Foguinhos
                                                 </span>
                                             </div>
-                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momentosComCustoAjustado.find(item => item.nome === momento.nome)).replace(/"/g, '&quot;')})" 
+                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momentosComCustoAjustado.find(m => m.nome === momento.nome)).replace(/"/g, '&quot;')})" 
                                                 class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
                                                 Resgatar
                                             </button>
@@ -1098,7 +1060,6 @@
                 state.showPartnerInfo = false;
                 state.pendingPairingRequest = null;
                 state.showCartSidebar = false; 
-                state.showFoguinhosPopup = false; // Resetar pop-up de foguinhos
                 renderApp(); // Volta para a tela inicial
             } catch (error) {
                 console.error('Erro ao deslogar:', error);
@@ -1410,7 +1371,6 @@
             state.etapa = newStep;
             state.showCartSidebar = false; 
             state.showFoguinhosPopup = false; // Garante que o pop-up de foguinhos fecha ao mudar de tela principal
-            state.showPartnerInfoPopup = false; // Garante que o pop-up de informações do parceiro fecha
             // Ajuste para garantir que, se for para 'parear' e 'codigoDigitando' já estiver true, ele não seja resetado.
             // A lógica é: se a nova etapa NÃO É 'parear' OU (se a nova etapa É 'parear' E 'codigoDigitando' É false)
             if (newStep !== 'parear' || (newStep === 'parear' && state.codigoDigitando === false)) {
@@ -1439,7 +1399,7 @@
 
             // Controla a visibilidade da barra de navegação inferior e da header
             if (bottomNavBar && mainHeader) { // Certifica-se que os elementos existem
-                if (state.etapa === 'main' || state.etapa === 'parear' || state.etapa === 'foguinhosPopup' || state.etapa === 'partnerInfoPopup') { // Header e footer visíveis nas telas pós-login
+                if (state.etapa === 'main' || state.etapa === 'parear' || state.etapa === 'foguinhosPopup') { // Header e footer visíveis nas telas pós-login
                     bottomNavBar.style.display = 'flex';
                     mainHeader.style.display = 'flex'; 
                 } else {
@@ -1453,32 +1413,13 @@
             const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item');
             bottomNavItems.forEach(item => {
                 item.classList.remove('active'); // Remove active de todos primeiro
-                // Botão Home
                 if (item.querySelector('.fas.fa-home') && state.etapa === 'main') {
                     item.classList.add('active');
-                } 
-                // Botão Parear
-                else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
+                } else if (item.querySelector('.fas.fa-heart') && state.etapa === 'parear') {
                     item.classList.add('active');
-                    // Cor do ícone de coração: verde se pareado, amarelo se pendente
-                    const heartIcon = item.querySelector('.fas.fa-heart');
-                    if(heartIcon){
-                        heartIcon.classList.remove('text-green-400', 'text-yellow-400', 'text-gray-400'); // Limpa cores anteriores
-                        if(state.pareado){
-                            heartIcon.classList.add('text-green-400');
-                        } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
-                            heartIcon.classList.add('text-yellow-400');
-                        } else {
-                            heartIcon.classList.add('text-gray-400'); // Cor padrão se não pareado/pendente
-                        }
-                    }
-                } 
-                // Botão Carrinho
-                else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) { 
+                } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) { // Carrinho ativo quando a sidebar estiver aberta
                     item.classList.add('active');
-                } 
-                // Botão Foguinhos
-                else if (item.querySelector('.fas.fa-fire') && state.etapa === 'foguinhosPopup') {
+                } else if (item.querySelector('.fas.fa-fire') && state.etapa === 'foguinhosPopup') { // Foguinhos ativo quando o pop-up estiver aberto
                     item.classList.add('active');
                 }
             });
@@ -1487,6 +1428,8 @@
         // Função para alternar a visibilidade do pop-up de Foguinhos
         function toggleFoguinhosPopup() {
             console.log('toggleFoguinhosPopup chamada. state.showFoguinhosPopup ANTES:', state.showFoguinhosPopup);
+            // Ao invés de usar showFoguinhosPopup para o display direto, vamos mudar a etapa para 'foguinhosPopup'
+            // Isso é porque o pop-up de foguinhos substitui a tela principal.
             if (state.etapa === 'foguinhosPopup') {
                 state.etapa = 'main'; // Volta para a tela principal
             } else {
@@ -1495,19 +1438,6 @@
             state.showFoguinhosPopup = !state.showFoguinhosPopup; // Atualiza a flag para logs/referência
             renderApp();
             console.log('state.showFoguinhosPopup DEPOIS:', state.showFoguinhosPopup);
-        }
-
-        // Função para alternar a visibilidade do pop-up de Informações do Parceiro Pareado
-        function togglePartnerInfoPopup() {
-            console.log('togglePartnerInfoPopup chamada. state.showPartnerInfoPopup ANTES:', state.showPartnerInfoPopup);
-            if (state.etapa === 'partnerInfoPopup') {
-                state.etapa = 'main'; // Volta para a tela principal
-            } else {
-                state.etapa = 'partnerInfoPopup'; // Vai para a tela do pop-up de informações do parceiro
-            }
-            state.showPartnerInfoPopup = !state.showPartnerInfoPopup; // Atualiza a flag
-            renderApp();
-            console.log('state.showPartnerInfoPopup DEPOIS:', state.showPartnerInfoPopup);
         }
 
         // Carrega dados do usuário e do parceiro se pareado
@@ -1583,7 +1513,7 @@
                         console.log('Solicitação de pareamento ENVIADA pendente. Redirecionando para parear.');
                     }
                     else {
-                        state.pendingRequestQuery = null; // Limpa qualquer solicitação pendente para o próximo load
+                        state.pendingPairingRequest = null; // Limpa qualquer solicitação pendente anterior
                         state.etapa = 'main'; // Se não há solicitações pendentes e não está pendente, vai para main
                         console.log('Nenhuma solicitação pendente. Redirecionando para main.');
                     }
@@ -1628,7 +1558,6 @@
                     state.pendingPairingRequest = null;
                     state.showCartSidebar = false;
                     state.showFoguinhosPopup = false;
-                    state.showPartnerInfoPopup = false; // Resetar pop-up de parceiro
                     renderApp();
                 }
             });
@@ -1666,8 +1595,7 @@
             window.desparearParceiro = desparearParceiro;
             window.toggleCartSidebar = toggleCartSidebar; 
             window.cancelPendingPairingRequest = cancelPendingPairingRequest; 
-            window.toggleFoguinhosPopup = toggleFoguinhosPopup; 
-            window.togglePartnerInfoPopup = togglePartnerInfoPopup; // Torna a nova função global
+            window.toggleFoguinhosPopup = toggleFoguinhosPopup; // Torna a nova função global
 
             init(); // Inicia o aplicativo
         };
