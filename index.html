@@ -920,7 +920,7 @@
         };
     });
 
-    const fotoParceiroUrl = state.parceiroData.fotoUrl || 'https://images.pexels.com/photos/1105325/pexels-photo-1105325.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+    const fotoParceiroUrl = state.parceiroData.fotoUrl || 'https://static8.depositphotos.com/1054144/917/i/450/depositphotos_9173011-stock-photo-flaming-heart.jpg';
 
     appContainer.innerHTML = `
         <main class="container mx-auto px-4 py-8 pb-24 pt-24 bg-gradient-to-br from-gray-900 to-black text-white">
@@ -1024,7 +1024,7 @@ function renderGerenciarCatalogo() {
     // --- LÓGICA EXISTENTE, AGORA USANDO OS DADOS FILTRADOS ---
     const catalogoSalvo = state.usuario.catalogoPersonalizado || {};
     const categorias = [...new Set(momentosDisponiveis.map(m => m.categoria))];
-    const fotoUrl = state.usuario.fotoUrl || 'https://images.pexels.com/photos/1105325/pexels-photo-1105325.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+    const fotoUrl = state.usuario.fotoUrl || 'https://static8.depositphotos.com/1054144/917/i/450/depositphotos_9173011-stock-photo-flaming-heart.jpg';
 
     appContainer.innerHTML = `
         <div class="container mx-auto px-4 py-8 pb-24 pt-24">
