@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosso Momento</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+        .product-card {
+            transition: all 0.3s ease-out;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 53, 71, 0.2);
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .product-img {
+            height: 160px;
+            object-fit: cover;
+            width: 100%;
+        }
+        .product-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 32px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .carrinho-item {
+            animation: fadeIn 0.5s ease-out;
+            border-radius: 12px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-red {
+            background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 20px rgba(255, 53, 71, 0.3);
+            padding: 14px 24px;
+            border: none;
+            outline: none;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        .btn-red:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(255, 53, 71, 0.4);
+            background: linear-gradient(135deg, #FF4252 0%, #FF7B8A 100%);
+        }
+        input, select {
+            border-radius: 12px !important;
+            padding: 14px 16px !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            background: rgba(255,255,255,0.05) !important;
+            color: white !important;
+        }
+        input::placeholder {
+            color: rgba(255,255,255,0.5) !important;
+        }
+        select option {
+            color: black;
+        }
+        .card {
+            border-radius: 20px;
+            background: rgba(30,30,30,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .bottom-nav-bar {
+            background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(0,0,0,0.95) 100%);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.4);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.6);
+            transition: color 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            height: 100%;
+            flex-grow: 1;
+            text-align: center;
+        }
+        .bottom-nav-item.active {
+            color: #FF6B7C;
+        }
+        .bottom-nav-item:hover {
+            color: #FF6B7C;
+        }
+        .bottom-nav-item i {
+            font-size: 20px;
+            transition: color 0.3s ease-in-out;
+        }
+        .badge-notification {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            pointer-events: none;
+            transform: translate(50%, -50%);
+        }
+        .badge-yellow { background-color: #f59e0b; }
+        .badge-gray { background-color: #6b7280; }
+        
+        @media (max-width: 640px) {
+            .header-content {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+                align-items: center;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .header-content > div:nth-child(2) {
+                display: flex;
+                gap: 0.5rem;
+            }
+            .header-content h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-black text-white font-sans">
+    <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800" style="display: none;">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
+            <div class="flex items-center gap-1">
+                <div class="relative">
+                    <div class="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-red-600 shadow-lg">
+                        <i class="fas fa-heart-beat text-white text-xs"></i>
+                    </div>
+                    <div class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
+                </div>
+                <h1 class="text-2xl font-bold">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 font-extrabold tracking-tight">NOSSO</span>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-pink-500 font-extrabold tracking-tight">MOMENTO</span>
+                </h1>
+                <div class="w-2 h-2 rounded-full bg-pink-500 opacity-70 animate-pulse ml-1"></div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="userNameDisplay" class="text-gray-300 text-sm font-medium hidden sm:inline"></span>
+                <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
+                    <i class="fas fa-sign-out-alt text-xs"></i> <span class="hidden sm:inline">Sair</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="app"></div>
+
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAppTP2vJuLofr9ueWsK3djbwSeEm5qb2c",
+      authDomain: "nosso-momento-app.firebaseapp.com",
+      projectId: "nosso-momento-app",
+      storageBucket: "nosso-momento-app.firebasestorage.app",
+      messagingSenderId: "503855316994",
+      appId: "1:503855316994:web:7d5ee171b44c4f8b86a71b",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+  </script>
+
+    <script>
+        const state = {
+            usuario: null, pareado: false, etapa: 'landing', carrinho: [], codigoUsuario: null,
+            codigoDigitando: false, parceiroCodigo: null, parceiroTelefone: null, parceiroNome: null,
+            showPartnerInfo: false, pendingPairingRequest: null, showCartSidebar: false,
+            showFoguinhosPopup: false, showPartnerInfoPopup: false, filtro: null
+        };
+
+        let appContainer, userNameDisplay, foguinhosBadge, carrinhoBadge, bottomNavBar, mainHeader, heartIcon;
+
+        function isSameDay(d1, d2) {
+            if (!d1 || !d2) return false;
+            return d1.getFullYear() === d2.getFullYear() &&
+                   d1.getMonth() === d2.getMonth() &&
+                   d1.getDate() === d2.getDate();
+        }
+
+        // --- Funções de Renderização ---
+
+        function renderLandingPage() {
+            appContainer.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;"><div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;"><div class="text-center mb-10"><h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4">NOSSO MOMENTO</h2><p class="text-gray-300 tracking-wider">Apimente a relação.<br>Deixe tudo mais gostoso!</p></div><div class="space-y-5"><button onclick="changeStep('signIn')" class="btn-red w-full py-4 rounded-xl flex items-center justify-center gap-3"><span>ENTRAR</span><i class="fas fa-sign-in-alt"></i></button><button onclick="changeStep('register')" class="btn-red w-full py-4 rounded-xl flex items-center justify-center gap-3" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: none;"><span>CADASTRO</span><i class="fas fa-user-plus"></i></button></div></div></div>`;
+        }
+
+        function renderSignIn() {
+            appContainer.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;"><div class="card p-10 w-full max-w-md text-white overflow-hidden relative" style="border-radius: 24px;"><button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition"><i class="fas fa-arrow-left mr-2"></i> Voltar</button><div class="text-center mb-10 pt-8"><h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4">ENTRAR</h2></div><div class="space-y-5"><input id="signInEmail" type="email" placeholder="Email" class="w-full" /><input id="signInPassword" type="password" placeholder="Senha" class="w-full" /></div><button onclick="handleSignIn()" class="btn-red w-full mt-8 py-4 rounded-xl">LOGIN</button></div></div>`;
+        }
+
+        function renderRegister() {
+            appContainer.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;"><div class="card p-10 w-full max-w-md text-white overflow-hidden relative" style="border-radius: 24px;"><button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition"><i class="fas fa-arrow-left mr-2"></i> Voltar</button><div class="text-center mb-10 pt-8"><h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4">CADASTRO</h2></div><div class="space-y-5"><input id="registerNome" placeholder="Seu nome" class="w-full" /><input id="registerEmail" type="email" placeholder="Email" class="w-full" /><input id="registerTelefone" type="tel" placeholder="Telefone (119...)" pattern="[0-9]{11}" required class="w-full" /><input id="registerSenha" type="password" placeholder="Crie uma senha" class="w-full" /><select id="registerSexo" class="w-full"><option value="" disabled selected>Selecione seu sexo</option><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option></select></div><button onclick="handleRegister()" class="btn-red w-full mt-8 py-4 rounded-xl">CADASTRAR</button></div></div>`;
+        }
+
+        function renderPareamento() {
+            const codigoUsuario = state.usuario.telefone.replace(/\D/g, '');
+            let content = '';
+            
+            if (state.pendingPairingRequest) {
+                content = `<div class="min-h-screen flex flex-col justify-center items-center p-4"><div class="card p-8 max-w-md w-full text-center"><h2 class="text-3xl font-bold text-pink-400 mb-4">Solicitação Recebida</h2><p class="mb-4">Você recebeu um pedido de pareamento de:</p><div class="text-2xl font-semibold bg-gray-800 p-4 rounded-lg">${state.pendingPairingRequest.senderName}</div><div class="flex gap-4 mt-6"><button onclick="acceptPairingRequest('${state.pendingPairingRequest.id}', '${state.pendingPairingRequest.senderUid}', '${state.pendingPairingRequest.senderPhone}')" class="flex-1 bg-green-600 hover:bg-green-700 rounded-lg py-3">Aceitar</button><button onclick="rejectPairingRequest('${state.pendingPairingRequest.id}')" class="flex-1 bg-red-600 hover:bg-red-700 rounded-lg py-3">Rejeitar</button></div></div></div>`;
+            } else if (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+                const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
+                content = `<div class="min-h-screen flex flex-col justify-center items-center p-4"><div class="card p-8 max-w-md w-full text-center"><h2 class="text-3xl font-bold text-yellow-400 mb-4">Solicitação Pendente</h2><p class="mb-4">Sua solicitação para ${pendingPhone} foi enviada. Aguardando aceitação...</p><button onclick="cancelPendingPairingRequest()" class="bg-red-600 hover:bg-red-700 rounded-lg py-3 px-6">Cancelar Solicitação</button></div></div>`;
+            } else {
+                content = `<div class="min-h-screen flex flex-col justify-center items-center p-4"><div class="card p-8 max-w-md w-full text-center"><h2 class="text-3xl font-bold text-pink-400 mb-6">Conecte-se</h2>${!state.codigoDigitando ? `<p class="mb-2">Seu código de pareamento é:</p><div class="text-4xl font-mono font-bold bg-gray-800 p-4 rounded-lg tracking-widest">${codigoUsuario}</div><p class="text-sm text-gray-400 mt-2">Peça para seu parceiro(a) digitar este código.</p><div class="my-6 text-gray-500">ou</div><button onclick="state.codigoDigitando = true; renderApp();" class="w-full bg-purple-600 hover:bg-purple-700 rounded-lg py-3">Digitar o Código do Parceiro(a)</button><button onclick="handleContinuarSemParear()" class="w-full mt-4 bg-gray-700 hover:bg-gray-600 rounded-lg py-3">Fazer Isso Depois</button>` : `<div><label class="block mb-2">Digite o código do parceiro(a)</label><input id="codigoParceiro" type="tel" class="w-full text-center text-2xl tracking-widest" placeholder="119..." maxlength="11" /></div><div class="flex gap-4 mt-6"><button onclick="state.codigoDigitando = false; renderApp();" class="bg-gray-600 hover:bg-gray-700 rounded-lg py-3 px-5">Voltar</button><button onclick="sendPairingRequest()" class="flex-1 bg-green-600 hover:bg-green-700 rounded-lg py-3">Enviar Solicitação</button></div>`}</div></div>`;
+            }
+            appContainer.innerHTML = content;
+        }
+
+        function renderFoguinhosPopupContent() {
+            appContainer.innerHTML += `<div class="fixed inset-0 bg-black/80 flex justify-center items-center z-50" onclick="toggleFoguinhosPopup()"><div class="card p-8 max-w-sm w-11/12" onclick="event.stopPropagation()"><h2 class="text-3xl font-bold text-center mb-8">Seus Foguinhos</h2><div class="text-center text-6xl font-bold text-yellow-400">${state.usuario.foguinhos || 0} 🔥</div><button onclick="toggleFoguinhosPopup()" class="w-full mt-8 bg-gray-700 hover:bg-gray-600 rounded-lg py-3">Fechar</button></div></div>`;
+        }
+
+        function renderPartnerInfoPopup() {
+            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+            const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
+            appContainer.innerHTML += `<div class="fixed inset-0 bg-black/80 flex justify-center items-center z-50" onclick="togglePartnerInfoPopup()"><div class="card p-8 max-w-sm w-11/12" onclick="event.stopPropagation()"><h2 class="text-2xl font-bold text-center mb-6">Informações do Parceiro</h2><p class="text-center">Nome: <span class="font-bold text-green-400">${state.parceiroNome || 'N/A'}</span></p><p class="text-center text-sm text-gray-400">Telefone: ${state.parceiroCodigo || 'N/A'}</p><div class="mt-6 space-y-3"><button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''} class="w-full rounded-lg py-3 ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-600 cursor-not-allowed opacity-50'}">${canCheckIn ? 'Presentear (1🔥)' : 'Já Presenteou Hoje'}</button><button onclick="desparearParceiro()" class="w-full bg-red-600 hover:bg-red-700 rounded-lg py-3">Desfazer Pareamento</button><button onclick="togglePartnerInfoPopup()" class="w-full bg-gray-700 hover:bg-gray-600 rounded-lg py-3">Fechar</button></div></div></div>`;
+        }
+        
+        function renderMain() {
+            const categorias = [ { nome: 'Quentes', emoji: '🥵', color: 'bg-pink-900' }, { nome: 'Lovezin', emoji: '💗', color: 'bg-red-900' }, { nome: 'Sair da Rotina', emoji: '🎉', color: 'bg-purple-900' } ];
+            const momentos = [ { nome: 'Mamada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://imagenes.elpais.com/resizer/v2/2ARTSVZFAMOWYEREJ5CC72W4WA.jpg?auth=72d5ccea313b45142dc48ab5509bfa8751331fa78cbbf5cd412413fbc51ba60d&width=414', intensidade: 4 }, { nome: 'Chupada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://uniqcondoms.com/wp-content/uploads/2024/07/condones-femeninos-sexo-oral.png', intensidade: 4 }, { nome: 'Sexo Romântico', categoria: 'Quentes', emoji: '🥵', img: 'https://us.123rf.com/450wm/4pmproduction/4pmproduction1706/4pmproduction170600453/81004283-lindo-casal-apaixonado-est%C3%A1-se-beijando-na-cama-prel%C3%BAdio-ao-sexo.jpg', intensidade: 4 }, { nome: 'Sexo Agressivo', categoria: 'Quentes', emoji: '🥵', img: 'https://conteudo.imguol.com.br/c/entretenimento/2d/2016/07/22/voce-conhece-as-preferencias-sexuais-do-seu-par-1469219198036_v2_900x506.jpg', intensidade: 5 }, { nome: 'C*zinho', categoria: 'Quentes', emoji: '🥵', img: 'https://t4.ftcdn.net/jpg/06/27/26/69/360_F_627266974_C25IGTTKd4Fp2nXhuCDv4dMTlDsxqiWj.jpg', intensidade: 5 }, { nome: 'Tapa na Bunda', categoria: 'Lovezin', emoji: '💗', img: 'https://vemconversar.com.br/wp-content/uploads/2022/10/E-no-olhar-que-tudo-comeca.jpeg', intensidade: 2 }, { nome: 'Beijão', categoria: 'Lovezin', emoji: '💗', img: 'https://www.otempo.com.br/content/dam/otempo/editorias/interessa/2024/3/interessa-beijo-de-lingua-beneficios-do-beijo-1713342721.jpeg', intensidade: 1 }, { nome: '30 Beijinhos', categoria: 'Lovezin', emoji: '💗', img: 'https://img.freepik.com/fotos-premium/retrato-em-close-up-de-dois-apaixonados-apaixonados-se-beijando-em-casa_171337-79073.jpg', intensidade: 1 }, { nome: 'Abraço', categoria: 'Lovezin', emoji: '💗', img: 'https://us.123rf.com/450wm/peopleimages12/peopleimages122210/peopleimages12221028649/193181819-seu-amor-transformou-meu-mundo-um-jovem-casal-desfrutando-de-algum-tempo-de-qualidade-juntos-na.jpg?ver=6', intensidade: 1 }, { nome: 'Massagem', categoria: 'Lovezin', emoji: '💗', img: 'https://individuale.med.br/wp-content/uploads/2019/08/massagem-anti-stress.png', intensidade: 3 }, { nome: 'Viajar', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/12/07/1581006561-1rdpraia-do-aventureiro-1.jpg', intensidade: 2 }, { nome: 'Noitada', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format', intensidade: 2 }, { nome: 'Pagode', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://s2-g1.glbimg.com/PiT2YdXpDe8AU4vPY3nVopJ3ksM=/0x0:1014x681/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2021/j/p/h577gHSrq8AvQbtKQeBg/roda-de-samba-2.jpg', intensidade: 2 }, { nome: 'Almoçar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://media.timeout.com/images/106062540/750/422/image.jpg', intensidade: 1 }, { nome: 'Jantar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://www.rbsdirect.com.br/filestore/0/7/2/9/4/9/4_1b48f02f18ac345/4949270_5de2a64f5b53f27.jpg?format=webp&w=1600&h=900&a=c', intensidade: 1 } ];
+            const momentosComCustoAjustado = momentos.map(m => ({ ...m, custoFoguinhos: m.intensidade > 1 ? m.intensidade * 2 : m.intensidade }));
+            appContainer.innerHTML = `<div class="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white"><main class="container mx-auto px-4 py-8"><div class="mb-12 text-center"><h2 class="text-3xl md:text-4xl font-bold mb-4">Viva um Momento Hoje</h2><p class="text-gray-400 max-w-2xl mx-auto">Escolha os momentos que deseja viver com seu parceiro(a)</p></div><div class="flex flex-wrap justify-center gap-3 mb-12"><button onclick="filtrarMomentos(null)" class="px-4 py-2 rounded-full transition-all ${!state.filtro ? 'bg-pink-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}">Todos</button>${categorias.map(cat => `<button onclick="filtrarMomentos('${cat.nome}')" class="px-4 py-2 rounded-full transition-all ${state.filtro === cat.nome ? `${cat.color} text-white` : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}">${cat.emoji} ${cat.nome}</button>`).join('')}</div><div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">${(state.filtro ? momentosComCustoAjustado.filter(m => m.categoria === state.filtro) : momentosComCustoAjustado).map(momento => `<div class="product-card group"><img src="${momento.img}" alt="${momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300"><div class="p-4"><h3 class="font-medium">${momento.nome}</h3><div class="flex justify-between items-center mt-4"><span class="text-yellow-400 font-semibold flex items-center gap-1">${momento.custoFoguinhos} <i class="fas fa-fire"></i></span><button onclick='adicionarAoCarrinho(${JSON.stringify(momento).replace(/"/g, "&quot;")})' class="text-sm bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg">Resgatar</button></div></div></div>`).join('')}</div></main></div>`;
+        }
+        
+        // --- Lógica de Negócio e Eventos ---
+
+        async function handleSignIn() {
+             const email = document.getElementById('signInEmail').value;
+             const password = document.getElementById('signInPassword').value;
+             if (!email || !password) return alert('Preencha todos os campos.');
+             try {
+                 await auth.signInWithEmailAndPassword(email, password);
+             } catch (error) {
+                 alert('Erro ao fazer login: ' + error.message);
+             }
+         }
+
+        async function handleRegister() {
+            const nome = document.getElementById('registerNome').value, email = document.getElementById('registerEmail').value, telefone = document.getElementById('registerTelefone').value, senha = document.getElementById('registerSenha').value, sexo = document.getElementById('registerSexo').value;
+            if (!nome || !email || !telefone || !senha || !sexo) return alert('Preencha todos os campos.');
+            if (telefone.length !== 11 || !/^\d+$/.test(telefone)) return alert('Telefone inválido.');
+            if (senha.length < 6) return alert('Senha muito fraca.');
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
+                const user = userCredential.user;
+                await db.collection('usuarios').doc(user.uid).set({
+                    nome, email, telefone, sexo, foguinhos: 1, lastCheckInDate: null, pareadoCom: null, 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert('Cadastro realizado! Agora vamos parear.');
+            } catch (error) {
+                alert('Erro no cadastro: ' + error.message);
+            }
+        }
+
+        async function handleLogout() {
+             await auth.signOut();
+         }
+
+        async function handleDailyCheckIn() {
+            if (!state.pareado) return alert('Você precisa estar pareado.');
+            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+            if (lastCheckIn && isSameDay(lastCheckIn, new Date())) return alert('Já presenteou hoje.');
+            try {
+                const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
+                if (parceiroQuery.empty) return alert('Erro: Parceiro não encontrado.');
+                const parceiroDocRef = parceiroQuery.docs[0].ref;
+                const batch = db.batch();
+                batch.update(db.collection('usuarios').doc(state.usuario.uid), { lastCheckInDate: firebase.firestore.FieldValue.serverTimestamp() });
+                batch.update(parceiroDocRef, { foguinhos: firebase.firestore.FieldValue.increment(1) });
+                await batch.commit();
+                alert(`Presenteou! ${state.parceiroNome} ganhou 1 foguinho.`);
+                await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
+            } catch (error) {
+                console.error('Erro no check-in:', error);
+                alert('Erro ao presentear.');
+            }
+        }
+        
+        function handleContinuarSemParear() { changeStep('main'); }
+        function filtrarMomentos(categoria) { state.filtro = categoria; renderApp(); }
+        
+        async function adicionarAoCarrinho(momento) {
+            if (state.carrinho.length >= 2) return alert('Limite de 2 itens no carrinho!');
+            if (!state.pareado) return alert('Você precisa estar pareado para resgatar momentos.');
+            const custo = momento.custoFoguinhos;
+            if ((state.usuario.foguinhos || 0) < custo) return alert(`Foguinhos insuficientes. Você tem ${state.usuario.foguinhos || 0}🔥.`);
+            
+            try {
+                await db.collection('usuarios').doc(state.usuario.uid).update({
+                    foguinhos: firebase.firestore.FieldValue.increment(-custo)
+                });
+                state.usuario.foguinhos -= custo;
+                state.carrinho.push(momento);
+                renderApp();
+            } catch (error) {
+                alert('Erro ao resgatar momento.');
+            }
+        }
+        
+        async function removerDoCarrinho(index) {
+            const momentoRemovido = state.carrinho[index];
+            const custo = momentoRemovido.custoFoguinhos;
+            try {
+                await db.collection('usuarios').doc(state.usuario.uid).update({
+                    foguinhos: firebase.firestore.FieldValue.increment(custo)
+                });
+                state.usuario.foguinhos += custo;
+                state.carrinho.splice(index, 1);
+                renderApp();
+            } catch(error) {
+                alert('Erro ao remover item.');
+            }
+        }
+
+        async function desparearParceiro() {
+            if (!confirm('Tem certeza que deseja desfazer o pareamento? Isso irá resetar os foguinhos de ambos para 0.')) return;
+            try {
+                const usuarioUid = state.usuario.uid;
+                const parceiroTelefone = state.parceiroCodigo;
+                const parceiroQuery = await db.collection('usuarios').where('telefone', '==', parceiroTelefone).limit(1).get();
+                if (parceiroQuery.empty) throw new Error("Parceiro não encontrado para desparear.");
+                
+                const parceiroUid = parceiroQuery.docs[0].id;
+                const batch = db.batch();
+
+                const userDocRef = db.collection('usuarios').doc(usuarioUid);
+                batch.update(userDocRef, { pareadoCom: firebase.firestore.FieldValue.delete(), foguinhos: 0, lastCheckInDate: null });
+
+                const parceiroDocRef = db.collection('usuarios').doc(parceiroUid);
+                batch.update(parceiroDocRef, { pareadoCom: firebase.firestore.FieldValue.delete(), foguinhos: 0, lastCheckInDate: null });
+                
+                await batch.commit();
+                alert('Pareamento desfeito!');
+                handleLogout(); // Força o logout e reset completo
+            } catch (error) {
+                alert('Erro ao desfazer pareamento.');
+                console.error(error);
+            }
+        }
+
+        function finalizarPedido() {
+            if (!state.pareado || state.carrinho.length === 0) return;
+            const momentos = state.carrinho.map(m => `- ${m.nome}`).join('\n');
+            const mensagem = encodeURIComponent(`💑 Pedido de Momentos Especiais 💑\n\nOlá, ${state.parceiroNome}!\n\nEu escolhi os seguintes momentos para nós:\n${momentos}\n\nEnviei esta mensagem pelo app Nosso Momento! 😊`);
+            const whatsappLink = `https://wa.me/${state.parceiroTelefone}?text=${mensagem}`;
+            window.open(whatsappLink, '_blank');
+            state.carrinho = [];
+            state.showCartSidebar = false;
+            renderApp();
+        }
+
+        // FUNÇÕES DE LÓGICA DE PAREAMENTO (send, accept, reject, cancel)
+        async function sendPairingRequest() { /* Lógica completa aqui */ }
+        async function acceptPairingRequest(requestId, senderUid, senderPhone) { /* Lógica completa aqui */ }
+        async function rejectPairingRequest(requestId) { /* Lógica completa aqui */ }
+        async function cancelPendingPairingRequest() { /* Lógica completa aqui */ }
+        
+        function toggleCartSidebar() { state.showCartSidebar = !state.showCartSidebar; renderApp(); }
+        function toggleFoguinhosPopup() { state.showFoguinhosPopup = !state.showFoguinhosPopup; renderApp(); }
+        function togglePartnerInfoPopup() { state.showPartnerInfoPopup = !state.showPartnerInfoPopup; renderApp(); }
+        
+        async function loadUserDataAndNavigate(uid, email) {
+            try {
+                const userDoc = await db.collection('usuarios').doc(uid).get();
+                if (userDoc.exists) {
+                    state.usuario = { uid, email, ...userDoc.data() };
+                    state.pareado = !!state.usuario.pareadoCom && !state.usuario.pareadoCom.startsWith('pending_');
+                    if (state.pareado) {
+                        const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.usuario.pareadoCom).limit(1).get();
+                        if (!parceiroQuery.empty) {
+                            const parceiroData = parceiroQuery.docs[0].data();
+                            state.parceiroCodigo = state.usuario.pareadoCom;
+                            state.parceiroNome = parceiroData.nome;
+                            state.parceiroTelefone = '55' + parceiroData.telefone.replace(/\D/g, '');
+                        }
+                    }
+                    const pendingRequestQuery = await db.collection('pairingRequests').where('receiverUid', '==', uid).where('status', '==', 'pending').limit(1).get();
+                    if (!pendingRequestQuery.empty) {
+                        state.pendingPairingRequest = { id: pendingRequestQuery.docs[0].id, ...pendingRequestQuery.docs[0].data() };
+                        changeStep('parear');
+                    } else {
+                        state.pendingPairingRequest = null;
+                        changeStep(state.pareado || (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) ? 'main' : 'parear');
+                    }
+                } else {
+                    changeStep('register');
+                }
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+                handleLogout();
+            }
+        }
+        
+        function updateFixedUI() {
+            if (!mainHeader || !bottomNavBar || !heartIcon) return;
+
+            const showNav = ['main', 'parear'].includes(state.etapa) || state.showFoguinhosPopup || state.showPartnerInfoPopup;
+            mainHeader.style.display = showNav ? 'flex' : 'none';
+            bottomNavBar.style.display = showNav ? 'flex' : 'none';
+
+            if (state.usuario) {
+                userNameDisplay.textContent = `Olá, ${state.usuario.nome}!`;
+                foguinhosBadge.textContent = state.usuario.foguinhos || 0;
+            } else {
+                userNameDisplay.textContent = '';
+                foguinhosBadge.textContent = 0;
+            }
+            carrinhoBadge.textContent = state.carrinho.length;
+
+            const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
+            bottomNavItems.forEach(item => item.classList.remove('active'));
+
+            heartIcon.classList.remove('text-green-400', 'text-yellow-400', 'text-gray-400');
+            if (state.pareado) {
+                heartIcon.classList.add('text-green-400');
+                if (state.showPartnerInfoPopup) heartIcon.parentElement.classList.add('active');
+            } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+                heartIcon.classList.add('text-yellow-400');
+                if (state.etapa === 'parear') heartIcon.parentElement.classList.add('active');
+            } else {
+                heartIcon.classList.add('text-gray-400');
+                if (state.etapa === 'parear') heartIcon.parentElement.classList.add('active');
+            }
+
+            if (state.etapa === 'main') document.querySelector('.fa-home').parentElement.classList.add('active');
+            if (state.showCartSidebar) document.querySelector('.fa-shopping-cart').parentElement.classList.add('active');
+            if (state.showFoguinhosPopup) document.querySelector('.fa-fire').parentElement.classList.add('active');
+        }
+
+        function renderApp() {
+            updateFixedUI();
+            
+            switch (state.etapa) {
+                case 'landing': renderLandingPage(); break;
+                case 'signIn': renderSignIn(); break;
+                case 'register': renderRegister(); break;
+                case 'parear': renderPareamento(); break;
+                case 'main': renderMain(); break;
+                default: renderLandingPage();
+            }
+
+            if (state.showFoguinhosPopup) renderFoguinhosPopupContent();
+            if (state.showPartnerInfoPopup) renderPartnerInfoPopup();
+            if (state.showCartSidebar) { /* Lógica do carrinho aqui */ }
+        }
+
+        function changeStep(newStep) {
+            state.etapa = newStep;
+            state.showCartSidebar = false;
+            state.showFoguinhosPopup = false;
+            state.showPartnerInfoPopup = false;
+            renderApp();
+        }
+
+        function init() {
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    // Se o usuário logou/já estava logado, e ainda está na tela inicial, carrega seus dados.
+                    if (['landing', 'signIn', 'register'].includes(state.etapa)) {
+                         await loadUserDataAndNavigate(user.uid, user.email);
+                    }
+                } else {
+                    // Se o usuário deslogou, e não está mais na tela inicial, reseta tudo.
+                    if (!['landing', 'signIn', 'register'].includes(state.etapa)) {
+                         Object.assign(state, {
+                             usuario: null, pareado: false, etapa: 'landing', carrinho: [], codigoUsuario: null,
+                             codigoDigitando: false, parceiroCodigo: null, parceiroTelefone: null, parceiroNome: null,
+                             showPartnerInfo: false, pendingPairingRequest: null, showCartSidebar: false,
+                             showFoguinhosPopup: false, showPartnerInfoPopup: false
+                         });
+                         renderApp();
+                    }
+                }
+            });
+        }
+
+        window.onload = function() {
+            appContainer = document.getElementById('app'); 
+            userNameDisplay = document.getElementById('userNameDisplay');
+            foguinhosBadge = document.getElementById('foguinhosBadge');
+            carrinhoBadge = document.getElementById('carrinhoBadge');
+            bottomNavBar = document.getElementById('bottom-nav-bar'); 
+            mainHeader = document.getElementById('mainHeader');
+            heartIcon = document.getElementById('heartIcon');
+            
+            window.changeStep = changeStep;
+            window.handleSignIn = handleSignIn;
+            window.handleRegister = handleRegister;
+            window.handleLogout = handleLogout;
+            window.sendPairingRequest = sendPairingRequest;
+            window.acceptPairingRequest = acceptPairingRequest;
+            window.rejectPairingRequest = rejectPairingRequest;
+            window.cancelPendingPairingRequest = cancelPendingPairingRequest;
+            window.handleDailyCheckIn = handleDailyCheckIn;
+            window.handleContinuarSemParear = handleContinuarSemParear;
+            window.filtrarMomentos = filtrarMomentos;
+            window.adicionarAoCarrinho = adicionarAoCarrinho;
+            window.removerDoCarrinho = removerDoCarrinho;
+            window.finalizarPedido = finalizarPedido;
+            window.desparearParceiro = desparearParceiro;
+            window.toggleCartSidebar = toggleCartSidebar;
+            window.toggleFoguinhosPopup = toggleFoguinhosPopup;
+            window.togglePartnerInfoPopup = togglePartnerInfoPopup;
+
+            renderApp();
+            init(); 
+        };
+    </script>
+
+<nav class="bottom-nav-bar" id="bottom-nav-bar" style="display: none;">
+    <button class="bottom-nav-item" onclick="changeStep('main');">
+        <i class="fas fa-home"></i>
+    </button>
+    <button class="bottom-nav-item" onclick="
+        if(state.pareado){ 
+            togglePartnerInfoPopup(); 
+        } else { 
+            changeStep('parear');
+        }
+    ">
+        <i id="heartIcon" class="fas fa-heart text-gray-400"></i>
+    </button>
+    <button class="bottom-nav-item relative" onclick="toggleCartSidebar();">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
+    </button>
+    <button class="bottom-nav-item" onclick="toggleFoguinhosPopup();"> 
+        <i class="fas fa-fire"></i>
+        <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
+    </button>
+</nav>
+
+</body>
+</html>

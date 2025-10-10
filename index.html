@@ -7,6 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +15,6 @@
         body {
             font-family: 'Poppins', sans-serif;
             /* Adicionado padding-bottom para que o conteúdo não fique por baixo do footer fixo */
-            padding-bottom: 80px; /* Altura aproximada do footer */
             overflow-x: hidden; /* Esconder a barra de rolagem horizontal se algo escapar */
         }
         .product-card {
@@ -209,33 +209,66 @@
                 font-size: 1.5rem; /* Reduz o tamanho da fonte em telas pequenas */
             }
         }
+
+.accordion-content.open {
+    max-height: 1000px; /* Um valor alto para permitir que o conteúdo se expanda */
+}
+.accordion-button.open i {
+    transform: rotate(180deg);
+}
+
+        /* Adicione este novo estilo para o botão central */
+.bottom-nav-item-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;   /* Tamanho do círculo */
+    height: 60px;  /* Tamanho do círculo */
+    background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
+    color: white;
+    border-radius: 50%; /* Deixa o botão redondo */
+    border: 3px solid #1f2937; /* Cor de fundo da sua barra de navegação, para dar um efeito de recorte */
+    transform: translateY(-20px); /* Move o botão para cima */
+    box-shadow: 0 -5px 15px rgba(255, 53, 71, 0.4);
+    transition: all 0.3s ease;
+}
+
+.bottom-nav-item-center:hover {
+    transform: translateY(-23px) scale(1.05); /* Efeito suave ao passar o mouse */
+    box-shadow: 0 -8px 20px rgba(255, 53, 71, 0.5);
+}
+
+.bottom-nav-item-center i {
+    font-size: 24px;
+}
     </style>
 </head>
 <body class="bg-black text-white font-sans">
     <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800" style="display: none;">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
-            <div class="flex items-center gap-1">
-                <div class="relative">
-                    <div class="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-red-600 shadow-lg">
-                        <i class="fas fa-heart-beat text-white text-xs"></i>
-                    </div>
-                    <div class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
+        <div class="flex items-center gap-1">
+            <div class="relative">
+                <div class="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-red-600 shadow-lg">
+                    <i class="fas fa-heart-beat text-white text-xs"></i>
                 </div>
-                <h1 class="text-2xl font-bold">
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 font-extrabold tracking-tight" style="text-shadow: 0 2px 4px rgba(255,53,71,0.3);">NOSSO</span>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-pink-500 font-extrabold tracking-tight" style="text-shadow: 0 2px 4px rgba(255,53,71,0.3);">MOMENTO</span>
-                </h1>
-                <div class="w-2 h-2 rounded-full bg-pink-500 opacity-70 animate-pulse ml-1"></div>
+                <div class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
             </div>
-            <div class="flex items-center gap-4">
-                <span id="userNameDisplay" class="text-gray-300 text-sm font-medium hidden sm:inline"></span>
-
-                <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
-                    <i class="fas fa-sign-out-alt text-xs"></i> <span class="hidden sm:inline">Sair</span>
-                </button>
-            </div>
+            <h1 class="text-2xl font-bold">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 font-extrabold tracking-tight" style="text-shadow: 0 2px 4px rgba(255,53,71,0.3);">NOSSO</span>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-pink-500 font-extrabold tracking-tight" style="text-shadow: 0 2px 4px rgba(255,53,71,0.3);">MOMENTO</span>
+            </h1>
+            <div class="w-2 h-2 rounded-full bg-pink-500 opacity-70 animate-pulse ml-1"></div>
         </div>
-    </header>
+
+        <div class="flex items-center gap-4">
+            <img id="headerProfilePic" src="" class="w-8 h-8 rounded-full object-cover hidden sm:block">
+            <span id="userNameDisplay" class="text-gray-300 text-sm font-medium hidden sm:inline"></span>
+            <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
+                <i class="fas fa-sign-out-alt text-xs"></i> <span class="hidden sm:inline">Sair</span>
+            </button>
+        </div>
+    </div>
+</header>
 
     <div id="app">
         </div>
@@ -255,26 +288,46 @@
     console.log("✅ Firebase: Initialized com sucesso!");
     const db = firebase.firestore();
     const auth = firebase.auth(); // Inicializa o Firebase Auth
+    const storage = firebase.storage();
   </script>
 
     <script>
         // Main application state
-        const state = {
-            usuario: null, // Incluirá UID, nome, email, telefone, sexo, foguinhos, lastCheckInDate, pareadoCom
-            pareado: false,
-            etapa: 'landing', // Nova etapa inicial
-            carrinho: [],
-            codigoUsuario: null,       // Código gerado para o usuário (telefone)
-            codigoDigitando: false,    // Flag para controle da UI (pareamento)
-            parceiroCodigo: null,      // Código do parceiro digitado (telefone)
-            parceiroTelefone: null,    // Telefone do parceiro pareado (sem 55)
-            parceiroNome: null,        // Nome do parceiro pareado
-            showPartnerInfo: false,    // Mostra informações do parceiro
-            // Nova propriedade para armazenar solicitações de pareamento recebidas
-            pendingPairingRequest: null, // {id, senderUid, senderName, senderPhone}
-            showCartSidebar: false,     // Nova flag para controlar a visibilidade do carrinho
-            showFoguinhosPopup: false // Nova flag para controlar a visibilidade do pop-up de foguinhos
-        };
+            const state = {
+        usuario: null,
+        pareado: false,
+        parceiroData: null,
+        idPareamentoAmigavel: null, // Nova propriedade para o ID amigável
+        etapa: 'landing',
+        carrinho: [],
+        codigoUsuario: null,
+        codigoDigitando: false,
+        parceiroCodigo: null,
+        parceiroTelefone: null,
+        parceiroNome: null,
+        showPartnerInfo: false,
+        pendingPairingRequest: null,
+        showCartSidebar: false,
+        showFoguinhosPopup: false
+    };
+
+        const momentos = [
+            { nome: 'Mamada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://imagenes.elpais.com/resizer/v2/2ARTSVZFAMOWYEREJ5CC72W4WA.jpg?auth=72d5ccea313b45142dc48ab5509bfa8751331fa78cbbf5cd412413fbc51ba60d&width=414', intensidade: 4 },
+            { nome: 'Chupada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://uniqcondoms.com/wp-content/uploads/2024/07/condones-femeninos-sexo-oral.png', intensidade: 4 },
+            { nome: 'Sexo Romântico', categoria: 'Quentes', emoji: '🥵', img: 'https://us.123rf.com/450wm/4pmproduction/4pmproduction1706/4pmproduction170600453/81004283-lindo-casal-apaixonado-est%C3%A1-se-beijando-na-cama-prel%C3%BAdio-ao-sexo.jpg', intensidade: 4 },
+            { nome: 'Sexo Agressivo', categoria: 'Quentes', emoji: '🥵', img: 'https://conteudo.imguol.com.br/c/entretenimento/2d/2016/07/22/voce-conhece-as-preferencias-sexuais-do-seu-par-1469219198036_v2_900x506.jpg', intensidade: 5 },
+            { nome: 'C*zinho', categoria: 'Quentes', emoji: '🥵', img: 'https://t4.ftcdn.net/jpg/06/27/26/69/360_F_627266974_C25IGTTKd4Fp2nXhuCDv4dMTlDsxqiWj.jpg', intensidade: 5 },
+            { nome: 'Tapa na Bunda', categoria: 'Lovezin', emoji: '💗', img: 'https://vemconversar.com.br/wp-content/uploads/2022/10/E-no-olhar-que-tudo-comeca.jpeg', intensidade: 2 },
+            { nome: 'Beijão', categoria: 'Lovezin', emoji: '💗', img: 'https://www.otempo.com.br/content/dam/otempo/editorias/interessa/2024/3/interessa-beijo-de-lingua-beneficios-do-beijo-1713342721.jpeg', intensidade: 1 },
+            { nome: '30 Beijinhos', categoria: 'Lovezin', emoji: '💗', img: 'https://img.freepik.com/fotos-premium/retrato-em-close-up-de-dois-apaixonados-apaixonados-se-beijando-em-casa_171337-79073.jpg', intensidade: 1 },
+            { nome: 'Abraço', categoria: 'Lovezin', emoji: '💗', img: 'https://us.123rf.com/450wm/peopleimages12/peopleimages122210/peopleimages12221028649/193181819-seu-amor-transformou-meu-mundo-um-jovem-casal-desfrutando-de-algum-tempo-de-qualidade-juntos-na.jpg?ver=6', intensidade: 1 },
+            { nome: 'Massagem', categoria: 'Lovezin', emoji: '💗', img: 'https://individuale.med.br/wp-content/uploads/2019/08/massagem-anti-stress.png', intensidade: 3 },
+            { nome: 'Viajar', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/12/07/1581006561-1rdpraia-do-aventureiro-1.jpg', intensidade: 2 },
+            { nome: 'Noitada', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format', intensidade: 2 },
+            { nome: 'Pagode', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://s2-g1.glbimg.com/PiT2YdXpDe8AU4vPY3nVopJ3ksM=/0x0:1014x681/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2021/j/p/h577gHSrq8AvQbtKQeBg/roda-de-samba-2.jpg', intensidade: 2 },
+            { nome: 'Almoçar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://media.timeout.com/images/106062540/750/422/image.jpg', intensidade: 1 },
+            { nome: 'Jantar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://www.rbsdirect.com.br/filestore/0/7/2/9/4/9/4_1b48f02f18ac345/4949270_5de2a64f5b53f27.jpg?format=webp&w=1600&h=900&a=c', intensidade: 1 }
+        ];
 
         // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
         let appContainer;
@@ -484,95 +537,46 @@
         }
 
         async function acceptPairingRequest(requestId, senderUid, senderPhone) {
-            console.log('--- Iniciando acceptPairingRequest ---');
-            console.log('requestId:', requestId, 'senderUid:', senderUid, 'senderPhone:', senderPhone);
-            console.log('state.usuario.uid (receiverUid):', state.usuario.uid, 'state.usuario.telefone:', state.usuario.telefone);
-
-            try {
-                // Verificar se o usuário já não está pareado antes de aceitar
-                if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
-                    alert('Você já está pareado com outra pessoa. Desfaça o pareamento atual para aceitar esta solicitação.');
-                    return;
-                }
-
-                // 1. Atualizar status da solicitação para 'accepted'
-                console.log('Passo 1: Tentando atualizar status da solicitação de pareamento...');
-                await db.collection('pairingRequests').doc(requestId).update({
-                    status: 'accepted'
-                });
-                console.log('Passo 1 Concluído: Status da solicitação de pareamento atualizado para accepted.');
-
-                // 2. Atualizar o usuário logado (receiver)
-                console.log('Passo 2: Tentando atualizar pareadoCom do receiver (usuário logado)...');
-                await db.collection('usuarios').doc(state.usuario.uid).update({ 
-                    pareadoCom: senderPhone
-                });
-                console.log('Passo 2 Concluído: pareadoCom do receiver atualizado.');
-
-                // 3. Atualizar o remetente da solicitação
-                console.log('Passo 3: Tentando atualizar pareadoCom do sender...');
-                await db.collection('usuarios').doc(senderUid).update({ 
-                    pareadoCom: state.usuario.telefone
-                });
-                console.log('Passo 3 Concluído: pareadoCom do sender atualizado.');
-
-                // 4. Criar/atualizar a collection "pareamentos"
-                const telefones = [state.usuario.telefone, senderPhone].sort();
-                // Limpa qualquer caractere não numérico para garantir um ID de documento válido
-                const cleanTelefones = telefones.map(tel => tel.replace(/\D/g, '')); 
-                const idPareamento = cleanTelefones.join('_'); 
-                
-                let uid1 = state.usuario.uid; // UID do receptor
-                let uid2 = senderUid; // UID do remetente
-
-                const pareamentoData = {
-                    pessoa1: telefones[0], // Telefone original
-                    pessoa2: telefones[1], // Telefone original
-                    pessoa1Uid: cleanTelefones[0] === state.usuario.telefone.replace(/\D/g, '') ? uid1 : uid2,
-                    pessoa2Uid: cleanTelefones[1] === state.usuario.telefone.replace(/\D/g, '') ? uid1 : uid2,
-                    dataPareamento: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                console.log('Passo 4: Tentando criar/atualizar documento na coleção pareamentos...');
-                console.log('ID do documento pareamentos:', idPareamento);
-                console.log('Dados do documento pareamentos:', pareamentoData);
-
-                await db.collection('pareamentos').doc(idPareamento).set(pareamentoData, { merge: true }); 
-                console.log('Passo 4 Concluído: Documento na coleção pareamentos criado/atualizado com sucesso!');
-
-
-                alert('Pareamento aceito com sucesso! Vocês estão agora pareados.');
-
-                // Atualiza o estado local para refletir o pareamento
-                state.pareado = true;
-                state.parceiroCodigo = senderPhone;
-                state.usuario.pareadoCom = senderPhone; 
-                
-                // Busca o nome do parceiro aceito
-                const parceiroAcceptedQuery = await db.collection('usuarios')
-                    .where('telefone', '==', senderPhone)
-                    .limit(1)
-                    .get();
-                if (!parceiroAcceptedQuery.empty) {
-                    const parceiroData = parceiroAcceptedQuery.docs[0].data();
-                    state.parceiroNome = parceiroData.nome;
-                    state.parceiroTelefone = '55' + parceiroData.telefone.replace(/\D/g, '');
-                }
-
-                state.pendingPairingRequest = null; // Limpa a solicitação pendente
-                state.etapa = 'main'; // Vai para a tela principal
-                renderApp();
-
-            } catch (error) {
-                console.error('Erro ao aceitar pareamento:', error);
-                // Captura e exibe a mensagem de erro específica do Firebase
-                if (error.code) {
-                    alert(`Erro Firebase: ${error.code} - ${error.message}`);
-                } else {
-                    alert('Erro ao aceitar pareamento. Tente novamente.');
-                }
-            }
-            console.log('--- Fim acceptPairingRequest ---');
+    console.log('--- Iniciando acceptPairingRequest ---');
+    
+    try {
+        if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
+            alert('Você já está pareado com outra pessoa. Desfaça o pareamento atual para aceitar esta solicitação.');
+            return;
         }
+
+        await db.collection('pairingRequests').doc(requestId).update({ status: 'accepted' });
+        await db.collection('usuarios').doc(state.usuario.uid).update({ pareadoCom: senderPhone });
+        await db.collection('usuarios').doc(senderUid).update({ pareadoCom: state.usuario.telefone });
+
+        const telefones = [state.usuario.telefone, senderPhone].sort();
+        const cleanTelefones = telefones.map(tel => tel.replace(/\D/g, ''));
+        const idPareamento = cleanTelefones.join('_');
+
+        // >>> AQUI CRIAMOS E SALVAMOS O NOVO ID AMIGÁVEL <<<
+        const idAmigavel = senderPhone.slice(-4) + state.usuario.telefone.slice(-4);
+
+        const pareamentoData = {
+            pessoa1: telefones[0],
+            pessoa2: telefones[1],
+            pessoa1Uid: cleanTelefones[0] === state.usuario.telefone.replace(/\D/g, '') ? state.usuario.uid : senderUid,
+            pessoa2Uid: cleanTelefones[1] === state.usuario.telefone.replace(/\D/g, '') ? state.usuario.uid : senderUid,
+            dataPareamento: firebase.firestore.FieldValue.serverTimestamp(),
+            idAmigavel: idAmigavel // Salva o novo ID no documento do pareamento
+        };
+        
+        await db.collection('pareamentos').doc(idPareamento).set(pareamentoData, { merge: true });
+        
+        alert('Pareamento aceito com sucesso!');
+
+        // Recarrega todos os dados do usuário para garantir que o novo ID seja carregado
+        await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
+
+    } catch (error) {
+        console.error('Erro ao aceitar pareamento:', error);
+        alert('Erro ao aceitar pareamento. Tente novamente.');
+    }
+}
 
         async function rejectPairingRequest(requestId) {
             try {
@@ -649,154 +653,165 @@
 
 
         function renderPareamento() {
-            console.log('renderPareamento chamada. state.codigoDigitando:', state.codigoDigitando);
-            const codigoUsuario = state.usuario.telefone.replace(/\D/g, '');
-            
-            let content = '';
+    if (state.pareado && state.parceiroData) {
+        // Mostra o Perfil do Parceiro se estiver pareado
+        const fotoParceiroUrl = state.parceiroData.fotoUrl || 'https://images.pexels.com/photos/1105325/pexels-photo-1105325.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+        const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+        const canCheckIn = !lastCheckIn || !isSameDay(lastCheckIn, new Date());
+        const checkInButtonText = canCheckIn ? 'Presentear com 1 🔥' : 'Presenteado Hoje';
+        const checkInButtonClasses = canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed';
 
-            // Se houver uma solicitação pendente para o usuário logado (ele recebeu)
-            if (state.pendingPairingRequest) {
-                content = `
-                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-                        <div class="card p-8 max-w-md w-full relative overflow-hidden">
-                            <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-                            <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-                            <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                                <i class="fas fa-heart mr-2"></i> Pareamento
-                            </h2>
-                            <div class="text-center mb-6">
-                                <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
-                                <div class="text-3xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">
-                                    ${state.pendingPairingRequest.senderName} (${state.pendingPairingRequest.senderPhone})
-                                </div>
-                                <p class="mt-4 text-sm text-gray-300">Deseja aceitar ou rejeitar?</p>
-                            </div>
-                            <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                                <button onclick="acceptPairingRequest('${state.pendingPairingRequest.id}', '${state.pendingPairingRequest.senderUid}', '${state.pendingPairingRequest.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">
-                                    Aceitar <i class="fas fa-check-circle ml-2"></i>
-                                </button>
-                                <button onclick="rejectPairingRequest('${state.pendingPairingRequest.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">
-                                    Rejeitar <i class="fas fa-times-circle ml-2"></i>
-                                </button>
-                            </div>
+        appContainer.innerHTML = `
+            <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+                <div class="max-w-md mx-auto card text-center p-8">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-300">Conectado com</h2>
+                    <img src="${fotoParceiroUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-pink-500/50 mx-auto mb-4">
+                    <h3 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500">${state.parceiroData.nome}</h3>
+                    
+                    <p class="text-gray-500 text-sm mt-2">ID do Casal: ${state.idPareamentoAmigavel || 'Indisponível'}</p>
+
+                    <div class="mt-8 space-y-4">
+                        <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''} class="w-full py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${checkInButtonClasses}">
+                            <i class="fas fa-gift"></i> ${checkInButtonText}
+                        </button>
+                        <button onclick="desparearParceiro()" class="w-full py-3 bg-red-800/60 hover:bg-red-700 text-white rounded-lg font-semibold transition">
+                            Desfazer Pareamento
+                        </button>
+                    </div>
+                </div>
+            </div>
+            ${state.showCartSidebar ? `
+    <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+    <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
+            <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="space-y-3">
+            ${state.carrinho.length === 0 ? `
+                <p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>
+            ` : state.carrinho.map((item, index) => `
+                <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
+                    <div>
+                        <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
+                        <small class="text-gray-400 text-sm">${item.categoria}</small>
+                        <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1">
+                            <i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos
                         </div>
                     </div>
-                `;
-            }
-            // Se o usuário já enviou uma solicitação e está pendente (ele enviou)
-            else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
-                const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
-                content = `
-                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-                        <div class="card p-8 max-w-md w-full relative overflow-hidden">
-                            <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-                            <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-                            <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                                <i class="fas fa-heart mr-2"></i> Pareamento
-                            </h2>
-                            <div class="text-center mb-6">
-                                <p class="mb-4">Sua solicitação de pareamento para ${pendingPhone} está pendente.</p>
-                                <p class="text-sm text-gray-300">Aguardando aceitação do seu parceiro(a)...</p>
-                            </div>
-                            <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                                <button onclick="changeStep('main')" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
-                                    Voltar para Principal
-                                </button>
-                                <button onclick="cancelPendingPairingRequest()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">
-                                    Cancelar Solicitação
-                                </button>
-                            </div>
-                        </div>
+                    <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('')}
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-800">
+            <button onclick="finalizarPedido()" 
+                class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all
+                ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                ${state.carrinho.length === 0 ? 'disabled' : ''}>
+                Finalizar Pedido
+            </button>
+            <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+                Continuar Resgatando
+            </button>
+        </div>
+    </div>
+` : ''}
+        `;
+        return; 
+    }
+
+    // Se não estiver pareado, mostra a lógica antiga de pareamento
+    const codigoUsuario = state.usuario.telefone.replace(/\D/g, '');
+    let content = '';
+
+    if (state.pendingPairingRequest) {
+        content = `
+            <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                <div class="card p-8 max-w-md w-full text-center">
+                    <h2 class="text-3xl font-bold mb-4 text-pink-400">Solicitação Recebida</h2>
+                    <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
+                    <div class="text-2xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block mb-6">${state.pendingPairingRequest.senderName}</div>
+                    <div class="flex flex-col sm:flex-row justify-center gap-4">
+                        <button onclick="acceptPairingRequest('${state.pendingPairingRequest.id}', '${state.pendingPairingRequest.senderUid}', '${state.pendingPairingRequest.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">Aceitar</button>
+                        <button onclick="rejectPairingRequest('${state.pendingPairingRequest.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">Rejeitar</button>
                     </div>
-                `;
-            }
-            // Estado padrão de pareamento (onde se digita/compartilha o código)
-            else {
-                content = `
-                    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-                        <div class="card p-8 max-w-md w-full relative overflow-hidden">
-                            <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-                            <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-                            <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                                <i class="fas fa-heart mr-2"></i> Pareamento
-                            </h2>
-                            ${!state.codigoDigitando ? `
-                                <div class="text-center mb-6">
-                                    <p class="mb-4">Seu código de pareamento é:</p>
-                                    <div class="text-4xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">
-                                        ${codigoUsuario}
-                                    </div>
-                                    <p class="mt-4 text-sm text-gray-300">Compartilhe este código com seu parceiro(a)</p>
-                                </div>
-
-                                <div class="mb-6 text-center">
-                                    <p>OU</p>
-                                    <p class="mt-2">Digite o código do seu parceiro(a)</p>
-                                </div>
-
-                                <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                                    <button onclick="state.codigoDigitando = true; renderApp();" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded text-white font-semibold transition">
-                                        Digitar Código
-                                    </button>
-                                    <button onclick="handleContinuarSemParear()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">
-                                        Fazer Isso Depois
-                                    </button>
-                                </div>
-                            ` : `
-                                <div class="mb-6">
-                                    <label class="block mb-2">Digite o código do seu parceiro(a)</label>
-                                    <input id="codigoParceiro" type="text" class="w-full p-3 rounded text-white" placeholder="11999991111" maxlength="11" />
-                                </div>
-                                <div class="flex gap-4">
-                                    <button onclick="state.codigoDigitando = false; renderApp();" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white font-semibold transition">
-                                        Voltar
-                                    </button>
-                                    <button onclick="sendPairingRequest()" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">
-                                        Enviar Solicitação
-                                    </button>
-                                </div>
-                            `}
+                </div>
+            </div>`;
+    } else if (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+        const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
+        content = `
+            <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                <div class="card p-8 max-w-md w-full text-center">
+                    <h2 class="text-3xl font-bold mb-4 text-yellow-400">Solicitação Enviada</h2>
+                    <p class="mb-4">Sua solicitação para ${pendingPhone} está pendente.</p>
+                    <p class="text-sm text-gray-300 mb-6">Aguardando aceitação...</p>
+                    <button onclick="cancelPendingPairingRequest()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">Cancelar Solicitação</button>
+                </div>
+            </div>`;
+    } else {
+        content = `
+            <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                <div class="card p-8 max-w-md w-full text-center">
+                    <h2 class="text-3xl font-bold mb-4 text-pink-400">Parear com seu Amor</h2>
+                    ${!state.codigoDigitando ? `
+                        <p class="mb-4">Seu código de pareamento é:</p>
+                        <div class="text-4xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">${codigoUsuario}</div>
+                        <p class="mt-4 text-sm text-gray-300 mb-6">Compartilhe este código com seu/sua parceiro(a).</p>
+                        <div class="flex flex-col sm:flex-row justify-center gap-4">
+                            <button onclick="state.codigoDigitando = true; renderApp();" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded text-white font-semibold transition">Digitar Código</button>
+                            <button onclick="handleContinuarSemParear()" class="btn-red">Fazer Isso Depois</button>
                         </div>
-                    </div>
-                `;
-            }
-
-            appContainer.innerHTML = content; /* Agora content já contém o wrapper div.min-h-screen */
-
-            if (!state.codigoUsuario) {
-                state.codigoUsuario = codigoUsuario;
-            }
-        }
+                    ` : `
+                        <div class="mb-6">
+                            <label class="block mb-2">Digite o código do seu parceiro(a)</label>
+                            <input id="codigoParceiro" type="text" class="w-full p-3 rounded text-white text-center" placeholder="11999991111" maxlength="11" />
+                        </div>
+                        <div class="flex gap-4">
+                            <button onclick="state.codigoDigitando = false; renderApp();" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded font-semibold transition">Voltar</button>
+                            <button onclick="sendPairingRequest()" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded font-semibold transition flex-1">Enviar Solicitação</button>
+                        </div>
+                    `}
+                </div>
+            </div>`;
+    }
+    appContainer.innerHTML = content;
+}
 
         // Nova função para renderizar o pop-up de Foguinhos
         function renderFoguinhosPopupContent() {
-            appContainer.innerHTML = `
-                <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-                    <div class="card p-8 max-w-md w-full relative overflow-hidden">
-                        <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-                        <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-                        <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                            <i class="fas fa-fire mr-2"></i> Seus Foguinhos
-                        </h2>
-                        <div class="text-center mb-6">
-                            <p class="mb-4 text-xl">Você tem:</p>
-                            <div class="relative inline-block">
-                                <i class="fas fa-fire text-6xl text-yellow-400 animate-pulse"></i>
-                                <span class="badge-notification badge-yellow text-2xl" style="top: 0px; right: -20px; min-width: 40px; height: 40px;">
-                                    ${state.usuario ? state.usuario.foguinhos : 0}
-                                </span>
-                            </div>
-                            <p class="mt-4 text-sm text-gray-300">Use-os para resgatar momentos!</p>
-                        </div>
-                        <div class="flex justify-center">
-                            <button onclick="toggleFoguinhosPopup();" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
-                                Voltar
-                            </button>
-                        </div>
+    appContainer.innerHTML = `
+        <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+            <div class="card p-8 max-w-md w-full relative overflow-hidden">
+                <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
+                <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
+                <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
+                    <i class="fas fa-fire mr-2"></i> Seus Foguinhos
+                </h2>
+                <div class="text-center mb-6">
+                    <p class="mb-4 text-xl">Você tem:</p>
+                    <div class="relative inline-block">
+                        <i class="fas fa-fire text-6xl text-yellow-400 animate-pulse"></i>
+                        <span class="badge-notification badge-yellow text-2xl" style="top: 0px; right: -20px; min-width: 40px; height: 40px;">
+                            ${state.usuario ? state.usuario.foguinhos : 0}
+                        </span>
                     </div>
+                    <p class="mt-4 text-sm text-gray-300">Use-os para resgatar momentos!</p>
                 </div>
-            `;
-        }
+                <div class="flex justify-center">
+                    <button onclick="changeStep('main');" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
+                        Voltar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
 
         // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
         function renderPartnerInfoPopup() {
@@ -837,145 +852,357 @@
 
 
         function renderMain() {
-            console.log('renderMain chamada.');
-            const categorias = [
-                { nome: 'Quentes', emoji: '🥵', color: 'bg-pink-900' },
-                { nome: 'Lovezin', emoji: '💗', color: 'bg-red-900' },
-                { nome: 'Sair da Rotina', emoji: '🎉', color: 'bg-purple-900' }
-            ];
+    if (!state.pareado || !state.parceiroData) {
+        appContainer.innerHTML = `
+            <div class="min-h-screen container mx-auto px-4 py-8 text-center flex flex-col justify-center items-center">
+                <h2 class="text-2xl font-bold mb-4">Você ainda não está pareado(a).</h2>
+                <p class="text-gray-400 mb-6">Pareie com seu/sua parceiro(a) para ver o catálogo de momentos dele(a).</p>
+                <button onclick="changeStep('parear')" class="btn-red">Parear agora</button>
+            </div>
+        `;
+        return;
+    }
 
-            const momentos = [
-                { nome: 'Mamada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://imagenes.elpais.com/resizer/v2/2ARTSVZFAMOWYEREJ5CC72W4WA.jpg?auth=72d5ccea313b45142dc48ab5509bfa8751331fa78cbbf5cd412413fbc51ba60d&width=414', intensidade: 4 },
-                { nome: 'Chupada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://uniqcondoms.com/wp-content/uploads/2024/07/condones-femeninos-sexo-oral.png', intensidade: 4 },
-                { nome: 'Sexo Romântico', categoria: 'Quentes', emoji: '🥵', img: 'https://us.123rf.com/450wm/4pmproduction/4pmproduction1706/4pmproduction170600453/81004283-lindo-casal-apaixonado-est%C3%A1-se-beijando-na-cama-prel%C3%BAdio-ao-sexo.jpg', intensidade: 4 },
-                { nome: 'Sexo Agressivo', categoria: 'Quentes', emoji: '🥵', img: 'https://conteudo.imguol.com.br/c/entretenimento/2d/2016/07/22/voce-conhece-as-preferencias-sexuais-do-seu-par-1469219198036_v2_900x506.jpg', intensidade: 5 },
-                { nome: 'C*zinho', categoria: 'Quentes', emoji: '🥵', img: 'https://t4.ftcdn.net/jpg/06/27/26/69/360_F_627266974_C25IGTTKd4Fp2nXhuCDv4dMTlDsxqiWj.jpg', intensidade: 5 },
-                { nome: 'Tapa na Bunda', categoria: 'Lovezin', emoji: '💗', img: 'https://vemconversar.com.br/wp-content/uploads/2022/10/E-no-olhar-que-tudo-comeca.jpeg', intensidade: 2 },
-                { nome: 'Beijão', categoria: 'Lovezin', emoji: '💗', img: 'https://www.otempo.com.br/content/dam/otempo/editorias/interessa/2024/3/interessa-beijo-de-lingua-beneficios-do-beijo-1713342721.jpeg', intensidade: 1 },
-                { nome: '30 Beijinhos', categoria: 'Lovezin', emoji: '💗', img: 'https://img.freepik.com/fotos-premium/retrato-em-close-up-de-dois-apaixonados-apaixonados-se-beijando-em-casa_171337-79073.jpg', intensidade: 1 },
-                { nome: 'Abraço', categoria: 'Lovezin', emoji: '💗', img: 'https://us.123rf.com/450wm/peopleimages12/peopleimages122210/peopleimages12221028649/193181819-seu-amor-transformou-meu-mundo-um-jovem-casal-desfrutando-de-algum-tempo-de-qualidade-juntos-na.jpg?ver=6', intensidade: 1 },
-                { nome: 'Massagem', categoria: 'Lovezin', emoji: '💗', img: 'https://individuale.med.br/wp-content/uploads/2019/08/massagem-anti-stress.png', intensidade: 3 },
-                { nome: 'Viajar', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/12/07/1581006561-1rdpraia-do-aventureiro-1.jpg', intensidade: 2 },
-                { nome: 'Noitada', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format', intensidade: 2 },
-                { nome: 'Pagode', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://s2-g1.glbimg.com/PiT2YdXpDe8AU4vPY3nVopJ3ksM=/0x0:1014x681/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2021/j/p/h577gHSrq8AvQbtKQeBg/roda-de-samba-2.jpg', intensidade: 2 },
-                { nome: 'Almoçar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://media.timeout.com/images/106062540/750/422/image.jpg', intensidade: 1 },
-                { nome: 'Jantar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://www.rbsdirect.com.br/filestore/0/7/2/9/4/9/4_1b48f02f18ac345/4949270_5de2a64f5b53f27.jpg?format=webp&w=1600&h=900&a=c', intensidade: 1 }
-            ];
+    const catalogoParceiro = state.parceiroData.catalogoPersonalizado || {};
+    const categorias = [
+        { nome: 'Quentes', emoji: '🥵', color: 'bg-pink-900' },
+        { nome: 'Lovezin', emoji: '💗', color: 'bg-red-900' },
+        { nome: 'Sair da Rotina', emoji: '🎉', color: 'bg-purple-900' }
+    ];
 
-            // Dobra o custo dos foguinhos para momentos com intensidade maior que 1
-            const momentosComCustoAjustado = momentos.map(m => ({
-                ...m,
-                custoFoguinhos: m.intensidade > 1 ? m.intensidade * 2 : m.intensidade // Nova propriedade para o custo
-            }));
+    appContainer.innerHTML = `
+        <main class="container mx-auto px-4 py-8 pb-24 pt-24 bg-gradient-to-br from-gray-900 to-black text-white">
+            <div class="mb-12 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Catálogo de ${state.parceiroNome}</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">Escolha os momentos que você deseja viver!</p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-3 mb-12">
+                <button onclick="filtrarMomentos(null)"
+                    class="px-4 py-2 rounded-full transition-all ${!state.filtro ? 'bg-pink-600 text-white shadow-lg' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}"
+                    style="background: ${!state.filtro ? 'linear-gradient(45deg, #FF3547 0%, #FF6B7B 100%)' : ''}">
+                    Todos
+                </button>
+                ${categorias.map(cat => `
+                    <button onclick="filtrarMomentos('${cat.nome}')"
+                        class="px-4 py-2 rounded-full transition-all ${state.filtro === cat.nome ? 'text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800/50'} ${cat.color}">
+                        ${cat.emoji} ${cat.nome}
+                    </button>
+                `).join('')}
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+                ${(state.filtro ? momentos.filter(m => m.categoria === state.filtro) : momentos).map(momento => {
+                    const configParceiro = catalogoParceiro[momento.nome];
+                    const preco = configParceiro?.preco !== undefined ? configParceiro.preco : momento.intensidade * 2;
+                    const bloqueado = configParceiro?.bloqueado || false;
+                    const momentoParaCarrinho = { ...momento, custoFoguinhos: preco };
 
-
-            // Determina se o botão de check-in deve estar habilitado
-            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
-            const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
-
-            appContainer.innerHTML = `
-                <div class="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
-                    <main class="container mx-auto px-4 py-8">
-                        <div class="mb-12 text-center">
-                            <h2 class="text-3xl md:text-4xl font-bold mb-4">Viva um Momento Hoje</h2>
-                            <p class="text-gray-400 max-w-2xl mx-auto">
-                                Escolha os momentos mais íntimos que você deseja viver com o seu parceiro(a)
-                            </p>
+                    return `
+                    <div class="product-card group ${bloqueado ? 'opacity-50' : ''}">
+                        <div class="relative overflow-hidden">
+                            <img src="${momento.img}" alt="${momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
+                            <span class="product-badge">${momento.emoji} ${momento.categoria}</span>
+                            ${bloqueado ? `<div class="absolute inset-0 bg-black/70 flex items-center justify-center"><i class="fas fa-lock text-4xl text-white"></i></div>` : ''}
                         </div>
-
-                        <div class="flex flex-wrap justify-center gap-3 mb-12">
-                            <button onclick="filtrarMomentos(null)"
-                                class="px-4 py-2 rounded-full transition-all ${!state.filtro ?
-                                    'bg-pink1-600 text-white shadow-lg ring-2 ring-pink-500/50' :
-                                    'bg-gray-800 text-gray-300 hover:bg-gray-700'}"
-                                style="background: ${!state.filtro ? 'linear-gradient(45deg, #FF3547 0%, #FF6B7B 100%)' : ''}">
-                                Todos
-                            </button>
-                            ${categorias.map(cat => `
-                                <button onclick="filtrarMomentos('${cat.nome}')"
-                                    class="px-4 py-2 rounded-full transition-all ${state.filtro === cat.nome ?
-                                        'text-white shadow-lg' :
-                                        'text-gray-300 hover:bg-gray-800/50'} ${cat.color}">
-                                    ${cat.emoji} ${cat.nome}
-                                </button>
-                            `).join('')}
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-                            ${(state.filtro ? momentos.filter(m => m.categoria === state.filtro) : momentos).map(momento => `
-                                <div class="product-card group">
-                                    <div class="relative overflow-hidden">
-                                        <img src="${momento.img}" alt="${momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
-                                        <span class="product-badge">${momento.emoji} ${momento.categoria}</span>
-                                    </div>
-                                    <div class="p-4">
-                                        <h3 class="font-medium">${momento.nome}</h3>
-                                        <div class="flex justify-between items-center mt-4">
-                                            <div class="flex flex-col">
-                                                <div class="flex items-center gap-1 mb-1">
-                                                    <span class="text-gray-500 text-sm">Intensidade:</span>
-                                                    <span class="text-pink-400">${'🔥'.repeat(momento.intensidade)}</span>
-                                                </div>
-                                                <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
-                                                    <i class="fas fa-fire"></i> ${momentosComCustoAjustado.find(item => item.nome === momento.nome).custoFoguinhos} Foguinhos
-                                                </span>
-                                            </div>
-                                            <button onclick="adicionarAoCarrinho(${JSON.stringify(momentosComCustoAjustado.find(item => item.nome === momento.nome)).replace(/"/g, '&quot;')})" 
-                                                class="text-sm bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded-lg transition">
-                                                Resgatar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </main>
-
-                    ${state.showCartSidebar ? `
-                        <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
-                        <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
-                            <div class="flex justify-between items-center mb-6">
-                                <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
-                                <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-
-                            <div class="space-y-3">
-                                ${state.carrinho.length === 0 ? `
-                                    <p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>
-                                ` : state.carrinho.map((item, index) => `
-                                    <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
-                                        <div>
-                                            <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
-                                            <small class="text-gray-400 text-sm">${item.categoria}</small>
-                                            <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1">
-                                                <i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos
-                                            </div>
-                                        </div>
-                                        <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                `).join('')}
-                            </div>
-
-                            <div class="mt-8 pt-6 border-t border-gray-800">
-                                <button onclick="finalizarPedido()" 
-                                    class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all
-                                    ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
-                                    ${state.carrinho.length === 0 ? 'disabled' : ''}>
-                                    Finalizar Pedido
-                                </button>
-                                <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
-                                    Continuar Resgatando
+                        <div class="p-4">
+                            <h3 class="font-medium">${momento.nome}</h3>
+                            <div class="flex justify-between items-center mt-4">
+                                <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
+                                    <i class="fas fa-fire"></i> ${preco} Foguinhos
+                                </span>
+                                <button onclick='adicionarAoCarrinho(${JSON.stringify(momentoParaCarrinho).replace(/"/g, "&quot;")})'
+                                    class="text-sm px-4 py-2 rounded-lg transition ${bloqueado ? 'bg-gray-700 cursor-not-allowed' : 'bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white'}"
+                                    ${bloqueado ? 'disabled' : ''}>
+                                    ${bloqueado ? 'Indisponível' : 'Resgatar'}
                                 </button>
                             </div>
                         </div>
-                    ` : ''}
+                    </div>
+                    `;
+                }).join('')}
+            </div>
+        </main>
+
+        ${state.showCartSidebar ? `
+            <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+            <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
+                    <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-            `;
+                <div class="space-y-3">
+                    ${state.carrinho.length === 0 ? `<p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>` : state.carrinho.map((item, index) => `
+                        <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
+                                <small class="text-gray-400 text-sm">${item.categoria}</small>
+                                <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1">
+                                    <i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos
+                                </div>
+                            </div>
+                            <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-800">
+                    <button onclick="finalizarPedido()" 
+                        class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                        ${state.carrinho.length === 0 ? 'disabled' : ''}>
+                        Finalizar Pedido
+                    </button>
+                    <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+                        Continuar Resgatando
+                    </button>
+                </div>
+            </div>
+        ` : ''}
+    `;
+}
+
+function renderGerenciarCatalogo() {
+    const catalogoSalvo = state.usuario.catalogoPersonalizado || {};
+    const categorias = [...new Set(momentos.map(m => m.categoria))];
+    const fotoUrl = state.usuario.fotoUrl || 'https://images.pexels.com/photos/1105325/pexels-photo-1105325.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+
+    appContainer.innerHTML = `
+        <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-bold mb-2">Meu Perfil e Catálogo</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">Gerencie sua foto, preços e a disponibilidade dos momentos.</p>
+            </div>
+
+            <div class="max-w-2xl mx-auto mb-12 p-6 card flex flex-col items-center">
+                <h3 class="font-bold text-xl mb-4">Sua Foto de Perfil</h3>
+                <img id="profilePicPreview" src="${fotoUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-gray-600 mb-4">
+                <input type="file" id="fileInput" onchange="handleFileSelect(event)" accept="image/*" class="hidden">
+                <button onclick="document.getElementById('fileInput').click()" class="text-pink-400 hover:text-pink-300 font-semibold">
+                    Trocar Foto
+                </button>
+                <div id="uploadProgress" class="w-full bg-gray-700 rounded-full h-2.5 mt-4 hidden">
+                    <div id="uploadProgressBar" class="bg-pink-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="space-y-4 max-w-2xl mx-auto">
+                ${categorias.map(categoria => `
+                    <div class="card overflow-hidden">
+                        <button onclick="toggleAccordion(this)" class="w-full p-4 text-left font-bold text-lg flex justify-between items-center">
+                            <span>${categoria}</span>
+                            <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="space-y-2 p-4 border-t border-gray-700">
+                                ${momentos.filter(m => m.categoria === categoria).map(momento => {
+                                    const configSalva = catalogoSalvo[momento.nome];
+                                    const preco = configSalva?.preco !== undefined ? configSalva.preco : momento.intensidade * 2;
+                                    const bloqueado = configSalva?.bloqueado || false;
+                                    return `
+                                    <div class="p-2 flex items-center justify-between gap-4">
+                                        <div class="flex items-center gap-4">
+                                            <img src="${momento.img}" class="w-12 h-12 rounded-lg object-cover">
+                                            <div><h3 class="font-semibold">${momento.nome}</h3></div>
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex items-center gap-1 bg-gray-800 rounded-lg p-2">
+                                                <i class="fas fa-fire text-yellow-400"></i>
+                                                <input type="number" value="${preco}" id="preco-${momento.nome.replace(/\s+/g, '-')}" class="bg-transparent w-16 text-center font-bold">
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" ${bloqueado ? 'checked' : ''} class="sr-only peer" id="bloqueado-${momento.nome.replace(/\s+/g, '-')}">
+                                                <div class="relative w-14 h-7 bg-pink-600 peer-checked:bg-gray-600 rounded-full transition-colors flex items-center justify-between px-2">
+                                                    <i class="fas fa-lock text-white text-xs"></i>
+                                                    <i class="fas fa-lock-open text-white text-xs"></i>
+                                                </div>
+                                                <div class="absolute top-0.5 left-[2px] w-6 h-6 bg-white rounded-full border border-gray-300 transition-transform transform peer-checked:translate-x-full"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="mt-10 text-center">
+                <button onclick="handleSaveCatalogo()" class="btn-red px-10 py-4">
+                    Salvar Alterações
+                </button>
+            </div>
+        </div>
+
+        ${state.showCartSidebar ? `
+            <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+            <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
+                    <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="space-y-3">
+                    ${state.carrinho.length === 0 ? `<p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>` : state.carrinho.map((item, index) => `
+                        <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
+                                <small class="text-gray-400 text-sm">${item.categoria}</small>
+                                <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1"><i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos</div>
+                            </div>
+                            <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-800">
+                    <button onclick="finalizarPedido()" class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${state.carrinho.length === 0 ? 'disabled' : ''}>
+                        Finalizar Pedido
+                    </button>
+                    <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+                        Continuar Resgatando
+                    </button>
+                </div>
+            </div>
+        ` : ''}
+    `;
+}
+
+async function handleSaveCatalogo() {
+    console.log('Iniciando salvamento do catálogo...');
+    const novoCatalogo = {}; // 1. Começamos com um objeto vazio.
+
+    // 2. Para cada momento da nossa lista mestra...
+    momentos.forEach(momento => {
+        // Montamos os IDs dos campos na tela, como fizemos ao criá-los.
+        const idPreco = `preco-${momento.nome.replace(/\s+/g, '-')}`;
+        const idBloqueado = `bloqueado-${momento.nome.replace(/\s+/g, '-')}`;
+
+        const inputPreco = document.getElementById(idPreco);
+        const inputBloqueado = document.getElementById(idBloqueado);
+
+        // Verificamos se encontramos os campos na tela, por segurança.
+        if (inputPreco && inputBloqueado) {
+            // 3. Coletamos os valores.
+            const preco = parseInt(inputPreco.value, 10) || 0; // Pegamos o valor do input e o convertemos para número.
+            const bloqueado = inputBloqueado.checked; // 'checked' será true ou false.
+
+            // 4. Montamos o objeto para este momento específico.
+            novoCatalogo[momento.nome] = {
+                preco: preco,
+                bloqueado: bloqueado
+            };
         }
+    });
+
+    try {
+        // 5. Usamos o comando 'update' para salvar o novo mapa no Firestore.
+        await db.collection('usuarios').doc(state.usuario.uid).update({
+            catalogoPersonalizado: novoCatalogo
+        });
+
+        // 6. Atualizamos o estado local para manter tudo sincronizado.
+        state.usuario.catalogoPersonalizado = novoCatalogo;
+
+        // 7. Damos um feedback de sucesso.
+        alert('Seu catálogo foi salvo com sucesso!');
+        console.log('Catálogo salvo no Firestore:', novoCatalogo);
+
+    } catch (error) {
+        console.error("Erro ao salvar o catálogo: ", error);
+        alert('Houve um erro ao salvar seu catálogo. Tente novamente.');
+    }
+}
+
+function toggleAccordion(buttonElement) {
+    const content = buttonElement.nextElementSibling;
+    buttonElement.classList.toggle('open');
+    content.classList.toggle('open');
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) {
+        return; // O usuário não escolheu nenhum arquivo
+    }
+
+    // Validação simples: checa se é uma imagem e se tem menos de 5MB
+    if (!file.type.startsWith('image/')){
+        alert('Por favor, selecione um arquivo de imagem (jpg, png, etc.).');
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5 Megabytes
+        alert('A imagem é muito grande. Por favor, escolha uma com menos de 5MB.');
+        return;
+    }
+
+    // Mostra a pré-visualização da imagem na tela
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const profilePicPreview = document.getElementById('profilePicPreview');
+        if (profilePicPreview) {
+            profilePicPreview.src = e.target.result;
+        }
+    };
+    reader.readAsDataURL(file);
+
+    // Inicia o processo de upload
+    uploadProfilePic(file);
+}
+
+// Função 2: Faz o upload do arquivo para o Firebase Storage
+async function uploadProfilePic(file) {
+    if (!state.usuario) {
+        alert('Você precisa estar logado para enviar uma foto.');
+        return;
+    }
+
+    // Mostra a barra de progresso
+    const progressContainer = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('uploadProgressBar');
+    if(progressContainer) progressContainer.classList.remove('hidden');
+
+    // 1. Define o caminho onde a imagem será salva no Storage
+    // Ex: profile_pics/UID_DO_USUARIO.jpg
+    const filePath = `profile_pics/${state.usuario.uid}/${file.name}`;
+    const fileRef = storage.ref(filePath);
+
+    // 2. Inicia o upload
+    const uploadTask = fileRef.put(file);
+
+    // 3. Acompanha o progresso do upload
+    uploadTask.on('state_changed', 
+        (snapshot) => {
+            // Atualiza a barra de progresso
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            if(progressBar) progressBar.style.width = progress + '%';
+            console.log('Upload is ' + progress + '% done');
+        }, 
+        (error) => {
+            // Em caso de erro
+            console.error("Erro no upload: ", error);
+            alert('Houve um erro ao enviar sua foto.');
+            if(progressContainer) progressContainer.classList.add('hidden');
+        }, 
+        () => {
+            // 4. Quando o upload terminar, pega a URL pública da imagem
+            uploadTask.snapshot.ref.getDownloadURL().then(async (downloadURL) => {
+                console.log('Arquivo disponível em', downloadURL);
+
+                // 5. Salva a URL da foto no perfil do usuário no Firestore
+                await db.collection('usuarios').doc(state.usuario.uid).update({
+                    fotoUrl: downloadURL
+                });
+
+                // 6. Atualiza o estado local e a UI
+                state.usuario.fotoUrl = downloadURL;
+                updateFixedUI(); // Chama a função para atualizar a header
+
+                alert('Foto de perfil atualizada com sucesso!');
+                if(progressContainer) progressContainer.classList.add('hidden'); // Esconde a barra
+            });
+        }
+    );
+}
 
         // --- Funções de Manipulação de Eventos e Firebase Auth/Firestore ---
 
@@ -1012,74 +1239,75 @@
         }
 
         async function handleRegister() {
-            const nome = document.getElementById('registerNome').value;
-            const email = document.getElementById('registerEmail').value;
-            const telefone = document.getElementById('registerTelefone').value;
-            const senha = document.getElementById('registerSenha').value;
-            const sexo = document.getElementById('registerSexo').value;
+    const nome = document.getElementById('registerNome').value;
+    const email = document.getElementById('registerEmail').value;
+    const telefone = document.getElementById('registerTelefone').value;
+    const senha = document.getElementById('registerSenha').value;
+    const sexo = document.getElementById('registerSexo').value;
 
-            // Validação de Frontend
-            if (!nome || !email || !telefone || !senha || !sexo) {
-                alert('Por favor, preencha todos os campos.');
-                return;
-            }
-            if (telefone.length !== 11 || !/^\d+$/.test(telefone)) {
-                alert('O telefone deve conter exatamente 11 dígitos numéricos (com DDD).');
-                return;
-            }
-            if (senha.length < 6) { 
-                 alert('A senha deve ter no mínimo 6 caracteres.');
-                 return;
-            }
+    // Validação de Frontend
+    if (!nome || !email || !telefone || !senha || !sexo) {
+        alert('Por favor, preencha todos os campos.');
+        return;
+    }
+    if (telefone.length !== 11 || !/^\d+$/.test(telefone)) {
+        alert('O telefone deve conter exatamente 11 dígitos numéricos (com DDD).');
+        return;
+    }
+    if (senha.length < 6) {
+         alert('A senha deve ter no mínimo 6 caracteres.');
+         return;
+    }
 
+    try {
+        // 1. Criar usuário no Firebase Authentication
+        const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
+        const user = userCredential.user;
+        console.log('Usuário criado no Auth:', user);
 
-            try {
-                // 1. Criar usuário no Firebase Authentication
-                const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
-                const user = userCredential.user;
-                console.log('Usuário criado no Auth:', user);
+        // 2. Salvar dados adicionais no Firestore usando o UID do Firebase Auth como ID do documento
+        await db.collection('usuarios').doc(user.uid).set({
+            nome: nome,
+            telefone: telefone,
+            email: email,
+            sexo: sexo,
+            foguinhos: 10,
+            lastCheckInDate: null,
+            pareadoCom: null,
+            catalogoPersonalizado: {}, // <-- NOSSA NOVA LINHA! Inicializa o catálogo.
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log("Dados do usuário salvos com sucesso no Firestore!");
 
-                // 2. Salvar dados adicionais no Firestore usando o UID do Firebase Auth como ID do documento
-                await db.collection('usuarios').doc(user.uid).set({
-                    nome: nome,
-                    telefone: telefone,
-                    email: email,
-                    sexo: sexo,
-                    foguinhos: 1, // Inicializa com 1 foguinho ao cadastrar!
-                    lastCheckInDate: null, 
-                    pareadoCom: null, 
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                console.log("Dados do usuário salvos com sucesso no Firestore!");
+        // Atualiza o estado local com os dados do novo usuário
+        state.usuario = {
+            uid: user.uid,
+            email: user.email,
+            nome,
+            telefone,
+            sexo,
+            foguinhos: 10,
+            lastCheckInDate: null,
+            pareadoCom: null,
+            catalogoPersonalizado: {} // <-- E AQUI TAMBÉM, para consistência.
+        };
+        state.etapa = 'parear';
+        renderApp();
+        alert('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.');
 
-                // Atualiza o estado local com os dados do novo usuário
-                state.usuario = {
-                    uid: user.uid,
-                    email: user.email,
-                    nome,
-                    telefone,
-                    sexo,
-                    foguinhos: 1, 
-                    lastCheckInDate: null,
-                    pareadoCom: null
-                };
-                state.etapa = 'parear'; 
-                renderApp();
-                alert('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.');
-
-            } catch (error) {
-                console.error('Erro no cadastro:', error.code, error.message);
-                let errorMessage = 'Erro ao cadastrar. Tente novamente.';
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = 'Este email já está em uso. Tente fazer login ou use outro email.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'O formato do email é inválido.';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = 'A senha é muito fraca (mínimo de 6 caracteres).';
-                }
-                alert(errorMessage);
-            }
+    } catch (error) {
+        console.error('Erro no cadastro:', error.code, error.message);
+        let errorMessage = 'Erro ao cadastrar. Tente novamente.';
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = 'Este email já está em uso. Tente fazer login ou use outro email.';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'O formato do email é inválido.';
+        } else if (error.code === 'auth/weak-password') {
+            errorMessage = 'A senha é muito fraca (mínimo de 6 caracteres).';
         }
+        alert(errorMessage);
+    }
+}
 
         async function handleLogout() {
             try {
@@ -1395,6 +1623,9 @@
                 case 'main':
                     renderMain();
                     break;
+                case 'gerenciarCatalogo':
+                    renderGerenciarCatalogo();
+                    break;
                 // Novo caso para o pop-up de Foguinhos
                 case 'foguinhosPopup':
                     renderFoguinhosPopupContent();
@@ -1406,83 +1637,100 @@
 
         // Função para mudar a etapa da aplicação
         function changeStep(newStep) {
-            console.log('changeStep chamada. Nova etapa:', newStep, 'state.codigoDigitando ANTES:', state.codigoDigitando);
-            state.etapa = newStep;
-            state.showCartSidebar = false; 
-            state.showFoguinhosPopup = false; // Garante que o pop-up de foguinhos fecha ao mudar de tela principal
-            state.showPartnerInfoPopup = false; // Garante que o pop-up de informações do parceiro fecha
-            // Ajuste para garantir que, se for para 'parear' e 'codigoDigitando' já estiver true, ele não seja resetado.
-            // A lógica é: se a nova etapa NÃO É 'parear' OU (se a nova etapa É 'parear' E 'codigoDigitando' É false)
-            if (newStep !== 'parear' || (newStep === 'parear' && state.codigoDigitando === false)) {
-                 console.log('Resetando state.codigoDigitando para false.');
-                 state.codigoDigitando = false;
-            }
-            console.log('state.codigoDigitando DEPOIS do ajuste em changeStep:', state.codigoDigitando);
-            renderApp();
+    // Lógica de Navegação Simplificada
+    // Se o usuário clicar no ícone da tela em que ele já está...
+    if (state.etapa === newStep) {
+        // ...e essa tela NÃO for a principal, então ele volta para a principal (efeito de fechar).
+        if (newStep !== 'main') {
+            state.etapa = 'main';
+        } else {
+            // Se ele já está na 'main' e clica na 'main', não faz nada.
+            return; 
         }
+    } else {
+        // Se ele clicar em um ícone de uma tela DIFERENTE, ele navega para ela. Simples assim.
+        state.etapa = newStep;
+    }
+
+    // Reseta o estado de outros elementos da UI ao navegar
+    state.showCartSidebar = false;
+    state.showFoguinhosPopup = false;
+    state.showPartnerInfoPopup = false;
+    
+    // Renderiza a aplicação com o novo estado definido
+    renderApp();
+}
 
         // Nova função para atualizar elementos da UI fixa (header e footer)
         function updateFixedUI() {
-            // userNameDisplay e os badge elements são inicializados no window.onload
-            // Então, precisamos verificar se eles já existem antes de tentar atualizar.
-            // Isso previne erros se a função for chamada antes de window.onload.
-            if (userNameDisplay) { 
-                userNameDisplay.textContent = state.usuario && state.usuario.nome ? `Olá, ${state.usuario.nome}!` : '';
-            }
+    if (userNameDisplay) {
+        userNameDisplay.textContent = state.usuario && state.usuario.nome ? `Olá, ${state.usuario.nome}!` : '';
+    }
+    if (foguinhosBadge) {
+        foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
+    }
+    if (carrinhoBadge) {
+        carrinhoBadge.textContent = state.carrinho.length;
+    }
 
-            if (foguinhosBadge) {
-                foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
-            }
-            if (carrinhoBadge) {
-                carrinhoBadge.textContent = state.carrinho.length;
-            }
+    const headerPic = document.getElementById('headerProfilePic');
+    if (headerPic && state.usuario) {
+        // Define a URL da foto padrão
+        const fotoPadrao = 'https://static8.depositphotos.com/1054144/917/i/450/depositphotos_9173011-stock-photo-flaming-heart.jpg';
+        
+        // Usa a foto do usuário OU a foto padrão
+        headerPic.src = state.usuario.fotoUrl || fotoPadrao;
+        
+        // Garante que a imagem esteja visível
+        headerPic.classList.remove('hidden');
+    } else if (headerPic) {
+        // Esconde a imagem se não houver usuário logado
+        headerPic.classList.add('hidden');
+    }
 
-            // Controla a visibilidade da barra de navegação inferior e da header
-            if (bottomNavBar && mainHeader) { // Certifica-se que os elementos existem
-                if (state.etapa === 'main' || state.etapa === 'parear' || state.etapa === 'foguinhosPopup' || state.etapa === 'partnerInfoPopup') { // Header e footer visíveis nas telas pós-login
-                    bottomNavBar.style.display = 'flex';
-                    mainHeader.style.display = 'flex'; 
-                } else {
-                    bottomNavBar.style.display = 'none';
-                    mainHeader.style.display = 'none'; 
-                }
-            }
-
-
-            // Atualizar estado ativo dos botões no footer (cor)
-            const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item');
-            bottomNavItems.forEach(item => {
-                item.classList.remove('active'); // Remove active de todos primeiro
-                // Botão Home
-                if (item.querySelector('.fas.fa-home') && state.etapa === 'main') {
-                    item.classList.add('active');
-                } 
-                // Botão Parear
-                else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
-                    item.classList.add('active');
-                    // Cor do ícone de coração: verde se pareado, amarelo se pendente
-                    const heartIcon = item.querySelector('.fas.fa-heart');
-                    if(heartIcon){
-                        heartIcon.classList.remove('text-green-400', 'text-yellow-400', 'text-gray-400'); // Limpa cores anteriores
-                        if(state.pareado){
-                            heartIcon.classList.add('text-green-400');
-                        } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
-                            heartIcon.classList.add('text-yellow-400');
-                        } else {
-                            heartIcon.classList.add('text-gray-400'); // Cor padrão se não pareado/pendente
-                        }
-                    }
-                } 
-                // Botão Carrinho
-                else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) { 
-                    item.classList.add('active');
-                } 
-                // Botão Foguinhos
-                else if (item.querySelector('.fas.fa-fire') && state.etapa === 'foguinhosPopup') {
-                    item.classList.add('active');
-                }
-            });
+    // Controla a visibilidade geral da barra de navegação
+    if (bottomNavBar && mainHeader) {
+        const telasComBarraVisivel = ['main', 'parear', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo'];
+        if (telasComBarraVisivel.includes(state.etapa)) {
+            bottomNavBar.style.display = 'flex';
+            mainHeader.style.display = 'flex';
+        } else {
+            bottomNavBar.style.display = 'none';
+            mainHeader.style.display = 'none';
         }
+    }
+
+    // --- LÓGICA ATUALIZADA PARA AS CORES DOS ÍCONES ---
+    const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item, .bottom-nav-bar .bottom-nav-item-center');
+    bottomNavItems.forEach(item => {
+        // Primeiro, limpa o estado 'ativo' de todos os itens
+        item.classList.remove('active');
+        
+        // Lógica de cor para o ícone de coração (SEMPRE ATIVA)
+        const heartIcon = item.querySelector('.fas.fa-heart');
+        if (heartIcon) {
+            heartIcon.classList.remove('text-red-500', 'text-yellow-400', 'text-gray-400');
+            if (state.pareado) {
+                heartIcon.classList.add('text-red-500'); // <-- ALTERADO PARA VERMELHO
+            } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+                heartIcon.classList.add('text-yellow-400'); // Amarelo para pendente
+            } else {
+                heartIcon.classList.add('text-gray-400'); // Cinza para não pareado
+            }
+        }
+
+        // Lógica para o estado 'ativo' (cor do texto/borda) quando a tela está aberta
+        if (item.querySelector('.fas.fa-store') && state.etapa === 'gerenciarCatalogo') {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-fire') && state.etapa === 'foguinhosPopup') {
+            item.classList.add('active');
+        }
+    });
+}
 
         // Função para alternar a visibilidade do pop-up de Foguinhos
         function toggleFoguinhosPopup() {
@@ -1512,97 +1760,77 @@
 
         // Carrega dados do usuário e do parceiro se pareado
         async function loadUserDataAndNavigate(uid, email) {
-            console.log('loadUserDataAndNavigate chamada para UID:', uid);
-            try {
-                // Certifique-se que o UID não é nulo/indefinido antes de fazer a chamada ao Firestore
-                if (!uid) {
-                    console.error('UID do usuário é nulo ou indefinido em loadUserDataAndNavigate. Abortando carregamento.');
-                    state.etapa = 'landing';
-                    renderApp();
-                    return;
-                }
-
-                const userDoc = await db.collection('usuarios').doc(uid).get();
-                if (userDoc.exists) {
-                    state.usuario = { uid: uid, email: email, ...userDoc.data() };
-                    
-                    // Verifica status de pareamento: não é nulo E não começa com 'pending_'
-                    state.pareado = !!state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_');
-                    
-                    // Se pareado, preenche as informações do parceiro
-                    if (state.pareado && state.usuario.pareadoCom) {
-                        state.parceiroCodigo = state.usuario.pareadoCom; // Telefone do parceiro
-                        console.log('Usuário pareado com telefone:', state.parceiroCodigo);
-                        const parceiroQuery = await db.collection('usuarios')
-                            .where('telefone', '==', state.parceiroCodigo)
-                            .limit(1)
-                            .get();
-                        if (!parceiroQuery.empty) {
-                            const parceiroData = parceiroQuery.docs[0].data();
-                            state.parceiroNome = parceiroData.nome;
-                            state.parceiroTelefone = '55' + parceiroData.telefone.replace(/\D/g, ''); // Garante formato para WhatsApp
-                            console.log('Dados do parceiro carregados:', state.parceiroNome, state.parceiroTelefone);
-                        } else {
-                            // Se pareado mas o parceiro não é encontrado, algo está errado, desfaz o pareamento localmente
-                            console.warn('Parceiro pareado não encontrado no Firestore. Desfazendo pareamento localmente.');
-                            state.pareado = false;
-                            state.parceiroCodigo = null;
-                            state.parceiroTelefone = null;
-                            state.parceiroNome = null;
-                            state.usuario.pareadoCom = null; 
-                        }
-                    } else {
-                        // Limpa info do parceiro se não estiver pareado
-                        console.log('Usuário não está pareado ou pareamento pendente.');
-                        state.parceiroCodigo = null;
-                        state.parceiroTelefone = null;
-                        state.parceiroNome = null;
-                    }
-
-                    // Verifica se há solicitações de pareamento pendentes para o usuário logado (ele é o receiver)
-                    const pendingRequestQuery = await db.collection('pairingRequests')
-                        .where('receiverUid', '==', uid)
-                        .where('status', '==', 'pending')
-                        .limit(1)
-                        .get();
-                    console.log('Verificando solicitações pendentes para receiverUid:', uid, 'Resultado:', pendingRequestQuery.empty ? 'Nenhuma' : 'Encontrada');
-
-
-                    if (!pendingRequestQuery.empty) {
-                        const requestDoc = pendingRequestQuery.docs[0];
-                        state.pendingPairingRequest = {
-                            id: requestDoc.id,
-                            ...requestDoc.data()
-                        };
-                        state.etapa = 'parear'; // Redireciona para a tela de pareamento para exibir a solicitação
-                        console.log('Solicitação de pareamento RECEBIDA encontrada. Redirecionando para parear.');
-                    } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
-                         // Se o usuário tem um pareamento pendente (ele enviou a solicitação)
-                        state.etapa = 'parear';
-                        state.pendingPairingRequest = null; // Garante que não há solicitação recebida ativa no estado
-                        console.log('Solicitação de pareamento ENVIADA pendente. Redirecionando para parear.');
-                    }
-                    else {
-                        state.pendingRequestQuery = null; // Limpa qualquer solicitação pendente para o próximo load
-                        state.etapa = 'main'; // Se não há solicitações pendentes e não está pendente, vai para main
-                        console.log('Nenhuma solicitação pendente. Redirecionando para main.');
-                    }
-
-                } else {
-                    // Usuário logado via Auth, mas sem dados no Firestore (deveria ir para cadastro completo)
-                    console.log('Usuário logado via Auth, mas sem documento de perfil no Firestore.');
-                    state.usuario = { uid: uid, email: email };
-                    state.etapa = 'register';
-                    alert('Por favor, complete seu cadastro para acessar todas as funcionalidades.');
-                }
-            } catch (error) {
-                console.error('Erro ao carregar dados do usuário em loadUserDataAndNavigate:', error);
-                alert('Erro ao carregar seu perfil. Por favor, tente novamente.');
-                state.etapa = 'landing'; // Volta para o início em caso de erro
-            } finally {
-                renderApp(); // Renderiza a tela apropriada
-            }
+    console.log('loadUserDataAndNavigate chamada para UID:', uid);
+    try {
+        if (!uid) {
+            console.error('UID do usuário é nulo ou indefinido em loadUserDataAndNavigate. Abortando carregamento.');
+            state.etapa = 'landing';
+            renderApp();
+            return;
         }
+
+        const userDoc = await db.collection('usuarios').doc(uid).get();
+        if (userDoc.exists) {
+            state.usuario = { uid: uid, email: email, ...userDoc.data() };
+            state.pareado = !!state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_');
+
+            if (state.pareado) {
+                state.parceiroCodigo = state.usuario.pareadoCom;
+                const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
+                
+                if (!parceiroQuery.empty) {
+                    state.parceiroData = parceiroQuery.docs[0].data();
+                    state.parceiroNome = state.parceiroData.nome;
+                    state.parceiroTelefone = '55' + state.parceiroData.telefone.replace(/\D/g, '');
+                    console.log('Dados completos do parceiro carregados:', state.parceiroData);
+                } else {
+                    console.warn('Parceiro pareado não encontrado no Firestore.');
+                    state.pareado = false;
+                    state.parceiroData = null;
+                }
+
+                // >>> NOVO BLOCO PARA CARREGAR O ID AMIGÁVEL <<<
+                if (state.parceiroData) { // Garante que só executa se o parceiro foi encontrado
+                    const telefones = [state.usuario.telefone, state.parceiroData.telefone].sort();
+                    const cleanTelefones = telefones.map(tel => tel.replace(/\D/g, ''));
+                    const idPareamento = cleanTelefones.join('_');
+                    const pareamentoDoc = await db.collection('pareamentos').doc(idPareamento).get();
+                    if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
+                        state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
+                        console.log('ID Amigável carregado:', state.idPareamentoAmigavel);
+                    }
+                }
+                // >>> FIM DO NOVO BLOCO <<<
+
+            } else {
+                state.parceiroData = null;
+                state.idPareamentoAmigavel = null; // Garante que o ID seja limpo se não estiver pareado
+            }
+            
+            const pendingRequestQuery = await db.collection('pairingRequests').where('receiverUid', '==', uid).where('status', '==', 'pending').limit(1).get();
+            if (!pendingRequestQuery.empty) {
+                const requestDoc = pendingRequestQuery.docs[0];
+                state.pendingPairingRequest = { id: requestDoc.id, ...requestDoc.data() };
+                state.etapa = 'parear';
+            } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
+                state.etapa = 'parear';
+                state.pendingPairingRequest = null;
+            } else {
+                state.etapa = 'main';
+            }
+        } else {
+            console.log('Usuário logado via Auth, mas sem documento de perfil no Firestore.');
+            state.usuario = { uid: uid, email: email };
+            state.etapa = 'register';
+            alert('Por favor, complete seu cadastro para acessar todas as funcionalidades.');
+        }
+    } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+        state.etapa = 'landing';
+    } finally {
+        renderApp();
+    }
+}
 
 
         // Initialize app
@@ -1674,17 +1902,22 @@
     </script>
 
 <nav class="bottom-nav-bar" id="bottom-nav-bar" style="display: none;">
-    <button class="bottom-nav-item" onclick="changeStep('main');">
-        <i class="fas fa-home"></i>
+    <button class="bottom-nav-item" onclick="changeStep('gerenciarCatalogo');">
+        <i class="fas fa-store"></i>
     </button>
     <button class="bottom-nav-item" onclick="changeStep('parear');">
         <i class="fas fa-heart"></i>
     </button>
+
+    <button class="bottom-nav-item-center" onclick="changeStep('main');">
+        <i class="fas fa-shopping-bag"></i>
+    </button>
+
     <button class="bottom-nav-item relative" onclick="toggleCartSidebar();">
         <i class="fas fa-shopping-cart"></i>
         <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
     </button>
-    <button class="bottom-nav-item" onclick="toggleFoguinhosPopup();"> 
+    <button class="bottom-nav-item" onclick="changeStep('foguinhosPopup');">
         <i class="fas fa-fire"></i>
         <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
     </button>
