@@ -312,22 +312,28 @@
     };
 
         const momentos = [
-            { nome: 'Mamada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://imagenes.elpais.com/resizer/v2/2ARTSVZFAMOWYEREJ5CC72W4WA.jpg?auth=72d5ccea313b45142dc48ab5509bfa8751331fa78cbbf5cd412413fbc51ba60d&width=414', intensidade: 4 },
-            { nome: 'Chupada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://uniqcondoms.com/wp-content/uploads/2024/07/condones-femeninos-sexo-oral.png', intensidade: 4 },
-            { nome: 'Sexo Romântico', categoria: 'Quentes', emoji: '🥵', img: 'https://us.123rf.com/450wm/4pmproduction/4pmproduction1706/4pmproduction170600453/81004283-lindo-casal-apaixonado-est%C3%A1-se-beijando-na-cama-prel%C3%BAdio-ao-sexo.jpg', intensidade: 4 },
-            { nome: 'Sexo Agressivo', categoria: 'Quentes', emoji: '🥵', img: 'https://conteudo.imguol.com.br/c/entretenimento/2d/2016/07/22/voce-conhece-as-preferencias-sexuais-do-seu-par-1469219198036_v2_900x506.jpg', intensidade: 5 },
-            { nome: 'C*zinho', categoria: 'Quentes', emoji: '🥵', img: 'https://t4.ftcdn.net/jpg/06/27/26/69/360_F_627266974_C25IGTTKd4Fp2nXhuCDv4dMTlDsxqiWj.jpg', intensidade: 5 },
-            { nome: 'Tapa na Bunda', categoria: 'Lovezin', emoji: '💗', img: 'https://vemconversar.com.br/wp-content/uploads/2022/10/E-no-olhar-que-tudo-comeca.jpeg', intensidade: 2 },
-            { nome: 'Beijão', categoria: 'Lovezin', emoji: '💗', img: 'https://www.otempo.com.br/content/dam/otempo/editorias/interessa/2024/3/interessa-beijo-de-lingua-beneficios-do-beijo-1713342721.jpeg', intensidade: 1 },
-            { nome: '30 Beijinhos', categoria: 'Lovezin', emoji: '💗', img: 'https://img.freepik.com/fotos-premium/retrato-em-close-up-de-dois-apaixonados-apaixonados-se-beijando-em-casa_171337-79073.jpg', intensidade: 1 },
-            { nome: 'Abraço', categoria: 'Lovezin', emoji: '💗', img: 'https://us.123rf.com/450wm/peopleimages12/peopleimages122210/peopleimages12221028649/193181819-seu-amor-transformou-meu-mundo-um-jovem-casal-desfrutando-de-algum-tempo-de-qualidade-juntos-na.jpg?ver=6', intensidade: 1 },
-            { nome: 'Massagem', categoria: 'Lovezin', emoji: '💗', img: 'https://individuale.med.br/wp-content/uploads/2019/08/massagem-anti-stress.png', intensidade: 3 },
-            { nome: 'Viajar', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/12/07/1581006561-1rdpraia-do-aventureiro-1.jpg', intensidade: 2 },
-            { nome: 'Noitada', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format', intensidade: 2 },
-            { nome: 'Pagode', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://s2-g1.glbimg.com/PiT2YdXpDe8AU4vPY3nVopJ3ksM=/0x0:1014x681/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2021/j/p/h577gHSrq8AvQbtKQeBg/roda-de-samba-2.jpg', intensidade: 2 },
-            { nome: 'Almoçar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://media.timeout.com/images/106062540/750/422/image.jpg', intensidade: 1 },
-            { nome: 'Jantar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://www.rbsdirect.com.br/filestore/0/7/2/9/4/9/4_1b48f02f18ac345/4949270_5de2a64f5b53f27.jpg?format=webp&w=1600&h=900&a=c', intensidade: 1 }
-        ];
+    // === Target Masculino (Aparece na loja do Homem, para a Mulher comprar) ===
+    { nome: 'Chupada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://uniqcondoms.com/wp-content/uploads/2024/07/condones-femeninos-sexo-oral.png', intensidade: 4, targetGender: 'Masculino' },
+    { nome: 'Tapa na Bunda', categoria: 'Lovezin', emoji: '💗', img: 'https://vemconversar.com.br/wp-content/uploads/2022/10/E-no-olhar-que-tudo-comeca.jpeg', intensidade: 2, targetGender: 'Masculino' },
+    { nome: '30 Beijinhos', categoria: 'Lovezin', emoji: '💗', img: 'https://img.freepik.com/fotos-premium/retrato-em-close-up-de-dois-apaixonados-apaixonados-se-beijando-em-casa_171337-79073.jpg', intensidade: 1, targetGender: 'Masculino' },
+
+    // === Target Feminino (Aparece na loja da Mulher, para o Homem comprar) ===
+    { nome: 'Mamada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://imagenes.elpais.com/resizer/v2/2ARTSVZFAMOWYEREJ5CC72W4WA.jpg?auth=72d5ccea313b45142dc48ab5509bfa8751331fa78cbbf5cd412413fbc51ba60d&width=414', intensidade: 4, targetGender: 'Feminino' },
+    { nome: 'C*zinho', categoria: 'Quentes', emoji: '🥵', img: 'https://t4.ftcdn.net/jpg/06/27/26/69/360_F_627266974_C25IGTTKd4Fp2nXhuCDv4dMTlDsxqiWj.jpg', intensidade: 5, targetGender: 'Feminino' },
+
+    // === Unisex (Aparece em ambas as lojas) ===
+    { nome: 'Sexo Romântico', categoria: 'Quentes', emoji: '🥵', img: 'https://us.123rf.com/450wm/4pmproduction/4pmproduction1706/4pmproduction170600453/81004283-lindo-casal-apaixonado-est%C3%A1-se-beijando-na-cama-prel%C3%BAdio-ao-sexo.jpg', intensidade: 4, targetGender: 'Unisex' },
+    { nome: 'Sexo Agressivo', categoria: 'Quentes', emoji: '🥵', img: 'https://conteudo.imguol.com.br/c/entretenimento/2d/2016/07/22/voce-conhece-as-preferencias-sexuais-do-seu-par-1469219198036_v2_900x506.jpg', intensidade: 5, targetGender: 'Unisex' },
+    { nome: 'Beijão', categoria: 'Lovezin', emoji: '💗', img: 'https://www.otempo.com.br/content/dam/otempo/editorias/interessa/2024/3/interessa-beijo-de-lingua-beneficios-do-beijo-1713342721.jpeg', intensidade: 1, targetGender: 'Unisex' },
+    { nome: 'Abraço', categoria: 'Lovezin', emoji: '💗', img: 'https://us.123rf.com/450wm/peopleimages12/peopleimages122210/peopleimages12221028649/193181819-seu-amor-transformou-meu-mundo-um-jovem-casal-desfrutando-de-algum-tempo-de-qualidade-juntos-na.jpg?ver=6', intensidade: 1, targetGender: 'Unisex' },
+    { nome: 'Massagem', categoria: 'Lovezin', emoji: '💗', img: 'https://individuale.med.br/wp-content/uploads/2019/08/massagem-anti-stress.png', intensidade: 3, targetGender: 'Unisex' },
+    { nome: 'Viajar', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/12/07/1581006561-1rdpraia-do-aventureiro-1.jpg', intensidade: 2, targetGender: 'Unisex' },
+    { nome: 'Noitada', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format', intensidade: 2, targetGender: 'Unisex' },
+    { nome: 'Pagode', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://s2-g1.glbimg.com/PiT2YdXpDe8AU4vPY3nVopJ3ksM=/0x0:1014x681/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2021/j/p/h577gHSrq8AvQbtKQeBg/roda-de-samba-2.jpg', intensidade: 2, targetGender: 'Unisex' },
+    { nome: 'Almoçar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://media.timeout.com/images/106062540/750/422/image.jpg', intensidade: 1, targetGender: 'Unisex' },
+    { nome: 'Jantar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://www.rbsdirect.com.br/filestore/0/7/2/9/4/9/4_1b48f02f18ac345/4949270_5de2a64f5b53f27.jpg?format=webp&w=1600&h=900&a=c', intensidade: 1, targetGender: 'Unisex' }
+];
+
 
         // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
         let appContainer;
@@ -863,12 +869,25 @@
         return;
     }
 
+    // Filtra os momentos baseado no gênero do parceiro
+    const partnerGender = state.parceiroData.sexo;
+    const momentosParaParceiro = momentos.filter(m => m.targetGender === partnerGender || m.targetGender === 'Unisex');
+
     const catalogoParceiro = state.parceiroData.catalogoPersonalizado || {};
-    const categorias = [
-        { nome: 'Quentes', emoji: '🥵', color: 'bg-pink-900' },
-        { nome: 'Lovezin', emoji: '💗', color: 'bg-red-900' },
-        { nome: 'Sair da Rotina', emoji: '🎉', color: 'bg-purple-900' }
-    ];
+    
+    // Gera as categorias a partir da lista já filtrada para o parceiro
+    const categorias = [...new Set(momentosParaParceiro.map(m => m.categoria))].map(nomeCat => {
+        const momentoExemplo = momentos.find(m => m.categoria === nomeCat);
+        let cor = 'bg-purple-900'; // Cor padrão
+        if (momentoExemplo.categoria === 'Quentes') cor = 'bg-pink-900';
+        if (momentoExemplo.categoria === 'Lovezin') cor = 'bg-red-900';
+        
+        return {
+            nome: nomeCat,
+            emoji: momentoExemplo.emoji,
+            color: cor
+        };
+    });
 
     appContainer.innerHTML = `
         <main class="container mx-auto px-4 py-8 pb-24 pt-24 bg-gradient-to-br from-gray-900 to-black text-white">
@@ -890,7 +909,7 @@
                 `).join('')}
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-                ${(state.filtro ? momentos.filter(m => m.categoria === state.filtro) : momentos).map(momento => {
+                ${(state.filtro ? momentosParaParceiro.filter(m => m.categoria === state.filtro) : momentosParaParceiro).map(momento => {
                     const configParceiro = catalogoParceiro[momento.nome];
                     const preco = configParceiro?.preco !== undefined ? configParceiro.preco : momento.intensidade * 2;
                     const bloqueado = configParceiro?.bloqueado || false;
@@ -963,8 +982,13 @@
 }
 
 function renderGerenciarCatalogo() {
+    // --- NOVA LÓGICA DE FILTRO POR GÊNERO ---
+    const userGender = state.usuario?.sexo || 'Masculino'; 
+    const momentosDisponiveis = momentos.filter(m => m.targetGender === userGender || m.targetGender === 'Unisex');
+
+    // --- LÓGICA EXISTENTE, AGORA USANDO OS DADOS FILTRADOS ---
     const catalogoSalvo = state.usuario.catalogoPersonalizado || {};
-    const categorias = [...new Set(momentos.map(m => m.categoria))];
+    const categorias = [...new Set(momentosDisponiveis.map(m => m.categoria))];
     const fotoUrl = state.usuario.fotoUrl || 'https://images.pexels.com/photos/1105325/pexels-photo-1105325.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
 
     appContainer.innerHTML = `
@@ -995,7 +1019,7 @@ function renderGerenciarCatalogo() {
                         </button>
                         <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
                             <div class="space-y-2 p-4 border-t border-gray-700">
-                                ${momentos.filter(m => m.categoria === categoria).map(momento => {
+                                ${momentosDisponiveis.filter(m => m.categoria === categoria).map(momento => { // <-- USA A LISTA FILTRADA
                                     const configSalva = catalogoSalvo[momento.nome];
                                     const preco = configSalva?.preco !== undefined ? configSalva.preco : momento.intensidade * 2;
                                     const bloqueado = configSalva?.bloqueado || false;
