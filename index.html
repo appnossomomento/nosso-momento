@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nosso Momento</title>
+        <link rel="icon" href="/assets/icons/favicon.ico" type="image/png">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -324,6 +326,11 @@
         </div>
 
         <div class="flex items-center gap-4">
+            <button onclick="changeStep('notificacoes')" class="relative text-gray-400 hover:text-white transition">
+                <i class="fas fa-bell text-xl"></i>
+                <span id="notificationDot" class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span>
+            </button>
+            
             <img id="headerProfilePic" src="" class="w-8 h-8 rounded-full object-cover hidden sm:block">
             <span id="userNameDisplay" class="text-gray-300 text-sm font-medium hidden sm:inline"></span>
             <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
@@ -360,7 +367,9 @@
         usuario: null,
         pareado: false,
         parceiroData: null,
-        idPareamentoAmigavel: null, // Nova propriedade para o ID amigável
+        idPareamentoAmigavel: null,
+        notificacoesNaoLidas: 0,
+        notificacoes: [],
         etapa: 'landing',
         carrinho: [],
         codigoUsuario: null,
@@ -373,6 +382,8 @@
         showCartSidebar: false,
         showFoguinhosPopup: false
     };
+    
+    let unsubscribeNotifications = null;
 
         const momentos = [
     // === Target Masculino (Aparece na loja do Homem, para a Mulher comprar) ===
@@ -543,6 +554,50 @@
                 </div>
             `;
         }
+
+async function solicitarPermissaoDeNotificacao() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.warn("Este navegador não suporta notificações Push.");
+        return;
+    }
+
+    try {
+        // ETAPA 1: Registrar explicitamente o Service Worker
+        // Isso garante que o navegador saiba qual arquivo controlar.
+        const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+        console.log('Service Worker registrado com sucesso:', registration);
+
+        const permission = await Notification.requestPermission();
+
+        if (permission === "granted") {
+            console.log("Permissão de notificação concedida.");
+            showToast("Notificações ativadas!", "sucesso");
+
+            const messaging = firebase.messaging();
+            
+            // ETAPA 2: Obter o token
+            const fcmToken = await messaging.getToken({
+                vapidKey: "BDTOlIk3SKC6BV_MD0Eu2DZfm7rPOnGbz6hvYL1K_3lYnR1YXvO6qbOMuHHzBqzHhtyKw8YJMetHIas4V8wrWpI", // Cole sua VAPID Key aqui novamente
+                serviceWorkerRegistration: registration // Informa ao Firebase qual registro usar
+            });
+
+            if (fcmToken) {
+                console.log("Token do FCM obtido:", fcmToken);
+                await db.collection('usuarios').doc(state.usuario.uid).update({
+                    fcmToken: fcmToken
+                });
+            } else {
+                console.log("Não foi possível obter o token do FCM. Tente recarregar a página.");
+            }
+        } else {
+            console.log("Permissão de notificação negada.");
+            showToast("Você não receberá notificações.", "aviso");
+        }
+    } catch (error) {
+        console.error("Erro detalhado ao solicitar permissão:", error);
+        showToast("Erro ao ativar notificações.", "erro");
+    }
+}
 
         async function sendPairingRequest() {
     const codigoDigitado = document.getElementById('codigoParceiro').value;
@@ -855,6 +910,56 @@
     `;
 }
 
+        async function criarNotificacao(userId, titulo, mensagem, icone) {
+            try {
+                await db.collection('notificacoes').add({
+                    userId: userId,         // Para quem é a notificação
+                    titulo: titulo,
+                    mensagem: mensagem,
+                    icone: icone,           // Um ícone da Font Awesome (ex: 'fa-gift')
+                    lida: false,            // Começa como não lida
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Notificação criada com sucesso para o usuário:', userId);
+            } catch (error) {
+                console.error("Erro ao criar notificação:", error);
+            }
+        }
+
+function setupNotificationListener(userId) {
+    // Se já existe um ouvinte, desliga ele primeiro para evitar duplicação
+    if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+    }
+
+    const notificationsQuery = db.collection('notificacoes')
+        .where('userId', '==', userId)
+        .orderBy('timestamp', 'desc')
+        .limit(20); // Pega as últimas 20 notificações
+
+    unsubscribeNotifications = notificationsQuery.onSnapshot(snapshot => {
+        const notifs = [];
+        snapshot.forEach(doc => {
+            notifs.push({ id: doc.id, ...doc.data() });
+        });
+
+        state.notificacoes = notifs; // Guarda a lista completa no state
+        
+        // Conta quantas não foram lidas
+        state.notificacoesNaoLidas = notifs.filter(n => !n.lida).length;
+
+        console.log(`Notificações carregadas: ${notifs.length}, Não lidas: ${state.notificacoesNaoLidas}`);
+
+        // Se o usuário estiver na tela de notificações, atualiza a lista
+        if (state.etapa === 'notificacoes') {
+            renderNotificacoes();
+        }
+
+        // Atualiza a bolinha vermelha na header
+        updateFixedUI();
+    });
+}
+
         // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
         function renderPartnerInfoPopup() {
             const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
@@ -920,7 +1025,7 @@
         };
     });
 
-    const fotoParceiroUrl = state.parceiroData.fotoUrl || 'https://static8.depositphotos.com/1054144/917/i/450/depositphotos_9173011-stock-photo-flaming-heart.jpg';
+    const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/favicon.png';
 
     appContainer.innerHTML = `
         <main class="container mx-auto px-4 py-8 pb-24 pt-24 bg-gradient-to-br from-gray-900 to-black text-white">
@@ -1024,7 +1129,7 @@ function renderGerenciarCatalogo() {
     // --- LÓGICA EXISTENTE, AGORA USANDO OS DADOS FILTRADOS ---
     const catalogoSalvo = state.usuario.catalogoPersonalizado || {};
     const categorias = [...new Set(momentosDisponiveis.map(m => m.categoria))];
-    const fotoUrl = state.usuario.fotoUrl || 'https://static8.depositphotos.com/1054144/917/i/450/depositphotos_9173011-stock-photo-flaming-heart.jpg';
+    const fotoUrl = state.usuario.fotoUrl || '/assets/icons/favicon.png';
 
     appContainer.innerHTML = `
         <div class="container mx-auto px-4 py-8 pb-24 pt-24">
@@ -1040,6 +1145,11 @@ function renderGerenciarCatalogo() {
                 <button onclick="document.getElementById('fileInput').click()" class="text-pink-400 hover:text-pink-300 font-semibold">
                     Trocar Foto
                 </button>
+
+                <button onclick="solicitarPermissaoDeNotificacao()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                <i class="fas fa-bell"></i> Ativar Notificações
+                </button>
+
                 <div id="uploadProgress" class="w-full bg-gray-700 rounded-full h-2.5 mt-4 hidden">
                     <div id="uploadProgressBar" class="bg-pink-600 h-2.5 rounded-full" style="width: 0%"></div>
                 </div>
@@ -1369,88 +1479,91 @@ async function uploadProfilePic(file) {
 }
 
         async function handleLogout() {
-            try {
-                await auth.signOut();
-                console.log('Usuário deslogado com sucesso!');
-                // Resetar todo o estado da aplicação para o padrão inicial
-                state.usuario = null;
-                state.pareado = false;
-                state.etapa = 'landing';
-                state.carrinho = [];
-                state.codigoUsuario = null;
-                state.codigoDigitando = false;
-                state.parceiroCodigo = null;
-                state.parceiroTelefone = null;
-                state.parceiroNome = null;
-                state.showPartnerInfo = false;
-                state.pendingPairingRequest = null;
-                state.showCartSidebar = false; 
-                state.showFoguinhosPopup = false; // Resetar pop-up de foguinhos
-                renderApp(); // Volta para a tela inicial
-            } catch (error) {
-                console.error('Erro ao deslogar:', error);
-                alert('Erro ao fazer logout. Tente novamente.');
-            }
+    try {
+        // >>> DESLIGA O OUVINTE DE NOTIFICAÇÕES AQUI <<<
+        if (unsubscribeNotifications) {
+            unsubscribeNotifications();
+            unsubscribeNotifications = null;
         }
+
+        await auth.signOut();
+        console.log('Usuário deslogado com sucesso!');
+        
+        // Resetar todo o estado da aplicação para o padrão inicial
+        state.usuario = null;
+        state.pareado = false;
+        state.parceiroData = null;
+        state.idPareamentoAmigavel = null;
+        state.notificacoesNaoLidas = 0;
+        state.notificacoes = [];
+        state.etapa = 'landing';
+        state.carrinho = [];
+        state.codigoUsuario = null;
+        state.codigoDigitando = false;
+        state.parceiroCodigo = null;
+        state.parceiroTelefone = null;
+        state.parceiroNome = null;
+        state.showPartnerInfo = false;
+        state.pendingPairingRequest = null;
+        state.showCartSidebar = false;
+        state.showFoguinhosPopup = false;
+
+        renderApp(); // Volta para a tela inicial
+    } catch (error) {
+        console.error('Erro ao deslogar:', error);
+        showToast('Erro ao fazer logout.', 'erro');
+    }
+}
 
         async function handleDailyCheckIn() {
-            if (!state.pareado) {
-                alert('Você precisa estar pareado para realizar o Check-in diário.');
-                return;
-            }
+    if (!state.pareado || !state.parceiroData) {
+        showToast('Você precisa estar pareado para presentear.', 'aviso');
+        return;
+    }
 
-            if (!state.parceiroCodigo || !state.parceiroNome) {
-                 alert('Não foi possível encontrar as informações do seu parceiro. Tente novamente mais tarde.');
-                 return;
-            }
+    const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+    if (lastCheckIn && isSameDay(lastCheckIn, new Date())) {
+        showToast('Você já presenteou hoje. Volte amanhã!', 'aviso');
+        return;
+    }
 
-            // Verifica se o check-in já foi feito hoje
-            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
-            if (lastCheckIn && isSameDay(lastCheckIn, new Date())) {
-                alert('Você já Presenteou hoje. Volte amanhã para Presentear seu parceiro(a) novamente!');
-                return;
-            }
-
-            try {
-                // 1. Atualiza a data do último check-in para o usuário logado
-                await db.collection('usuarios').doc(state.usuario.uid).update({
-                    lastCheckInDate: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // 2. Busca o parceiro (o telefone do parceiro está em state.parceiroCodigo)
-                const parceiroQuery = await db.collection('usuarios')
-                    .where('telefone', '==', state.parceiroCodigo)
-                    .limit(1)
-                    .get();
-
-                if (parceiroQuery.empty) {
-                    alert('Erro: Parceiro não encontrado no banco de dados para conceder foguinhos.');
-                    return;
-                }
-
-                const parceiroDocRef = parceiroQuery.docs[0].ref;
-                const parceiroData = parceiroQuery.docs[0].data();
-                const parceiroFoguinhosAtuais = parceiroData.foguinhos || 0;
-
-                // 3. Incrementa os foguinhos do parceiro
-                await parceiroDocRef.update({
-                    foguinhos: parceiroFoguinhosAtuais + 1
-                });
-
-                alert(`Presenteou! Seu parceiro(a) ${state.parceiroNome} ganhou 1 foguinho 🔥.`);
-
-                // Atualiza o estado local do usuário que fez o check-in
-                state.usuario.lastCheckInDate = firebase.firestore.FieldValue.serverTimestamp();
-                
-                // Recarrega os dados do usuário para garantir que o estado local esteja 100% sincronizado com o Firestore
-                await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
-
-
-            } catch (error) {
-                console.error('Erro ao realizar Presentear (Check-in) diário:', error);
-                alert('Erro ao Presentear. Tente novamente.');
-            }
+    try {
+        // Busca o UID do parceiro, que precisamos para criar a notificação
+        const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
+        if (parceiroQuery.empty) {
+            showToast('Erro: Parceiro não encontrado.', 'erro');
+            return;
         }
+        const parceiroDoc = parceiroQuery.docs[0];
+        const parceiroUid = parceiroDoc.id;
+        const parceiroFoguinhosAtuais = parceiroDoc.data().foguinhos || 0;
+
+        // Atualiza os dados no Firestore
+        await db.collection('usuarios').doc(state.usuario.uid).update({
+            lastCheckInDate: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await db.collection('usuarios').doc(parceiroUid).update({
+            foguinhos: parceiroFoguinhosAtuais + 1
+        });
+
+        // >>> AQUI ESTÁ A MÁGICA: CRIA A NOTIFICAÇÃO PARA O PARCEIRO <<<
+        await criarNotificacao(
+            parceiroUid,
+            'Você ganhou um presente!',
+            `${state.usuario.nome} te presenteou com 1 foguinho 🔥.`,
+            'fa-gift'
+        );
+
+        showToast(`Presente enviado para ${state.parceiroNome}!`, 'sucesso');
+        
+        // Recarrega os dados do usuário para atualizar a UI do botão
+        await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
+
+    } catch (error) {
+        console.error('Erro ao realizar Presentear (Check-in) diário:', error);
+        showToast('Erro ao presentear. Tente novamente.', 'erro');
+    }
+}
 
 
         function handleContinuarSemParear() {
@@ -1602,39 +1715,52 @@ async function uploadProfilePic(file) {
             }
         }
 
-        function finalizarPedido() {
-            if (!state.pareado) {
-                alert('Você precisa estar pareado com seu parceiro(a) para finalizar o pedido.');
-                return;
-            }
-            if (state.carrinho.length === 0) {
-                alert('Seu carrinho está vazio. Adicione momentos para finalizar o pedido.');
-                return;
-            }
+        async function finalizarPedido() {
+    if (!state.pareado) {
+        // As validações continuam as mesmas
+        showToast('Você precisa estar pareado para finalizar o pedido.', 'aviso');
+        return;
+    }
+    if (state.carrinho.length === 0) {
+        showToast('Seu carrinho está vazio.', 'aviso');
+        return;
+    }
 
-            const momentos = state.carrinho.map(m => `${m.emoji} ${m.nome} (Intensidade: ${m.intensidade}🔥)`).join(' | ');
-            const mensagem = encodeURIComponent(`💑 Pedido de Momentos Especiais 💑\n\nOlá, ${state.parceiroNome || 'parceiro(a)'}!\n\nEu escolhi os seguintes momentos para nós:\n\n${momentos}\n\nEnviei esta mensagem pelo app Nosso Momento! 😊`);
-
-            const telefoneWhatsapp = state.parceiroTelefone; // Já está formatado com 55DDD
-            const whatsappLink = `https://wa.me/${telefoneWhatsapp}?text=${mensagem}`;
-
-            // Animation
-            const animElement = document.createElement('div');
-            animElement.innerHTML = `
-                <div class="fixed bottom-10 right-10 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg animate-bounce">
-                    <i class="fas fa-paper-plane"></i> Abrindo WhatsApp com seu parceiro...
-                </div>
-            `;
-            document.body.appendChild(animElement);
-            setTimeout(() => {
-                animElement.remove();
-                window.open(whatsappLink, '_blank');
-            }, 1500);
-
-            state.carrinho = []; // Limpa o carrinho após finalizar o pedido
-            state.showCartSidebar = false; // Fecha a sidebar do carrinho
-            renderApp();
+    try {
+        // Busca o UID do parceiro para enviar as notificações
+        const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
+        if (parceiroQuery.empty) {
+            showToast('Erro: Parceiro não foi encontrado para notificar.', 'erro');
+            return;
         }
+        const parceiroUid = parceiroQuery.docs[0].id;
+
+        // Cria uma notificação para cada item no carrinho
+        state.carrinho.forEach(async (momento) => {
+            await criarNotificacao(
+                parceiroUid,
+                'Momento Resgatado!',
+                `${state.usuario.nome} resgatou o momento "${momento.nome}"!`,
+                'fa-shopping-bag'
+            );
+        });
+
+        // 2. ADICIONAMOS UMA MENSAGEM DE SUCESSO PARA O USUÁRIO
+        const totalItens = state.carrinho.length;
+        const plural = totalItens > 1 ? 's' : '';
+        showToast(`Momento${plural} resgatado${plural} com sucesso!`, 'sucesso');
+
+
+        // Limpa o carrinho e atualiza a interface
+        state.carrinho = [];
+        state.showCartSidebar = false;
+        renderApp();
+
+    } catch (error) {
+        console.error("Erro ao finalizar pedido e notificar:", error);
+        showToast("Ocorreu um erro ao finalizar o pedido.", "erro");
+    }
+}
 
         // Função para alternar a visibilidade do carrinho
         function toggleCartSidebar() {
@@ -1670,7 +1796,9 @@ async function uploadProfilePic(file) {
                 case 'gerenciarCatalogo':
                     renderGerenciarCatalogo();
                     break;
-                // Novo caso para o pop-up de Foguinhos
+                case 'notificacoes':
+                    renderNotificacoes();
+                    break;
                 case 'foguinhosPopup':
                     renderFoguinhosPopupContent();
                     break;
@@ -1678,6 +1806,49 @@ async function uploadProfilePic(file) {
                     renderLandingPage(); // Fallback
             }
         }
+
+        function renderNotificacoes() {
+    // Zera o contador visual e marca as notificações como lidas no Firestore
+    if (state.notificacoesNaoLidas > 0) {
+        state.notificacoesNaoLidas = 0;
+        updateFixedUI(); // Atualiza a bolinha vermelha imediatamente
+
+        const batch = db.batch();
+        state.notificacoes.forEach(notif => {
+            if (!notif.lida) {
+                const notifRef = db.collection('notificacoes').doc(notif.id);
+                batch.update(notifRef, { lida: true });
+            }
+        });
+        batch.commit().catch(err => console.error("Erro ao marcar notificações como lidas:", err));
+    }
+
+    appContainer.innerHTML = `
+        <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-bold mb-2">Notificações</h2>
+                <p class="text-gray-400">Aqui estão suas atividades recentes.</p>
+            </div>
+            <div id="notifications-list" class="space-y-3 max-w-2xl mx-auto">
+                ${state.notificacoes.length === 0 
+                    ? `<p class="text-center text-gray-500">Nenhuma notificação ainda.</p>`
+                    : state.notificacoes.map(notif => `
+                        <div class="card p-4 flex items-start gap-4 ${notif.lida ? 'opacity-60' : ''}">
+                            <i class="fas ${notif.icone || 'fa-info-circle'} text-xl mt-1 text-pink-400"></i>
+                            <div>
+                                <h3 class="font-bold">${notif.titulo}</h3>
+                                <p class="text-sm text-gray-300">${notif.mensagem}</p>
+                                <p class="text-xs text-gray-500 mt-2">${notif.timestamp ? new Date(notif.timestamp.seconds * 1000).toLocaleString('pt-BR') : ''}</p>
+                            </div>
+                        </div>
+                    `).join('')
+                }
+            </div>
+        </div>
+        
+        ${state.showCartSidebar ? `...` : ''}
+    `;
+}
 
         // Função para mudar a etapa da aplicação
         function changeStep(newStep) {
@@ -1707,9 +1878,32 @@ async function uploadProfilePic(file) {
 
         // Nova função para atualizar elementos da UI fixa (header e footer)
         function updateFixedUI() {
+    // ATUALIZA O NOME DO USUÁRIO
     if (userNameDisplay) {
         userNameDisplay.textContent = state.usuario && state.usuario.nome ? `Olá, ${state.usuario.nome}!` : '';
     }
+
+    // ATUALIZA FOTO DE PERFIL NA HEADER
+    const headerPic = document.getElementById('headerProfilePic');
+    if (headerPic && state.usuario) {
+        const fotoPadrao = '/assets/icons/favicon.png';
+        headerPic.src = state.usuario.fotoUrl || fotoPadrao;
+        headerPic.classList.remove('hidden');
+    } else if (headerPic) {
+        headerPic.classList.add('hidden');
+    }
+
+    // CONTROLA PONTO VERMELHO DE NOTIFICAÇÃO
+    const notificationDot = document.getElementById('notificationDot');
+    if (notificationDot) {
+        if (state.notificacoesNaoLidas > 0) {
+            notificationDot.classList.remove('hidden');
+        } else {
+            notificationDot.classList.add('hidden');
+        }
+    }
+
+    // ATUALIZA OS BADGES DA BARRA DE NAVEGAÇÃO
     if (foguinhosBadge) {
         foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
     }
@@ -1717,24 +1911,9 @@ async function uploadProfilePic(file) {
         carrinhoBadge.textContent = state.carrinho.length;
     }
 
-    const headerPic = document.getElementById('headerProfilePic');
-    if (headerPic && state.usuario) {
-        // Define a URL da foto padrão
-        const fotoPadrao = 'https://static8.depositphotos.com/1054144/917/i/450/depositphotos_9173011-stock-photo-flaming-heart.jpg';
-        
-        // Usa a foto do usuário OU a foto padrão
-        headerPic.src = state.usuario.fotoUrl || fotoPadrao;
-        
-        // Garante que a imagem esteja visível
-        headerPic.classList.remove('hidden');
-    } else if (headerPic) {
-        // Esconde a imagem se não houver usuário logado
-        headerPic.classList.add('hidden');
-    }
-
-    // Controla a visibilidade geral da barra de navegação
+    // LÓGICA DE VISIBILIDADE DAS BARRAS (HEADER E NAV)
     if (bottomNavBar && mainHeader) {
-        const telasComBarraVisivel = ['main', 'parear', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo'];
+        const telasComBarraVisivel = ['main', 'parear', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes'];
         if (telasComBarraVisivel.includes(state.etapa)) {
             bottomNavBar.style.display = 'flex';
             mainHeader.style.display = 'flex';
@@ -1744,26 +1923,23 @@ async function uploadProfilePic(file) {
         }
     }
 
-    // --- LÓGICA ATUALIZADA PARA AS CORES DOS ÍCONES ---
+    // LÓGICA PARA CORES E ESTADO "ATIVO" DOS ÍCONES
     const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item, .bottom-nav-bar .bottom-nav-item-center');
     bottomNavItems.forEach(item => {
-        // Primeiro, limpa o estado 'ativo' de todos os itens
         item.classList.remove('active');
         
-        // Lógica de cor para o ícone de coração (SEMPRE ATIVA)
         const heartIcon = item.querySelector('.fas.fa-heart');
         if (heartIcon) {
             heartIcon.classList.remove('text-red-500', 'text-yellow-400', 'text-gray-400');
             if (state.pareado) {
-                heartIcon.classList.add('text-red-500'); // <-- ALTERADO PARA VERMELHO
+                heartIcon.classList.add('text-red-500');
             } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
-                heartIcon.classList.add('text-yellow-400'); // Amarelo para pendente
+                heartIcon.classList.add('text-yellow-400');
             } else {
-                heartIcon.classList.add('text-gray-400'); // Cinza para não pareado
+                heartIcon.classList.add('text-gray-400');
             }
         }
 
-        // Lógica para o estado 'ativo' (cor do texto/borda) quando a tela está aberta
         if (item.querySelector('.fas.fa-store') && state.etapa === 'gerenciarCatalogo') {
             item.classList.add('active');
         } else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
@@ -1771,6 +1947,8 @@ async function uploadProfilePic(file) {
         } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) {
             item.classList.add('active');
         } else if (item.querySelector('.fas.fa-fire') && state.etapa === 'foguinhosPopup') {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-bell') && state.etapa === 'notificacoes') {
             item.classList.add('active');
         }
     });
@@ -1803,7 +1981,8 @@ async function uploadProfilePic(file) {
         }
 
         // Carrega dados do usuário e do parceiro se pareado
-        async function loadUserDataAndNavigate(uid, email) {
+        
+async function loadUserDataAndNavigate(uid, email) {
     console.log('loadUserDataAndNavigate chamada para UID:', uid);
     try {
         if (!uid) {
@@ -1817,6 +1996,9 @@ async function uploadProfilePic(file) {
         if (userDoc.exists) {
             state.usuario = { uid: uid, email: email, ...userDoc.data() };
             state.pareado = !!state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_');
+
+            // >>> LIGA O OUVINTE DE NOTIFICAÇÕES AQUI <<<
+            setupNotificationListener(uid);
 
             if (state.pareado) {
                 state.parceiroCodigo = state.usuario.pareadoCom;
@@ -1833,8 +2015,7 @@ async function uploadProfilePic(file) {
                     state.parceiroData = null;
                 }
 
-                // >>> NOVO BLOCO PARA CARREGAR O ID AMIGÁVEL <<<
-                if (state.parceiroData) { // Garante que só executa se o parceiro foi encontrado
+                if (state.parceiroData) {
                     const telefones = [state.usuario.telefone, state.parceiroData.telefone].sort();
                     const cleanTelefones = telefones.map(tel => tel.replace(/\D/g, ''));
                     const idPareamento = cleanTelefones.join('_');
@@ -1844,11 +2025,10 @@ async function uploadProfilePic(file) {
                         console.log('ID Amigável carregado:', state.idPareamentoAmigavel);
                     }
                 }
-                // >>> FIM DO NOVO BLOCO <<<
 
             } else {
                 state.parceiroData = null;
-                state.idPareamentoAmigavel = null; // Garante que o ID seja limpo se não estiver pareado
+                state.idPareamentoAmigavel = null;
             }
             
             const pendingRequestQuery = await db.collection('pairingRequests').where('receiverUid', '==', uid).where('status', '==', 'pending').limit(1).get();
@@ -1939,7 +2119,8 @@ async function uploadProfilePic(file) {
             window.toggleCartSidebar = toggleCartSidebar; 
             window.cancelPendingPairingRequest = cancelPendingPairingRequest; 
             window.toggleFoguinhosPopup = toggleFoguinhosPopup; 
-            window.togglePartnerInfoPopup = togglePartnerInfoPopup; // Torna a nova função global
+            window.togglePartnerInfoPopup = togglePartnerInfoPopup;
+            window.solicitarPermissaoDeNotificacao = solicitarPermissaoDeNotificacao; // Torna a nova função global
 
             init(); // Inicia o aplicativo
         };
