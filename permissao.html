@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Permissão</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; }
+        button { font-size: 1.2rem; padding: 15px 25px; cursor: pointer; }
+        #resultado { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Teste Puro de Permissão de Notificação</h1>
+    <button id="testeBtn">Pedir Permissão</button>
+    <div id="resultado"></div>
+
+    <script>
+        const btn = document.getElementById('testeBtn');
+        const resultadoDiv = document.getElementById('resultado');
+
+        btn.onclick = async function() {
+            resultadoDiv.textContent = 'Solicitando permissão...';
+            try {
+                // Esta é a chamada mais básica possível para pedir permissão
+                const permissionResult = await Notification.requestPermission();
+                
+                resultadoDiv.textContent = 'Resultado: ' + permissionResult;
+
+                if (permissionResult === 'granted') {
+                    console.log('Permissão concedida!');
+                } else {
+                    console.warn('Permissão não concedida:', permissionResult);
+                }
+            } catch (error) {
+                resultadoDiv.textContent = 'Erro: ' + error.message;
+                console.error('Erro ao pedir permissão:', error);
+            }
+        };
+    </script>
+</body>
+</html>
