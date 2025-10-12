@@ -1176,38 +1176,34 @@ function setupNotificationListener(userId) {
 }
 
 function renderGerenciarCatalogo() {
-    // --- NOVA LÓGICA DE FILTRO POR GÊNERO ---
-    const userGender = state.usuario?.sexo || 'Masculino'; 
+    const userGender = state.usuario?.sexo || 'Masculino';
     const momentosDisponiveis = momentos.filter(m => m.targetGender === userGender || m.targetGender === 'Unisex');
-
-    // --- LÓGICA EXISTENTE, AGORA USANDO OS DADOS FILTRADOS ---
-    const catalogoSalvo = state.usuario.catalogoPersonalizado || {};
+    const catalogoSalvo = state.usuario?.catalogoPersonalizado || {};
     const categorias = [...new Set(momentosDisponiveis.map(m => m.categoria))];
-    const fotoUrl = state.usuario.fotoUrl || '/assets/icons/favicon.png';
+    const fotoUrl = state.usuario?.fotoUrl || 'assets/icons/favicon.png';
 
     let notificationButtonHtml = '';
-if (window.Notification && Notification.permission === 'granted') {
-    // Botão para DESATIVAR (vermelho escuro)
-    notificationButtonHtml = `
-        <button onclick="handleNotificationToggle()" class="mt-4 bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-lg transition">
-            <i class="fas fa-bell-slash"></i> Desativar Notificações
-        </button>
-    `;
-} else if (window.Notification && Notification.permission === 'denied') {
-    // Botão desabilitado para indicar que está bloqueado
-     notificationButtonHtml = `
-        <button disabled class="mt-4 bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed">
-            <i class="fas fa-ban"></i> Notificações Bloqueadas
-        </button>
-    `;
-} else if (window.Notification) {
-    // Botão padrão para ATIVAR (azul)
-    notificationButtonHtml = `
-        <button onclick="handleNotificationToggle()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
-            <i class="fas fa-bell"></i> Ativar Notificações
-        </button>
-    `;
-}
+    if (window.Notification) {
+        if (state.usuario && state.usuario.fcmToken && Notification.permission === 'granted') {
+            notificationButtonHtml = `
+                <button onclick="handleNotificationToggle()" class="mt-4 bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-lg transition">
+                    <i class="fas fa-bell-slash"></i> Desativar Notificações
+                </button>
+            `;
+        } else if (Notification.permission === 'denied') {
+            notificationButtonHtml = `
+                <button onclick="handleNotificationToggle()" class="mt-4 bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed" title="Você precisa permitir as notificações nas configurações do seu navegador.">
+                    <i class="fas fa-ban"></i> Notificações Bloqueadas
+                </button>
+            `;
+        } else {
+            notificationButtonHtml = `
+                <button onclick="handleNotificationToggle()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                    <i class="fas fa-bell"></i> Ativar Notificações
+                </button>
+            `;
+        }
+    }
 
     appContainer.innerHTML = `
         <div class="container mx-auto px-4 py-8 pb-24 pt-24">
@@ -1240,10 +1236,11 @@ if (window.Notification && Notification.permission === 'granted') {
                         </button>
                         <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
                             <div class="space-y-2 p-4 border-t border-gray-700">
-                                ${momentosDisponiveis.filter(m => m.categoria === categoria).map(momento => { // <-- USA A LISTA FILTRADA
+                                ${momentosDisponiveis.filter(m => m.categoria === categoria).map(momento => {
                                     const configSalva = catalogoSalvo[momento.nome];
                                     const preco = configSalva?.preco !== undefined ? configSalva.preco : momento.intensidade * 2;
                                     const bloqueado = configSalva?.bloqueado || false;
+                                    // A CORREÇÃO ESTÁ AQUI: O "return" AGORA COMEÇA DIRETAMENTE COM O ACENTO GRAVE `
                                     return `
                                     <div class="p-2 flex items-center justify-between gap-4">
                                         <div class="flex items-center gap-4">
@@ -1365,18 +1362,15 @@ function toggleAccordion(buttonElement) {
 }
 
 async function handleNotificationToggle() {
-    // 'Notification.permission' pode ser 'granted', 'denied' ou 'default'
-    const currentPermission = Notification.permission;
+    const notificationsActive = state.usuario && state.usuario.fcmToken && Notification.permission === 'granted';
 
-    if (currentPermission === 'granted') {
-        // Se já tem permissão, a ação é desativar
+    if (Notification.permission === 'denied') {
+        alert("As notificações estão bloqueadas. Você precisa permitir manualmente nas configurações do seu navegador (clicando no ícone de cadeado 🔒 ao lado da URL).");
+    } else if (notificationsActive) {
+        // Se está ativo, a ação é desativar
         await desativarNotificacoes();
-    } else if (currentPermission === 'denied') {
-        // Se a permissão foi negada, não podemos pedir de novo.
-        // Precisamos instruir o usuário a fazer manualmente.
-        alert("As notificações estão bloqueadas nas configurações do seu navegador. Você precisa permitir manualmente nas configurações do site para reativá-las.");
     } else {
-        // Se for 'default' (nem permitiu, nem negou), a ação é pedir permissão
+        // Se não está ativo, a ação é ativar
         await solicitarPermissaoDeNotificacao();
     }
 }
