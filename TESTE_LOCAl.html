@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><title>Teste de Notificação Local</title></head>
+<body>
+    <button onclick="mostrarNotificacao()">Mostrar Notificação</button>
+    <script>
+        function mostrarNotificacao() {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    console.log('Permissão concedida. Mostrando notificação...');
+                    new Notification("Teste Local", {
+                        body: "Se você está vendo isso, seu navegador e Windows estão funcionando!",
+                    });
+                } else {
+                    console.log('Permissão negada.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

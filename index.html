@@ -599,6 +599,25 @@ async function solicitarPermissaoDeNotificacao() {
     }
 }
 
+function setupForegroundMessageHandler() {
+    // Certifique-se de que 'firebase.messaging' está disponível
+    if (firebase.messaging.isSupported()) {
+        const messaging = firebase.messaging();
+        messaging.onMessage((payload) => {
+            console.log("Notificação Push recebida em primeiro plano: ", payload);
+
+            // Em vez de uma notificação do sistema, mostramos um "toast"
+            const title = payload.data.title;
+            const body = payload.data.body;
+            showToast(`🔔 ${title}: ${body}`, 'sucesso');
+            
+            // Opcional: Atualizar a bolinha do sino em tempo real
+            state.notificacoesNaoLidas++;
+            updateFixedUI();
+        });
+    }
+}
+
         async function sendPairingRequest() {
     const codigoDigitado = document.getElementById('codigoParceiro').value;
 
@@ -1999,6 +2018,9 @@ async function loadUserDataAndNavigate(uid, email) {
 
             // >>> LIGA O OUVINTE DE NOTIFICAÇÕES AQUI <<<
             setupNotificationListener(uid);
+
+            // LIGA O OUVINTE DE NOTIFICAÇÕES PUSH EM PRIMEIRO PLANO
+            setupForegroundMessageHandler();
 
             if (state.pareado) {
                 state.parceiroCodigo = state.usuario.pareadoCom;
