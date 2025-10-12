@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosso Momento</title>
+        <link rel="icon" href="/assets/icons/favicon.ico" type="image/png">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            /* Adicionado padding-bottom para que o conteúdo não fique por baixo do footer fixo */
+            overflow-x: hidden; /* Esconder a barra de rolagem horizontal se algo escapar */
+        }
+        .product-card {
+            transition: all 0.3s ease-out;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 53, 71, 0.2);
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .product-img {
+            height: 160px;
+            object-fit: cover;
+            width: 100%;
+        }
+        .product-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 32px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .carrinho-item {
+            animation: fadeIn 0.5s ease-out;
+            border-radius: 12px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-red {
+            background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 20px rgba(255, 53, 71, 0.3);
+            padding: 14px 24px;
+            border: none;
+            outline: none;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        .btn-red:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(255, 53, 71, 0.4);
+            background: linear-gradient(135deg, #FF4252 0%, #FF7B8A 100%);
+        }
+        .bg-overlay {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        /* Modern button styles */
+        .btn-modern {
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        /* Input styles */
+        input {
+            border-radius: 12px !important;
+            padding: 14px 16px !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            background: rgba(255,255,255,0.05) !important;
+            color: white !important;
+        }
+        input::placeholder {
+            color: rgba(255,255,255,0.5) !important;
+        }
+        /* Card styles */
+        .card {
+            border-radius: 20px;
+            background: rgba(30,30,30,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        /* Footer custom style */
+        /* REMOVED: .app-footer style is no longer needed for the fixed footer structure */
+        /*
+        .app-footer {
+            background: linear-gradient(90deg, #FF3547 0%, #FF6B7C 100%);
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            padding: 16px;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        */
+
+        /* Novo estilo para a barra de navegação inferior (footer) */
+        .bottom-nav-bar {
+            background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(0,0,0,0.95) 100%);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px; /* Altura da barra */
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100; /* Garante que fique acima de outros elementos como a sidebar */
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.4);
+            padding-bottom: env(safe-area-inset-bottom); /* Para iPhones com notch inferior */
+        }
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.6);
+            transition: color 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            height: 100%;
+            flex-grow: 1;
+            text-align: center; /* Centraliza o conteúdo dentro do item */
+        }
+        .bottom-nav-item.active {
+            color: #FF6B7C; /* Cor de destaque */
+        }
+        .bottom-nav-item:hover {
+            color: #FF6B7C; /* Cor de destaque no hover */
+        }
+        .bottom-nav-item i {
+            font-size: 20px;
+        }
+
+        /* Estilo para as bolinhas de notificação */
+        .badge-notification {
+            position: absolute;
+            top: 5px; /* Ajusta a posição vertical */
+            right: 5px;  /* Ajusta a posição horizontal */
+            min-width: 20px; /* Largura mínima para 1-2 dígitos */
+            height: 20px;
+            border-radius: 50%;
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            pointer-events: none; /* Garante que o clique passe para o botão pai */
+            transform: translate(50%, -50%); /* Ajusta para centralizar na quina do ícone */
+        }
+        /* Cores das bolinhas */
+        .badge-yellow { background-color: #f59e0b; /* yellow-500 */ }
+        .badge-gray { background-color: #6b7280; /* gray-500 */ }
+
+
+        /* Esconder a barra de rolagem horizontal se algo escapar */
+        body {
+            overflow-x: hidden;
+        }
+
+        /* Ajuste para telas pequenas - header */
+        @media (max-width: 640px) { /* sm breakpoint no Tailwind */
+            .header-content {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+                align-items: center;
+                padding-left: 1rem; /* px-4 */
+                padding-right: 1rem; /* px-4 */
+            }
+            .header-content > div:nth-child(2) { /* Ações à direita */
+                display: flex;
+                gap: 0.5rem; /* Menor gap para caber tudo */
+            }
+            .header-content h1 { /* Ajuste para o título do app na header */
+                font-size: 1.5rem; /* Reduz o tamanho da fonte em telas pequenas */
+            }
+        }
+
+.accordion-content.open {
+    max-height: 1000px; /* Um valor alto para permitir que o conteúdo se expanda */
+}
+.accordion-button.open i {
+    transform: rotate(180deg);
+}
+
+        /* Adicione este novo estilo para o botão central */
+.bottom-nav-item-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;   /* Tamanho do círculo */
+    height: 60px;  /* Tamanho do círculo */
+    background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
+    color: white;
+    border-radius: 50%; /* Deixa o botão redondo */
+    border: 3px solid #1f2937; /* Cor de fundo da sua barra de navegação, para dar um efeito de recorte */
+    transform: translateY(-20px); /* Move o botão para cima */
+    box-shadow: 0 -5px 15px rgba(255, 53, 71, 0.4);
+    transition: all 0.3s ease;
+}
+
+.bottom-nav-item-center:hover {
+    transform: translateY(-23px) scale(1.05); /* Efeito suave ao passar o mouse */
+    box-shadow: 0 -8px 20px rgba(255, 53, 71, 0.5);
+}
+
+.bottom-nav-item-center i {
+    font-size: 24px;
+}
+
+/*
+// =========================================
+// NOVO SISTEMA DE NOTIFICAÇÕES (TOASTS)
+// =========================================
+*/
+.toast {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px; /* Padding vertical diminuído */
+    font-size: 14px; /* Fonte menor */
+    border-radius: 9999px; /* Formato de pílula */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    animation: slideInUp 0.5s ease-out forwards; /* Nova animação de entrada */
+}
+
+.toast.exiting {
+    animation: slideOutDown 0.5s ease-in forwards; /* Nova animação de saída */
+}
+
+.toast-icon {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+/* Tipos de Toast (cores sem alteração) */
+.toast-sucesso {
+    background-color: rgba(22, 163, 74, 0.7);
+    color: white;
+}
+.toast-erro {
+    background-color: rgba(220, 38, 38, 0.7);
+    color: white;
+}
+.toast-aviso {
+    background-color: rgba(245, 158, 11, 0.7);
+    color: white;
+}
+
+/* Novas Animações (de baixo para cima) */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideOutDown {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(100%);
+    }
+}
+    </style>
+</head>
+<body class="bg-black text-white font-sans">
+    <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800" style="display: none;">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
+        <div class="flex items-center gap-1">
+            <div class="relative">
+                <div class="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-red-600 shadow-lg">
+                    <i class="fas fa-heart-beat text-white text-xs"></i>
+                </div>
+                <div class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
+            </div>
+            <h1 class="text-2xl font-bold">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 font-extrabold tracking-tight" style="text-shadow: 0 2px 4px rgba(255,53,71,0.3);">NOSSO</span>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-pink-500 font-extrabold tracking-tight" style="text-shadow: 0 2px 4px rgba(255,53,71,0.3);">MOMENTO</span>
+            </h1>
+            <div class="w-2 h-2 rounded-full bg-pink-500 opacity-70 animate-pulse ml-1"></div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button onclick="changeStep('notificacoes')" class="relative text-gray-400 hover:text-white transition">
+                <i class="fas fa-bell text-xl"></i>
+                <span id="notificationDot" class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span>
+            </button>
+            
+            <img id="headerProfilePic" src="" class="w-8 h-8 rounded-full object-cover hidden sm:block">
+            <span id="userNameDisplay" class="text-gray-300 text-sm font-medium hidden sm:inline"></span>
+            <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
+                <i class="fas fa-sign-out-alt text-xs"></i> <span class="hidden sm:inline">Sair</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+    <div id="app">
+        </div>
+
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAppTP2vJuLofr9ueWsK3djbwSeEm5qb2c",
+      authDomain: "nosso-momento-app.firebaseapp.com",
+      projectId: "nosso-momento-app",
+      storageBucket: "nosso-momento-app.firebasestorage.app",
+      messagingSenderId: "503855316994",
+      appId: "1:503855316994:web:7d5ee171b44c4f8b86a71b",
+    };
+
+    // Inicialização do Firebase, Firestore e Auth
+    firebase.initializeApp(firebaseConfig);
+    console.log("✅ Firebase: Initialized com sucesso!");
+    const db = firebase.firestore();
+    const auth = firebase.auth(); // Inicializa o Firebase Auth
+    const storage = firebase.storage();
+  </script>
+
+    <script>
+        // Main application state
+            const state = {
+        usuario: null,
+        pareado: false,
+        parceiroData: null,
+        idPareamentoAmigavel: null,
+        notificacoesNaoLidas: 0,
+        notificacoes: [],
+        etapa: 'landing',
+        carrinho: [],
+        codigoUsuario: null,
+        codigoDigitando: false,
+        parceiroCodigo: null,
+        parceiroTelefone: null,
+        parceiroNome: null,
+        showPartnerInfo: false,
+        pendingPairingRequest: null,
+        showCartSidebar: false,
+        showFoguinhosPopup: false
+    };
+    
+    let unsubscribeNotifications = null;
+
+        const momentos = [
+    // === Target Masculino ===
+    { nome: 'Chupada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://uniqcondoms.com/wp-content/uploads/2024/07/condones-femeninos-sexo-oral.png', intensidade: 4, targetGender: 'Masculino' },
+    { nome: 'Tapa na Bunda', categoria: 'Lovezin', emoji: '💗', img: 'https://vemconversar.com.br/wp-content/uploads/2022/10/E-no-olhar-que-tudo-comeca.jpeg', intensidade: 2, targetGender: 'Masculino' },
+    { nome: '30 Beijinhos', categoria: 'Lovezin', emoji: '💗', img: 'https://img.freepik.com/fotos-premium/retrato-em-close-up-de-dois-apaixonados-apaixonados-se-beijando-em-casa_171337-79073.jpg', intensidade: 1, targetGender: 'Masculino' },
+
+    // === Target Feminino ===
+    { nome: 'Mamada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://imagenes.elpais.com/resizer/v2/2ARTSVZFAMOWYEREJ5CC72W4WA.jpg?auth=72d5ccea313b45142dc48ab5509bfa8751331fa78cbbf5cd412413fbc51ba60d&width=414', intensidade: 4, targetGender: 'Feminino' },
+    { nome: 'C*zinho', categoria: 'Quentes', emoji: '🥵', img: 'https://t4.ftcdn.net/jpg/06/27/26/69/360_F_627266974_C25IGTTKd4Fp2nXhuCDv4dMTlDsxqiWj.jpg', intensidade: 5, targetGender: 'Feminino' },
+
+    // === Unisex ===
+    { nome: 'Sexo Romântico', categoria: 'Quentes', emoji: '🥵', img: 'https://us.123rf.com/450wm/4pmproduction/4pmproduction1706/4pmproduction170600453/81004283-lindo-casal-apaixonado-est%C3%A1-se-beijando-na-cama-prel%C3%BAdio-ao-sexo.jpg', intensidade: 4, targetGender: 'Unisex' },
+    { nome: 'Sexo Agressivo', categoria: 'Quentes', emoji: '🥵', img: 'https://conteudo.imguol.com.br/c/entretenimento/2d/2016/07/22/voce-conhece-as-preferencias-sexuais-do-seu-par-1469219198036_v2_900x506.jpg', intensidade: 5, targetGender: 'Unisex' },
+    { nome: 'Beijão', categoria: 'Lovezin', emoji: '💗', img: 'https://www.otempo.com.br/content/dam/otempo/editorias/interessa/2024/3/interessa-beijo-de-lingua-beneficios-do-beijo-1713342721.jpeg', intensidade: 1, targetGender: 'Unisex' },
+    { nome: 'Abraço', categoria: 'Lovezin', emoji: '💗', img: 'https://us.123rf.com/450wm/peopleimages12/peopleimages122210/peopleimages12221028649/193181819-seu-amor-transformou-meu-mundo-um-jovem-casal-desfrutando-de-algum-tempo-de-qualidade-juntos-na.jpg?ver=6', intensidade: 1, targetGender: 'Unisex' },
+    { nome: 'Massagem', categoria: 'Lovezin', emoji: '💗', img: 'https://individuale.med.br/wp-content/uploads/2019/08/massagem-anti-stress.png', intensidade: 3, targetGender: 'Unisex' },
+    { nome: 'Viajar', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/12/07/1581006561-1rdpraia-do-aventureiro-1.jpg', intensidade: 2, targetGender: 'Unisex' },
+    { nome: 'Noitada', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format', intensidade: 2, targetGender: 'Unisex' },
+    { nome: 'Pagode', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://s2-g1.glbimg.com/PiT2YdXpDe8AU4vPY3nVopJ3ksM=/0x0:1014x681/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2021/j/p/h577gHSrq8AvQbtKQeBg/roda-de-samba-2.jpg', intensidade: 2, targetGender: 'Unisex' },
+    { nome: 'Almoçar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://media.timeout.com/images/106062540/750/422/image.jpg', intensidade: 1, targetGender: 'Unisex' },
+    { nome: 'Jantar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://www.rbsdirect.com.br/filestore/0/7/2/9/4/9/4_1b48f02f18ac345/4949270_5de2a64f5b53f27.jpg?format=webp&w=1600&h=900&a=c', intensidade: 1, targetGender: 'Unisex' }
+];
+
+
+        // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
+        let appContainer;
+        let userNameDisplay; 
+        let foguinhosBadge;
+        let carrinhoBadge;
+        let bottomNavBar; // Referência para a barra de navegação inferior
+        let mainHeader; // Referência para o cabeçalho principal
+
+
+        // --- Utils para datas ---
+        function isSameDay(d1, d2) {
+            return d1.getFullYear() === d2.getFullYear() &&
+                   d1.getMonth() === d2.getMonth() &&
+                   d1.getDate() === d2.getDate();
+        }
+
+        function showToast(message, type = 'sucesso') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    let iconClass = 'fa-check-circle';
+    let toastClass = 'toast-sucesso';
+
+    if (type === 'erro') {
+        iconClass = 'fa-times-circle';
+        toastClass = 'toast-erro';
+    } else if (type === 'aviso') {
+        iconClass = 'fa-exclamation-triangle';
+        toastClass = 'toast-aviso';
+    }
+
+    const toastElement = document.createElement('div');
+    toastElement.className = `toast ${toastClass}`;
+    toastElement.innerHTML = `
+        <i class="fas ${iconClass} toast-icon"></i>
+        <span>${message}</span>
+    `;
+
+    container.appendChild(toastElement);
+
+    // DURAÇÃO ALTERADA AQUI
+    setTimeout(() => {
+        toastElement.classList.add('exiting');
+        setTimeout(() => {
+            toastElement.remove();
+        }, 500);
+    }, 2000); // <-- Alterado de 4000 para 2000 (2 segundos)
+}
+        // --- Funções de Renderização das Etapas ---
+        // Apenas o conteúdo DENTRO da #app será renderizado por estas funções
+
+        function renderLandingPage() {
+            appContainer.innerHTML = `
+                <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                    <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                        <div class="text-center mb-10">
+                            <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">NOSSO MOMENTO</h2>
+                            <p class="text-gray-300 tracking-wider">Apimente a relação.<br>Deixe tudo mais gostoso!</p>
+                        </div>
+                        <div class="space-y-5">
+                            <button onclick="changeStep('signIn')" class="btn-red w-full py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3">
+                                <span class="text-lg">ENTRAR</span>
+                                <i class="fas fa-sign-in-alt"></i>
+                            </button>
+                            <button onclick="changeStep('register')" class="btn-red w-full py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: none;">
+                                <span class="text-lg">CADASTRO</span>
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSignIn() {
+            appContainer.innerHTML = `
+                <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                    <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                        <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
+                            <i class="fas fa-arrow-left mr-2"></i> Voltar
+                        </button>
+                        <div class="text-center mb-10">
+                            <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">ENTRAR</h2>
+                            <p class="text-gray-300 tracking-wider">Acesse sua conta para continuar</p>
+                        </div>
+                        <div class="space-y-5">
+                            <div>
+                                <input id="signInEmail" type="email" placeholder="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                            <div>
+                                <input id="signInPassword" type="password" placeholder="Senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                        </div>
+                        <button onclick="handleSignIn()" class="btn-red w-full mt-8 py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3">
+                            <span class="text-lg">LOGIN</span>
+                            <i class="fas fa-sign-in-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRegister() {
+            appContainer.innerHTML = `
+                <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                    <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                        <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
+                            <i class="fas fa-arrow-left mr-2"></i> Voltar
+                        </button>
+                        <div class="text-center mb-10">
+                            <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">CADASTRO</h2>
+                            <p class="text-gray-300 tracking-wider">Crie sua conta para começar a apimentar!</p>
+                        </div>
+                        <div class="space-y-5">
+                            <div>
+                                <input id="registerNome" placeholder="Seu nome" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                            <div>
+                                <input id="registerEmail" type="email" placeholder="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                            <div>
+                                <input id="registerTelefone" type="tel" placeholder="Telefone (apenas números, ex: 11999991111)" pattern="[0-9]{11}" required class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                            <div>
+                                <input id="registerSenha" type="password" placeholder="Crie uma senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            </div>
+                            <div>
+                                <select id="registerSexo" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300">
+                                    <option value="" disabled selected>Selecione seu sexo</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Feminino">Feminino</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="handleRegister()" class="btn-red w-full mt-8 py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3">
+                            <span class="text-lg">CADASTRAR</span>
+                            <i class="fas fa-arrow-right-long"></i>
+                        </button>
+                        <p class="text-center mt-6 text-gray-400 text-sm">
+                            Ao continuar, você concorda com nossos <a href="#" class="text-pink-400 hover:underline">Termos</a> e <a href="#" class="text-pink-400 hover:underline">Política de Privacidade</a>
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+async function solicitarPermissaoDeNotificacao() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.warn("Este navegador não suporta notificações Push.");
+        return;
+    }
+
+    try {
+        // ETAPA 1: Registrar explicitamente o Service Worker
+        // Isso garante que o navegador saiba qual arquivo controlar.
+        const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+        console.log('Service Worker registrado com sucesso:', registration);
+
+        const permission = await Notification.requestPermission();
+
+        if (permission === "granted") {
+            console.log("Permissão de notificação concedida.");
+            showToast("Notificações ativadas!", "sucesso");
+
+            const messaging = firebase.messaging();
+            
+            // ETAPA 2: Obter o token
+            const fcmToken = await messaging.getToken({
+                vapidKey: "BDTOlIk3SKC6BV_MD0Eu2DZfm7rPOnGbz6hvYL1K_3lYnR1YXvO6qbOMuHHzBqzHhtyKw8YJMetHIas4V8wrWpI", // Cole sua VAPID Key aqui novamente
+                serviceWorkerRegistration: registration // Informa ao Firebase qual registro usar
+            });
+
+            if (fcmToken) {
+                console.log("Token do FCM obtido:", fcmToken);
+                await db.collection('usuarios').doc(state.usuario.uid).update({
+                    fcmToken: fcmToken
+                });
+            } else {
+                console.log("Não foi possível obter o token do FCM. Tente recarregar a página.");
+            }
+        } else {
+            console.log("Permissão de notificação negada.");
+            showToast("Você não receberá notificações.", "aviso");
+        }
+    } catch (error) {
+        console.error("Erro detalhado ao solicitar permissão:", error);
+        showToast("Erro ao ativar notificações.", "erro");
+    }
+}
+
+function setupForegroundMessageHandler() {
+    // Certifique-se de que 'firebase.messaging' está disponível
+    if (firebase.messaging.isSupported()) {
+        const messaging = firebase.messaging();
+        messaging.onMessage((payload) => {
+            console.log("Notificação Push recebida em primeiro plano: ", payload);
+
+            // Em vez de uma notificação do sistema, mostramos um "toast"
+            const title = payload.data.title;
+            const body = payload.data.body;
+            showToast(`🔔 ${title}: ${body}`, 'sucesso');
+            
+            // Opcional: Atualizar a bolinha do sino em tempo real
+            state.notificacoesNaoLidas++;
+            updateFixedUI();
+        });
+    }
+}
+
+        async function sendPairingRequest() {
+    const codigoDigitado = document.getElementById('codigoParceiro').value;
+
+    if (!codigoDigitado || codigoDigitado.length !== 11 || !/^\d+$/.test(codigoDigitado)) {
+        showToast('Por favor, digite um telefone com 11 dígitos.', 'aviso');
+        return;
+    }
+    if (codigoDigitado === state.usuario.telefone) {
+        showToast('Você não pode parear consigo mesmo!', 'erro');
+        return;
+    }
+    try {
+        const parceiroQuery = await db.collection('usuarios').where('telefone', '==', codigoDigitado).limit(1).get();
+        if (parceiroQuery.empty) {
+            showToast('Parceiro não encontrado. Verifique o código.', 'erro');
+            return;
+        }
+        const parceiroDoc = parceiroQuery.docs[0];
+        const parceiroUid = parceiroDoc.id;
+        const parceiroNome = parceiroDoc.data().nome;
+
+        const requestId = [state.usuario.uid, parceiroUid].sort().join('_');
+        const existingRequestDoc = await db.collection('pairingRequests').doc(requestId).get();
+
+        if (existingRequestDoc.exists && existingRequestDoc.data().status === 'pending') {
+            showToast('Você já enviou uma solicitação para este parceiro.', 'aviso');
+            return;
+        }
+        if (parceiroDoc.data().pareadoCom && typeof parceiroDoc.data().pareadoCom === 'string' && !parceiroDoc.data().pareadoCom.startsWith('pending_')) {
+            showToast(`O(a) parceiro(a) ${parceiroNome} já está pareado(a).`, 'aviso');
+            return;
+        }
+
+        const requestData = {
+            senderUid: state.usuario.uid,
+            senderName: state.usuario.nome,
+            senderPhone: state.usuario.telefone,
+            receiverUid: parceiroUid,
+            receiverName: parceiroNome,
+            receiverPhone: codigoDigitado,
+            status: 'pending',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        await db.collection('pairingRequests').doc(requestId).set(requestData);
+        await db.collection('usuarios').doc(state.usuario.uid).update({
+            pareadoCom: `pending_${codigoDigitado}`
+        });
+        
+        state.usuario.pareadoCom = `pending_${codigoDigitado}`;
+        showToast(`Solicitação enviada para ${parceiroNome}!`, 'sucesso');
+        state.etapa = 'parear';
+        state.codigoDigitando = false;
+        renderApp();
+    } catch (error) {
+        console.error('Erro ao enviar solicitação de pareamento:', error);
+        showToast('Erro ao enviar solicitação. Tente novamente.', 'erro');
+    }
+}
+
+        async function acceptPairingRequest(requestId, senderUid, senderPhone) {
+    try {
+        if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
+            showToast('Você já está pareado com outra pessoa.', 'aviso');
+            return;
+        }
+
+        await db.collection('pairingRequests').doc(requestId).update({ status: 'accepted' });
+        await db.collection('usuarios').doc(state.usuario.uid).update({ pareadoCom: senderPhone });
+        await db.collection('usuarios').doc(senderUid).update({ pareadoCom: state.usuario.telefone });
+
+        const telefones = [state.usuario.telefone, senderPhone].sort();
+        const cleanTelefones = telefones.map(tel => tel.replace(/\D/g, ''));
+        const idPareamento = cleanTelefones.join('_');
+        const idAmigavel = senderPhone.slice(-4) + state.usuario.telefone.slice(-4);
+        const pareamentoData = {
+            pessoa1: telefones[0],
+            pessoa2: telefones[1],
+            pessoa1Uid: cleanTelefones[0] === state.usuario.telefone.replace(/\D/g, '') ? state.usuario.uid : senderUid,
+            pessoa2Uid: cleanTelefones[1] === state.usuario.telefone.replace(/\D/g, '') ? state.usuario.uid : senderUid,
+            dataPareamento: firebase.firestore.FieldValue.serverTimestamp(),
+            idAmigavel: idAmigavel
+        };
+        
+        await db.collection('pareamentos').doc(idPareamento).set(pareamentoData, { merge: true });
+        
+        showToast('Pareamento aceito com sucesso!', 'sucesso');
+
+        await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
+    } catch (error) {
+        console.error('Erro ao aceitar pareamento:', error);
+        showToast('Erro ao aceitar pareamento. Tente novamente.', 'erro');
+    }
+}
+
+        async function rejectPairingRequest(requestId) {
+    try {
+        await db.collection('pairingRequests').doc(requestId).update({ status: 'rejected' });
+        
+        const requestDoc = await db.collection('pairingRequests').doc(requestId).get();
+        if (requestDoc.exists) {
+            const senderUid = requestDoc.data().senderUid;
+            const senderDoc = await db.collection('usuarios').doc(senderUid).get();
+            if (senderDoc.exists && senderDoc.data().pareadoCom && senderDoc.data().pareadoCom.startsWith('pending_')) {
+                await db.collection('usuarios').doc(senderUid).update({
+                    pareadoCom: firebase.firestore.FieldValue.delete()
+                });
+            }
+        }
+        showToast('Solicitação de pareamento rejeitada.', 'sucesso');
+        state.pendingPairingRequest = null;
+        renderApp();
+    } catch (error) {
+        console.error('Erro ao rejeitar pareamento:', error);
+        showToast('Erro ao rejeitar solicitação.', 'erro');
+    }
+}
+
+        // Função para cancelar uma solicitação de pareamento pendente (do lado do sender)
+        async function cancelPendingPairingRequest() {
+    if (confirm('Tem certeza que deseja cancelar esta solicitação de pareamento?')) {
+        try {
+            const senderUid = state.usuario.uid;
+            const receiverPhone = state.usuario.pareadoCom.replace('pending_', '');
+            const receiverQuery = await db.collection('usuarios').where('telefone', '==', receiverPhone).limit(1).get();
+            
+            if (receiverQuery.empty) {
+                showToast('Erro: Destinatário não encontrado.', 'erro');
+                return;
+            }
+            const receiverUid = receiverQuery.docs[0].id;
+            const requestId = [senderUid, receiverUid].sort().join('_');
+            
+            await db.collection('pairingRequests').doc(requestId).delete();
+            await db.collection('usuarios').doc(senderUid).update({
+                pareadoCom: firebase.firestore.FieldValue.delete()
+            });
+
+            showToast('Solicitação de pareamento cancelada.', 'sucesso');
+            state.usuario.pareadoCom = null;
+            state.etapa = 'parear';
+            renderApp();
+        } catch (error) {
+            console.error('Erro ao cancelar solicitação:', error);
+            showToast('Erro ao cancelar solicitação.', 'erro');
+        }
+    }
+}
+
+
+        function renderPareamento() {
+    if (state.pareado && state.parceiroData) {
+        // Mostra o Perfil do Parceiro se estiver pareado
+        const fotoParceiroUrl = state.parceiroData.fotoUrl || 'https://images.pexels.com/photos/1105325/pexels-photo-1105325.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+        const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+        const canCheckIn = !lastCheckIn || !isSameDay(lastCheckIn, new Date());
+        const checkInButtonText = canCheckIn ? 'Presentear com 1 🔥' : 'Presenteado Hoje';
+        const checkInButtonClasses = canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed';
+
+        appContainer.innerHTML = `
+            <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+                <div class="max-w-md mx-auto card text-center p-8">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-300">Conectado com</h2>
+                    <img src="${fotoParceiroUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-pink-500/50 mx-auto mb-4">
+                    <h3 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500">${state.parceiroData.nome}</h3>
+                    
+                    <p class="text-gray-500 text-sm mt-2">ID do Casal: ${state.idPareamentoAmigavel || 'Indisponível'}</p>
+
+                    <div class="mt-8 space-y-4">
+                        <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''} class="w-full py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${checkInButtonClasses}">
+                            <i class="fas fa-gift"></i> ${checkInButtonText}
+                        </button>
+                        <button onclick="desparearParceiro()" class="w-full py-3 bg-red-800/60 hover:bg-red-700 text-white rounded-lg font-semibold transition">
+                            Desfazer Pareamento
+                        </button>
+                    </div>
+                </div>
+            </div>
+            ${state.showCartSidebar ? `
+    <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+    <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
+            <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="space-y-3">
+            ${state.carrinho.length === 0 ? `
+                <p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>
+            ` : state.carrinho.map((item, index) => `
+                <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
+                    <div>
+                        <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
+                        <small class="text-gray-400 text-sm">${item.categoria}</small>
+                        <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1">
+                            <i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos
+                        </div>
+                    </div>
+                    <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('')}
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-800">
+            <button onclick="finalizarPedido()" 
+                class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all
+                ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                ${state.carrinho.length === 0 ? 'disabled' : ''}>
+                Finalizar Pedido
+            </button>
+            <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+                Continuar Resgatando
+            </button>
+        </div>
+    </div>
+` : ''}
+        `;
+        return; 
+    }
+
+    // Se não estiver pareado, mostra a lógica antiga de pareamento
+    const codigoUsuario = state.usuario.telefone.replace(/\D/g, '');
+    let content = '';
+
+    if (state.pendingPairingRequest) {
+        content = `
+            <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                <div class="card p-8 max-w-md w-full text-center">
+                    <h2 class="text-3xl font-bold mb-4 text-pink-400">Solicitação Recebida</h2>
+                    <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
+                    <div class="text-2xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block mb-6">${state.pendingPairingRequest.senderName}</div>
+                    <div class="flex flex-col sm:flex-row justify-center gap-4">
+                        <button onclick="acceptPairingRequest('${state.pendingPairingRequest.id}', '${state.pendingPairingRequest.senderUid}', '${state.pendingPairingRequest.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">Aceitar</button>
+                        <button onclick="rejectPairingRequest('${state.pendingPairingRequest.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">Rejeitar</button>
+                    </div>
+                </div>
+            </div>`;
+    } else if (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+        const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
+        content = `
+            <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                <div class="card p-8 max-w-md w-full text-center">
+                    <h2 class="text-3xl font-bold mb-4 text-yellow-400">Solicitação Enviada</h2>
+                    <p class="mb-4">Sua solicitação para ${pendingPhone} está pendente.</p>
+                    <p class="text-sm text-gray-300 mb-6">Aguardando aceitação...</p>
+                    <button onclick="cancelPendingPairingRequest()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">Cancelar Solicitação</button>
+                </div>
+            </div>`;
+    } else {
+        content = `
+            <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                <div class="card p-8 max-w-md w-full text-center">
+                    <h2 class="text-3xl font-bold mb-4 text-pink-400">Parear com seu Amor</h2>
+                    ${!state.codigoDigitando ? `
+                        <p class="mb-4">Seu código de pareamento é:</p>
+                        <div class="text-4xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">${codigoUsuario}</div>
+                        <p class="mt-4 text-sm text-gray-300 mb-6">Compartilhe este código com seu/sua parceiro(a).</p>
+                        <div class="flex flex-col sm:flex-row justify-center gap-4">
+                            <button onclick="state.codigoDigitando = true; renderApp();" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded text-white font-semibold transition">Digitar Código</button>
+                            <button onclick="handleContinuarSemParear()" class="btn-red">Fazer Isso Depois</button>
+                        </div>
+                    ` : `
+                        <div class="mb-6">
+                            <label class="block mb-2">Digite o código do seu parceiro(a)</label>
+                            <input id="codigoParceiro" type="text" class="w-full p-3 rounded text-white text-center" placeholder="11999991111" maxlength="11" />
+                        </div>
+                        <div class="flex gap-4">
+                            <button onclick="state.codigoDigitando = false; renderApp();" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded font-semibold transition">Voltar</button>
+                            <button onclick="sendPairingRequest()" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded font-semibold transition flex-1">Enviar Solicitação</button>
+                        </div>
+                    `}
+                </div>
+            </div>`;
+    }
+    appContainer.innerHTML = content;
+}
+
+        // Nova função para renderizar o pop-up de Foguinhos
+        function renderFoguinhosPopupContent() {
+    appContainer.innerHTML = `
+        <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+            <div class="card p-8 max-w-md w-full relative overflow-hidden">
+                <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
+                <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
+                <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
+                    <i class="fas fa-fire mr-2"></i> Seus Foguinhos
+                </h2>
+                <div class="text-center mb-6">
+                    <p class="mb-4 text-xl">Você tem:</p>
+                    <div class="relative inline-block">
+                        <i class="fas fa-fire text-6xl text-yellow-400 animate-pulse"></i>
+                        <span class="badge-notification badge-yellow text-2xl" style="top: 0px; right: -20px; min-width: 40px; height: 40px;">
+                            ${state.usuario ? state.usuario.foguinhos : 0}
+                        </span>
+                    </div>
+                    <p class="mt-4 text-sm text-gray-300">Use-os para resgatar momentos!</p>
+                </div>
+                <div class="flex justify-center">
+                    <button onclick="changeStep('main');" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
+                        Voltar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+        async function criarNotificacao(userId, titulo, mensagem, icone) {
+            try {
+                await db.collection('notificacoes').add({
+                    userId: userId,         // Para quem é a notificação
+                    titulo: titulo,
+                    mensagem: mensagem,
+                    icone: icone,           // Um ícone da Font Awesome (ex: 'fa-gift')
+                    lida: false,            // Começa como não lida
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log('Notificação criada com sucesso para o usuário:', userId);
+            } catch (error) {
+                console.error("Erro ao criar notificação:", error);
+            }
+        }
+
+function setupNotificationListener(userId) {
+    // Se já existe um ouvinte, desliga ele primeiro para evitar duplicação
+    if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+    }
+
+    const notificationsQuery = db.collection('notificacoes')
+        .where('userId', '==', userId)
+        .orderBy('timestamp', 'desc')
+        .limit(20); // Pega as últimas 20 notificações
+
+    unsubscribeNotifications = notificationsQuery.onSnapshot(snapshot => {
+        const notifs = [];
+        snapshot.forEach(doc => {
+            notifs.push({ id: doc.id, ...doc.data() });
+        });
+
+        state.notificacoes = notifs; // Guarda a lista completa no state
+        
+        // Conta quantas não foram lidas
+        state.notificacoesNaoLidas = notifs.filter(n => !n.lida).length;
+
+        console.log(`Notificações carregadas: ${notifs.length}, Não lidas: ${state.notificacoesNaoLidas}`);
+
+        // Se o usuário estiver na tela de notificações, atualiza a lista
+        if (state.etapa === 'notificacoes') {
+            renderNotificacoes();
+        }
+
+        // Atualiza a bolinha vermelha na header
+        updateFixedUI();
+    });
+}
+
+        // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
+        function renderPartnerInfoPopup() {
+            const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+            const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
+
+            appContainer.innerHTML = `
+                <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                    <div class="card p-8 max-w-md w-full relative overflow-hidden">
+                        <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
+                        <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
+                        <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-500">
+                            <i class="fas fa-user-heart mr-2"></i> Seu Parceiro
+                        </h2>
+                        <div class="text-center mb-6">
+                            <p class="mb-2 text-xl">Nome: <span class="font-bold text-green-400">${state.parceiroNome || 'N/A'}</span></p>
+                            <p class="mb-4 text-md text-gray-300">Telefone: ${state.parceiroCodigo || 'N/A'}</p>
+                        </div>
+                        <div class="space-y-4">
+                            <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''}
+                                class="w-full text-sm px-6 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2
+                                ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}">
+                                <i class="fas fa-gift text-xs"></i> Presentear 🔥
+                            </button>
+
+                            <button onclick="desparearParceiro()" class="w-full text-sm bg-red-800 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition">
+                                <i class="fas fa-unlink text-xs"></i> Desfazer Pareamento
+                            </button>
+
+                            <button onclick="togglePartnerInfoPopup();" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition w-full">
+                                Voltar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+
+        function renderMain() {
+    if (!state.pareado || !state.parceiroData) {
+        appContainer.innerHTML = `
+            <div class="min-h-screen container mx-auto px-4 py-8 text-center flex flex-col justify-center items-center">
+                <h2 class="text-2xl font-bold mb-4">Você ainda não está pareado(a).</h2>
+                <p class="text-gray-400 mb-6">Pareie com seu/sua parceiro(a) para ver o catálogo de momentos dele(a).</p>
+                <button onclick="changeStep('parear')" class="btn-red">Parear agora</button>
+            </div>
+        `;
+        return;
+    }
+
+    const partnerGender = state.parceiroData.sexo;
+    const momentosParaParceiro = momentos.filter(m => m.targetGender === partnerGender || m.targetGender === 'Unisex');
+    const catalogoParceiro = state.parceiroData.catalogoPersonalizado || {};
+    const categorias = [...new Set(momentosParaParceiro.map(m => m.categoria))].map(nomeCat => {
+        const momentoExemplo = momentos.find(m => m.categoria === nomeCat);
+        let cor = 'bg-purple-900';
+        if (momentoExemplo.categoria === 'Quentes') cor = 'bg-pink-900';
+        if (momentoExemplo.categoria === 'Lovezin') cor = 'bg-red-900';
+        return {
+            nome: nomeCat,
+            emoji: momentoExemplo.emoji,
+            color: cor
+        };
+    });
+
+    const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/favicon.png';
+
+    appContainer.innerHTML = `
+        <main class="container mx-auto px-4 py-8 pb-24 pt-24 bg-gradient-to-br from-gray-900 to-black text-white">
+            <div class="mb-12 text-center">
+                <img src="${fotoParceiroUrl}" class="w-24 h-24 rounded-full object-cover border-4 border-pink-500/50 mx-auto mb-6">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Catálogo de ${state.parceiroNome}</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">Escolha os momentos que você deseja viver!</p>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-3 mb-12">
+                <button onclick="filtrarMomentos(null)"
+                    class="px-4 py-2 rounded-full transition-all ${!state.filtro ? 'bg-pink-600 text-white shadow-lg' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}"
+                    style="background: ${!state.filtro ? 'linear-gradient(45deg, #FF3547 0%, #FF6B7B 100%)' : ''}">
+                    Todos
+                </button>
+                ${categorias.map(cat => `
+                    <button onclick="filtrarMomentos('${cat.nome}')"
+                        class="px-4 py-2 rounded-full transition-all ${state.filtro === cat.nome ? 'text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800/50'} ${cat.color}">
+                        ${cat.emoji} ${cat.nome}
+                    </button>
+                `).join('')}
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+                ${(state.filtro ? momentosParaParceiro.filter(m => m.categoria === state.filtro) : momentosParaParceiro).map(momento => {
+                    const configParceiro = catalogoParceiro[momento.nome];
+                    const preco = configParceiro?.preco !== undefined ? configParceiro.preco : momento.intensidade * 2;
+                    const bloqueado = configParceiro?.bloqueado || false;
+                    const momentoParaCarrinho = { ...momento, custoFoguinhos: preco };
+
+                    return `
+                    <div class="product-card group ${bloqueado ? 'opacity-50' : ''}">
+                        <div class="relative overflow-hidden">
+                            <img src="${momento.img}" alt="${momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
+                            <span class="product-badge">${momento.emoji} ${momento.categoria}</span>
+                            ${bloqueado ? `<div class="absolute inset-0 bg-black/70 flex items-center justify-center"><i class="fas fa-lock text-4xl text-white"></i></div>` : ''}
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-medium">${momento.nome}</h3>
+                            <div class="flex justify-between items-center mt-4">
+                                <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
+                                    <i class="fas fa-fire"></i> ${preco} Foguinhos
+                                </span>
+                                <button onclick='adicionarAoCarrinho(${JSON.stringify(momentoParaCarrinho).replace(/"/g, "&quot;")})'
+                                    class="text-sm px-4 py-2 rounded-lg transition ${bloqueado ? 'bg-gray-700 cursor-not-allowed' : 'bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white'}"
+                                    ${bloqueado ? 'disabled' : ''}>
+                                    ${bloqueado ? 'Indisponível' : 'Resgatar'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }).join('')}
+            </div>
+        </main>
+
+        ${state.showCartSidebar ? `
+            <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+            <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
+                    <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    ${state.carrinho.length === 0 ? `<p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>` : state.carrinho.map((item, index) => `
+                        <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
+                                <small class="text-gray-400 text-sm">${item.categoria}</small>
+                                <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1">
+                                    <i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos
+                                </div>
+                            </div>
+                            <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-800">
+                    <button onclick="finalizarPedido()" 
+                        class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                        ${state.carrinho.length === 0 ? 'disabled' : ''}>
+                        Finalizar Pedido
+                    </button>
+                    <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+                        Continuar Resgatando
+                    </button>
+                </div>
+            </div>
+        ` : ''}
+    `;
+}
+
+function renderGerenciarCatalogo() {
+    // --- NOVA LÓGICA DE FILTRO POR GÊNERO ---
+    const userGender = state.usuario?.sexo || 'Masculino'; 
+    const momentosDisponiveis = momentos.filter(m => m.targetGender === userGender || m.targetGender === 'Unisex');
+
+    // --- LÓGICA EXISTENTE, AGORA USANDO OS DADOS FILTRADOS ---
+    const catalogoSalvo = state.usuario.catalogoPersonalizado || {};
+    const categorias = [...new Set(momentosDisponiveis.map(m => m.categoria))];
+    const fotoUrl = state.usuario.fotoUrl || '/assets/icons/favicon.png';
+
+    appContainer.innerHTML = `
+        <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-bold mb-2">Meu Perfil e Catálogo</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">Gerencie sua foto, preços e a disponibilidade dos momentos.</p>
+            </div>
+
+            <div class="max-w-2xl mx-auto mb-12 p-6 card flex flex-col items-center">
+                <h3 class="font-bold text-xl mb-4">Sua Foto de Perfil</h3>
+                <img id="profilePicPreview" src="${fotoUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-gray-600 mb-4">
+                <input type="file" id="fileInput" onchange="handleFileSelect(event)" accept="image/*" class="hidden">
+                <button onclick="document.getElementById('fileInput').click()" class="text-pink-400 hover:text-pink-300 font-semibold">
+                    Trocar Foto
+                </button>
+
+                <button onclick="solicitarPermissaoDeNotificacao()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                <i class="fas fa-bell"></i> Ativar Notificações
+                </button>
+
+                <div id="uploadProgress" class="w-full bg-gray-700 rounded-full h-2.5 mt-4 hidden">
+                    <div id="uploadProgressBar" class="bg-pink-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="space-y-4 max-w-2xl mx-auto">
+                ${categorias.map(categoria => `
+                    <div class="card overflow-hidden">
+                        <button onclick="toggleAccordion(this)" class="w-full p-4 text-left font-bold text-lg flex justify-between items-center">
+                            <span>${categoria}</span>
+                            <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                            <div class="space-y-2 p-4 border-t border-gray-700">
+                                ${momentosDisponiveis.filter(m => m.categoria === categoria).map(momento => { // <-- USA A LISTA FILTRADA
+                                    const configSalva = catalogoSalvo[momento.nome];
+                                    const preco = configSalva?.preco !== undefined ? configSalva.preco : momento.intensidade * 2;
+                                    const bloqueado = configSalva?.bloqueado || false;
+                                    return `
+                                    <div class="p-2 flex items-center justify-between gap-4">
+                                        <div class="flex items-center gap-4">
+                                            <img src="${momento.img}" class="w-12 h-12 rounded-lg object-cover">
+                                            <div><h3 class="font-semibold">${momento.nome}</h3></div>
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex items-center gap-1 bg-gray-800 rounded-lg p-2">
+                                                <i class="fas fa-fire text-yellow-400"></i>
+                                                <input type="number" value="${preco}" id="preco-${momento.nome.replace(/\s+/g, '-')}" class="bg-transparent w-16 text-center font-bold">
+                                            </div>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" ${bloqueado ? 'checked' : ''} class="sr-only peer" id="bloqueado-${momento.nome.replace(/\s+/g, '-')}">
+                                                <div class="relative w-14 h-7 bg-pink-600 peer-checked:bg-gray-600 rounded-full transition-colors flex items-center justify-between px-2">
+                                                    <i class="fas fa-lock text-white text-xs"></i>
+                                                    <i class="fas fa-lock-open text-white text-xs"></i>
+                                                </div>
+                                                <div class="absolute top-0.5 left-[2px] w-6 h-6 bg-white rounded-full border border-gray-300 transition-transform transform peer-checked:translate-x-full"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="mt-10 text-center">
+                <button onclick="handleSaveCatalogo()" class="btn-red px-10 py-4">
+                    Salvar Alterações
+                </button>
+            </div>
+        </div>
+
+        ${state.showCartSidebar ? `
+            <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+            <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
+                    <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="space-y-3">
+                    ${state.carrinho.length === 0 ? `<p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>` : state.carrinho.map((item, index) => `
+                        <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
+                                <small class="text-gray-400 text-sm">${item.categoria}</small>
+                                <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1"><i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos</div>
+                            </div>
+                            <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-800">
+                    <button onclick="finalizarPedido()" class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${state.carrinho.length === 0 ? 'disabled' : ''}>
+                        Finalizar Pedido
+                    </button>
+                    <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+                        Continuar Resgatando
+                    </button>
+                </div>
+            </div>
+        ` : ''}
+    `;
+}
+
+async function handleSaveCatalogo() {
+    console.log('Iniciando salvamento do catálogo...');
+    const novoCatalogo = {}; // 1. Começamos com um objeto vazio.
+
+    // 2. Para cada momento da nossa lista mestra...
+    momentos.forEach(momento => {
+        // Montamos os IDs dos campos na tela, como fizemos ao criá-los.
+        const idPreco = `preco-${momento.nome.replace(/\s+/g, '-')}`;
+        const idBloqueado = `bloqueado-${momento.nome.replace(/\s+/g, '-')}`;
+
+        const inputPreco = document.getElementById(idPreco);
+        const inputBloqueado = document.getElementById(idBloqueado);
+
+        // Verificamos se encontramos os campos na tela, por segurança.
+        if (inputPreco && inputBloqueado) {
+            // 3. Coletamos os valores.
+            const preco = parseInt(inputPreco.value, 10) || 0; // Pegamos o valor do input e o convertemos para número.
+            const bloqueado = inputBloqueado.checked; // 'checked' será true ou false.
+
+            // 4. Montamos o objeto para este momento específico.
+            novoCatalogo[momento.nome] = {
+                preco: preco,
+                bloqueado: bloqueado
+            };
+        }
+    });
+
+    try {
+        // 5. Usamos o comando 'update' para salvar o novo mapa no Firestore.
+        await db.collection('usuarios').doc(state.usuario.uid).update({
+            catalogoPersonalizado: novoCatalogo
+        });
+
+        // 6. Atualizamos o estado local para manter tudo sincronizado.
+        state.usuario.catalogoPersonalizado = novoCatalogo;
+
+        // 7. Damos um feedback de sucesso.
+        alert('Seu catálogo foi salvo com sucesso!');
+        console.log('Catálogo salvo no Firestore:', novoCatalogo);
+
+    } catch (error) {
+        console.error("Erro ao salvar o catálogo: ", error);
+        alert('Houve um erro ao salvar seu catálogo. Tente novamente.');
+    }
+}
+
+function toggleAccordion(buttonElement) {
+    const content = buttonElement.nextElementSibling;
+    buttonElement.classList.toggle('open');
+    content.classList.toggle('open');
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) {
+        return; // O usuário não escolheu nenhum arquivo
+    }
+
+    // Validação simples: checa se é uma imagem e se tem menos de 5MB
+    if (!file.type.startsWith('image/')){
+        alert('Por favor, selecione um arquivo de imagem (jpg, png, etc.).');
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5 Megabytes
+        alert('A imagem é muito grande. Por favor, escolha uma com menos de 5MB.');
+        return;
+    }
+
+    // Mostra a pré-visualização da imagem na tela
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const profilePicPreview = document.getElementById('profilePicPreview');
+        if (profilePicPreview) {
+            profilePicPreview.src = e.target.result;
+        }
+    };
+    reader.readAsDataURL(file);
+
+    // Inicia o processo de upload
+    uploadProfilePic(file);
+}
+
+// Função 2: Faz o upload do arquivo para o Firebase Storage
+async function uploadProfilePic(file) {
+    if (!state.usuario) {
+        alert('Você precisa estar logado para enviar uma foto.');
+        return;
+    }
+
+    // Mostra a barra de progresso
+    const progressContainer = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('uploadProgressBar');
+    if(progressContainer) progressContainer.classList.remove('hidden');
+
+    // 1. Define o caminho onde a imagem será salva no Storage
+    // Ex: profile_pics/UID_DO_USUARIO.jpg
+    const filePath = `profile_pics/${state.usuario.uid}/${file.name}`;
+    const fileRef = storage.ref(filePath);
+
+    // 2. Inicia o upload
+    const uploadTask = fileRef.put(file);
+
+    // 3. Acompanha o progresso do upload
+    uploadTask.on('state_changed', 
+        (snapshot) => {
+            // Atualiza a barra de progresso
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            if(progressBar) progressBar.style.width = progress + '%';
+            console.log('Upload is ' + progress + '% done');
+        }, 
+        (error) => {
+            // Em caso de erro
+            console.error("Erro no upload: ", error);
+            alert('Houve um erro ao enviar sua foto.');
+            if(progressContainer) progressContainer.classList.add('hidden');
+        }, 
+        () => {
+            // 4. Quando o upload terminar, pega a URL pública da imagem
+            uploadTask.snapshot.ref.getDownloadURL().then(async (downloadURL) => {
+                console.log('Arquivo disponível em', downloadURL);
+
+                // 5. Salva a URL da foto no perfil do usuário no Firestore
+                await db.collection('usuarios').doc(state.usuario.uid).update({
+                    fotoUrl: downloadURL
+                });
+
+                // 6. Atualiza o estado local e a UI
+                state.usuario.fotoUrl = downloadURL;
+                updateFixedUI(); // Chama a função para atualizar a header
+
+                alert('Foto de perfil atualizada com sucesso!');
+                if(progressContainer) progressContainer.classList.add('hidden'); // Esconde a barra
+            });
+        }
+    );
+}
+
+        // --- Funções de Manipulação de Eventos e Firebase Auth/Firestore ---
+
+        async function handleSignIn() {
+            const email = document.getElementById('signInEmail').value;
+            const password = document.getElementById('signInPassword').value;
+
+            if (!email || !password) {
+                alert('Por favor, preencha o email e a senha.');
+                return;
+            }
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                console.log('Usuário logado com sucesso:', user);
+
+                await loadUserDataAndNavigate(user.uid, user.email);
+
+            } catch (error) {
+                console.error('Erro no login:', error.code, error.message);
+                let errorMessage = 'Erro ao fazer login. Verifique seu email e senha.';
+                if (error.code === 'auth/user-not-found') {
+                    errorMessage = 'Nenhum usuário encontrado com este email.';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Senha incorreta.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'Email inválido.';
+                } else if (error.code === 'auth/invalid-credential') { 
+                    errorMessage = 'Credenciais inválidas. Verifique seu email e senha.';
+                }
+                alert(errorMessage);
+            }
+        }
+
+        async function handleRegister() {
+    const nome = document.getElementById('registerNome').value;
+    const email = document.getElementById('registerEmail').value;
+    const telefone = document.getElementById('registerTelefone').value;
+    const senha = document.getElementById('registerSenha').value;
+    const sexo = document.getElementById('registerSexo').value;
+
+    // Validação de Frontend
+    if (!nome || !email || !telefone || !senha || !sexo) {
+        alert('Por favor, preencha todos os campos.');
+        return;
+    }
+    if (telefone.length !== 11 || !/^\d+$/.test(telefone)) {
+        alert('O telefone deve conter exatamente 11 dígitos numéricos (com DDD).');
+        return;
+    }
+    if (senha.length < 6) {
+         alert('A senha deve ter no mínimo 6 caracteres.');
+         return;
+    }
+
+    try {
+        // 1. Criar usuário no Firebase Authentication
+        const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
+        const user = userCredential.user;
+        console.log('Usuário criado no Auth:', user);
+
+        // 2. Salvar dados adicionais no Firestore usando o UID do Firebase Auth como ID do documento
+        await db.collection('usuarios').doc(user.uid).set({
+            nome: nome,
+            telefone: telefone,
+            email: email,
+            sexo: sexo,
+            foguinhos: 10,
+            lastCheckInDate: null,
+            pareadoCom: null,
+            catalogoPersonalizado: {}, // <-- NOSSA NOVA LINHA! Inicializa o catálogo.
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log("Dados do usuário salvos com sucesso no Firestore!");
+
+        // Atualiza o estado local com os dados do novo usuário
+        state.usuario = {
+            uid: user.uid,
+            email: user.email,
+            nome,
+            telefone,
+            sexo,
+            foguinhos: 10,
+            lastCheckInDate: null,
+            pareadoCom: null,
+            catalogoPersonalizado: {} // <-- E AQUI TAMBÉM, para consistência.
+        };
+        state.etapa = 'parear';
+        renderApp();
+        alert('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.');
+
+    } catch (error) {
+        console.error('Erro no cadastro:', error.code, error.message);
+        let errorMessage = 'Erro ao cadastrar. Tente novamente.';
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = 'Este email já está em uso. Tente fazer login ou use outro email.';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'O formato do email é inválido.';
+        } else if (error.code === 'auth/weak-password') {
+            errorMessage = 'A senha é muito fraca (mínimo de 6 caracteres).';
+        }
+        alert(errorMessage);
+    }
+}
+
+        async function handleLogout() {
+    try {
+        // >>> DESLIGA O OUVINTE DE NOTIFICAÇÕES AQUI <<<
+        if (unsubscribeNotifications) {
+            unsubscribeNotifications();
+            unsubscribeNotifications = null;
+        }
+
+        await auth.signOut();
+        console.log('Usuário deslogado com sucesso!');
+        
+        // Resetar todo o estado da aplicação para o padrão inicial
+        state.usuario = null;
+        state.pareado = false;
+        state.parceiroData = null;
+        state.idPareamentoAmigavel = null;
+        state.notificacoesNaoLidas = 0;
+        state.notificacoes = [];
+        state.etapa = 'landing';
+        state.carrinho = [];
+        state.codigoUsuario = null;
+        state.codigoDigitando = false;
+        state.parceiroCodigo = null;
+        state.parceiroTelefone = null;
+        state.parceiroNome = null;
+        state.showPartnerInfo = false;
+        state.pendingPairingRequest = null;
+        state.showCartSidebar = false;
+        state.showFoguinhosPopup = false;
+
+        renderApp(); // Volta para a tela inicial
+    } catch (error) {
+        console.error('Erro ao deslogar:', error);
+        showToast('Erro ao fazer logout.', 'erro');
+    }
+}
+
+        async function handleDailyCheckIn() {
+    if (!state.pareado || !state.parceiroData) {
+        showToast('Você precisa estar pareado para presentear.', 'aviso');
+        return;
+    }
+
+    const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+    if (lastCheckIn && isSameDay(lastCheckIn, new Date())) {
+        showToast('Você já presenteou hoje. Volte amanhã!', 'aviso');
+        return;
+    }
+
+    try {
+        // Busca o UID do parceiro, que precisamos para criar a notificação
+        const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
+        if (parceiroQuery.empty) {
+            showToast('Erro: Parceiro não encontrado.', 'erro');
+            return;
+        }
+        const parceiroDoc = parceiroQuery.docs[0];
+        const parceiroUid = parceiroDoc.id;
+        const parceiroFoguinhosAtuais = parceiroDoc.data().foguinhos || 0;
+
+        // Atualiza os dados no Firestore
+        await db.collection('usuarios').doc(state.usuario.uid).update({
+            lastCheckInDate: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await db.collection('usuarios').doc(parceiroUid).update({
+            foguinhos: parceiroFoguinhosAtuais + 1
+        });
+
+        // >>> AQUI ESTÁ A MÁGICA: CRIA A NOTIFICAÇÃO PARA O PARCEIRO <<<
+        await criarNotificacao(
+            parceiroUid,
+            'Você ganhou um presente!',
+            `${state.usuario.nome} te presenteou com 1 foguinho 🔥.`,
+            'fa-gift'
+        );
+
+        showToast(`Presente enviado para ${state.parceiroNome}!`, 'sucesso');
+        
+        // Recarrega os dados do usuário para atualizar a UI do botão
+        await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
+
+    } catch (error) {
+        console.error('Erro ao realizar Presentear (Check-in) diário:', error);
+        showToast('Erro ao presentear. Tente novamente.', 'erro');
+    }
+}
+
+
+        function handleContinuarSemParear() {
+            state.etapa = 'main';
+            renderApp();
+        }
+
+        function filtrarMomentos(categoria) {
+            state.filtro = categoria;
+            renderApp(); // Re-renderiza a etapa atual, que é 'main'
+        }
+
+        async function adicionarAoCarrinho(momento) {
+    // Validação 1: Limite de itens no carrinho
+    if (state.carrinho.length >= 2) {
+        showToast('Limite de 2 itens no carrinho!', 'aviso');
+        return;
+    }
+
+    // Validação 2: Checa se o usuário está pareado
+    if (!state.pareado) {
+        showToast('Você precisa estar pareado para resgatar momentos.', 'aviso');
+        return;
+    }
+
+    const custo = momento.custoFoguinhos;
+    // Validação 3: Checa se o usuário tem "foguinhos" suficientes
+    if ((state.usuario.foguinhos || 0) < custo) {
+        showToast(`Você precisa de ${custo} foguinhos para este momento.`, 'aviso');
+        return;
+    }
+
+    try {
+        // Debita os foguinhos do usuário no Firestore
+        await db.collection('usuarios').doc(state.usuario.uid).update({
+            foguinhos: firebase.firestore.FieldValue.increment(-custo)
+        });
+        
+        // Atualiza o estado local
+        state.usuario.foguinhos = (state.usuario.foguinhos || 0) - custo;
+        state.carrinho = [...state.carrinho, momento];
+
+        // Notificação de sucesso
+        showToast(`${momento.nome} adicionado ao carrinho!`, 'sucesso');
+
+        // Re-renderiza o app para atualizar os badges do carrinho e foguinhos
+        renderApp();
+
+    } catch (error) {
+        // Notificação em caso de erro no processo
+        console.error('Erro ao adicionar momento ao carrinho:', error);
+        showToast('Erro ao adicionar momento. Tente novamente.', 'erro');
+    }
+}
+
+        async function removerDoCarrinho(index) {
+    const momentoRemovido = state.carrinho[index];
+    const custo = momentoRemovido.custoFoguinhos;
+
+    try {
+        // Devolve os foguinhos ao usuário no Firestore
+        await db.collection('usuarios').doc(state.usuario.uid).update({
+            foguinhos: firebase.firestore.FieldValue.increment(custo)
+        });
+
+        // Atualiza o estado local
+        state.usuario.foguinhos = (state.usuario.foguinhos || 0) + custo;
+        state.carrinho = state.carrinho.filter((_, i) => i !== index);
+
+        // Notificação de sucesso unificada
+        showToast(`Item removido (+${custo} 🔥)`, 'sucesso');
+
+        // Re-renderiza o app para atualizar os badges
+        renderApp();
+
+    } catch (error) {
+        console.error('Erro ao remover do carrinho:', error);
+        // Notificação de erro unificada
+        showToast('Erro ao remover item. Tente novamente.', 'erro');
+    }
+}
+
+        async function desparearParceiro() {
+            if (confirm('Tem certeza que deseja desfazer o pareamento? Isso irá resetar os foguinhos de ambos os usuários para 0.')) { 
+                try {
+                    const usuarioUid = state.usuario.uid;
+                    const usuarioTelefone = state.usuario.telefone;
+                    const parceiroTelefone = state.parceiroCodigo; 
+
+                    // 1. Encontrar o UID do parceiro pelo telefone
+                    let parceiroUid = null;
+                    const parceiroQuery = await db.collection('usuarios').where('telefone', '==', parceiroTelefone).limit(1).get();
+                    if (!parceiroQuery.empty) {
+                        parceiroUid = parceiroQuery.docs[0].id;
+                    }
+
+                    const batch = db.batch();
+
+                    // 2. Remover pareamento do usuário atual no Firestore e resetar foguinhos
+                    const userDocRef = db.collection('usuarios').doc(usuarioUid);
+                    batch.update(userDocRef, {
+                        pareadoCom: firebase.firestore.FieldValue.delete(),
+                        foguinhos: 0,
+                        lastCheckInDate: null
+                    });
+
+                    // 3. Remover pareamento do parceiro (se o UID for encontrado) e resetar foguinhos
+                    if (parceiroUid) {
+                        const parceiroDocRef = db.collection('usuarios').doc(parceiroUid);
+                        batch.update(parceiroDocRef, {
+                            pareadoCom: firebase.firestore.FieldValue.delete(),
+                            foguinhos: 0,
+                            lastCheckInDate: null
+                        });
+                    }
+
+                    // 4. Remover documento da coleção 'pareamentos'
+                    const telefonesOrdenados = [usuarioTelefone, parceiroTelefone].sort();
+                    // Garante que o ID do documento é limpo de caracteres não numéricos também
+                    const idPareamento = telefonesOrdenados.map(tel => tel.replace(/\D/g, '')).join('_');
+                    const pareamentoDocRef = db.collection('pareamentos').doc(idPareamento);
+                    batch.delete(pareamentoDocRef);
+
+                    // 5. Limpar quaisquer solicitações de pareamento pendentes entre os dois
+                    const request1Id = [usuarioUid, parceiroUid].sort().join('_');
+                    const requestDocRef = db.collection('pairingRequests').doc(request1Id);
+                    batch.delete(requestDocRef); // Tenta deletar se existir
+                    
+                    await batch.commit(); // Executa todas as operações em um lote
+
+                    // Resetar estado local
+                    state.pareado = false;
+                    state.parceiroCodigo = null;
+                    state.parceiroTelefone = null;
+                    state.parceiroNome = null;
+                    state.showPartnerInfo = false;
+                    state.usuario.pareadoCom = null; 
+                    state.usuario.foguinhos = 0; 
+                    state.usuario.lastCheckInDate = null; 
+                    state.carrinho = []; 
+                    state.showCartSidebar = false; 
+                    alert('Pareamento desfeito com sucesso! Foguinhos resetados para ambos.');
+                    renderApp(); // Re-renderiza a tela principal
+
+                } catch (error) {
+                    console.error('Erro ao desfazer pareamento:', error);
+                    alert('Erro ao desfazer pareamento. Tente novamente.');
+                }
+            }
+        }
+
+        async function finalizarPedido() {
+    if (!state.pareado) {
+        // As validações continuam as mesmas
+        showToast('Você precisa estar pareado para finalizar o pedido.', 'aviso');
+        return;
+    }
+    if (state.carrinho.length === 0) {
+        showToast('Seu carrinho está vazio.', 'aviso');
+        return;
+    }
+
+    try {
+        // Busca o UID do parceiro para enviar as notificações
+        const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
+        if (parceiroQuery.empty) {
+            showToast('Erro: Parceiro não foi encontrado para notificar.', 'erro');
+            return;
+        }
+        const parceiroUid = parceiroQuery.docs[0].id;
+
+        // Cria uma notificação para cada item no carrinho
+        state.carrinho.forEach(async (momento) => {
+            await criarNotificacao(
+                parceiroUid,
+                'Momento Resgatado!',
+                `${state.usuario.nome} resgatou o momento "${momento.nome}"!`,
+                'fa-shopping-bag'
+            );
+        });
+
+        // 2. ADICIONAMOS UMA MENSAGEM DE SUCESSO PARA O USUÁRIO
+        const totalItens = state.carrinho.length;
+        const plural = totalItens > 1 ? 's' : '';
+        showToast(`Momento${plural} resgatado${plural} com sucesso!`, 'sucesso');
+
+
+        // Limpa o carrinho e atualiza a interface
+        state.carrinho = [];
+        state.showCartSidebar = false;
+        renderApp();
+
+    } catch (error) {
+        console.error("Erro ao finalizar pedido e notificar:", error);
+        showToast("Ocorreu um erro ao finalizar o pedido.", "erro");
+    }
+}
+
+        // Função para alternar a visibilidade do carrinho
+        function toggleCartSidebar() {
+            console.log('toggleCartSidebar chamada. state.showCartSidebar ANTES:', state.showCartSidebar);
+            state.showCartSidebar = !state.showCartSidebar;
+            console.log('state.showCartSidebar DEPOIS:', state.showCartSidebar);
+            renderApp(); // Re-renderiza para exibir/esconder a sidebar
+        }
+
+        // --- Função Central de Renderização (Gerencia as etapas) ---
+        function renderApp() {
+            console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar, 'state.showFoguinhosPopup:', state.showFoguinhosPopup);
+            // Atualiza os elementos da header e footer que são fixos no DOM
+            updateFixedUI();
+            
+            // Renderiza o conteúdo principal dentro da #app
+            switch (state.etapa) {
+                case 'landing':
+                    renderLandingPage();
+                    break;
+                case 'signIn':
+                    renderSignIn();
+                    break;
+                case 'register':
+                    renderRegister();
+                    break;
+                case 'parear':
+                    renderPareamento();
+                    break;
+                case 'main':
+                    renderMain();
+                    break;
+                case 'gerenciarCatalogo':
+                    renderGerenciarCatalogo();
+                    break;
+                case 'notificacoes':
+                    renderNotificacoes();
+                    break;
+                case 'foguinhosPopup':
+                    renderFoguinhosPopupContent();
+                    break;
+                default:
+                    renderLandingPage(); // Fallback
+            }
+        }
+
+        function renderNotificacoes() {
+    // Zera o contador visual e marca as notificações como lidas no Firestore
+    if (state.notificacoesNaoLidas > 0) {
+        state.notificacoesNaoLidas = 0;
+        updateFixedUI(); // Atualiza a bolinha vermelha imediatamente
+
+        const batch = db.batch();
+        state.notificacoes.forEach(notif => {
+            if (!notif.lida) {
+                const notifRef = db.collection('notificacoes').doc(notif.id);
+                batch.update(notifRef, { lida: true });
+            }
+        });
+        batch.commit().catch(err => console.error("Erro ao marcar notificações como lidas:", err));
+    }
+
+    appContainer.innerHTML = `
+        <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-bold mb-2">Notificações</h2>
+                <p class="text-gray-400">Aqui estão suas atividades recentes.</p>
+            </div>
+            <div id="notifications-list" class="space-y-3 max-w-2xl mx-auto">
+                ${state.notificacoes.length === 0 
+                    ? `<p class="text-center text-gray-500">Nenhuma notificação ainda.</p>`
+                    : state.notificacoes.map(notif => `
+                        <div class="card p-4 flex items-start gap-4 ${notif.lida ? 'opacity-60' : ''}">
+                            <i class="fas ${notif.icone || 'fa-info-circle'} text-xl mt-1 text-pink-400"></i>
+                            <div>
+                                <h3 class="font-bold">${notif.titulo}</h3>
+                                <p class="text-sm text-gray-300">${notif.mensagem}</p>
+                                <p class="text-xs text-gray-500 mt-2">${notif.timestamp ? new Date(notif.timestamp.seconds * 1000).toLocaleString('pt-BR') : ''}</p>
+                            </div>
+                        </div>
+                    `).join('')
+                }
+            </div>
+        </div>
+        
+        ${state.showCartSidebar ? `...` : ''}
+    `;
+}
+
+        // Função para mudar a etapa da aplicação
+        function changeStep(newStep) {
+    // Lógica de Navegação Simplificada
+    // Se o usuário clicar no ícone da tela em que ele já está...
+    if (state.etapa === newStep) {
+        // ...e essa tela NÃO for a principal, então ele volta para a principal (efeito de fechar).
+        if (newStep !== 'main') {
+            state.etapa = 'main';
+        } else {
+            // Se ele já está na 'main' e clica na 'main', não faz nada.
+            return; 
+        }
+    } else {
+        // Se ele clicar em um ícone de uma tela DIFERENTE, ele navega para ela. Simples assim.
+        state.etapa = newStep;
+    }
+
+    // Reseta o estado de outros elementos da UI ao navegar
+    state.showCartSidebar = false;
+    state.showFoguinhosPopup = false;
+    state.showPartnerInfoPopup = false;
+    
+    // Renderiza a aplicação com o novo estado definido
+    renderApp();
+}
+
+        // Nova função para atualizar elementos da UI fixa (header e footer)
+        function updateFixedUI() {
+    // ATUALIZA O NOME DO USUÁRIO
+    if (userNameDisplay) {
+        userNameDisplay.textContent = state.usuario && state.usuario.nome ? `Olá, ${state.usuario.nome}!` : '';
+    }
+
+    // ATUALIZA FOTO DE PERFIL NA HEADER
+    const headerPic = document.getElementById('headerProfilePic');
+    if (headerPic && state.usuario) {
+        const fotoPadrao = '/assets/icons/favicon.png';
+        headerPic.src = state.usuario.fotoUrl || fotoPadrao;
+        headerPic.classList.remove('hidden');
+    } else if (headerPic) {
+        headerPic.classList.add('hidden');
+    }
+
+    // CONTROLA PONTO VERMELHO DE NOTIFICAÇÃO
+    const notificationDot = document.getElementById('notificationDot');
+    if (notificationDot) {
+        if (state.notificacoesNaoLidas > 0) {
+            notificationDot.classList.remove('hidden');
+        } else {
+            notificationDot.classList.add('hidden');
+        }
+    }
+
+    // ATUALIZA OS BADGES DA BARRA DE NAVEGAÇÃO
+    if (foguinhosBadge) {
+        foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
+    }
+    if (carrinhoBadge) {
+        carrinhoBadge.textContent = state.carrinho.length;
+    }
+
+    // LÓGICA DE VISIBILIDADE DAS BARRAS (HEADER E NAV)
+    if (bottomNavBar && mainHeader) {
+        const telasComBarraVisivel = ['main', 'parear', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes'];
+        if (telasComBarraVisivel.includes(state.etapa)) {
+            bottomNavBar.style.display = 'flex';
+            mainHeader.style.display = 'flex';
+        } else {
+            bottomNavBar.style.display = 'none';
+            mainHeader.style.display = 'none';
+        }
+    }
+
+    // LÓGICA PARA CORES E ESTADO "ATIVO" DOS ÍCONES
+    const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item, .bottom-nav-bar .bottom-nav-item-center');
+    bottomNavItems.forEach(item => {
+        item.classList.remove('active');
+        
+        const heartIcon = item.querySelector('.fas.fa-heart');
+        if (heartIcon) {
+            heartIcon.classList.remove('text-red-500', 'text-yellow-400', 'text-gray-400');
+            if (state.pareado) {
+                heartIcon.classList.add('text-red-500');
+            } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+                heartIcon.classList.add('text-yellow-400');
+            } else {
+                heartIcon.classList.add('text-gray-400');
+            }
+        }
+
+        if (item.querySelector('.fas.fa-store') && state.etapa === 'gerenciarCatalogo') {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-fire') && state.etapa === 'foguinhosPopup') {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-bell') && state.etapa === 'notificacoes') {
+            item.classList.add('active');
+        }
+    });
+}
+
+        // Função para alternar a visibilidade do pop-up de Foguinhos
+        function toggleFoguinhosPopup() {
+            console.log('toggleFoguinhosPopup chamada. state.showFoguinhosPopup ANTES:', state.showFoguinhosPopup);
+            if (state.etapa === 'foguinhosPopup') {
+                state.etapa = 'main'; // Volta para a tela principal
+            } else {
+                state.etapa = 'foguinhosPopup'; // Vai para a tela do pop-up
+            }
+            state.showFoguinhosPopup = !state.showFoguinhosPopup; // Atualiza a flag para logs/referência
+            renderApp();
+            console.log('state.showFoguinhosPopup DEPOIS:', state.showFoguinhosPopup);
+        }
+
+        // Função para alternar a visibilidade do pop-up de Informações do Parceiro Pareado
+        function togglePartnerInfoPopup() {
+            console.log('togglePartnerInfoPopup chamada. state.showPartnerInfoPopup ANTES:', state.showPartnerInfoPopup);
+            if (state.etapa === 'partnerInfoPopup') {
+                state.etapa = 'main'; // Volta para a tela principal
+            } else {
+                state.etapa = 'partnerInfoPopup'; // Vai para a tela do pop-up de informações do parceiro
+            }
+            state.showPartnerInfoPopup = !state.showPartnerInfoPopup; // Atualiza a flag
+            renderApp();
+            console.log('state.showPartnerInfoPopup DEPOIS:', state.showPartnerInfoPopup);
+        }
+
+        // Carrega dados do usuário e do parceiro se pareado
+        
+async function loadUserDataAndNavigate(uid, email) {
+    console.log('loadUserDataAndNavigate chamada para UID:', uid);
+    try {
+        if (!uid) {
+            console.error('UID do usuário é nulo ou indefinido em loadUserDataAndNavigate. Abortando carregamento.');
+            state.etapa = 'landing';
+            renderApp();
+            return;
+        }
+
+        const userDoc = await db.collection('usuarios').doc(uid).get();
+        if (userDoc.exists) {
+            state.usuario = { uid: uid, email: email, ...userDoc.data() };
+            state.pareado = !!state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_');
+
+            // >>> LIGA O OUVINTE DE NOTIFICAÇÕES AQUI <<<
+            setupNotificationListener(uid);
+
+            // LIGA O OUVINTE DE NOTIFICAÇÕES PUSH EM PRIMEIRO PLANO
+            setupForegroundMessageHandler();
+
+            if (state.pareado) {
+                state.parceiroCodigo = state.usuario.pareadoCom;
+                const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
+                
+                if (!parceiroQuery.empty) {
+                    state.parceiroData = parceiroQuery.docs[0].data();
+                    state.parceiroNome = state.parceiroData.nome;
+                    state.parceiroTelefone = '55' + state.parceiroData.telefone.replace(/\D/g, '');
+                    console.log('Dados completos do parceiro carregados:', state.parceiroData);
+                } else {
+                    console.warn('Parceiro pareado não encontrado no Firestore.');
+                    state.pareado = false;
+                    state.parceiroData = null;
+                }
+
+                if (state.parceiroData) {
+                    const telefones = [state.usuario.telefone, state.parceiroData.telefone].sort();
+                    const cleanTelefones = telefones.map(tel => tel.replace(/\D/g, ''));
+                    const idPareamento = cleanTelefones.join('_');
+                    const pareamentoDoc = await db.collection('pareamentos').doc(idPareamento).get();
+                    if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
+                        state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
+                        console.log('ID Amigável carregado:', state.idPareamentoAmigavel);
+                    }
+                }
+
+            } else {
+                state.parceiroData = null;
+                state.idPareamentoAmigavel = null;
+            }
+            
+            const pendingRequestQuery = await db.collection('pairingRequests').where('receiverUid', '==', uid).where('status', '==', 'pending').limit(1).get();
+            if (!pendingRequestQuery.empty) {
+                const requestDoc = pendingRequestQuery.docs[0];
+                state.pendingPairingRequest = { id: requestDoc.id, ...requestDoc.data() };
+                state.etapa = 'parear';
+            } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
+                state.etapa = 'parear';
+                state.pendingPairingRequest = null;
+            } else {
+                state.etapa = 'main';
+            }
+        } else {
+            console.log('Usuário logado via Auth, mas sem documento de perfil no Firestore.');
+            state.usuario = { uid: uid, email: email };
+            state.etapa = 'register';
+            alert('Por favor, complete seu cadastro para acessar todas as funcionalidades.');
+        }
+    } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+        state.etapa = 'landing';
+    } finally {
+        renderApp();
+    }
+}
+
+
+        // Initialize app
+        function init() {
+            // Monitora o estado de autenticação do Firebase ao carregar a página
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    console.log('init: Usuário já logado no Auth:', user.email, user.uid);
+                    await loadUserDataAndNavigate(user.uid, user.email);
+                } else {
+                    console.log('init: Nenhum usuário logado no Auth. Redirecionando para landing page.');
+                    // Limpa todo o estado do usuário ao deslogar
+                    state.usuario = null;
+                    state.pareado = false;
+                    state.etapa = 'landing';
+                    state.carrinho = [];
+                    state.codigoUsuario = null;
+                    state.codigoDigitando = false;
+                    state.parceiroCodigo = null;
+                    state.parceiroTelefone = null;
+                    state.parceiroNome = null;
+                    state.showPartnerInfo = false;
+                    state.pendingPairingRequest = null;
+                    state.showCartSidebar = false;
+                    state.showFoguinhosPopup = false;
+                    state.showPartnerInfoPopup = false; // Resetar pop-up de parceiro
+                    renderApp();
+                }
+            });
+        }
+
+
+        // Start the app
+        window.onload = function() {
+            // Atribui os elementos globais após o DOM estar carregado
+            // É importante que esses elementos existam no HTML no momento que o script roda.
+            appContainer = document.getElementById('app'); 
+            userNameDisplay = document.getElementById('userNameDisplay');
+            foguinhosBadge = document.getElementById('foguinhosBadge');
+            carrinhoBadge = document.getElementById('carrinhoBadge');
+            bottomNavBar = document.getElementById('bottom-nav-bar'); 
+            mainHeader = document.getElementById('mainHeader'); // Atribui o elemento do cabeçalho
+
+
+            // Make functions global for onclick events
+            window.isSameDay = isSameDay; 
+            window.changeStep = changeStep; 
+            window.handleSignIn = handleSignIn; 
+            window.handleRegister = handleRegister; 
+            window.handleLogout = handleLogout; 
+            window.sendPairingRequest = sendPairingRequest; 
+            window.acceptPairingRequest = acceptPairingRequest; 
+            window.rejectPairingRequest = rejectPairingRequest; 
+            window.handleDailyCheckIn = handleDailyCheckIn; 
+
+            window.handleContinuarSemParear = handleContinuarSemParear;
+            window.filtrarMomentos = filtrarMomentos;
+            window.adicionarAoCarrinho = adicionarAoCarrinho;
+            window.removerDoCarrinho = removerDoCarrinho;
+            window.finalizarPedido = finalizarPedido;
+            window.desparearParceiro = desparearParceiro;
+            window.toggleCartSidebar = toggleCartSidebar; 
+            window.cancelPendingPairingRequest = cancelPendingPairingRequest; 
+            window.toggleFoguinhosPopup = toggleFoguinhosPopup; 
+            window.togglePartnerInfoPopup = togglePartnerInfoPopup;
+            window.solicitarPermissaoDeNotificacao = solicitarPermissaoDeNotificacao; // Torna a nova função global
+
+            init(); // Inicia o aplicativo
+        };
+    </script>
+
+<nav class="bottom-nav-bar" id="bottom-nav-bar" style="display: none;">
+    <button class="bottom-nav-item" onclick="changeStep('gerenciarCatalogo');">
+        <i class="fas fa-store"></i>
+    </button>
+    <button class="bottom-nav-item" onclick="changeStep('parear');">
+        <i class="fas fa-heart"></i>
+    </button>
+
+    <button class="bottom-nav-item-center" onclick="changeStep('main');">
+        <i class="fas fa-shopping-bag"></i>
+    </button>
+
+    <button class="bottom-nav-item relative" onclick="toggleCartSidebar();">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
+    </button>
+    <button class="bottom-nav-item" onclick="changeStep('foguinhosPopup');">
+        <i class="fas fa-fire"></i>
+        <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
+    </button>
+</nav>
+<div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] space-y-2 w-auto max-w-sm"></div>
+
+</body>
+</html>

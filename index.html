@@ -599,6 +599,41 @@ async function solicitarPermissaoDeNotificacao() {
     }
 }
 
+async function desativarNotificacoes() {
+    try {
+        console.log("Iniciando processo de desativação...");
+        // Encontra o registro do Service Worker
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (!registration) {
+            console.log("Nenhum Service Worker encontrado.");
+            return;
+        }
+
+        // Pega a assinatura de Push
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+            // Cancela a assinatura no navegador
+            await subscription.unsubscribe();
+            console.log("Assinatura de Push cancelada no navegador.");
+        }
+
+        // Remove o token do Firestore para parar de enviar notificações
+        await db.collection('usuarios').doc(state.usuario.uid).update({
+            fcmToken: firebase.firestore.FieldValue.delete()
+        });
+
+        console.log("Token FCM removido do Firestore.");
+        showToast("Notificações desativadas com sucesso!", 'sucesso');
+
+        // Força a re-renderização da página para atualizar o botão
+        renderApp();
+
+    } catch (error) {
+        console.error("Erro ao desativar notificações:", error);
+        showToast("Erro ao desativar notificações.", 'erro');
+    }
+}
+
 function setupForegroundMessageHandler() {
     // Certifique-se de que 'firebase.messaging' está disponível
     if (firebase.messaging.isSupported()) {
@@ -1150,6 +1185,30 @@ function renderGerenciarCatalogo() {
     const categorias = [...new Set(momentosDisponiveis.map(m => m.categoria))];
     const fotoUrl = state.usuario.fotoUrl || '/assets/icons/favicon.png';
 
+    let notificationButtonHtml = '';
+if (window.Notification && Notification.permission === 'granted') {
+    // Botão para DESATIVAR (vermelho escuro)
+    notificationButtonHtml = `
+        <button onclick="handleNotificationToggle()" class="mt-4 bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-lg transition">
+            <i class="fas fa-bell-slash"></i> Desativar Notificações
+        </button>
+    `;
+} else if (window.Notification && Notification.permission === 'denied') {
+    // Botão desabilitado para indicar que está bloqueado
+     notificationButtonHtml = `
+        <button disabled class="mt-4 bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed">
+            <i class="fas fa-ban"></i> Notificações Bloqueadas
+        </button>
+    `;
+} else if (window.Notification) {
+    // Botão padrão para ATIVAR (azul)
+    notificationButtonHtml = `
+        <button onclick="handleNotificationToggle()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+            <i class="fas fa-bell"></i> Ativar Notificações
+        </button>
+    `;
+}
+
     appContainer.innerHTML = `
         <div class="container mx-auto px-4 py-8 pb-24 pt-24">
             <div class="text-center mb-10">
@@ -1165,9 +1224,7 @@ function renderGerenciarCatalogo() {
                     Trocar Foto
                 </button>
 
-                <button onclick="solicitarPermissaoDeNotificacao()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                <i class="fas fa-bell"></i> Ativar Notificações
-                </button>
+                ${notificationButtonHtml}
 
                 <div id="uploadProgress" class="w-full bg-gray-700 rounded-full h-2.5 mt-4 hidden">
                     <div id="uploadProgressBar" class="bg-pink-600 h-2.5 rounded-full" style="width: 0%"></div>
@@ -1305,6 +1362,23 @@ function toggleAccordion(buttonElement) {
     const content = buttonElement.nextElementSibling;
     buttonElement.classList.toggle('open');
     content.classList.toggle('open');
+}
+
+async function handleNotificationToggle() {
+    // 'Notification.permission' pode ser 'granted', 'denied' ou 'default'
+    const currentPermission = Notification.permission;
+
+    if (currentPermission === 'granted') {
+        // Se já tem permissão, a ação é desativar
+        await desativarNotificacoes();
+    } else if (currentPermission === 'denied') {
+        // Se a permissão foi negada, não podemos pedir de novo.
+        // Precisamos instruir o usuário a fazer manualmente.
+        alert("As notificações estão bloqueadas nas configurações do seu navegador. Você precisa permitir manualmente nas configurações do site para reativá-las.");
+    } else {
+        // Se for 'default' (nem permitiu, nem negou), a ação é pedir permissão
+        await solicitarPermissaoDeNotificacao();
+    }
 }
 
 function handleFileSelect(event) {
@@ -2142,7 +2216,9 @@ async function loadUserDataAndNavigate(uid, email) {
             window.cancelPendingPairingRequest = cancelPendingPairingRequest; 
             window.toggleFoguinhosPopup = toggleFoguinhosPopup; 
             window.togglePartnerInfoPopup = togglePartnerInfoPopup;
-            window.solicitarPermissaoDeNotificacao = solicitarPermissaoDeNotificacao; // Torna a nova função global
+            window.solicitarPermissaoDeNotificacao = solicitarPermissaoDeNotificacao;
+            window.desativarNotificacoes = desativarNotificacoes;
+            window.handleNotificationToggle = handleNotificationToggle;
 
             init(); // Inicia o aplicativo
         };
