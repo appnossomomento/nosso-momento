@@ -25,11 +25,11 @@ messaging.onBackgroundMessage((payload) => {
     payload
   );
   
-  const notificationTitle = payload.notification.title;
+  const notificationTitle = payload.data.title;
   const notificationOptions = {
-    body: payload.notification.body,
-    icon: '/assets/icons/favicon.ico' // Lembre-se de criar essa pasta/arquivo de ícone se quiser usá-lo
+    body: payload.data.body,
+    icon: payload.data.icon,
   };
-
+  
   self.registration.showNotification(notificationTitle, notificationOptions);
 });

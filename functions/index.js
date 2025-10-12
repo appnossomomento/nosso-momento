@@ -6,7 +6,6 @@ admin.initializeApp();
 
 setGlobalOptions({region: "southamerica-east1"});
 
-// A definição da função foi quebrada em múltiplas linhas para o ESLint
 exports.enviarNotificacaoPush = onDocumentCreated(
     "notificacoes/{notificacaoId}",
     async (event) => {
@@ -23,7 +22,6 @@ exports.enviarNotificacaoPush = onDocumentCreated(
 
       console.log(`Nova notificação para o usuário ${userId}: "${titulo}"`);
 
-      // A busca no Firestore também foi quebrada para o ESLint
       const userDoc = await admin.firestore()
           .collection("usuarios").doc(userId).get();
 
@@ -38,14 +36,16 @@ exports.enviarNotificacaoPush = onDocumentCreated(
         return;
       }
 
+      // ===== AQUI ESTÁ A CORREÇÃO =====
       const payload = {
-        notification: {
+        data: {
           title: titulo,
           body: mensagem,
-          icon: "/assets/icons/icon-192x192.png",
+          icon: "/assets/icons/favicon.png",
         },
         token: fcmToken,
       };
+      // =================================
 
       try {
         const response = await admin.messaging().send(payload);
@@ -55,3 +55,4 @@ exports.enviarNotificacaoPush = onDocumentCreated(
       }
     },
 );
+
