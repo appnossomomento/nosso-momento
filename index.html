@@ -187,6 +187,23 @@
         .badge-yellow { background-color: #f59e0b; /* yellow-500 */ }
         .badge-gray { background-color: #6b7280; /* gray-500 */ }
 
+        #foguinhosBadge,
+        #carrinhoBadge {
+            /* 1. Posiciona o badge com base no centro do botão */
+            top: 50%;
+            left: 50%;
+            
+            /* 2. Anula o 'right: 5px' da regra original */
+            right: auto; 
+            
+            /* 3. Anula a transformação original e aplica a nova:
+                - Move 14px para a direita (para ficar ao lado do ícone)
+                - Move 70% da sua própria altura para cima (para ficar ligeiramente 
+                  acima do centro, como no seu 'green square')
+            */
+            transform: translate(14px, -70%);
+        }
+
 
         /* Esconder a barra de rolagem horizontal se algo escapar */
         body {
@@ -368,10 +385,12 @@
     pareado: false,
     parceiroData: null,
     idPareamentoAmigavel: null,
-    notificacoesNaoLidas: 0,
+    notificacoesTarefasNaoLidas: 0,
+    notificacoesPresentesNaoLidas: 0,
     notificacoes: [],
     etapa: 'landing',
     carrinho: [],
+    momentosMestres: [],
     codigoUsuario: null,
     codigoDigitando: false,
     parceiroCodigo: null,
@@ -380,34 +399,11 @@
     showPartnerInfo: false,
     pendingPairingRequest: null,
     showCartSidebar: false,
-    showFoguinhosPopup: false
+    showFoguinhosPopup: false,
+    abaTarefasAtiva: 'recebidos'
 };
 
 let unsubscribeNotifications = null;
-
-    const momentos = [
-// === Target Masculino ===
-{ nome: 'Chupada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://uniqcondoms.com/wp-content/uploads/2024/07/condones-femeninos-sexo-oral.png', intensidade: 4, targetGender: 'Masculino' },
-{ nome: 'Tapa na Bunda', categoria: 'Lovezin', emoji: '💗', img: 'https://vemconversar.com.br/wp-content/uploads/2022/10/E-no-olhar-que-tudo-comeca.jpeg', intensidade: 2, targetGender: 'Masculino' },
-{ nome: '30 Beijinhos', categoria: 'Lovezin', emoji: '💗', img: 'https://img.freepik.com/fotos-premium/retrato-em-close-up-de-dois-apaixonados-apaixonados-se-beijando-em-casa_171337-79073.jpg', intensidade: 1, targetGender: 'Masculino' },
-
-// === Target Feminino ===
-{ nome: 'Mamada Surpresa', categoria: 'Quentes', emoji: '🥵', img: 'https://imagenes.elpais.com/resizer/v2/2ARTSVZFAMOWYEREJ5CC72W4WA.jpg?auth=72d5ccea313b45142dc48ab5509bfa8751331fa78cbbf5cd412413fbc51ba60d&width=414', intensidade: 4, targetGender: 'Feminino' },
-{ nome: 'C*zinho', categoria: 'Quentes', emoji: '🥵', img: 'https://t4.ftcdn.net/jpg/06/27/26/69/360_F_627266974_C25IGTTKd4Fp2nXhuCDv4dMTlDsxqiWj.jpg', intensidade: 5, targetGender: 'Feminino' },
-
-// === Unisex ===
-{ nome: 'Sexo Romântico', categoria: 'Quentes', emoji: '🥵', img: 'https://us.123rf.com/450wm/4pmproduction/4pmproduction1706/4pmproduction170600453/81004283-lindo-casal-apaixonado-est%C3%A1-se-beijando-na-cama-prel%C3%BAdio-ao-sexo.jpg', intensidade: 4, targetGender: 'Unisex' },
-{ nome: 'Sexo Agressivo', categoria: 'Quentes', emoji: '🥵', img: 'https://conteudo.imguol.com.br/c/entretenimento/2d/2016/07/22/voce-conhece-as-preferencias-sexuais-do-seu-par-1469219198036_v2_900x506.jpg', intensidade: 5, targetGender: 'Unisex' },
-{ nome: 'Beijão', categoria: 'Lovezin', emoji: '💗', img: 'https://www.otempo.com.br/content/dam/otempo/editorias/interessa/2024/3/interessa-beijo-de-lingua-beneficios-do-beijo-1713342721.jpeg', intensidade: 1, targetGender: 'Unisex' },
-{ nome: 'Abraço', categoria: 'Lovezin', emoji: '💗', img: 'https://us.123rf.com/450wm/peopleimages12/peopleimages122210/peopleimages12221028649/193181819-seu-amor-transformou-meu-mundo-um-jovem-casal-desfrutando-de-algum-tempo-de-qualidade-juntos-na.jpg?ver=6', intensidade: 1, targetGender: 'Unisex' },
-{ nome: 'Massagem', categoria: 'Lovezin', emoji: '💗', img: 'https://individuale.med.br/wp-content/uploads/2019/08/massagem-anti-stress.png', intensidade: 3, targetGender: 'Unisex' },
-{ nome: 'Viajar', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://p2.trrsf.com/image/fget/cf/774/0/images.terra.com/2023/12/07/1581006561-1rdpraia-do-aventureiro-1.jpg', intensidade: 2, targetGender: 'Unisex' },
-{ nome: 'Noitada', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format', intensidade: 2, targetGender: 'Unisex' },
-{ nome: 'Pagode', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://s2-g1.glbimg.com/PiT2YdXpDe8AU4vPY3nVopJ3ksM=/0x0:1014x681/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2021/j/p/h577gHSrq8AvQbtKQeBg/roda-de-samba-2.jpg', intensidade: 2, targetGender: 'Unisex' },
-{ nome: 'Almoçar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://media.timeout.com/images/106062540/750/422/image.jpg', intensidade: 1, targetGender: 'Unisex' },
-{ nome: 'Jantar Fora', categoria: 'Sair da Rotina', emoji: '🎉', img: 'https://www.rbsdirect.com.br/filestore/0/7/2/9/4/9/4_1b48f02f18ac345/4949270_5de2a64f5b53f27.jpg?format=webp&w=1600&h=900&a=c', intensidade: 1, targetGender: 'Unisex' }
-];
-
 
     // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
     let appContainer;
@@ -806,7 +802,7 @@ if (confirm('Tem certeza que deseja cancelar esta solicitação de pareamento?')
     function renderPareamento() {
 if (state.pareado && state.parceiroData) {
     // Mostra o Perfil do Parceiro se estiver pareado
-    const fotoParceiroUrl = state.parceiroData.fotoUrl || 'https://images.pexels.com/photos/1105325/pexels-photo-1105325.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1';
+    const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/favicon.png';
     const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
     const canCheckIn = !lastCheckIn || !isSameDay(lastCheckIn, new Date());
     const checkInButtonText = canCheckIn ? 'Presentear com 1 🔥' : 'Presenteado Hoje';
@@ -935,14 +931,53 @@ appContainer.innerHTML = content;
 }
 
     // Nova função para renderizar o pop-up de Foguinhos
-    function renderFoguinhosPopupContent() {
-appContainer.innerHTML = `
-    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-        <div class="card p-8 max-w-md w-full relative overflow-hidden">
+    async function renderFoguinhosPopupContent() {
+    
+    // ==================================================================
+    // 1. Limpa a "bolinha" de notificações de PRESENTES (fa-gift)
+    // ==================================================================
+    try {
+        if (state.notificacoesPresentesNaoLidas > 0) {
+            const batch = db.batch();
+            let notificacoesDePresenteLidas = 0;
+
+            state.notificacoes.forEach(notif => {
+                // Marcamos como lidas APENAS as notificações de 'fa-gift'
+                if (!notif.lida && notif.icone === 'fa-gift') {
+                    const notifRef = db.collection('notificacoes').doc(notif.id);
+                    batch.update(notifRef, { lida: true });
+                    notificacoesDePresenteLidas++;
+                }
+            });
+
+            if (notificacoesDePresenteLidas > 0) {
+                await batch.commit();
+                console.log(`Marcou ${notificacoesDePresenteLidas} notificações de presente como lidas.`);
+                // Atualiza o state local (só subtrai as que limpamos)
+                state.notificacoesPresentesNaoLidas = 0;
+                updateFixedUI(); // Atualiza a bolinha
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao marcar notificações de presente como lidas:", err);
+    }
+    // ==================================================================
+    // FIM DO BLOCO DE LIMPEZA
+    // ==================================================================
+
+
+    // 2. Busca o histórico de presentes (filtrando as notificações)
+    const historicoPresentes = state.notificacoes.filter(notif => notif.icone === 'fa-gift');
+
+    // 3. Renderiza o HTML da página
+    appContainer.innerHTML = `
+    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8 pt-24 pb-24">
+        <div class="card p-6 md:p-8 max-w-md w-full relative overflow-hidden">
             <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
             <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
+            
             <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                <i class="fas fa-fire mr-2"></i> Seus Foguinhos
+                <i class="fas fa-fire mr-2"></i> Meus Foguinhos
             </h2>
             <div class="text-center mb-6">
                 <p class="mb-4 text-xl">Você tem:</p>
@@ -954,14 +989,34 @@ appContainer.innerHTML = `
                 </div>
                 <p class="mt-4 text-sm text-gray-300">Use-os para resgatar momentos!</p>
             </div>
-            <div class="flex justify-center">
+
+            <div class="border-t border-gray-700 mt-6 pt-6">
+                <h3 class="font-bold text-lg text-center text-gray-300 mb-4">Histórico de Presentes</h3>
+                
+                <div class="space-y-3 max-h-48 overflow-y-auto pr-2">
+                    ${historicoPresentes.length === 0
+                        ? `<p class="text-center text-gray-500 py-4">Nenhum presente recebido ainda.</p>`
+                        : historicoPresentes.map(notif => `
+                            <div class="bg-gray-800/50 p-3 rounded-lg flex items-center gap-3 ${notif.lida ? '' : 'border-l-2 border-yellow-400'}">
+                                <i class="fas ${notif.icone || 'fa-info-circle'} text-xl text-yellow-400"></i>
+                                <div>
+                                    <p class="text-sm text-gray-200">${notif.mensagem}</p>
+                                    <p class="text-xs text-gray-500 mt-1">${notif.timestamp ? new Date(notif.timestamp.seconds * 1000).toLocaleString('pt-BR') : ''}</p>
+                                </div>
+                            </div>
+                        `).join('')
+                    }
+                </div>
+            </div>
+
+            <div class="flex justify-center mt-8">
                 <button onclick="changeStep('main');" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
                     Voltar
                 </button>
             </div>
         </div>
     </div>
-`;
+    `;
 }
 
     async function criarNotificacao(userId, titulo, mensagem, icone) {
@@ -981,37 +1036,55 @@ appContainer.innerHTML = `
     }
 
 function setupNotificationListener(userId) {
-// Se já existe um ouvinte, desliga ele primeiro para evitar duplicação
-if (unsubscribeNotifications) {
-    unsubscribeNotifications();
-}
-
-const notificationsQuery = db.collection('notificacoes')
-    .where('userId', '==', userId)
-    .orderBy('timestamp', 'desc')
-    .limit(20); // Pega as últimas 20 notificações
-
-unsubscribeNotifications = notificationsQuery.onSnapshot(snapshot => {
-    const notifs = [];
-    snapshot.forEach(doc => {
-        notifs.push({ id: doc.id, ...doc.data() });
-    });
-
-    state.notificacoes = notifs; // Guarda a lista completa no state
-    
-    // Conta quantas não foram lidas
-    state.notificacoesNaoLidas = notifs.filter(n => !n.lida).length;
-
-    console.log(`Notificações carregadas: ${notifs.length}, Não lidas: ${state.notificacoesNaoLidas}`);
-
-    // Se o usuário estiver na tela de notificações, atualiza a lista
-    if (state.etapa === 'notificacoes') {
-        renderNotificacoes();
+    // Se já existe um ouvinte, desliga ele primeiro
+    if (unsubscribeNotifications) {
+        unsubscribeNotifications();
     }
 
-    // Atualiza a bolinha vermelha na header
-    updateFixedUI();
-});
+    const notificationsQuery = db.collection('notificacoes')
+        .where('userId', '==', userId)
+        .orderBy('timestamp', 'desc')
+        .limit(20);
+
+    unsubscribeNotifications = notificationsQuery.onSnapshot(snapshot => {
+        const notifs = [];
+        snapshot.forEach(doc => {
+            notifs.push({ id: doc.id, ...doc.data() });
+        });
+
+        state.notificacoes = notifs; // Guarda a lista completa no state
+        
+        // ==========================================================
+        // AQUI ESTÁ A NOVA LÓGICA DE CONTAGEM
+        // ==========================================================
+        let tarefasNaoLidas = 0;
+        let presentesNaoLidos = 0;
+        
+        notifs.forEach(n => {
+            if (!n.lida) {
+                if (n.icone === 'fa-shopping-bag') { // Notificação de Tarefa
+                    tarefasNaoLidas++;
+                } else if (n.icone === 'fa-gift') { // Notificação de Presente
+                    presentesNaoLidos++;
+                }
+            }
+        });
+
+        // Atualiza os contadores separados no state
+        state.notificacoesTarefasNaoLidas = tarefasNaoLidas;
+        state.notificacoesPresentesNaoLidas = presentesNaoLidos;
+        // ==========================================================
+
+        console.log(`Notificações carregadas: ${notifs.length}, Tarefas não lidas: ${tarefasNaoLidas}, Presentes não lidos: ${presentesNaoLidos}`);
+
+        // Se o usuário estiver na tela de notificações, atualiza a lista
+        if (state.etapa === 'notificacoes') {
+            renderNossasTarefas(); // (Já tínhamos mudado isso)
+        }
+
+        // Atualiza a UI fixa (bolinha do sino e cor do fogo)
+        updateFixedUI();
+    });
 }
 
     // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
@@ -1065,10 +1138,11 @@ if (!state.pareado || !state.parceiroData) {
 }
 
 const partnerGender = state.parceiroData.sexo;
-const momentosParaParceiro = momentos.filter(m => m.targetGender === partnerGender || m.targetGender === 'Unisex');
+
+const momentosParaParceiro = state.momentosMestres.filter(m => m.targetGender === partnerGender || m.targetGender === 'Unisex');
 const catalogoParceiro = state.parceiroData.catalogoPersonalizado || {};
 const categorias = [...new Set(momentosParaParceiro.map(m => m.categoria))].map(nomeCat => {
-    const momentoExemplo = momentos.find(m => m.categoria === nomeCat);
+    const momentoExemplo = state.momentosMestres.find(m => m.categoria === nomeCat);
     let cor = 'bg-purple-900';
     if (momentoExemplo.categoria === 'Quentes') cor = 'bg-pink-900';
     if (momentoExemplo.categoria === 'Lovezin') cor = 'bg-red-900';
@@ -1177,7 +1251,7 @@ appContainer.innerHTML = `
 
 function renderGerenciarCatalogo() {
 const userGender = state.usuario?.sexo || 'Masculino';
-const momentosDisponiveis = momentos.filter(m => m.targetGender === userGender || m.targetGender === 'Unisex');
+const momentosDisponiveis = state.momentosMestres.filter(m => m.targetGender === userGender || m.targetGender === 'Unisex');
 const catalogoSalvo = state.usuario?.catalogoPersonalizado || {};
 const categorias = [...new Set(momentosDisponiveis.map(m => m.categoria))];
 const fotoUrl = state.usuario?.fotoUrl || 'assets/icons/favicon.png';
@@ -1314,7 +1388,7 @@ console.log('Iniciando salvamento do catálogo...');
 const novoCatalogo = {}; // 1. Começamos com um objeto vazio.
 
 // 2. Para cada momento da nossa lista mestra...
-momentos.forEach(momento => {
+state.momentosMestres.forEach(momento => {
     // Montamos os IDs dos campos na tela, como fizemos ao criá-los.
     const idPreco = `preco-${momento.nome.replace(/\s+/g, '-')}`;
     const idBloqueado = `bloqueado-${momento.nome.replace(/\s+/g, '-')}`;
@@ -1353,6 +1427,32 @@ try {
     console.error("Erro ao salvar o catálogo: ", error);
     alert('Houve um erro ao salvar seu catálogo. Tente novamente.');
 }
+}
+
+async function carregarMomentosMestres() {
+    console.log("Buscando momentos mestres no Firestore...");
+    
+    // 1. Limpa a lista local (caso seja um recarregamento)
+    state.momentosMestres = []; 
+
+    try {
+        const querySnapshot = await db.collection('momentosMestres')
+            .orderBy('nome') // Opcional: ordenar por nome
+            .get();
+        
+        querySnapshot.forEach(doc => {
+            state.momentosMestres.push(doc.data());
+        });
+
+        // 2. Confirmação no console para nosso teste
+        console.log(`✅ Sucesso: ${state.momentosMestres.length} momentos mestres carregados.`);
+        console.log(state.momentosMestres); // <-- Mostra o que foi carregado
+
+    } catch (error) {
+        console.error("Erro ao carregar momentos mestres:", error);
+        // Se falhar, como fallback, podemos carregar a lista antiga (mas por enquanto, só avisamos)
+        showToast("Erro ao carregar catálogo de momentos.", "erro");
+    }
 }
 
 function toggleAccordion(buttonElement) {
@@ -1803,50 +1903,77 @@ try {
     }
 
     async function finalizarPedido() {
-if (!state.pareado) {
-    // As validações continuam as mesmas
-    showToast('Você precisa estar pareado para finalizar o pedido.', 'aviso');
-    return;
-}
-if (state.carrinho.length === 0) {
-    showToast('Seu carrinho está vazio.', 'aviso');
-    return;
-}
-
-try {
-    // Busca o UID do parceiro para enviar as notificações
-    const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
-    if (parceiroQuery.empty) {
-        showToast('Erro: Parceiro não foi encontrado para notificar.', 'erro');
+    // 1. Validações iniciais
+    if (!state.pareado) {
+        showToast('Você precisa estar pareado para finalizar o pedido.', 'aviso');
         return;
     }
-    const parceiroUid = parceiroQuery.docs[0].id;
+    if (state.carrinho.length === 0) {
+        showToast('Seu carrinho está vazio.', 'aviso');
+        return;
+    }
 
-    // Cria uma notificação para cada item no carrinho
-    state.carrinho.forEach(async (momento) => {
-        await criarNotificacao(
-            parceiroUid,
-            'Momento Resgatado!',
-            `${state.usuario.nome} resgatou o momento "${momento.nome}"!`,
-            'fa-shopping-bag'
-        );
-    });
+    try {
+        // 2. Buscar o UID do parceiro
+        const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
+        if (parceiroQuery.empty) {
+            showToast('Erro: Parceiro não foi encontrado para notificar.', 'erro');
+            return;
+        }
+        const parceiroUid = parceiroQuery.docs[0].id;
+        const parceiroNome = state.parceiroData.nome;
 
-    // 2. ADICIONAMOS UMA MENSAGEM DE SUCESSO PARA O USUÁRIO
-    const totalItens = state.carrinho.length;
-    const plural = totalItens > 1 ? 's' : '';
-    showToast(`Momento${plural} resgatado${plural} com sucesso!`, 'sucesso');
+        // 3. Usar um "batch" para as TAREFAS
+        const batch = db.batch();
 
+        // 4. Loop para criar TAREFAS e NOTIFICAÇÕES
+        //    (Mudamos de forEach para for...of para usar 'await' dentro)
+        for (const momento of state.carrinho) {
+            
+            // --- PARTE 1: Cria a TAREFA (como antes) ---
+            const tarefaRef = db.collection('tarefasMomentos').doc(); 
+            const novaTarefa = {
+                momentoNome: momento.nome,
+                momentoEmoji: momento.emoji || '🛍️',
+                momentoCategoria: momento.categoria || 'Geral',
+                status: 'Pendente',
+                dataResgate: firebase.firestore.FieldValue.serverTimestamp(),
+                dataConclusao: null,
+                idPareamento: state.idPareamentoAmigavel,
+                resgatadoPorUid: state.usuario.uid,
+                resgatadoPorNome: state.usuario.nome,
+                executadoPorUid: parceiroUid,
+                executadoPorNome: parceiroNome 
+            };
+            // Adiciona a tarefa ao "pacote"
+            batch.set(tarefaRef, novaTarefa);
 
-    // Limpa o carrinho e atualiza a interface
-    state.carrinho = [];
-    state.showCartSidebar = false;
-    renderApp();
+            // --- PARTE 2: Cria a NOTIFICAÇÃO (PARA FAZER A BOLINHA VOLTAR) ---
+            await criarNotificacao(
+                parceiroUid, // Para quem é a notificação
+                'Momento Resgatado!', // Título
+                `${state.usuario.nome} resgatou o momento "${momento.nome}"!`, // Mensagem
+                'fa-shopping-bag' // Ícone (usamos 'sacola' para diferenciar de 'presente')
+            );
+        }
 
-} catch (error) {
-    console.error("Erro ao finalizar pedido e notificar:", error);
-    showToast("Ocorreu um erro ao finalizar o pedido.", "erro");
-}
+        // 5. Envia todas as TAREFAS de uma vez para o Firestore
+        await batch.commit();
+
+        // 6. Mensagem de sucesso
+        const totalItens = state.carrinho.length;
+        const plural = totalItens > 1 ? 's' : '';
+        showToast(`Momento${plural} resgatado${plural} com sucesso!`, 'sucesso');
+
+        // 7. Limpa o carrinho e atualiza a interface
+        state.carrinho = [];
+        state.showCartSidebar = false;
+        renderApp();
+
+    } catch (error) {
+        console.error("Erro ao finalizar pedido e criar tarefas:", error);
+        showToast("Ocorreu um erro ao finalizar o pedido.", "erro");
+    }
 }
 
     // Função para alternar a visibilidade do carrinho
@@ -1884,7 +2011,7 @@ try {
                 renderGerenciarCatalogo();
                 break;
             case 'notificacoes':
-                renderNotificacoes();
+                renderNossasTarefas();
                 break;
             case 'foguinhosPopup':
                 renderFoguinhosPopupContent();
@@ -1894,47 +2021,189 @@ try {
         }
     }
 
-    function renderNotificacoes() {
-// Zera o contador visual e marca as notificações como lidas no Firestore
-if (state.notificacoesNaoLidas > 0) {
-    state.notificacoesNaoLidas = 0;
-    updateFixedUI(); // Atualiza a bolinha vermelha imediatamente
+    async function renderNossasTarefas() {
+    
+    // (Bloco de limpeza de notificações que adicionamos - continua igual)
+    try {
+        if (state.notificacoesTarefasNaoLidas > 0) {
+            const batch = db.batch();
+            let notificacoesDeTarefasLidas = 0;
 
-    const batch = db.batch();
-    state.notificacoes.forEach(notif => {
-        if (!notif.lida) {
-            const notifRef = db.collection('notificacoes').doc(notif.id);
-            batch.update(notifRef, { lida: true });
+            state.notificacoes.forEach(notif => {
+                if (!notif.lida && notif.icone === 'fa-shopping-bag') {
+                    const notifRef = db.collection('notificacoes').doc(notif.id);
+                    batch.update(notifRef, { lida: true });
+                    notificacoesDeTarefasLidas++;
+                }
+            });
+
+            if (notificacoesDeTarefasLidas > 0) {
+                await batch.commit();
+                console.log(`Marcou ${notificacoesDeTarefasLidas} notificações de tarefa como lidas.`);
+                state.notificacoesTarefasNaoLidas = 0;
+                updateFixedUI(); 
+            }
         }
-    });
-    batch.commit().catch(err => console.error("Erro ao marcar notificações como lidas:", err));
-}
+    } catch (err) {
+        console.error("Erro ao marcar notificações de tarefa como lidas:", err);
+    }
+    // (Fim do bloco de limpeza)
 
-appContainer.innerHTML = `
-    <div class="container mx-auto px-4 py-8 pb-24 pt-24">
-        <div class="text-center mb-10">
-            <h2 class="text-3xl md:text-4xl font-bold mb-2">Notificações</h2>
-            <p class="text-gray-400">Aqui estão suas atividades recentes.</p>
+
+    const abaAtiva = state.abaTarefasAtiva || 'recebidos';
+    
+    // 1. Define o HTML base da página (continua igual)
+    appContainer.innerHTML = `
+        <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-bold mb-2">Nossas Tarefas</h2>
+                <p class="text-gray-400">Momentos resgatados para curtir.</p>
+            </div>
+
+            <div class="flex justify-center mb-6 border-b border-gray-700">
+                <button 
+                    onclick="trocarAbaTarefas('recebidos')" 
+                    class="py-3 px-6 font-semibold transition-all duration-300 ${abaAtiva === 'recebidos' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-gray-500'}">
+                    Recebidos
+                </button>
+                <button 
+                    onclick="trocarAbaTarefas('enviados')" 
+                    class="py-3 px-6 font-semibold transition-all duration-300 ${abaAtiva === 'enviados' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-gray-500'}">
+                    Enviados
+                </button>
+            </div>
+
+            <div id="tarefas-list-container" class="space-y-4 max-w-2xl mx-auto">
+                <div class="text-center py-10">
+                    <i class="fas fa-spinner fa-spin text-4xl text-pink-500"></i>
+                    <p class="mt-2 text-gray-400">Buscando tarefas...</p>
+                </div>
+            </div>
         </div>
-        <div id="notifications-list" class="space-y-3 max-w-2xl mx-auto">
-            ${state.notificacoes.length === 0 
-                ? `<p class="text-center text-gray-500">Nenhuma notificação ainda.</p>`
-                : state.notificacoes.map(notif => `
-                    <div class="card p-4 flex items-start gap-4 ${notif.lida ? 'opacity-60' : ''}">
-                        <i class="fas ${notif.icone || 'fa-info-circle'} text-xl mt-1 text-pink-400"></i>
+    `;
+
+    // 4. Busca os dados no Firestore (continua igual)
+    let tarefas = [];
+    let queryField = ''; 
+    
+    if (abaAtiva === 'recebidos') {
+        queryField = 'executadoPorUid';
+    } else {
+        queryField = 'resgatadoPorUid';
+    }
+
+    try {
+        const querySnapshot = await db.collection('tarefasMomentos')
+            .where(queryField, '==', state.usuario.uid)
+            .where('idPareamento', '==', state.idPareamentoAmigavel)
+            .orderBy('dataResgate', 'desc')
+            .limit(30)
+            .get();
+        
+        querySnapshot.forEach(doc => {
+            tarefas.push({ id: doc.id, ...doc.data() });
+        });
+
+    } catch (error) {
+        console.error("Erro ao buscar tarefas:", error);
+        showToast("Erro ao carregar tarefas.", "erro");
+    }
+
+    // 5. Renderiza a lista de tarefas no container (AQUI ESTÃO AS MUDANÇAS)
+    const container = document.getElementById('tarefas-list-container');
+    if (tarefas.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 py-10">Nenhuma tarefa encontrada aqui.</p>`;
+    } else {
+        container.innerHTML = tarefas.map(tarefa => {
+            const isPendente = tarefa.status === 'Pendente';
+            const statusCor = isPendente ? 'text-yellow-400' : 'text-green-400';
+            const statusIcon = isPendente ? 'fa-clock' : 'fa-check-circle';
+            const dataFormatada = tarefa.dataResgate ? new Date(tarefa.dataResgate.seconds * 1000).toLocaleDateString('pt-BR') : 'Data indisponível';
+
+            // ==================================================================
+            // MUDANÇA 1: Buscar a imagem do momento na lista mestre 'momentos'
+            // ==================================================================
+            const momentoInfo = state.momentosMestres.find(m => m.nome === tarefa.momentoNome);
+            // Usamos a imagem encontrada, ou o emoji como fallback, ou uma imagem padrão
+            const imagemHtml = momentoInfo 
+                ? `<img src="${momentoInfo.img}" class="w-12 h-12 rounded-lg object-cover">`
+                : `<span class="text-3xl">${tarefa.momentoEmoji}</span>`; // Fallback para o emoji se não achar
+
+            return `
+                <div class="card p-4 flex items-center justify-between gap-4 ${!isPendente ? 'opacity-50' : ''}">
+                    <div class="flex items-center gap-4">
+                        
+                        ${imagemHtml} 
+
                         <div>
-                            <h3 class="font-bold">${notif.titulo}</h3>
-                            <p class="text-sm text-gray-300">${notif.mensagem}</p>
-                            <p class="text-xs text-gray-500 mt-2">${notif.timestamp ? new Date(notif.timestamp.seconds * 1000).toLocaleString('pt-BR') : ''}</p>
+                            <h3 class="font-bold">${tarefa.momentoNome}</h3>
+                            <p class="text-sm text-gray-300">
+                                ${abaAtiva === 'recebidos' ? `Resgatado por: ${tarefa.resgatadoPorNome}` : `Aguardando: ${tarefa.executadoPorNome}`}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-2">Resgatado em: ${dataFormatada}</p>
                         </div>
                     </div>
-                `).join('')
-            }
-        </div>
-    </div>
-    
-    ${state.showCartSidebar ? `...` : ''}
-`;
+                    
+                    <div class="text-right flex-shrink-0"> <div class="flex items-center justify-end gap-2 font-semibold ${statusCor} mb-3">
+                            <i class="fas ${statusIcon}"></i>
+                            <span>${tarefa.status}</span>
+                        </div>
+                        
+                        ${(abaAtiva === 'enviados' && isPendente) ? `
+                            <button 
+                                onclick="handleDarCheck('${tarefa.id}')"
+                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+                                
+                                <i class="fas fa-check"></i> Realizado
+                            
+                            </button>
+                        ` : ''}
+
+                         ${(!isPendente && tarefa.dataConclusao) ? `
+                            <p class="text-xs text-gray-400">Concluído em: ${new Date(tarefa.dataConclusao.seconds * 1000).toLocaleDateString('pt-BR')}</p>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+function trocarAbaTarefas(aba) {
+    if (state.abaTarefasAtiva !== aba) {
+        state.abaTarefasAtiva = aba;
+        renderNossasTarefas(); // Re-renderiza a tela com a nova aba
+    }
+}
+
+async function handleDarCheck(tarefaId) {
+    if (!tarefaId) {
+        console.error("ID da tarefa não fornecido.");
+        return;
+    }
+
+    // Confirmação (opcional, mas recomendado)
+    if (!confirm("Tem certeza que deseja marcar este momento como 'Realizado'?")) {
+        return;
+    }
+
+    try {
+        const tarefaRef = db.collection('tarefasMomentos').doc(tarefaId);
+        
+        await tarefaRef.update({
+            status: 'Realizado',
+            dataConclusao: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showToast("Momento confirmado com sucesso!", "sucesso");
+        
+        // Re-renderiza a tela para mostrar a mudança de status
+        renderNossasTarefas(); 
+
+    } catch (error) {
+        console.error("Erro ao confirmar tarefa:", error);
+        showToast("Erro ao confirmar o momento.", "erro");
+    }
 }
 
     // Função para mudar a etapa da aplicação
@@ -1965,80 +2234,108 @@ renderApp();
 
     // Nova função para atualizar elementos da UI fixa (header e footer)
     function updateFixedUI() {
-// ATUALIZA O NOME DO USUÁRIO
-if (userNameDisplay) {
-    userNameDisplay.textContent = state.usuario && state.usuario.nome ? `Olá, ${state.usuario.nome}!` : '';
-}
-
-// ATUALIZA FOTO DE PERFIL NA HEADER
-const headerPic = document.getElementById('headerProfilePic');
-if (headerPic && state.usuario) {
-    const fotoPadrao = '/assets/icons/favicon.png';
-    headerPic.src = state.usuario.fotoUrl || fotoPadrao;
-    headerPic.classList.remove('hidden');
-} else if (headerPic) {
-    headerPic.classList.add('hidden');
-}
-
-// CONTROLA PONTO VERMELHO DE NOTIFICAÇÃO
-const notificationDot = document.getElementById('notificationDot');
-if (notificationDot) {
-    if (state.notificacoesNaoLidas > 0) {
-        notificationDot.classList.remove('hidden');
-    } else {
-        notificationDot.classList.add('hidden');
+    // ATUALIZA O NOME DO USUÁRIO (igual)
+    if (userNameDisplay) {
+        userNameDisplay.textContent = state.usuario && state.usuario.nome ? `Olá, ${state.usuario.nome}!` : '';
     }
-}
 
-// ATUALIZA OS BADGES DA BARRA DE NAVEGAÇÃO
-if (foguinhosBadge) {
-    foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
-}
-if (carrinhoBadge) {
-    carrinhoBadge.textContent = state.carrinho.length;
-}
-
-// LÓGICA DE VISIBILIDADE DAS BARRAS (HEADER E NAV)
-if (bottomNavBar && mainHeader) {
-    const telasComBarraVisivel = ['main', 'parear', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes'];
-    if (telasComBarraVisivel.includes(state.etapa)) {
-        bottomNavBar.style.display = 'flex';
-        mainHeader.style.display = 'flex';
-    } else {
-        bottomNavBar.style.display = 'none';
-        mainHeader.style.display = 'none';
+    // ATUALIZA FOTO DE PERFIL NA HEADER (igual)
+    const headerPic = document.getElementById('headerProfilePic');
+    if (headerPic && state.usuario) {
+        const fotoPadrao = '/assets/icons/favicon.png';
+        headerPic.src = state.usuario.fotoUrl || fotoPadrao;
+        headerPic.classList.remove('hidden');
+    } else if (headerPic) {
+        headerPic.classList.add('hidden');
     }
-}
 
-// LÓGICA PARA CORES E ESTADO "ATIVO" DOS ÍCONES
-const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item, .bottom-nav-bar .bottom-nav-item-center');
-bottomNavItems.forEach(item => {
-    item.classList.remove('active');
-    
-    const heartIcon = item.querySelector('.fas.fa-heart');
-    if (heartIcon) {
-        heartIcon.classList.remove('text-red-500', 'text-yellow-400', 'text-gray-400');
-        if (state.pareado) {
-            heartIcon.classList.add('text-red-500');
-        } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
-            heartIcon.classList.add('text-yellow-400');
+    // ==================================================================
+    // LÓGICA ATUALIZADA (PONTO VERMELHO)
+    // ==================================================================
+    // CONTROLA PONTO VERMELHO DE NOTIFICAÇÃO (SÓ PARA TAREFAS)
+    const notificationDot = document.getElementById('notificationDot');
+    if (notificationDot) {
+        // AGORA VERIFICA O CONTADOR DE TAREFAS
+        if (state.notificacoesTarefasNaoLidas > 0) {
+            notificationDot.classList.remove('hidden');
         } else {
-            heartIcon.classList.add('text-gray-400');
+            notificationDot.classList.add('hidden');
         }
     }
 
-    if (item.querySelector('.fas.fa-store') && state.etapa === 'gerenciarCatalogo') {
-        item.classList.add('active');
-    } else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
-        item.classList.add('active');
-    } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) {
-        item.classList.add('active');
-    } else if (item.querySelector('.fas.fa-fire') && state.etapa === 'foguinhosPopup') {
-        item.classList.add('active');
-    } else if (item.querySelector('.fas.fa-bell') && state.etapa === 'notificacoes') {
-        item.classList.add('active');
+    // ATUALIZA OS BADGES DA BARRA DE NAVEGAÇÃO (igual)
+    if (foguinhosBadge) {
+        foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
     }
-});
+    if (carrinhoBadge) {
+        carrinhoBadge.textContent = state.carrinho.length;
+    }
+
+    // LÓGICA DE VISIBILIDADE DAS BARRAS (igual)
+    if (bottomNavBar && mainHeader) {
+        const telasComBarraVisivel = ['main', 'parear', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes'];
+        if (telasComBarraVisivel.includes(state.etapa)) {
+            bottomNavBar.style.display = 'flex';
+            mainHeader.style.display = 'flex';
+        } else {
+            bottomNavBar.style.display = 'none';
+            mainHeader.style.display = 'none';
+        }
+    }
+
+    // LÓGICA PARA CORES E ESTADO "ATIVO" DOS ÍCONES (atualizada)
+    const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item, .bottom-nav-bar .bottom-nav-item-center');
+    
+    // ==================================================================
+    // NOVA LÓGICA DE COR (ÍCONE DE FOGO AMARELO)
+    // ==================================================================
+    // Primeiro, tratamos o ícone de fogo separadamente
+    const foguinhosBtn = document.getElementById('foguinhosNavButton');
+    if (foguinhosBtn) {
+        // Limpa os estados de cor primeiro
+        foguinhosBtn.classList.remove('active', 'text-yellow-400'); 
+        
+        if (state.etapa === 'foguinhosPopup') {
+            // 1. Se a tela está ATIVA, fica ROSA (cor 'active')
+            foguinhosBtn.classList.add('active');
+        } else if (state.notificacoesPresentesNaoLidas > 0) {
+            // 2. Se não está ativa, MAS TEM notificação, fica AMARELO
+            foguinhosBtn.classList.add('text-yellow-400');
+        }
+        // 3. Se não for nenhum dos casos, ele fica com a cor padrão (cinza)
+    }
+
+    // Agora, tratamos o resto dos ícones (exceto o de fogo)
+    bottomNavItems.forEach(item => {
+        // Não mexemos no de fogo, pois já fizemos isso
+        if (item.id === 'foguinhosNavButton') return; 
+
+        item.classList.remove('active');
+        
+        // (Lógica do ícone de coração - continua igual)
+        const heartIcon = item.querySelector('.fas.fa-heart');
+        if (heartIcon) {
+            heartIcon.classList.remove('text-red-500', 'text-yellow-400', 'text-gray-400');
+            if (state.pareado) {
+                heartIcon.classList.add('text-red-500');
+            } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+                heartIcon.classList.add('text-yellow-400');
+            } else {
+                heartIcon.classList.add('text-gray-400');
+            }
+        }
+
+        // (Lógica de ativação dos outros botões - continua igual)
+        if (item.querySelector('.fas.fa-store') && state.etapa === 'gerenciarCatalogo') {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-bell') && state.etapa === 'notificacoes') {
+            item.classList.add('active');
+        }
+    });
 }
 
     // Função para alternar a visibilidade do pop-up de Foguinhos
@@ -2071,6 +2368,7 @@ bottomNavItems.forEach(item => {
     
 async function loadUserDataAndNavigate(uid, email) {
 console.log('loadUserDataAndNavigate chamada para UID:', uid);
+await carregarMomentosMestres();
 try {
     if (!uid) {
         console.error('UID do usuário é nulo ou indefinido em loadUserDataAndNavigate. Abortando carregamento.');
@@ -2213,6 +2511,8 @@ try {
         window.handleSaveCatalogo = handleSaveCatalogo;
         window.toggleAccordion = toggleAccordion;
         window.handleFileSelect = handleFileSelect;
+        window.trocarAbaTarefas = trocarAbaTarefas;
+        window.handleDarCheck = handleDarCheck;
 
         console.log("✅ Funções de evento prontas.");
 
@@ -2240,9 +2540,10 @@ try {
         <i class="fas fa-shopping-cart"></i>
         <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
     </button>
-    <button class="bottom-nav-item" onclick="changeStep('foguinhosPopup');">
-        <i class="fas fa-fire"></i>
-        <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
+    
+    <button id="foguinhosNavButton" class="bottom-nav-item" onclick="changeStep('foguinhosPopup');">
+        
+        <i class="fas fa-fire"></i> <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
     </button>
 </nav>
 <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] space-y-2 w-auto max-w-sm"></div>
