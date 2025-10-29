@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nosso Momento</title>
-        <link rel="icon" href="/assets/icons/favicon.ico" type="image/png">
+        <link rel="icon" href="/assets/icons/logo-app-white.png" type="image/png">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -328,18 +328,8 @@
 <body class="bg-black text-white font-sans">
     <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800" style="display: none;">
     <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
-        <div class="flex items-center gap-1">
-            <div class="relative">
-                <div class="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-red-600 shadow-lg">
-                    <i class="fas fa-heart-beat text-white text-xs"></i>
-                </div>
-                <div class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
-            </div>
-            <h1 class="text-2xl font-bold">
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 font-extrabold tracking-tight" style="text-shadow: 0 2px 4px rgba(255,53,71,0.3);">NOSSO</span>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-pink-500 font-extrabold tracking-tight" style="text-shadow: 0 2px 4px rgba(255,53,71,0.3);">MOMENTO</span>
-            </h1>
-            <div class="w-2 h-2 rounded-full bg-pink-500 opacity-70 animate-pulse ml-1"></div>
+        <div class="flex items-center">
+            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento Logo" class="h-[55px] w-auto">
         </div>
 
         <div class="flex items-center gap-4">
@@ -802,7 +792,7 @@ if (confirm('Tem certeza que deseja cancelar esta solicitação de pareamento?')
     function renderPareamento() {
 if (state.pareado && state.parceiroData) {
     // Mostra o Perfil do Parceiro se estiver pareado
-    const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/favicon.png';
+    const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/iconprincipal.png';
     const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
     const canCheckIn = !lastCheckIn || !isSameDay(lastCheckIn, new Date());
     const checkInButtonText = canCheckIn ? 'Presentear com 1 🔥' : 'Presenteado Hoje';
@@ -1143,9 +1133,20 @@ const momentosParaParceiro = state.momentosMestres.filter(m => m.targetGender ==
 const catalogoParceiro = state.parceiroData.catalogoPersonalizado || {};
 const categorias = [...new Set(momentosParaParceiro.map(m => m.categoria))].map(nomeCat => {
     const momentoExemplo = state.momentosMestres.find(m => m.categoria === nomeCat);
-    let cor = 'bg-purple-900';
-    if (momentoExemplo.categoria === 'Quentes') cor = 'bg-pink-900';
-    if (momentoExemplo.categoria === 'Lovezin') cor = 'bg-red-900';
+    let cor = 'bg-gray-800'; // Cor padrão (fallback)
+        if (momentoExemplo) {
+            switch (momentoExemplo.categoria) {
+                case 'Quentes':
+                    cor = 'bg-pink-600'; // Vibrante, alinhado ao logo
+                    break;
+                case 'Lovezin':
+                    cor = 'bg-red-600'; // Cor da paixão
+                    break;
+                case 'Sair da Rotina':
+                    cor = 'bg-amber-600'; // Laranja/Âmbar, alinhado aos "foguinhos"
+                    break;
+            }
+        }
     return {
         nome: nomeCat,
         emoji: momentoExemplo.emoji,
@@ -1153,7 +1154,7 @@ const categorias = [...new Set(momentosParaParceiro.map(m => m.categoria))].map(
     };
 });
 
-const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/favicon.png';
+const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/logo-instagram-white.png';
 
 appContainer.innerHTML = `
     <main class="container mx-auto px-4 py-8 pb-24 pt-24 bg-gradient-to-br from-gray-900 to-black text-white">
@@ -1254,7 +1255,7 @@ const userGender = state.usuario?.sexo || 'Masculino';
 const momentosDisponiveis = state.momentosMestres.filter(m => m.targetGender === userGender || m.targetGender === 'Unisex');
 const catalogoSalvo = state.usuario?.catalogoPersonalizado || {};
 const categorias = [...new Set(momentosDisponiveis.map(m => m.categoria))];
-const fotoUrl = state.usuario?.fotoUrl || 'assets/icons/favicon.png';
+const fotoUrl = state.usuario?.fotoUrl || 'assets/icons/iconprincipal.png';
 
 let notificationButtonHtml = '';
 if (window.Notification) {
@@ -2242,7 +2243,7 @@ renderApp();
     // ATUALIZA FOTO DE PERFIL NA HEADER (igual)
     const headerPic = document.getElementById('headerProfilePic');
     if (headerPic && state.usuario) {
-        const fotoPadrao = '/assets/icons/favicon.png';
+        const fotoPadrao = '/assets/icons/iconprincipal.png';
         headerPic.src = state.usuario.fotoUrl || fotoPadrao;
         headerPic.classList.remove('hidden');
     } else if (headerPic) {
