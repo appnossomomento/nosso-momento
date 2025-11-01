@@ -1293,6 +1293,33 @@ appContainer.innerHTML = `
 `;
 }
 
+function calcularPrecoBase(momento) {
+    if (momento == null) {
+        return 10;
+    }
+
+    const intensidade = Number(momento.intensidade);
+    if (Number.isFinite(intensidade) && intensidade >= 0) {
+        return intensidade * 2;
+    }
+
+    const custoFoguinhos = Number(momento.custoFoguinhos);
+    if (Number.isFinite(custoFoguinhos) && custoFoguinhos >= 0) {
+        return custoFoguinhos;
+    }
+
+    return 10;
+}
+
+function normalizarPreco(valor, fallback) {
+    if (valor === '' || valor === null || valor === undefined) {
+        return fallback;
+    }
+
+    const numero = Number(valor);
+    return Number.isFinite(numero) && numero >= 0 ? numero : fallback;
+}
+
 function renderGerenciarCatalogo() {
 const userGender = state.usuario?.sexo || 'Masculino';
 const momentosDisponiveis = state.momentosMestres.filter(m => m.targetGender === userGender || m.targetGender === 'Unisex');
@@ -1356,7 +1383,11 @@ appContainer.innerHTML = `
                         <div class="space-y-2 p-4 border-t border-gray-700">
                             ${momentosDisponiveis.filter(m => m.categoria === categoria).map(momento => {
                                 const configSalva = catalogoSalvo[momento.nome];
-                                const preco = configSalva?.preco !== undefined ? configSalva.preco : momento.intensidade * 2;
+                                const precoPadrao = calcularPrecoBase(momento);
+                                const preco = normalizarPreco(configSalva?.preco, precoPadrao);
+                                if (configSalva && configSalva.preco !== preco) {
+                                    configSalva.preco = preco;
+                                }
                                 const bloqueado = configSalva?.bloqueado || false;
                                 // A CORREÇÃO ESTÁ AQUI: O "return" AGORA COMEÇA DIRETAMENTE COM O ACENTO GRAVE `
                                 return `
@@ -1368,7 +1399,7 @@ appContainer.innerHTML = `
                                     <div class="flex items-center gap-4">
                                         <div class="flex items-center gap-1 bg-gray-800 rounded-lg p-2">
                                             <i class="fas fa-fire text-yellow-400"></i>
-                                            <input type="number" value="${preco}" id="preco-${momento.nome.replace(/\s+/g, '-')}" class="bg-transparent w-16 text-center font-bold">
+                                            <input type="number" min="0" step="1" value="${preco}" id="preco-${momento.nome.replace(/\s+/g, '-')}" class="bg-transparent w-16 text-center font-bold">
                                         </div>
                                         <label class="relative inline-flex items-center cursor-pointer">
                                             <input type="checkbox" ${bloqueado ? 'checked' : ''} class="sr-only peer" id="bloqueado-${momento.nome.replace(/\s+/g, '-')}">
@@ -1443,7 +1474,8 @@ state.momentosMestres.forEach(momento => {
     // Verificamos se encontramos os campos na tela, por segurança.
     if (inputPreco && inputBloqueado) {
         // 3. Coletamos os valores.
-        const preco = parseInt(inputPreco.value, 10) || 0; // Pegamos o valor do input e o convertemos para número.
+        const precoPadrao = calcularPrecoBase(momento);
+        const preco = normalizarPreco(inputPreco.value, precoPadrao);
         const bloqueado = inputBloqueado.checked; // 'checked' será true ou false.
 
         // 4. Montamos o objeto para este momento específico.
