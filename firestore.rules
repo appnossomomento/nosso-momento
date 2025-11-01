@@ -114,11 +114,16 @@ service cloud.firestore {
       allow list: if isAuthenticated();
 
       allow update: if isAuthenticated()
-        && resource.data.executadoPorUid == authUid()
-        && request.resource.data.keys().hasOnly([
+        && (
+          resource.data.executadoPorUid == authUid() ||
+          resource.data.resgatadoPorUid == authUid()
+        )
+        && resource.data.status == 'Pendente'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'dataConclusao', 'status'
         ])
-        && request.resource.data.status == 'Realizado';
+        && request.resource.data.status == 'Realizado'
+        && request.resource.data.dataConclusao == request.time;
 
       allow create, delete: if false;
     }
