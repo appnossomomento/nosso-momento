@@ -43,11 +43,15 @@ service cloud.firestore {
           'fotoUrl', 'lastCheckInDate', 'nome', 'pareadoCom', 'pareadoUid', 'sexo',
           'telefone'
         ])
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'catalogoPersonalizado', 'fcmToken', 'fotoUrl'
+        ])
         && request.resource.data.foguinhos == resource.data.foguinhos
         && request.resource.data.pareadoCom == resource.data.pareadoCom
         && request.resource.data.pareadoUid == resource.data.pareadoUid
         && request.resource.data.lastCheckInDate == resource.data.lastCheckInDate
-        && request.resource.data.createdAt == resource.data.createdAt;
+        && request.resource.data.catalogoPersonalizado is map;
 
       allow delete: if isOwner(userId);
     }
@@ -60,7 +64,12 @@ service cloud.firestore {
       allow get: if isAuthenticated() && resource.data.userId == authUid();
       allow list: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.userId == authUid();
-      allow update, delete: if false;
+      allow update: if isAuthenticated()
+        && resource.data.userId == authUid()
+        && resource.data.diff(request.resource.data).changedKeys()
+          .hasOnly(['lida'])
+        && request.resource.data.lida is bool;
+      allow delete: if false;
     }
 
     match /pairingRequests/{pid} {

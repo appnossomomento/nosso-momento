@@ -1104,16 +1104,37 @@ exports.processPairingRequest = onDocumentUpdated(
               throw new Error("Usuário(s) do pareamento não encontrado(s)");
             }
 
+            const senderData = senderSnap.data() || {};
+            const receiverData = receiverSnap.data() || {};
+            const MIN_FOGUINHOS = 10;
+
             // Atualiza campo pareadoCom para ambos — feita com privilégios
             // do Admin
-            tx.update(senderRef, {
+            const senderUpdate = {
               pareadoCom: receiverPhone,
               pareadoUid: receiverUid,
-            });
-            tx.update(receiverRef, {
+            };
+            const receiverUpdate = {
               pareadoCom: senderPhone,
               pareadoUid: senderUid,
-            });
+            };
+
+            const senderFoguinhos = Number(senderData.foguinhos);
+            const senderNeedsTopUp = !Number.isFinite(senderFoguinhos) ||
+              senderFoguinhos < MIN_FOGUINHOS;
+            if (senderNeedsTopUp) {
+              senderUpdate.foguinhos = MIN_FOGUINHOS;
+            }
+
+            const receiverFoguinhos = Number(receiverData.foguinhos);
+            const receiverNeedsTopUp = !Number.isFinite(receiverFoguinhos) ||
+              receiverFoguinhos < MIN_FOGUINHOS;
+            if (receiverNeedsTopUp) {
+              receiverUpdate.foguinhos = MIN_FOGUINHOS;
+            }
+
+            tx.update(senderRef, senderUpdate);
+            tx.update(receiverRef, receiverUpdate);
 
             // Cria documento em `pareamentos` com id consistente
             const telefones = [senderPhone, receiverPhone]
