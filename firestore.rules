@@ -1,0 +1,126 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function authUid() {
+      return request.auth.uid;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && authUid() == userId;
+    }
+
+    function isPartner(resourceData) {
+      return isAuthenticated() &&
+        resourceData.pareadoUid != null &&
+        resourceData.pareadoUid == authUid();
+    }
+
+    match /usuarios/{userId} {
+      allow get: if isOwner(userId) || (resource.data != null && isPartner(resource.data));
+      allow list: if false;
+
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly([
+          'catalogoPersonalizado', 'createdAt', 'email', 'foguinhos', 'fotoUrl',
+          'fcmToken', 'lastCheckInDate', 'nome', 'pareadoCom', 'pareadoUid',
+          'sexo', 'telefone'
+        ])
+        && request.resource.data.foguinhos is int
+        && request.resource.data.foguinhos == 10
+        && (!('pareadoUid' in request.resource.data) || request.resource.data.pareadoUid == null)
+        && (!('pareadoCom' in request.resource.data) || request.resource.data.pareadoCom == null)
+        && (!('lastCheckInDate' in request.resource.data) || request.resource.data.lastCheckInDate == null)
+        && request.resource.data.catalogoPersonalizado is map;
+
+      allow update: if isOwner(userId)
+        && request.resource.data.keys().hasOnly([
+          'catalogoPersonalizado', 'createdAt', 'email', 'fcmToken', 'foguinhos',
+          'fotoUrl', 'lastCheckInDate', 'nome', 'pareadoCom', 'pareadoUid', 'sexo',
+          'telefone'
+        ])
+        && request.resource.data.foguinhos == resource.data.foguinhos
+        && request.resource.data.pareadoCom == resource.data.pareadoCom
+        && request.resource.data.pareadoUid == resource.data.pareadoUid
+        && request.resource.data.lastCheckInDate == resource.data.lastCheckInDate
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow delete: if isOwner(userId);
+    }
+
+    match /inputs/{inputId} {
+      allow read, write: if false;
+    }
+
+    match /notificacoes/{nid} {
+      allow get: if isAuthenticated() && resource.data.userId == authUid();
+      allow list: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == authUid();
+      allow update, delete: if false;
+    }
+
+    match /pairingRequests/{pid} {
+      allow get: if isAuthenticated() && (
+        resource.data.senderUid == authUid() ||
+        resource.data.receiverUid == authUid()
+      );
+
+      allow list: if isAuthenticated();
+
+      allow create: if isAuthenticated()
+        && request.resource.data.senderUid == authUid()
+        && request.resource.data.receiverUid is string
+        && request.resource.data.status == 'pending';
+
+      allow update: if isAuthenticated()
+        && resource.data.receiverUid == authUid()
+        && (request.resource.data.status == 'accepted' || request.resource.data.status == 'rejected')
+        && request.resource.data.keys().hasOnly([
+          'processedAt', 'processedBy', 'receiverPhone', 'status'
+        ]);
+
+      allow delete: if isAuthenticated()
+        && resource.data.senderUid == authUid()
+        && resource.data.status == 'pending';
+    }
+
+    match /pareamentos/{pid} {
+      allow get: if isAuthenticated() && (
+        resource.data.pessoa1Uid == authUid() ||
+        resource.data.pessoa2Uid == authUid()
+      );
+      allow list, write: if false;
+    }
+
+    match /tarefasMomentos/{tid} {
+      allow get: if isAuthenticated() && (
+        resource.data.resgatadoPorUid == authUid() ||
+        resource.data.executadoPorUid == authUid()
+      );
+
+      allow list: if isAuthenticated();
+
+      allow update: if isAuthenticated()
+        && resource.data.executadoPorUid == authUid()
+        && request.resource.data.keys().hasOnly([
+          'dataConclusao', 'status'
+        ])
+        && request.resource.data.status == 'Realizado';
+
+      allow create, delete: if false;
+    }
+
+    match /momentosMestres/{mid} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

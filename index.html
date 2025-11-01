@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nosso Momento</title>
-        <link rel="icon" href="/assets/icons/logo-app-white.png" type="image/png">
+        <link rel="icon" href="/assets/icons/iconprincipal.png" type="image/png">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -279,33 +279,13 @@
 }
 
 .toast.exiting {
-    animation: slideOutDown 0.5s ease-in forwards; /* Nova animação de saída */
+    animation: slideOutDown 0.4s ease-in forwards;
 }
 
-.toast-icon {
-    margin-right: 10px;
-    font-size: 18px;
-}
-
-/* Tipos de Toast (cores sem alteração) */
-.toast-sucesso {
-    background-color: rgba(22, 163, 74, 0.7);
-    color: white;
-}
-.toast-erro {
-    background-color: rgba(220, 38, 38, 0.7);
-    color: white;
-}
-.toast-aviso {
-    background-color: rgba(245, 158, 11, 0.7);
-    color: white;
-}
-
-/* Novas Animações (de baixo para cima) */
 @keyframes slideInUp {
     from {
         opacity: 0;
-        transform: translateY(100%);
+        transform: translateY(20px);
     }
     to {
         opacity: 1;
@@ -320,9 +300,31 @@
     }
     to {
         opacity: 0;
-        transform: translateY(100%);
+        transform: translateY(20px);
     }
 }
+
+/* Instagram CTA com borda em gradiente e fundo discreto */
+.instagram-cta-outline {
+    display: inline-block;
+    padding: 2px; /* espaço para a borda em gradiente */
+    border-radius: 12px;
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+.instagram-cta-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #000; /* Fundo discreto */
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+}
+.instagram-cta-inner i { font-size: 16px; }
+.instagram-cta-inner:hover { transform: translateY(-2px); }
+
     </style>
 </head>
 <body class="bg-black text-white font-sans">
@@ -363,12 +365,85 @@
     // Inicialização do Firebase, Firestore e Auth
     firebase.initializeApp(firebaseConfig);
     console.log("✅ Firebase: Initialized com sucesso!");
-    const db = firebase.firestore();
-    const auth = firebase.auth(); // Inicializa o Firebase Auth
-    const storage = firebase.storage();
+        const db = firebase.firestore();
+        const auth = firebase.auth(); // Inicializa o Firebase Auth
+        const storage = firebase.storage();
+        const CREATE_INPUT_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/createInput';
   </script>
 
     <script>
+    /**
+     * Adiciona um input ao Firestore garantindo que o token do Auth esteja
+     * válido e tentando um refresh antes de falhar com permission errors.
+     * Retorna o DocumentReference resolvido pela chamada .add().
+     */
+    async function safeAddInput(inputObj) {
+        const payload = {...inputObj};
+
+        if (!payload.fromUid) {
+            if (auth.currentUser) {
+                payload.fromUid = auth.currentUser.uid;
+            } else if (state.usuario && state.usuario.uid) {
+                payload.fromUid = state.usuario.uid;
+            }
+        }
+
+        // Sempre delegamos ao backend, então removemos sentinelas do Firestore.
+        delete payload.timestamp;
+        payload.processed = false;
+
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            const authError = new Error('auth_required');
+            authError.code = 'auth_required';
+            throw authError;
+        }
+
+        if (payload.fromUid !== currentUser.uid) {
+            payload.fromUid = currentUser.uid;
+        }
+
+        const callBackend = async (forceRefreshToken = false) => {
+            const idToken = await currentUser.getIdToken(forceRefreshToken);
+            const response = await fetch(CREATE_INPUT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({input: payload}),
+            });
+
+            let body = null;
+            try {
+                body = await response.json();
+            } catch (jsonErr) {
+                console.warn('safeAddInput: corpo não pôde ser parseado', jsonErr);
+            }
+
+            if (response.ok) {
+                return body && body.id ? {id: body.id} : body;
+            }
+
+            const errorCode = body && body.error ? body.error : `http_${response.status}`;
+            const backendError = new Error(errorCode);
+            backendError.code = errorCode;
+            backendError.status = response.status;
+            backendError.details = body;
+            throw backendError;
+        };
+
+        try {
+            return await callBackend(false);
+        } catch (err) {
+            if (err.status === 401 || err.status === 403) {
+                // Força refresh do token e tenta novamente uma vez.
+                return await callBackend(true);
+            }
+            throw err;
+        }
+    }
+
     // Main application state
         const state = {
     usuario: null,
@@ -384,6 +459,7 @@
     codigoUsuario: null,
     codigoDigitando: false,
     parceiroCodigo: null,
+    pareadoUid: null,
     parceiroTelefone: null,
     parceiroNome: null,
     showPartnerInfo: false,
@@ -394,6 +470,8 @@
 };
 
 let unsubscribeNotifications = null;
+let unsubscribeUserDoc = null;
+let unsubscribePendingPairing = null;
 
     // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
     let appContainer;
@@ -634,9 +712,6 @@ if (firebase.messaging.isSupported()) {
         const title = payload.data.title;
         const body = payload.data.body;
         showToast(`🔔 ${title}: ${body}`, 'sucesso');
-        
-        // Opcional: Atualizar a bolinha do sino em tempo real
-        state.notificacoesNaoLidas++;
         updateFixedUI();
     });
 }
@@ -654,45 +729,23 @@ if (codigoDigitado === state.usuario.telefone) {
     return;
 }
 try {
-    const parceiroQuery = await db.collection('usuarios').where('telefone', '==', codigoDigitado).limit(1).get();
-    if (parceiroQuery.empty) {
-        showToast('Parceiro não encontrado. Verifique o código.', 'erro');
-        return;
-    }
-    const parceiroDoc = parceiroQuery.docs[0];
-    const parceiroUid = parceiroDoc.id;
-    const parceiroNome = parceiroDoc.data().nome;
-
-    const requestId = [state.usuario.uid, parceiroUid].sort().join('_');
-    const existingRequestDoc = await db.collection('pairingRequests').doc(requestId).get();
-
-    if (existingRequestDoc.exists && existingRequestDoc.data().status === 'pending') {
-        showToast('Você já enviou uma solicitação para este parceiro.', 'aviso');
-        return;
-    }
-    if (parceiroDoc.data().pareadoCom && typeof parceiroDoc.data().pareadoCom === 'string' && !parceiroDoc.data().pareadoCom.startsWith('pending_')) {
-        showToast(`O(a) parceiro(a) ${parceiroNome} já está pareado(a).`, 'aviso');
-        return;
-    }
-
-    const requestData = {
-        senderUid: state.usuario.uid,
-        senderName: state.usuario.nome,
-        senderPhone: state.usuario.telefone,
-        receiverUid: parceiroUid,
-        receiverName: parceiroNome,
-        receiverPhone: codigoDigitado,
-        status: 'pending',
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    const inputData = {
+        type: 'pairing_request',
+        fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+        fromName: state.usuario.nome,
+        fromPhone: state.usuario.telefone,
+        toPhone: codigoDigitado,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        processed: false,
     };
-    
-    await db.collection('pairingRequests').doc(requestId).set(requestData);
-    await db.collection('usuarios').doc(state.usuario.uid).update({
-        pareadoCom: `pending_${codigoDigitado}`
-    });
-    
+
+    // Cria um input para o backend processar a solicitação de pareamento.
+    await safeAddInput(inputData);
+
+    // Atualiza apenas o estado local/imediato do sender; o backend atualizará
+    // os documentos reais quando processar o input.
     state.usuario.pareadoCom = `pending_${codigoDigitado}`;
-    showToast(`Solicitação enviada para ${parceiroNome}!`, 'sucesso');
+    showToast('Solicitação enviada! Aguardando confirmação.', 'sucesso');
     state.etapa = 'parear';
     state.codigoDigitando = false;
     renderApp();
@@ -709,28 +762,16 @@ try {
         return;
     }
 
-    await db.collection('pairingRequests').doc(requestId).update({ status: 'accepted' });
-    await db.collection('usuarios').doc(state.usuario.uid).update({ pareadoCom: senderPhone });
-    await db.collection('usuarios').doc(senderUid).update({ pareadoCom: state.usuario.telefone });
-
-    const telefones = [state.usuario.telefone, senderPhone].sort();
-    const cleanTelefones = telefones.map(tel => tel.replace(/\D/g, ''));
-    const idPareamento = cleanTelefones.join('_');
-    const idAmigavel = senderPhone.slice(-4) + state.usuario.telefone.slice(-4);
-    const pareamentoData = {
-        pessoa1: telefones[0],
-        pessoa2: telefones[1],
-        pessoa1Uid: cleanTelefones[0] === state.usuario.telefone.replace(/\D/g, '') ? state.usuario.uid : senderUid,
-        pessoa2Uid: cleanTelefones[1] === state.usuario.telefone.replace(/\D/g, '') ? state.usuario.uid : senderUid,
-        dataPareamento: firebase.firestore.FieldValue.serverTimestamp(),
-        idAmigavel: idAmigavel
-    };
-    
-    await db.collection('pareamentos').doc(idPareamento).set(pareamentoData, { merge: true });
-    
-    showToast('Pareamento aceito com sucesso!', 'sucesso');
-
-    await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
+    // Cria um input indicando que o receiver aceitou a solicitação. O backend
+    // processará a aceitação (atualizará `usuarios` e criará `pareamentos`).
+    await safeAddInput({
+        type: 'pairing_response',
+        fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+        requestId: requestId,
+        response: 'accepted',
+    });
+    showToast('Solicitação aceita. Aguardando processamento...', 'sucesso');
+    setTimeout(() => loadUserDataAndNavigate(state.usuario.uid, state.usuario.email), 800);
 } catch (error) {
     console.error('Erro ao aceitar pareamento:', error);
     showToast('Erro ao aceitar pareamento. Tente novamente.', 'erro');
@@ -739,18 +780,14 @@ try {
 
     async function rejectPairingRequest(requestId) {
 try {
-    await db.collection('pairingRequests').doc(requestId).update({ status: 'rejected' });
-    
-    const requestDoc = await db.collection('pairingRequests').doc(requestId).get();
-    if (requestDoc.exists) {
-        const senderUid = requestDoc.data().senderUid;
-        const senderDoc = await db.collection('usuarios').doc(senderUid).get();
-        if (senderDoc.exists && senderDoc.data().pareadoCom && senderDoc.data().pareadoCom.startsWith('pending_')) {
-            await db.collection('usuarios').doc(senderUid).update({
-                pareadoCom: firebase.firestore.FieldValue.delete()
-            });
-        }
-    }
+    // Cria um input indicando que o receiver rejeitou a solicitação. O backend
+    // irá processar a rejeição e limpar o estado do sender.
+    await safeAddInput({
+        type: 'pairing_response',
+        fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+        requestId: requestId,
+        response: 'rejected',
+    });
     showToast('Solicitação de pareamento rejeitada.', 'sucesso');
     state.pendingPairingRequest = null;
     renderApp();
@@ -766,22 +803,20 @@ if (confirm('Tem certeza que deseja cancelar esta solicitação de pareamento?')
     try {
         const senderUid = state.usuario.uid;
         const receiverPhone = state.usuario.pareadoCom.replace('pending_', '');
-        const receiverQuery = await db.collection('usuarios').where('telefone', '==', receiverPhone).limit(1).get();
-        
-        if (receiverQuery.empty) {
-            showToast('Erro: Destinatário não encontrado.', 'erro');
-            return;
-        }
-        const receiverUid = receiverQuery.docs[0].id;
-        const requestId = [senderUid, receiverUid].sort().join('_');
-        
-        await db.collection('pairingRequests').doc(requestId).delete();
-        await db.collection('usuarios').doc(senderUid).update({
-            pareadoCom: firebase.firestore.FieldValue.delete()
+        await safeAddInput({
+            type: 'pairing_cancel',
+            fromUid: (auth.currentUser && auth.currentUser.uid) || senderUid,
+            partnerPhone: receiverPhone,
         });
 
-        showToast('Solicitação de pareamento cancelada.', 'sucesso');
+        showToast('Solicitação de pareamento cancelada. Aguardando processamento', 'sucesso');
         state.usuario.pareadoCom = null;
+    state.usuario.pareadoUid = null;
+    state.parceiroData = null;
+    state.parceiroNome = null;
+    state.parceiroTelefone = null;
+    state.idPareamentoAmigavel = null;
+    state.pareado = false;
         state.etapa = 'parear';
         renderApp();
     } catch (error) {
@@ -816,6 +851,13 @@ if (state.pareado && state.parceiroData) {
                     </button>
                     <button onclick="desparearParceiro()" class="w-full py-3 bg-red-800/60 hover:bg-red-700 text-white rounded-lg font-semibold transition">
                         Desfazer Pareamento
+                    </button>
+
+                    <!-- Botão de seguir no Instagram (discreto, com borda em gradiente) -->
+                    <button onclick="window.open('https://instagram.com/nossomomentoapp','_blank')" class="instagram-cta-outline w-full mt-2">
+                        <span class="instagram-cta-inner w-full justify-center">
+                            <i class="fab fa-instagram"></i> Siga-nos no Instagram!
+                        </span>
                     </button>
                 </div>
             </div>
@@ -1012,22 +1054,6 @@ appContainer.innerHTML = content;
     `;
 }
 
-    async function criarNotificacao(userId, titulo, mensagem, icone) {
-        try {
-            await db.collection('notificacoes').add({
-                userId: userId,         // Para quem é a notificação
-                titulo: titulo,
-                mensagem: mensagem,
-                icone: icone,           // Um ícone da Font Awesome (ex: 'fa-gift')
-                lida: false,            // Começa como não lida
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            console.log('Notificação criada com sucesso para o usuário:', userId);
-        } catch (error) {
-            console.error("Erro ao criar notificação:", error);
-        }
-    }
-
 function setupNotificationListener(userId) {
     // Se já existe um ouvinte, desliga ele primeiro
     if (unsubscribeNotifications) {
@@ -1108,6 +1134,13 @@ function setupNotificationListener(userId) {
                             <i class="fas fa-unlink text-xs"></i> Desfazer Pareamento
                         </button>
 
+                        <!-- Botão de seguir no Instagram (discreto, com borda em gradiente) -->
+                        <button onclick="window.open('https://instagram.com/nossomomentoapp','_blank')" class="instagram-cta-outline w-full">
+                            <span class="instagram-cta-inner w-full justify-center">
+                                <i class="fab fa-instagram text-xs"></i> Siga-nos no Instagram!
+                            </span>
+                        </button>
+
                         <button onclick="togglePartnerInfoPopup();" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition w-full">
                             Voltar
                         </button>
@@ -1121,10 +1154,17 @@ function setupNotificationListener(userId) {
     function renderMain() {
 if (!state.pareado || !state.parceiroData) {
     appContainer.innerHTML = `
-        <div class="min-h-screen container mx-auto px-4 py-8 text-center flex flex-col justify-center items-center">
+            <div class="min-h-screen container mx-auto px-4 py-8 text-center flex flex-col justify-center items-center">
             <h2 class="text-2xl font-bold mb-4">Você ainda não está pareado(a).</h2>
             <p class="text-gray-400 mb-6">Pareie com seu/sua parceiro(a) para ver o catálogo de momentos dele(a).</p>
             <button onclick="changeStep('parear')" class="btn-red">Parear agora</button>
+
+            <!-- CTA social abaixo do botão de parear (discreto com borda em gradiente) -->
+            <button onclick="window.open('https://instagram.com/nossomomentoapp','_blank')" class="instagram-cta-outline mt-4 inline-block">
+                <span class="instagram-cta-inner inline-flex items-center gap-2">
+                    <i class="fab fa-instagram"></i> Siga-nos no Instagram!
+                </span>
+            </button>
         </div>
     `;
     return;
@@ -1685,7 +1725,6 @@ try {
     state.pareado = false;
     state.parceiroData = null;
     state.idPareamentoAmigavel = null;
-    state.notificacoesNaoLidas = 0;
     state.notificacoes = [];
     state.etapa = 'landing';
     state.carrinho = [];
@@ -1707,49 +1746,20 @@ try {
 }
 
     async function handleDailyCheckIn() {
-if (!state.pareado || !state.parceiroData) {
+if (!state.pareado || !state.usuario || !state.usuario.pareadoUid) {
     showToast('Você precisa estar pareado para presentear.', 'aviso');
     return;
 }
 
-const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
-if (lastCheckIn && isSameDay(lastCheckIn, new Date())) {
-    showToast('Você já presenteou hoje. Volte amanhã!', 'aviso');
-    return;
-}
-
 try {
-    // Busca o UID do parceiro, que precisamos para criar a notificação
-    const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
-    if (parceiroQuery.empty) {
-        showToast('Erro: Parceiro não encontrado.', 'erro');
-        return;
-    }
-    const parceiroDoc = parceiroQuery.docs[0];
-    const parceiroUid = parceiroDoc.id;
-    const parceiroFoguinhosAtuais = parceiroDoc.data().foguinhos || 0;
-
-    // Atualiza os dados no Firestore
-    await db.collection('usuarios').doc(state.usuario.uid).update({
-        lastCheckInDate: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    await db.collection('usuarios').doc(parceiroUid).update({
-        foguinhos: parceiroFoguinhosAtuais + 1
+    await safeAddInput({
+        type: 'daily_check_in',
+        fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+        partnerUid: state.usuario.pareadoUid,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
-    // >>> AQUI ESTÁ A MÁGICA: CRIA A NOTIFICAÇÃO PARA O PARCEIRO <<<
-    await criarNotificacao(
-        parceiroUid,
-        'Você ganhou um presente!',
-        `${state.usuario.nome} te presenteou com 1 foguinho 🔥.`,
-        'fa-gift'
-    );
-
-    showToast(`Presente enviado para ${state.parceiroNome}!`, 'sucesso');
-    
-    // Recarrega os dados do usuário para atualizar a UI do botão
-    await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
-
+    showToast(`Presente enviado!`, 'sucesso');
 } catch (error) {
     console.error('Erro ao realizar Presentear (Check-in) diário:', error);
     showToast('Erro ao presentear. Tente novamente.', 'erro');
@@ -1781,127 +1791,75 @@ if (!state.pareado) {
 }
 
 const custo = momento.custoFoguinhos;
+const foguinhosEmUso = state.carrinho.reduce((total, item) => total + item.custoFoguinhos, 0);
+const saldoDisponivel = (state.usuario.foguinhos || 0) - foguinhosEmUso;
 // Validação 3: Checa se o usuário tem "foguinhos" suficientes
-if ((state.usuario.foguinhos || 0) < custo) {
+if (saldoDisponivel < custo) {
     showToast(`Você precisa de ${custo} foguinhos para este momento.`, 'aviso');
     return;
 }
 
-try {
-    // Debita os foguinhos do usuário no Firestore
-    await db.collection('usuarios').doc(state.usuario.uid).update({
-        foguinhos: firebase.firestore.FieldValue.increment(-custo)
-    });
-    
-    // Atualiza o estado local
-    state.usuario.foguinhos = (state.usuario.foguinhos || 0) - custo;
-    state.carrinho = [...state.carrinho, momento];
-
-    // Notificação de sucesso
-    showToast(`${momento.nome} adicionado ao carrinho!`, 'sucesso');
-
-    // Re-renderiza o app para atualizar os badges do carrinho e foguinhos
-    renderApp();
-
-} catch (error) {
-    // Notificação em caso de erro no processo
-    console.error('Erro ao adicionar momento ao carrinho:', error);
-    showToast('Erro ao adicionar momento. Tente novamente.', 'erro');
-}
+state.carrinho = [...state.carrinho, momento];
+showToast(`${momento.nome} adicionado ao carrinho!`, 'sucesso');
+renderApp();
 }
 
     async function removerDoCarrinho(index) {
 const momentoRemovido = state.carrinho[index];
-const custo = momentoRemovido.custoFoguinhos;
-
-try {
-    // Devolve os foguinhos ao usuário no Firestore
-    await db.collection('usuarios').doc(state.usuario.uid).update({
-        foguinhos: firebase.firestore.FieldValue.increment(custo)
-    });
-
-    // Atualiza o estado local
-    state.usuario.foguinhos = (state.usuario.foguinhos || 0) + custo;
-    state.carrinho = state.carrinho.filter((_, i) => i !== index);
-
-    // Notificação de sucesso unificada
-    showToast(`Item removido (+${custo} 🔥)`, 'sucesso');
-
-    // Re-renderiza o app para atualizar os badges
-    renderApp();
-
-} catch (error) {
-    console.error('Erro ao remover do carrinho:', error);
-    // Notificação de erro unificada
-    showToast('Erro ao remover item. Tente novamente.', 'erro');
-}
+state.carrinho = state.carrinho.filter((_, i) => i !== index);
+showToast(`Item removido do carrinho${momentoRemovido ? ` (${momentoRemovido.emoji || ''} ${momentoRemovido?.nome || ''})` : ''}.`, 'sucesso');
+renderApp();
 }
 
     async function desparearParceiro() {
         if (confirm('Tem certeza que deseja desfazer o pareamento? Isso irá resetar os foguinhos de ambos os usuários para 0.')) {
             try {
-                const usuarioUid = state.usuario.uid;
-                const usuarioTelefone = state.usuario.telefone;
-                const parceiroTelefone = state.parceiroCodigo;
-
-                // 1. Encontrar o UID do parceiro pelo telefone
-                let parceiroUid = null;
-                const parceiroQuery = await db.collection('usuarios').where('telefone', '==', parceiroTelefone).limit(1).get();
-                if (!parceiroQuery.empty) {
-                    parceiroUid = parceiroQuery.docs[0].id;
+                // Ao invés de tentar atualizar `usuarios` diretamente (que viola
+                // regras de segurança para campos sensíveis), criaremos um
+                // input que o backend processará com privilégios de Admin.
+                // Use o uid do usuário autenticado no Auth (mais seguro)
+                const currentUser = auth.currentUser;
+                if (!currentUser) {
+                    throw new Error('Usuário não autenticado. Faça login antes de desfazer o pareamento.');
                 }
+                const usuarioUid = currentUser.uid;
+                const parceiroTelefone = state.parceiroCodigo || null;
+                const parceiroUid = state.usuario.pareadoUid || (state.parceiroData && state.parceiroData.uid) || null;
 
-                const batch = db.batch();
-
-                // 2. Remover pareamento do usuário atual no Firestore e resetar foguinhos
-                const userDocRef = db.collection('usuarios').doc(usuarioUid);
-                batch.update(userDocRef, {
-                    pareadoCom: firebase.firestore.FieldValue.delete(),
-                    foguinhos: 0,
-                    lastCheckInDate: null
+                // Cria um input 'pairing_unpair' para o backend processar a
+                // operação com privilégios administrativos.
+                await safeAddInput({
+                    type: 'pairing_unpair',
+                    fromUid: usuarioUid,
+                    partnerUid: parceiroUid || null,
+                    partnerPhone: parceiroTelefone || null,
                 });
 
-                // 3. Remover pareamento do parceiro (se o UID for encontrado) e resetar foguinhos
-                if (parceiroUid) {
-                    const parceiroDocRef = db.collection('usuarios').doc(parceiroUid);
-                    batch.update(parceiroDocRef, {
-                        pareadoCom: firebase.firestore.FieldValue.delete(),
-                        foguinhos: 0,
-                        lastCheckInDate: null
-                    });
-                }
-
-                // 4. Remover documento da coleção 'pareamentos'
-                const telefonesOrdenados = [usuarioTelefone, parceiroTelefone].sort();
-                // Garante que o ID do documento é limpo de caracteres não numéricos também
-                const idPareamento = telefonesOrdenados.map(tel => tel.replace(/\D/g, '')).join('_');
-                const pareamentoDocRef = db.collection('pareamentos').doc(idPareamento);
-                batch.delete(pareamentoDocRef);
-
-                // 5. Limpar quaisquer solicitações de pareamento pendentes entre os dois
-                const request1Id = [usuarioUid, parceiroUid].sort().join('_');
-                const requestDocRef = db.collection('pairingRequests').doc(request1Id);
-                batch.delete(requestDocRef); // Tenta deletar se existir
-                
-                await batch.commit(); // Executa todas as operações em um lote
-
-                // Resetar estado local
+                // Atualização otimista da UI (será corrigida pelo ouvinte do
+                // documento do usuário assim que o backend aplicar as mudanças).
                 state.pareado = false;
                 state.parceiroCodigo = null;
                 state.parceiroTelefone = null;
                 state.parceiroNome = null;
                 state.showPartnerInfo = false;
                 state.usuario.pareadoCom = null;
-                state.usuario.foguinhos = 0;
-                state.usuario.lastCheckInDate = null;
+                state.usuario.pareadoUid = null;
                 state.carrinho = [];
                 state.showCartSidebar = false;
-                alert('Pareamento desfeito com sucesso! Foguinhos resetados para ambos.');
-                renderApp(); // Re-renderiza a tela principal
+                state.pareado = false;
+                state.idPareamentoAmigavel = null;
+                showToast('Solicitação de desfazer pareamento enviada. Aguardando processamento...', 'sucesso');
+                renderApp();
 
             } catch (error) {
-                console.error('Erro ao desfazer pareamento:', error);
-                alert('Erro ao desfazer pareamento. Tente novamente.');
+                console.error('Erro ao desfazer pareamento (criando input):', error);
+                if (error && error.message && error.message.toLowerCase().includes('autenticado')) {
+                    alert(error.message);
+                } else if (error && error.code === 'permission-denied') {
+                    alert('Permissão negada: sua sessão expirou ou você não está autenticado. Faça login novamente.');
+                } else {
+                    alert('Erro ao desfazer pareamento. Tente novamente.');
+                }
             }
         }
     }
@@ -1917,57 +1875,32 @@ try {
         return;
     }
 
+    if (!state.usuario || !state.usuario.pareadoUid) {
+        showToast('Erro: parceiro pareado não encontrado.', 'erro');
+        return;
+    }
+
     try {
-        // 2. Buscar o UID do parceiro
-        const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
-        if (parceiroQuery.empty) {
-            showToast('Erro: Parceiro não foi encontrado para notificar.', 'erro');
-            return;
-        }
-        const parceiroUid = parceiroQuery.docs[0].id;
-        const parceiroNome = state.parceiroData.nome;
+        const payload = {
+            type: 'moment_redeem',
+            fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+            partnerUid: state.usuario.pareadoUid,
+            pareamentoId: state.idPareamentoAmigavel || '',
+            items: state.carrinho.map(item => ({
+                nome: item.nome,
+                emoji: item.emoji || '',
+                categoria: item.categoria || 'Geral',
+                custoFoguinhos: item.custoFoguinhos,
+                img: item.img || '',
+            })),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        };
 
-        // 3. Usar um "batch" para as TAREFAS
-        const batch = db.batch();
+        await safeAddInput(payload);
 
-        // 4. Loop para criar TAREFAS e NOTIFICAÇÕES
-        //    (Mudamos de forEach para for...of para usar 'await' dentro)
-        for (const momento of state.carrinho) {
-            
-            // --- PARTE 1: Cria a TAREFA (como antes) ---
-            const tarefaRef = db.collection('tarefasMomentos').doc(); 
-            const novaTarefa = {
-                momentoNome: momento.nome,
-                momentoEmoji: momento.emoji || '🛍️',
-                momentoCategoria: momento.categoria || 'Geral',
-                status: 'Pendente',
-                dataResgate: firebase.firestore.FieldValue.serverTimestamp(),
-                dataConclusao: null,
-                idPareamento: state.idPareamentoAmigavel,
-                resgatadoPorUid: state.usuario.uid,
-                resgatadoPorNome: state.usuario.nome,
-                executadoPorUid: parceiroUid,
-                executadoPorNome: parceiroNome 
-            };
-            // Adiciona a tarefa ao "pacote"
-            batch.set(tarefaRef, novaTarefa);
-
-            // --- PARTE 2: Cria a NOTIFICAÇÃO (PARA FAZER A BOLINHA VOLTAR) ---
-            await criarNotificacao(
-                parceiroUid, // Para quem é a notificação
-                'Momento Resgatado!', // Título
-                `${state.usuario.nome} resgatou o momento "${momento.nome}"!`, // Mensagem
-                'fa-shopping-bag' // Ícone (usamos 'sacola' para diferenciar de 'presente')
-            );
-        }
-
-        // 5. Envia todas as TAREFAS de uma vez para o Firestore
-        await batch.commit();
-
-        // 6. Mensagem de sucesso
         const totalItens = state.carrinho.length;
         const plural = totalItens > 1 ? 's' : '';
-        showToast(`Momento${plural} resgatado${plural} com sucesso!`, 'sucesso');
+        showToast(`Pedido enviado! ${totalItens} momento${plural} aguardando confirmação.`, 'sucesso');
 
         // 7. Limpa o carrinho e atualiza a interface
         state.carrinho = [];
@@ -2384,7 +2317,17 @@ try {
     const userDoc = await db.collection('usuarios').doc(uid).get();
     if (userDoc.exists) {
         state.usuario = { uid: uid, email: email, ...userDoc.data() };
-        state.pareado = !!state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_');
+        state.usuario.pareadoUid = state.usuario.pareadoUid || null;
+
+        const hasPairUid = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
+        const hasPairPhone = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
+        state.pareado = hasPairUid || hasPairPhone;
+
+        state.parceiroCodigo = state.usuario.pareadoCom || null;
+        state.parceiroData = null;
+        state.parceiroNome = null;
+        state.parceiroTelefone = null;
+        state.idPareamentoAmigavel = null;
 
         // >>> LIGA O OUVINTE DE NOTIFICAÇÕES AQUI <<<
         setupNotificationListener(uid);
@@ -2392,48 +2335,110 @@ try {
         // LIGA O OUVINTE DE NOTIFICAÇÕES PUSH EM PRIMEIRO PLANO
         setupForegroundMessageHandler();
 
-        if (state.pareado) {
-            state.parceiroCodigo = state.usuario.pareadoCom;
-            const parceiroQuery = await db.collection('usuarios').where('telefone', '==', state.parceiroCodigo).limit(1).get();
-            
-            if (!parceiroQuery.empty) {
-                state.parceiroData = parceiroQuery.docs[0].data();
-                state.parceiroNome = state.parceiroData.nome;
-                state.parceiroTelefone = '55' + state.parceiroData.telefone.replace(/\D/g, '');
-                console.log('Dados completos do parceiro carregados:', state.parceiroData);
+        if (state.pareado && state.usuario.pareadoUid) {
+            const parceiroSnap = await db.collection('usuarios').doc(state.usuario.pareadoUid).get();
+            if (parceiroSnap.exists) {
+                const parceiroData = { uid: parceiroSnap.id, ...parceiroSnap.data() };
+                state.parceiroData = parceiroData;
+                state.parceiroNome = parceiroData.nome;
+                state.parceiroCodigo = parceiroData.telefone || state.parceiroCodigo;
+                if (parceiroData.telefone) {
+                    state.parceiroTelefone = '55' + parceiroData.telefone.replace(/\D/g, '');
+                }
+
+                const telefoneUsuario = state.usuario.telefone ? state.usuario.telefone.replace(/\D/g, '') : null;
+                const telefoneParceiro = parceiroData.telefone ? parceiroData.telefone.replace(/\D/g, '') : null;
+                if (telefoneUsuario && telefoneParceiro) {
+                    const telefonesOrdenados = [telefoneUsuario, telefoneParceiro].sort();
+                    const idPareamentoDoc = telefonesOrdenados.join('_');
+                    const pareamentoDoc = await db.collection('pareamentos').doc(idPareamentoDoc).get();
+                    if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
+                        state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
+                        console.log('ID Amigável carregado:', state.idPareamentoAmigavel);
+                    }
+                }
             } else {
                 console.warn('Parceiro pareado não encontrado no Firestore.');
                 state.pareado = false;
-                state.parceiroData = null;
+                state.usuario.pareadoUid = null;
             }
+        }
 
-            if (state.parceiroData) {
-                const telefones = [state.usuario.telefone, state.parceiroData.telefone].sort();
-                const cleanTelefones = telefones.map(tel => tel.replace(/\D/g, ''));
-                const idPareamento = cleanTelefones.join('_');
-                const pareamentoDoc = await db.collection('pareamentos').doc(idPareamento).get();
-                if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
-                    state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
-                    console.log('ID Amigável carregado:', state.idPareamentoAmigavel);
-                }
-            }
-
-        } else {
+        if (!state.pareado) {
             state.parceiroData = null;
             state.idPareamentoAmigavel = null;
         }
         
-        const pendingRequestQuery = await db.collection('pairingRequests').where('receiverUid', '==', uid).where('status', '==', 'pending').limit(1).get();
-        if (!pendingRequestQuery.empty) {
-            const requestDoc = pendingRequestQuery.docs[0];
-            state.pendingPairingRequest = { id: requestDoc.id, ...requestDoc.data() };
-            state.etapa = 'parear';
-        } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
-            state.etapa = 'parear';
-            state.pendingPairingRequest = null;
-        } else {
-            state.etapa = 'main';
+        // Ouvinte em tempo real: documento do usuário (para refletir mudanças
+        // feitas pelo backend, como remoção de pending quando rejeitado)
+        if (unsubscribeUserDoc) {
+            unsubscribeUserDoc();
+            unsubscribeUserDoc = null;
         }
+        unsubscribeUserDoc = db.collection('usuarios').doc(uid).onSnapshot((doc) => {
+            if (!doc.exists) return;
+            state.usuario = { uid: uid, email: email, ...doc.data() };
+            state.usuario.pareadoUid = state.usuario.pareadoUid || null;
+            const hasUidPair = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
+            const hasPhonePair = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
+            state.pareado = hasUidPair || hasPhonePair;
+            state.parceiroCodigo = state.usuario.pareadoCom || null;
+            if (!state.pareado && (!state.usuario.pareadoCom || !state.usuario.pareadoCom.startsWith('pending_'))) {
+                state.pendingPairingRequest = null;
+                state.parceiroData = null;
+                state.parceiroNome = null;
+                state.parceiroTelefone = null;
+                state.idPareamentoAmigavel = null;
+            }
+
+            if (state.pareado && state.usuario.pareadoUid && (!state.parceiroData || state.parceiroData.uid !== state.usuario.pareadoUid)) {
+                db.collection('usuarios').doc(state.usuario.pareadoUid).get().then(async (partnerSnap) => {
+                    if (partnerSnap.exists) {
+                        const parceiroData = { uid: partnerSnap.id, ...partnerSnap.data() };
+                        state.parceiroData = parceiroData;
+                        state.parceiroNome = parceiroData.nome;
+                        state.parceiroCodigo = parceiroData.telefone || state.usuario.pareadoCom || null;
+                        state.parceiroTelefone = parceiroData.telefone ? '55' + parceiroData.telefone.replace(/\D/g, '') : null;
+
+                        const telefoneUsuario = state.usuario.telefone ? state.usuario.telefone.replace(/\D/g, '') : null;
+                        const telefoneParceiro = parceiroData.telefone ? parceiroData.telefone.replace(/\D/g, '') : null;
+                        if (telefoneUsuario && telefoneParceiro) {
+                            const telefonesOrdenados = [telefoneUsuario, telefoneParceiro].sort();
+                            const idPareamentoDoc = telefonesOrdenados.join('_');
+                            const pareamentoDoc = await db.collection('pareamentos').doc(idPareamentoDoc).get();
+                            if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
+                                state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
+                            }
+                        }
+                    }
+                    renderApp();
+                }).catch((err) => console.error('Erro ao carregar parceiro pareado:', err));
+            }
+            renderApp();
+        });
+
+        // Ouvinte para solicitações pendentes onde este usuário é receiver
+        if (unsubscribePendingPairing) {
+            unsubscribePendingPairing();
+            unsubscribePendingPairing = null;
+        }
+        unsubscribePendingPairing = db.collection('pairingRequests')
+            .where('receiverUid', '==', uid)
+            .where('status', '==', 'pending')
+            .limit(1)
+            .onSnapshot((snap) => {
+                if (!snap.empty) {
+                    const requestDoc = snap.docs[0];
+                    state.pendingPairingRequest = { id: requestDoc.id, ...requestDoc.data() };
+                    state.etapa = 'parear';
+                } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
+                    state.etapa = 'parear';
+                    state.pendingPairingRequest = null;
+                } else {
+                    state.etapa = 'main';
+                }
+                renderApp();
+            });
     } else {
         console.log('Usuário logado via Auth, mas sem documento de perfil no Firestore.');
         state.usuario = { uid: uid, email: email };
