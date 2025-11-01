@@ -1458,10 +1458,17 @@ exports.runPairingTests = https.onRequest(async (req, res) => {
 });
 
 exports.setNotificationToken = https.onRequest(async (req, res) => {
-  const origin = req.get("Origin") || req.get("origin") || "*";
-  res.set("Access-Control-Allow-Origin", origin);
+  const originHeader = req.get("Origin") || req.get("origin") || "*";
+  const allowOrigin = originHeader === "null" ? "*" : originHeader;
+  const requestedHeaders = req.get("Access-Control-Request-Headers");
+
+  res.set("Access-Control-Allow-Origin", allowOrigin);
   res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.set(
+      "Access-Control-Allow-Headers",
+      requestedHeaders || "Authorization, Content-Type",
+  );
+  res.set("Vary", "Origin");
 
   if (req.method === "OPTIONS") {
     res.status(204).send("");

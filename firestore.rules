@@ -38,11 +38,6 @@ service cloud.firestore {
         && request.resource.data.catalogoPersonalizado is map;
 
       allow update: if isOwner(userId)
-        && request.resource.data.keys().hasOnly([
-          'catalogoPersonalizado', 'createdAt', 'email', 'fcmToken', 'foguinhos',
-          'fotoUrl', 'lastCheckInDate', 'nome', 'notificationsEnabled',
-          'pareadoCom', 'pareadoUid', 'sexo', 'telefone'
-        ])
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'catalogoPersonalizado', 'fotoUrl'
