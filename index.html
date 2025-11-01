@@ -367,8 +367,9 @@
     console.log("✅ Firebase: Initialized com sucesso!");
         const db = firebase.firestore();
         const auth = firebase.auth(); // Inicializa o Firebase Auth
-        const storage = firebase.storage();
-        const CREATE_INPUT_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/createInput';
+    const storage = firebase.storage();
+    const CREATE_INPUT_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/createInput';
+    const SET_NOTIFICATION_TOKEN_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/setNotificationToken';
   </script>
 
     <script>
@@ -456,6 +457,7 @@
     etapa: 'landing',
     carrinho: [],
     momentosMestres: [],
+    fcmToken: null,
     codigoUsuario: null,
     codigoDigitando: false,
     parceiroCodigo: null,
@@ -502,6 +504,54 @@ if (type === 'erro') {
 } else if (type === 'aviso') {
     iconClass = 'fa-exclamation-triangle';
     toastClass = 'toast-aviso';
+}
+
+async function syncNotificationToken(payload) {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+        const authError = new Error('auth_required');
+        authError.code = 'auth_required';
+        throw authError;
+    }
+
+    const callBackend = async (forceRefreshToken = false) => {
+        const idToken = await currentUser.getIdToken(forceRefreshToken);
+        const response = await fetch(SET_NOTIFICATION_TOKEN_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        let body = null;
+        try {
+            body = await response.json();
+        } catch (jsonErr) {
+            console.warn('syncNotificationToken: corpo não pôde ser parseado', jsonErr);
+        }
+
+        if (response.ok) {
+            return body || {};
+        }
+
+        const errorCode = body && body.error ? body.error : `http_${response.status}`;
+        const backendError = new Error(errorCode);
+        backendError.code = errorCode;
+        backendError.status = response.status;
+        backendError.details = body;
+        throw backendError;
+    };
+
+    try {
+        return await callBackend(false);
+    } catch (err) {
+        if (err.status === 401 || err.status === 403) {
+            return await callBackend(true);
+        }
+        throw err;
+    }
 }
 
 const toastElement = document.createElement('div');
@@ -629,37 +679,42 @@ if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushMan
 }
 
 try {
-    // ETAPA 1: Registrar explicitamente o Service Worker
-    // Isso garante que o navegador saiba qual arquivo controlar.
     const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
     console.log('Service Worker registrado com sucesso:', registration);
 
     const permission = await Notification.requestPermission();
 
-    if (permission === "granted") {
-        console.log("Permissão de notificação concedida.");
-        showToast("Notificações ativadas!", "sucesso");
-
-        const messaging = firebase.messaging();
-        
-        // ETAPA 2: Obter o token
-        const fcmToken = await messaging.getToken({
-            vapidKey: "BDTOlIk3SKC6BV_MD0Eu2DZfm7rPOnGbz6hvYL1K_3lYnR1YXvO6qbOMuHHzBqzHhtyKw8YJMetHIas4V8wrWpI", // Cole sua VAPID Key aqui novamente
-            serviceWorkerRegistration: registration // Informa ao Firebase qual registro usar
-        });
-
-        if (fcmToken) {
-            console.log("Token do FCM obtido:", fcmToken);
-            await db.collection('usuarios').doc(state.usuario.uid).update({
-                fcmToken: fcmToken
-            });
-        } else {
-            console.log("Não foi possível obter o token do FCM. Tente recarregar a página.");
-        }
-    } else {
+    if (permission !== "granted") {
         console.log("Permissão de notificação negada.");
         showToast("Você não receberá notificações.", "aviso");
+        return;
     }
+
+    console.log("Permissão de notificação concedida.");
+
+    const messaging = firebase.messaging();
+    const fcmToken = await messaging.getToken({
+        vapidKey: "BDTOlIk3SKC6BV_MD0Eu2DZfm7rPOnGbz6hvYL1K_3lYnR1YXvO6qbOMuHHzBqzHhtyKw8YJMetHIas4V8wrWpI",
+        serviceWorkerRegistration: registration
+    });
+
+    if (!fcmToken) {
+        console.log("Não foi possível obter o token do FCM. Tente recarregar a página.");
+        showToast("Não foi possível ativar notificações agora.", "aviso");
+        return;
+    }
+
+    console.log("Token do FCM obtido:", fcmToken);
+    await syncNotificationToken({ token: fcmToken });
+
+    state.fcmToken = fcmToken;
+    if (!state.usuario) {
+        state.usuario = {};
+    }
+    state.usuario.notificationsEnabled = true;
+
+    showToast("Notificações ativadas!", "sucesso");
+    renderApp();
 } catch (error) {
     console.error("Erro detalhado ao solicitar permissão:", error);
     showToast("Erro ao ativar notificações.", "erro");
@@ -684,12 +739,24 @@ try {
         console.log("Assinatura de Push cancelada no navegador.");
     }
 
-    // Remove o token do Firestore para parar de enviar notificações
-    await db.collection('usuarios').doc(state.usuario.uid).update({
-        fcmToken: firebase.firestore.FieldValue.delete()
-    });
+    const tokenParaRemover = state.fcmToken || state.usuario?.fcmToken || null;
+    await syncNotificationToken({ revoke: true, token: tokenParaRemover || undefined });
 
-    console.log("Token FCM removido do Firestore.");
+    if (tokenParaRemover && firebase.messaging && firebase.messaging.isSupported && firebase.messaging.isSupported()) {
+        try {
+            await firebase.messaging().deleteToken(tokenParaRemover);
+            console.log("Token removido do Firebase Messaging neste dispositivo.");
+        } catch (deleteErr) {
+            console.warn("Falha ao remover token local do FCM:", deleteErr);
+        }
+    }
+
+    if (state.usuario) {
+        state.usuario.notificationsEnabled = false;
+    }
+    state.fcmToken = null;
+
+    console.log("Token FCM removido do backend.");
     showToast("Notificações desativadas com sucesso!", 'sucesso');
 
     // Força a re-renderização da página para atualizar o botão
@@ -1329,7 +1396,7 @@ const fotoUrl = state.usuario?.fotoUrl || 'assets/icons/iconprincipal.png';
 
 let notificationButtonHtml = '';
 if (window.Notification) {
-    if (state.usuario && state.usuario.fcmToken && Notification.permission === 'granted') {
+    if (state.usuario && state.usuario.notificationsEnabled && Notification.permission === 'granted') {
         notificationButtonHtml = `
             <button onclick="handleNotificationToggle()" class="mt-4 bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-lg transition">
                 <i class="fas fa-bell-slash"></i> Desativar Notificações
@@ -1538,7 +1605,7 @@ content.classList.toggle('open');
 }
 
 async function handleNotificationToggle() {
-const notificationsActive = state.usuario && state.usuario.fcmToken && Notification.permission === 'granted';
+const notificationsActive = state.usuario && state.usuario.notificationsEnabled && Notification.permission === 'granted';
 
 if (Notification.permission === 'denied') {
     alert("As notificações estão bloqueadas. Você precisa permitir manualmente nas configurações do seu navegador (clicando no ícone de cadeado 🔒 ao lado da URL).");
@@ -2348,7 +2415,8 @@ try {
 
     const userDoc = await db.collection('usuarios').doc(uid).get();
     if (userDoc.exists) {
-        state.usuario = { uid: uid, email: email, ...userDoc.data() };
+    state.usuario = { uid: uid, email: email, ...userDoc.data() };
+    state.usuario.notificationsEnabled = !!state.usuario.notificationsEnabled;
         state.usuario.pareadoUid = state.usuario.pareadoUid || null;
 
         const hasPairUid = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
@@ -2410,6 +2478,7 @@ try {
         unsubscribeUserDoc = db.collection('usuarios').doc(uid).onSnapshot((doc) => {
             if (!doc.exists) return;
             state.usuario = { uid: uid, email: email, ...doc.data() };
+            state.usuario.notificationsEnabled = !!state.usuario.notificationsEnabled;
             state.usuario.pareadoUid = state.usuario.pareadoUid || null;
             const hasUidPair = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
             const hasPhonePair = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));

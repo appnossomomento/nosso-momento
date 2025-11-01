@@ -26,9 +26,9 @@ service cloud.firestore {
 
       allow create: if isOwner(userId)
         && request.resource.data.keys().hasOnly([
-          'catalogoPersonalizado', 'createdAt', 'email', 'foguinhos', 'fotoUrl',
-          'fcmToken', 'lastCheckInDate', 'nome', 'pareadoCom', 'pareadoUid',
-          'sexo', 'telefone'
+          'catalogoPersonalizado', 'createdAt', 'email', 'fcmToken', 'foguinhos',
+          'fotoUrl', 'lastCheckInDate', 'nome', 'notificationsEnabled',
+          'pareadoCom', 'pareadoUid', 'sexo', 'telefone'
         ])
         && request.resource.data.foguinhos is int
         && request.resource.data.foguinhos == 10
@@ -40,12 +40,12 @@ service cloud.firestore {
       allow update: if isOwner(userId)
         && request.resource.data.keys().hasOnly([
           'catalogoPersonalizado', 'createdAt', 'email', 'fcmToken', 'foguinhos',
-          'fotoUrl', 'lastCheckInDate', 'nome', 'pareadoCom', 'pareadoUid', 'sexo',
-          'telefone'
+          'fotoUrl', 'lastCheckInDate', 'nome', 'notificationsEnabled',
+          'pareadoCom', 'pareadoUid', 'sexo', 'telefone'
         ])
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
-          'catalogoPersonalizado', 'fcmToken', 'fotoUrl'
+          'catalogoPersonalizado', 'fotoUrl'
         ])
         && request.resource.data.foguinhos == resource.data.foguinhos
         && request.resource.data.pareadoCom == resource.data.pareadoCom
@@ -62,7 +62,7 @@ service cloud.firestore {
 
     match /notificacoes/{nid} {
       allow get: if isAuthenticated() && resource.data.userId == authUid();
-      allow list: if isAuthenticated();
+      allow list: if isAuthenticated() && resource.data.userId == authUid();
       allow create: if isAuthenticated() && request.resource.data.userId == authUid();
       allow update: if isAuthenticated()
         && resource.data.userId == authUid()
@@ -78,7 +78,10 @@ service cloud.firestore {
         resource.data.receiverUid == authUid()
       );
 
-      allow list: if isAuthenticated();
+      allow list: if isAuthenticated() && (
+        resource.data.senderUid == authUid() ||
+        resource.data.receiverUid == authUid()
+      );
 
       allow create: if isAuthenticated()
         && request.resource.data.senderUid == authUid()
@@ -111,7 +114,10 @@ service cloud.firestore {
         resource.data.executadoPorUid == authUid()
       );
 
-      allow list: if isAuthenticated();
+      allow list: if isAuthenticated() && (
+        resource.data.executadoPorUid == authUid() ||
+        resource.data.resgatadoPorUid == authUid()
+      );
 
       allow update: if isAuthenticated()
         && (
@@ -131,6 +137,10 @@ service cloud.firestore {
     match /momentosMestres/{mid} {
       allow read: if true;
       allow write: if false;
+    }
+
+    match /userNotificationTokens/{uid} {
+      allow read, write: if false;
     }
 
     match /{document=**} {

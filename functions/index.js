@@ -96,37 +96,77 @@ exports.enviarNotificacaoPush = onDocumentCreated(
 
       console.log("Nova notificação para o usuário:", userId, titulo);
 
-      const userDoc = await admin
-          .firestore()
-          .collection("usuarios")
-          .doc(userId)
-          .get();
+      const db = admin.firestore();
+      const userDoc = await db.collection("usuarios").doc(userId).get();
 
       if (!userDoc.exists) {
         console.error(`Usuário ${userId} não encontrado no Firestore.`);
         return;
       }
 
-      const fcmToken = userDoc.data().fcmToken;
-      if (!fcmToken) {
-        console.log(`Usuário ${userId} não tem token FCM para notificar.`);
+      const tokensDoc = await db
+          .collection("userNotificationTokens")
+          .doc(userId)
+          .get();
+
+      let tokens = [];
+      if (tokensDoc.exists) {
+        const docData = tokensDoc.data() || {};
+        if (Array.isArray(docData.tokens)) {
+          tokens = docData.tokens.filter((token) =>
+            typeof token === "string" && token.length > 0,
+          );
+        } else if (
+          typeof docData.token === "string" &&
+          docData.token.length > 0
+        ) {
+          tokens = [docData.token];
+        }
+      }
+
+      if (!tokens.length) {
+        console.log(
+            `Usuário ${userId} não possui tokens de notificação válidos.`,
+        );
         return;
       }
 
-      // ===== AQUI ESTÁ A CORREÇÃO =====
-      const payload = {
+      const message = {
+        tokens,
         data: {
-          title: titulo,
-          body: mensagem,
+          title: titulo || "",
+          body: mensagem || "",
           icon: "/assets/icons/favicon.png",
         },
-        token: fcmToken,
       };
-      // =================================
 
       try {
-        const response = await admin.messaging().send(payload);
-        console.log("Notificação Push enviada com sucesso:", response);
+        const response = await admin.messaging().sendEachForMulticast(message);
+        console.log("Notificação Push enviada:", {
+          successCount: response.successCount,
+          failureCount: response.failureCount,
+        });
+
+        const invalidTokens = [];
+        response.responses.forEach((resp, index) => {
+          if (!resp.success) {
+            const errorCode = resp.error && resp.error.code;
+            console.error("Erro ao enviar push:", errorCode, resp.error);
+            if (errorCode === "messaging/registration-token-not-registered" ||
+                errorCode === "messaging/invalid-registration-token") {
+              invalidTokens.push(tokens[index]);
+            }
+          }
+        });
+
+        if (invalidTokens.length) {
+          await tokensDoc.ref.update({
+            tokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }).catch((updateErr) => {
+            console.error("Falha ao remover tokens inválidos:", updateErr);
+          });
+        }
       } catch (error) {
         console.error("Erro ao enviar notificação Push:", error);
       }
@@ -1414,6 +1454,143 @@ exports.runPairingTests = https.onRequest(async (req, res) => {
   } catch (err) {
     console.error("runPairingTests error:", err);
     res.status(500).send({error: String(err)});
+  }
+});
+
+exports.setNotificationToken = https.onRequest(async (req, res) => {
+  const origin = req.get("Origin") || req.get("origin") || "*";
+  res.set("Access-Control-Allow-Origin", origin);
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+
+  if (req.method !== "POST") {
+    res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  const authHeader = req.get("Authorization") || req.get("authorization") || "";
+  let idToken = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    idToken = authHeader.split("Bearer ")[1];
+  }
+
+  if (!idToken) {
+    res.status(401).send({error: "missing_id_token"});
+    return;
+  }
+
+  const body = req.body || {};
+  const rawToken = typeof body.token === "string" ?
+    body.token.trim() :
+    "";
+  const revoke = body.revoke === true;
+
+  if (!revoke && rawToken.length < 10) {
+    res.status(400).send({error: "invalid_token_value"});
+    return;
+  }
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+    const db = admin.firestore();
+    const userRef = db.collection("usuarios").doc(uid);
+    const tokensRef = db.collection("userNotificationTokens").doc(uid);
+
+    await db.runTransaction(async (tx) => {
+      const userSnap = await tx.get(userRef);
+      if (!userSnap.exists) {
+        throw new Error("user_not_found");
+      }
+
+      const tokensSnap = await tx.get(tokensRef);
+      let tokens = [];
+      if (tokensSnap.exists) {
+        const data = tokensSnap.data() || {};
+        if (Array.isArray(data.tokens)) {
+          tokens = data.tokens.filter((token) =>
+            typeof token === "string" && token.length > 0,
+          );
+        } else if (
+          typeof data.token === "string" &&
+          data.token.length > 0
+        ) {
+          tokens = [data.token];
+        }
+      }
+
+      const hadLegacyToken = Object.prototype.hasOwnProperty.call(
+          userSnap.data() || {},
+          "fcmToken",
+      );
+
+      if (revoke) {
+        let updatedTokens = tokens;
+        if (rawToken) {
+          updatedTokens = tokens.filter((token) => token !== rawToken);
+        } else {
+          updatedTokens = [];
+        }
+
+        if (updatedTokens.length) {
+          tx.set(tokensRef, {
+            tokens: updatedTokens,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, {merge: true});
+        } else if (tokensSnap.exists) {
+          tx.delete(tokensRef);
+        }
+
+        const userUpdates = {
+          notificationsEnabled: updatedTokens.length > 0,
+        };
+        if (!updatedTokens.length && hadLegacyToken) {
+          userUpdates.fcmToken = admin.firestore.FieldValue.delete();
+        }
+        tx.set(userRef, userUpdates, {merge: true});
+      } else {
+        const updatedSet = new Set(tokens);
+        updatedSet.add(rawToken);
+
+        if (updatedSet.size > 10) {
+          throw new Error("too_many_tokens");
+        }
+
+        tx.set(tokensRef, {
+          tokens: Array.from(updatedSet),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, {merge: true});
+        const userUpdates = {
+          notificationsEnabled: true,
+        };
+        if (hadLegacyToken) {
+          userUpdates.fcmToken = admin.firestore.FieldValue.delete();
+        }
+        tx.set(userRef, userUpdates, {merge: true});
+      }
+    });
+
+    res.send({ok: true});
+  } catch (err) {
+    console.error("setNotificationToken error:", err);
+    if (err.message === "user_not_found") {
+      res.status(404).send({error: "user_not_found"});
+      return;
+    }
+    if (err.message === "too_many_tokens") {
+      res.status(400).send({error: "too_many_tokens"});
+      return;
+    }
+    if (err.code === "auth/argument-error") {
+      res.status(401).send({error: "invalid_token"});
+      return;
+    }
+    res.status(500).send({error: "internal_error"});
   }
 });
 
