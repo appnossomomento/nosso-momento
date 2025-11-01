@@ -492,85 +492,84 @@ let unsubscribePendingPairing = null;
     }
 
     function showToast(message, type = 'sucesso') {
-const container = document.getElementById('toast-container');
-if (!container) return;
+        const container = document.getElementById('toast-container');
+        if (!container) return;
 
-let iconClass = 'fa-check-circle';
-let toastClass = 'toast-sucesso';
+        let iconClass = 'fa-check-circle';
+        let toastClass = 'toast-sucesso';
 
-if (type === 'erro') {
-    iconClass = 'fa-times-circle';
-    toastClass = 'toast-erro';
-} else if (type === 'aviso') {
-    iconClass = 'fa-exclamation-triangle';
-    toastClass = 'toast-aviso';
-}
+        if (type === 'erro') {
+            iconClass = 'fa-times-circle';
+            toastClass = 'toast-erro';
+        } else if (type === 'aviso') {
+            iconClass = 'fa-exclamation-triangle';
+            toastClass = 'toast-aviso';
+        }
 
-async function syncNotificationToken(payload) {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-        const authError = new Error('auth_required');
-        authError.code = 'auth_required';
-        throw authError;
+        const toastElement = document.createElement('div');
+        toastElement.className = `toast ${toastClass}`;
+        toastElement.innerHTML = `
+            <i class="fas ${iconClass} toast-icon"></i>
+            <span>${message}</span>
+        `;
+
+        container.appendChild(toastElement);
+
+        setTimeout(() => {
+            toastElement.classList.add('exiting');
+            setTimeout(() => {
+                toastElement.remove();
+            }, 500);
+        }, 2000);
     }
 
-    const callBackend = async (forceRefreshToken = false) => {
-        const idToken = await currentUser.getIdToken(forceRefreshToken);
-        const response = await fetch(SET_NOTIFICATION_TOKEN_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}`,
-            },
-            body: JSON.stringify(payload),
-        });
+    async function syncNotificationToken(payload) {
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            const authError = new Error('auth_required');
+            authError.code = 'auth_required';
+            throw authError;
+        }
 
-        let body = null;
+        const callBackend = async (forceRefreshToken = false) => {
+            const idToken = await currentUser.getIdToken(forceRefreshToken);
+            const response = await fetch(SET_NOTIFICATION_TOKEN_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            let body = null;
+            try {
+                body = await response.json();
+            } catch (jsonErr) {
+                console.warn('syncNotificationToken: corpo não pôde ser parseado', jsonErr);
+            }
+
+            if (response.ok) {
+                return body || {};
+            }
+
+            const errorCode = body && body.error ? body.error : `http_${response.status}`;
+            const backendError = new Error(errorCode);
+            backendError.code = errorCode;
+            backendError.status = response.status;
+            backendError.details = body;
+            throw backendError;
+        };
+
         try {
-            body = await response.json();
-        } catch (jsonErr) {
-            console.warn('syncNotificationToken: corpo não pôde ser parseado', jsonErr);
+            return await callBackend(false);
+        } catch (err) {
+            if (err.status === 401 || err.status === 403) {
+                return await callBackend(true);
+            }
+            throw err;
         }
-
-        if (response.ok) {
-            return body || {};
-        }
-
-        const errorCode = body && body.error ? body.error : `http_${response.status}`;
-        const backendError = new Error(errorCode);
-        backendError.code = errorCode;
-        backendError.status = response.status;
-        backendError.details = body;
-        throw backendError;
-    };
-
-    try {
-        return await callBackend(false);
-    } catch (err) {
-        if (err.status === 401 || err.status === 403) {
-            return await callBackend(true);
-        }
-        throw err;
     }
-}
-
-const toastElement = document.createElement('div');
-toastElement.className = `toast ${toastClass}`;
-toastElement.innerHTML = `
-    <i class="fas ${iconClass} toast-icon"></i>
-    <span>${message}</span>
-`;
-
-container.appendChild(toastElement);
-
-// DURAÇÃO ALTERADA AQUI
-setTimeout(() => {
-    toastElement.classList.add('exiting');
-    setTimeout(() => {
-        toastElement.remove();
-    }, 500);
-}, 2000); // <-- Alterado de 4000 para 2000 (2 segundos)
-}
     // --- Funções de Renderização das Etapas ---
     // Apenas o conteúdo DENTRO da #app será renderizado por estas funções
 
