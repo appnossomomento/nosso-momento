@@ -1309,7 +1309,7 @@ appContainer.innerHTML = `
                             <button onclick='adicionarAoCarrinho(${JSON.stringify(momentoParaCarrinho).replace(/"/g, "&quot;")})'
                                 class="text-sm px-4 py-2 rounded-lg transition ${bloqueado ? 'bg-gray-700 cursor-not-allowed' : 'bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white'}"
                                 ${bloqueado ? 'disabled' : ''}>
-                                ${bloqueado ? 'Block' : 'Resgatar'}
+                                ${bloqueado ? '🔒' : 'Resgatar'}
                             </button>
                         </div>
                     </div>
