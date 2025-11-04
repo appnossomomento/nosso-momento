@@ -335,6 +335,26 @@
 
   gtag('config', 'G-556FY0WV3Q');
 </script>
+<script>
+      gtag('config', 'G-556FY0WV3Q');
+    </script>
+
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1883535982201745');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1883535982201745&ev=PageView&noscript=1"
+    /></noscript>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 </head>
 <body class="bg-black text-white font-sans">
     <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800" style="display: none;">
@@ -547,6 +567,24 @@ let unsubscribePendingPairing = null;
             gtag('event', eventName, eventParams);
         } else {
             console.warn(`gtag() não definido. Evento "${eventName}" não rastreado.`);
+        }
+    }
+
+    // ==========================================================
+    // COLE ESTA NOVA FUNÇÃO AQUI (LOGO ABAIXO DA ANTERIOR)
+    // ==========================================================
+    /**
+     * Envia um evento customizado para o Meta Pixel.
+     * @param {string} eventName O nome do evento (ex: 'CompleteRegistration', 'Purchase').
+     * @param {Object} [eventParams={}] Parâmetros adicionais (ex: { value: 10, currency: 'BRL' }).
+     */
+    function trackMetaEvent(eventName, eventParams = {}) {
+        // Verifica se a função fbq() está disponível
+        if (typeof fbq === 'function') {
+            console.log(`Meta Event: ${eventName}`, eventParams);
+            fbq('track', eventName, eventParams);
+        } else {
+            console.warn(`fbq() não definido. Evento "${eventName}" não rastreado.`);
         }
     }
 
@@ -836,6 +874,7 @@ try {
     await safeAddInput(inputData);
 
     trackGAEvent('initiate_pairing');
+    trackMetaEvent('InitiatePairing');
 
     // Atualiza apenas o estado local/imediato do sender; o backend atualizará
     // os documentos reais quando processar o input.
@@ -1591,6 +1630,7 @@ try {
     state.usuario.catalogoPersonalizado = novoCatalogo;
 
     trackGAEvent('customize_catalog');
+    trackMetaEvent('CustomizeProduct');
 
     // 7. Damos um feedback de sucesso.
     alert('Seu catálogo foi salvo com sucesso!');
@@ -1801,6 +1841,7 @@ uploadTask.on('state_changed',
             await loadUserDataAndNavigate(user.uid, user.email);
 
             trackGAEvent('login', { method: 'Email' });
+            trackMetaEvent('Login');
 
         } catch (error) {
             console.error('Erro no login:', error.code, error.message);
@@ -1860,6 +1901,7 @@ try {
     console.log("Dados do usuário salvos com sucesso no Firestore!");
 
     trackGAEvent('sign_up');
+    trackMetaEvent('CompleteRegistration');
 
     // Atualiza o estado local com os dados do novo usuário
     state.usuario = {
@@ -1942,6 +1984,7 @@ try {
     });
 
     trackGAEvent('gift_foguinho');
+    trackMetaEvent('GiftFoguinho');
 
     showToast(`Presente enviado!`, 'sucesso');
 } catch (error) {
@@ -1995,6 +2038,15 @@ trackGAEvent('add_to_cart', {
                 quantity: 1
             }]
         });
+
+trackMetaEvent('AddToCart', {
+            currency: 'BRL', // A Meta prefere moedas reais, mas podemos ajustar se necessário.
+            value: 0, // Como é moeda virtual, o valor monetário é 0
+            content_name: momento.nome,
+            content_ids: [momento.nome.replace(/\s+/g, '_')],
+            content_type: 'product'
+        });
+
 showToast(`${momento.nome} adicionado ao carrinho!`, 'sucesso');
 renderApp();
 }
@@ -2105,6 +2157,16 @@ renderApp();
             quantity: 1
         }))
     });
+
+    trackMetaEvent('Purchase', {
+        currency: 'BRL', // A Meta prefere moedas reais
+        value: 0, // O valor monetário é 0, pois é moeda virtual
+        content_ids: state.carrinho.map(item => item.nome.replace(/\s+/g, '_')),
+        content_name: state.carrinho.map(item => item.nome).join(', '),
+        content_type: 'product',
+        num_items: state.carrinho.length
+    });
+
         const totalItens = state.carrinho.length;
         const plural = totalItens > 1 ? 's' : '';
         showToast(`Pedido enviado! ${totalItens} momento${plural} aguardando confirmação.`, 'sucesso');
@@ -2349,6 +2411,13 @@ async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
                 quantity: 1
             }]
         });
+
+        trackMetaEvent('CompleteMoment', {
+        currency: 'BRL',
+        value: 0,
+        content_name: momentoNome || 'unknown',
+        content_ids: [(momentoNome || 'unknown').replace(/\s+/g, '_')]
+    });
         // ==========================================================
 
         showToast("Momento confirmado com sucesso!", "sucesso");
