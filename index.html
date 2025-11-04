@@ -532,6 +532,24 @@ let unsubscribePendingPairing = null;
         }, 2000);
     }
 
+// ==========================================================
+    // NOVA FUNÇÃO DE RASTREAMENTO (ANALYTICS)
+    // ==========================================================
+    /**
+     * Envia um evento customizado para o Google Analytics (GA4).
+     * @param {string} eventName O nome do evento (ex: 'sign_up', 'purchase_moment').
+     * @param {Object} [eventParams={}] Parâmetros adicionais (ex: { value: 10, currency: 'BRL' }).
+     */
+    function trackGAEvent(eventName, eventParams = {}) {
+        // Verifica se a função gtag() está disponível
+        if (typeof gtag === 'function') {
+            console.log(`GA Event: ${eventName}`, eventParams);
+            gtag('event', eventName, eventParams);
+        } else {
+            console.warn(`gtag() não definido. Evento "${eventName}" não rastreado.`);
+        }
+    }
+
     async function syncNotificationToken(payload) {
         const currentUser = auth.currentUser;
         if (!currentUser) {
@@ -816,6 +834,8 @@ try {
 
     // Cria um input para o backend processar a solicitação de pareamento.
     await safeAddInput(inputData);
+
+    trackGAEvent('initiate_pairing');
 
     // Atualiza apenas o estado local/imediato do sender; o backend atualizará
     // os documentos reais quando processar o input.
@@ -1570,6 +1590,8 @@ try {
     // 6. Atualizamos o estado local para manter tudo sincronizado.
     state.usuario.catalogoPersonalizado = novoCatalogo;
 
+    trackGAEvent('customize_catalog');
+
     // 7. Damos um feedback de sucesso.
     alert('Seu catálogo foi salvo com sucesso!');
     console.log('Catálogo salvo no Firestore:', novoCatalogo);
@@ -1778,6 +1800,8 @@ uploadTask.on('state_changed',
 
             await loadUserDataAndNavigate(user.uid, user.email);
 
+            trackGAEvent('login', { method: 'Email' });
+
         } catch (error) {
             console.error('Erro no login:', error.code, error.message);
             let errorMessage = 'Erro ao fazer login. Verifique seu email e senha.';
@@ -1834,6 +1858,8 @@ try {
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     console.log("Dados do usuário salvos com sucesso no Firestore!");
+
+    trackGAEvent('sign_up');
 
     // Atualiza o estado local com os dados do novo usuário
     state.usuario = {
@@ -1915,6 +1941,8 @@ try {
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
+    trackGAEvent('gift_foguinho');
+
     showToast(`Presente enviado!`, 'sucesso');
 } catch (error) {
     console.error('Erro ao realizar Presentear (Check-in) diário:', error);
@@ -1956,6 +1984,17 @@ if (saldoDisponivel < custo) {
 }
 
 state.carrinho = [...state.carrinho, momento];
+trackGAEvent('add_to_cart', {
+            currency: 'FOG', // Moeda customizada "Foguinhos"
+            value: momento.custoFoguinhos,
+            items: [{
+                item_id: momento.nome.replace(/\s+/g, '_'), // ID do item (nome sem espaços)
+                item_name: momento.nome,
+                item_category: momento.categoria,
+                price: momento.custoFoguinhos,
+                quantity: 1
+            }]
+        });
 showToast(`${momento.nome} adicionado ao carrinho!`, 'sucesso');
 renderApp();
 }
@@ -2054,6 +2093,18 @@ renderApp();
 
         await safeAddInput(payload);
 
+        const totalCost = state.carrinho.reduce((sum, item) => sum + item.custoFoguinhos, 0);
+    trackGAEvent('purchase', {
+        currency: 'FOG', // Moeda customizada "Foguinhos"
+        value: totalCost,
+        items: state.carrinho.map(item => ({
+            item_id: item.nome.replace(/\s+/g, '_'),
+            item_name: item.nome,
+            item_category: item.categoria,
+            price: item.custoFoguinhos,
+            quantity: 1
+        }))
+    });
         const totalItens = state.carrinho.length;
         const plural = totalItens > 1 ? 's' : '';
         showToast(`Pedido enviado! ${totalItens} momento${plural} aguardando confirmação.`, 'sucesso');
@@ -2244,7 +2295,7 @@ renderApp();
                         
                         ${(abaAtiva === 'enviados' && isPendente) ? `
                             <button 
-                                onclick="handleDarCheck('${tarefa.id}')"
+                                onclick="handleDarCheck('${tarefa.id}', '${tarefa.momentoNome}', ${tarefa.custoFoguinhos || 0})"
                                 class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
                                 
                                 <i class="fas fa-check"></i> Realizado
@@ -2269,7 +2320,7 @@ function trocarAbaTarefas(aba) {
     }
 }
 
-async function handleDarCheck(tarefaId) {
+async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
     if (!tarefaId) {
         console.error("ID da tarefa não fornecido.");
         return;
@@ -2288,10 +2339,22 @@ async function handleDarCheck(tarefaId) {
             dataConclusao: firebase.firestore.FieldValue.serverTimestamp()
         });
 
+        trackGAEvent('complete_moment', {
+            currency: 'FOG',
+            value: custoFoguinhos,
+            items: [{
+                item_id: (momentoNome || 'unknown').replace(/\s+/g, '_'),
+                item_name: momentoNome || 'unknown',
+                price: custoFoguinhos,
+                quantity: 1
+            }]
+        });
+        // ==========================================================
+
         showToast("Momento confirmado com sucesso!", "sucesso");
         
         // Re-renderiza a tela para mostrar a mudança de status
-        renderNossasTarefas(); 
+        renderNossasTarefas();
 
     } catch (error) {
         console.error("Erro ao confirmar tarefa:", error);
