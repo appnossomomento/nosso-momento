@@ -230,7 +230,7 @@
         }
 
 .accordion-content.open {
-    max-height: 1000px; /* Um valor alto para permitir que o conteúdo se expanda */
+    overflow: visible;
 }
 .accordion-button.open i {
     transform: rotate(180deg);
@@ -1573,18 +1573,32 @@ try {
 
 async function carregarMomentosMestres() {
     console.log("Buscando momentos mestres no Firestore...");
-    
-    // 1. Limpa a lista local (caso seja um recarregamento)
-    state.momentosMestres = []; 
+
+    state.momentosMestres = [];
 
     try {
         const querySnapshot = await db.collection('momentosMestres')
             .orderBy('nome') // Opcional: ordenar por nome
             .get();
-        
+
+        const momentosPorChave = new Map();
+
         querySnapshot.forEach(doc => {
-            state.momentosMestres.push(doc.data());
+            const data = { id: doc.id, ...doc.data() };
+            if (!data || !data.nome) {
+                console.warn('Documento de momento sem nome ignorado:', doc.id);
+                return;
+            }
+            const dedupeKey = `${data.nome}::${data.targetGender || 'any'}`;
+            if (!momentosPorChave.has(dedupeKey)) {
+                momentosPorChave.set(dedupeKey, data);
+            } else {
+                const existente = momentosPorChave.get(dedupeKey);
+                console.warn('Momento duplicado detectado no Firestore:', dedupeKey, 'doc existente:', existente.id, 'doc ignorado:', doc.id);
+            }
         });
+
+        state.momentosMestres = Array.from(momentosPorChave.values());
 
         // 2. Confirmação no console para nosso teste
         console.log(`✅ Sucesso: ${state.momentosMestres.length} momentos mestres carregados.`);
@@ -1599,8 +1613,43 @@ async function carregarMomentosMestres() {
 
 function toggleAccordion(buttonElement) {
 const content = buttonElement.nextElementSibling;
+const isOpening = !content.classList.contains('open');
+
 buttonElement.classList.toggle('open');
 content.classList.toggle('open');
+
+const finalizeTransition = (event) => {
+    if (event.target !== content || event.propertyName !== 'max-height') return;
+    if (content.classList.contains('open')) {
+        content.style.maxHeight = 'none';
+        content.style.overflow = 'visible';
+    } else {
+        content.style.maxHeight = '0';
+        content.style.overflow = 'hidden';
+    }
+    content.removeEventListener('transitionend', finalizeTransition);
+};
+
+content.addEventListener('transitionend', finalizeTransition);
+
+if (isOpening) {
+    content.style.overflow = 'hidden';
+    content.style.maxHeight = content.scrollHeight + 'px';
+    if (content.scrollHeight === 0) {
+        requestAnimationFrame(() => {
+            content.style.maxHeight = content.scrollHeight + 'px';
+        });
+    }
+} else {
+    if (content.style.maxHeight === 'none' || content.style.maxHeight === '') {
+        content.style.maxHeight = content.scrollHeight + 'px';
+        void content.offsetHeight;
+    }
+    content.style.overflow = 'hidden';
+    requestAnimationFrame(() => {
+        content.style.maxHeight = '0';
+    });
+}
 }
 
 async function handleNotificationToggle() {

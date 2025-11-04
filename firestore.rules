@@ -20,6 +20,15 @@ service cloud.firestore {
         resourceData.pareadoUid == authUid();
     }
 
+    function hasField(data, fieldName) {
+      return data.keys().hasAny([fieldName]);
+    }
+
+    function fieldUnchanged(fieldName) {
+      return (!hasField(resource.data, fieldName) && !hasField(request.resource.data, fieldName)) ||
+        request.resource.data[fieldName] == resource.data[fieldName];
+    }
+
     match /usuarios/{userId} {
       allow get: if isOwner(userId) || (resource.data != null && isPartner(resource.data));
       allow list: if false;
@@ -38,15 +47,20 @@ service cloud.firestore {
         && request.resource.data.catalogoPersonalizado is map;
 
       allow update: if isOwner(userId)
-        && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
-          'catalogoPersonalizado', 'fotoUrl'
-        ])
-        && request.resource.data.foguinhos == resource.data.foguinhos
-        && request.resource.data.pareadoCom == resource.data.pareadoCom
-        && request.resource.data.pareadoUid == resource.data.pareadoUid
-        && request.resource.data.lastCheckInDate == resource.data.lastCheckInDate
-        && request.resource.data.catalogoPersonalizado is map;
+        && fieldUnchanged('createdAt')
+        && fieldUnchanged('email')
+        && fieldUnchanged('foguinhos')
+        && fieldUnchanged('nome')
+        && fieldUnchanged('notificationsEnabled')
+        && fieldUnchanged('pareadoCom')
+        && fieldUnchanged('pareadoUid')
+        && fieldUnchanged('sexo')
+        && fieldUnchanged('telefone')
+        && fieldUnchanged('lastCheckInDate')
+        && fieldUnchanged('fcmToken')
+  && (hasField(request.resource.data, 'catalogoPersonalizado') || !hasField(resource.data, 'catalogoPersonalizado'))
+  && (!hasField(request.resource.data, 'catalogoPersonalizado') || request.resource.data.catalogoPersonalizado is map)
+  && (!hasField(request.resource.data, 'fotoUrl') || request.resource.data.fotoUrl is string || request.resource.data.fotoUrl == null);
 
       allow delete: if isOwner(userId);
     }
