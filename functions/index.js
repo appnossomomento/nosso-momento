@@ -80,6 +80,227 @@ function sanitizeMomentItems(rawItems) {
   return sanitized;
 }
 
+function differenceInCalendarDays(tsA, tsB) {
+  const dateA = timestampToDate(tsA);
+  const dateB = timestampToDate(tsB);
+  if (!dateA || !dateB) return null;
+
+  const utcA = Date.UTC(
+      dateA.getUTCFullYear(),
+      dateA.getUTCMonth(),
+      dateA.getUTCDate(),
+  );
+  const utcB = Date.UTC(
+      dateB.getUTCFullYear(),
+      dateB.getUTCMonth(),
+      dateB.getUTCDate(),
+  );
+
+  const diffMs = utcB - utcA;
+  return Math.round(diffMs / (24 * 60 * 60 * 1000));
+}
+
+function isPreviousCalendarDay(tsA, tsB) {
+  const diff = differenceInCalendarDays(tsA, tsB);
+  return diff === 1;
+}
+
+// TODO: mover para uma coleção de configurações se quisermos editar sem deploy.
+const ACHIEVEMENTS = [
+  {
+    id: "first_check_in",
+    trigger: "daily_check_in",
+    title: "Primeiro Passo",
+    description: "Realize seu primeiro check-in diário com o seu par.",
+    hint: "Envie um foguinho pela tela de check-in.",
+    icon: "fa-person-rays",
+    accentColor: "#fbbf24",
+    notificationIcon: "fa-trophy",
+    notificationTitle: "🏆 Nova conquista!",
+    notificationMessage: "Você desbloqueou: Primeiro Passo",
+    check: ({stats}) => (stats.totalCheckins || 0) >= 1,
+    snapshot: ({stats}) => ({
+      totalCheckins: stats.totalCheckins || 0,
+      currentDailyStreak: stats.currentDailyStreak || 0,
+    }),
+  },
+  {
+    id: "checkin_streak_7",
+    trigger: "daily_check_in",
+    title: "Foguinho Semanal",
+    description: "Complete 7 check-ins em dias consecutivos.",
+    hint: "Faça check-ins diários sem perder nenhum dia.",
+    icon: "fa-calendar-week",
+    accentColor: "#34d399",
+    notificationIcon: "fa-trophy",
+    notificationTitle: "🏆 Conquista de Foguinho!",
+    notificationMessage: "Streak de 7 dias concluída!",
+    check: ({stats}) => (stats.bestDailyStreak || 0) >= 7,
+    snapshot: ({stats}) => ({
+      bestDailyStreak: stats.bestDailyStreak || 0,
+      totalCheckins: stats.totalCheckins || 0,
+    }),
+  },
+  {
+    id: "checkin_master",
+    trigger: "daily_check_in",
+    title: "Mestre do Check-in",
+    description: "Realize 30 check-ins no total.",
+    hint: "Consistência é tudo: presenteie seu par frequentemente.",
+    icon: "fa-stopwatch",
+    accentColor: "#60a5fa",
+    notificationIcon: "fa-trophy",
+    notificationTitle: "🏆 Mestre do Check-in!",
+    notificationMessage: "30 check-ins completados!",
+    check: ({stats}) => (stats.totalCheckins || 0) >= 30,
+    snapshot: ({stats}) => ({
+      totalCheckins: stats.totalCheckins || 0,
+      bestDailyStreak: stats.bestDailyStreak || 0,
+    }),
+  },
+  {
+    id: "first_moment_redeem",
+    trigger: "moment_redeem",
+    title: "Primeiro Momento",
+    description: "Resgate o seu primeiro momento.",
+    hint: "Escolha um momento e resgate com foguinhos.",
+    icon: "fa-heart",
+    accentColor: "#f472b6",
+    notificationIcon: "fa-trophy",
+    notificationTitle: "🏆 Momento especial desbloqueado!",
+    notificationMessage: "Você resgatou o primeiro momento.",
+    check: ({stats}) => getMomentsRedeemedTotal(stats) >= 1,
+    snapshot: ({stats}) => ({
+      momentsRedeemed: getMomentsRedeemedTotal(stats),
+      totalFoguinhosGastos: stats.totalFoguinhosGastos || 0,
+    }),
+  },
+  {
+    id: "moment_collector",
+    trigger: "moment_redeem",
+    title: "Colecionador de Momentos",
+    description: "Resgate 5 momentos diferentes.",
+    hint: "Continue resgatando momentos para o seu mural.",
+    icon: "fa-gift",
+    accentColor: "#c084fc",
+    notificationIcon: "fa-trophy",
+    notificationTitle: "🏆 Colecionador de Momentos!",
+    notificationMessage: "Você resgatou 5 momentos!",
+    check: ({stats}) => getMomentsRedeemedTotal(stats) >= 5,
+    snapshot: ({stats}) => ({
+      momentsRedeemed: getMomentsRedeemedTotal(stats),
+      totalFoguinhosGastos: stats.totalFoguinhosGastos || 0,
+    }),
+  },
+  {
+    id: "foguinhos_investor",
+    trigger: "moment_redeem",
+    title: "Investidor de Foguinhos",
+    description: "Gaste 50 foguinhos em momentos.",
+    hint: "Momentos incríveis custam foguinhos – continue investindo!",
+    icon: "fa-coins",
+    accentColor: "#facc15",
+    notificationIcon: "fa-trophy",
+    notificationTitle: "🏆 Investidor de Foguinhos!",
+    notificationMessage: "Mais de 50 foguinhos investidos em momentos.",
+    check: ({stats}) => (stats.totalFoguinhosGastos || 0) >= 50,
+    snapshot: ({stats}) => ({
+      totalFoguinhosGastos: stats.totalFoguinhosGastos || 0,
+      momentsRedeemed: getMomentsRedeemedTotal(stats),
+    }),
+  },
+];
+
+function getMomentsRedeemedTotal(stats) {
+  if (!stats || !stats.momentsRedeemed) {
+    return 0;
+  }
+  return stats.momentsRedeemed.total || 0;
+}
+
+function grantAchievementsInTransaction({
+  tx,
+  userRef,
+  userId,
+  trigger,
+  currentAchievements = {},
+  statsBefore = {},
+  statsAfter = {},
+  eventContext = {},
+}) {
+  const unlocked = [];
+  const achievementUpdates = {};
+  const now = admin.firestore.Timestamp.now();
+
+  const knownAchievements = {...currentAchievements};
+
+  for (const definition of ACHIEVEMENTS) {
+    if (definition.trigger !== trigger && definition.trigger !== "any") {
+      continue;
+    }
+    if (knownAchievements && knownAchievements[definition.id]) {
+      continue;
+    }
+
+    const meetsRequirement = definition.check({
+      stats: statsAfter,
+      previousStats: statsBefore,
+      event: eventContext,
+      trigger,
+      userId,
+    });
+
+    if (!meetsRequirement) {
+      continue;
+    }
+
+    unlocked.push(definition);
+    knownAchievements[definition.id] = {
+      unlockedAt: now,
+    };
+
+    const snapshot = definition.snapshot ? definition.snapshot({
+      stats: statsAfter,
+      previousStats: statsBefore,
+      event: eventContext,
+      trigger,
+    }) : null;
+
+    const achievementPayload = {
+      unlockedAt: now,
+      title: definition.title,
+      description: definition.description,
+      icon: definition.icon,
+      accentColor: definition.accentColor,
+      trigger,
+    };
+    if (snapshot) {
+      achievementPayload.progressSnapshot = snapshot;
+    }
+
+    achievementUpdates[`conquistas.${definition.id}`] = achievementPayload;
+
+    const notifRef = admin.firestore().collection("notificacoes").doc();
+    tx.set(notifRef, {
+      userId,
+      titulo: definition.notificationTitle || "Nova conquista desbloqueada!",
+      mensagem: definition.notificationMessage ||
+        `Você desbloqueou: ${definition.title}`,
+      icone: definition.notificationIcon || "fa-trophy",
+      tipo: "achievement",
+      achievementId: definition.id,
+      lida: false,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+
+  if (Object.keys(achievementUpdates).length) {
+    tx.update(userRef, achievementUpdates);
+  }
+
+  return unlocked;
+}
+
 exports.enviarNotificacaoPush = onDocumentCreated(
     "notificacoes/{notificacaoId}",
     async (event) => {
@@ -131,13 +352,25 @@ exports.enviarNotificacaoPush = onDocumentCreated(
         return;
       }
 
+      const dataPayload = {
+        title: titulo || "",
+        body: mensagem || "",
+        icon: "/assets/icons/favicon.png",
+      };
+
+      if (novaNotificacao.tipo) {
+        dataPayload.type = String(novaNotificacao.tipo);
+      }
+      if (novaNotificacao.achievementId) {
+        dataPayload.achievementId = String(novaNotificacao.achievementId);
+      }
+      if (novaNotificacao.icone) {
+        dataPayload.iconClass = String(novaNotificacao.icone);
+      }
+
       const message = {
         tokens,
-        data: {
-          title: titulo || "",
-          body: mensagem || "",
-          icon: "/assets/icons/favicon.png",
-        },
+        data: dataPayload,
       };
 
       try {
@@ -777,8 +1010,30 @@ exports.processInput = onDocumentCreated(
               return;
             }
 
+            const existingStats = senderData.achievementStats || {};
+            const totalCheckinsBefore = existingStats.totalCheckins || 0;
+            const previousStreak = existingStats.currentDailyStreak || 0;
+            const bestStreakBefore = existingStats.bestDailyStreak || 0;
+
+            let currentStreak = 1;
+            if (senderData.lastCheckInDate &&
+              isPreviousCalendarDay(senderData.lastCheckInDate, nowTs)) {
+              currentStreak = previousStreak + 1;
+            }
+
+            const bestStreak = Math.max(bestStreakBefore, currentStreak);
+
+            const updatedStats = {
+              ...existingStats,
+              totalCheckins: totalCheckinsBefore + 1,
+              currentDailyStreak: currentStreak,
+              bestDailyStreak: bestStreak,
+              lastCheckInAt: nowTs,
+            };
+
             tx.update(senderRef, {
-              lastCheckInDate: admin.firestore.FieldValue.serverTimestamp(),
+              lastCheckInDate: nowTs,
+              achievementStats: updatedStats,
             });
 
             tx.update(partnerRef, {
@@ -795,6 +1050,27 @@ exports.processInput = onDocumentCreated(
               lida: false,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
             });
+
+            const granted = grantAchievementsInTransaction({
+              tx,
+              userRef: senderRef,
+              userId: fromUid,
+              trigger: "daily_check_in",
+              currentAchievements: senderData.conquistas || {},
+              statsBefore: existingStats,
+              statsAfter: updatedStats,
+              eventContext: {
+                streak: currentStreak,
+                totalCheckins: updatedStats.totalCheckins,
+              },
+            });
+
+            if (granted.length) {
+              console.log(
+                  "processInput: conquistas concedidas (daily_check_in)",
+                  granted.map((ach) => ach.id),
+              );
+            }
 
             tx.update(inputRef, {
               processed: true,
@@ -864,8 +1140,37 @@ exports.processInput = onDocumentCreated(
               return;
             }
 
+            const nowRedeemTs = admin.firestore.Timestamp.now();
+            const existingStats = senderData.achievementStats || {};
+            const previousMomentsStats = existingStats.momentsRedeemed || {};
+            const previousCategoryCounts =
+              previousMomentsStats.porCategoria || {};
+            const updatedCategoryCounts = {...previousCategoryCounts};
+
+            sanitizedItems.forEach((item) => {
+              const rawCategory = item.categoria || "Outros";
+              const normalizedCategory = rawCategory.toLowerCase();
+              updatedCategoryCounts[normalizedCategory] =
+                (updatedCategoryCounts[normalizedCategory] || 0) + 1;
+            });
+
+            const updatedMomentsStats = {
+              total: (previousMomentsStats.total || 0) + sanitizedItems.length,
+              porCategoria: updatedCategoryCounts,
+              lastRedeemAt: nowRedeemTs,
+            };
+
+            const updatedStats = {
+              ...existingStats,
+              momentsRedeemed: updatedMomentsStats,
+              totalFoguinhosGastos:
+                (existingStats.totalFoguinhosGastos || 0) + totalCost,
+              lastMomentRedeemAt: nowRedeemTs,
+            };
+
             tx.update(senderRef, {
               foguinhos: admin.firestore.FieldValue.increment(-totalCost),
+              achievementStats: updatedStats,
             });
 
             let effectivePareamentoId = pareamentoId;
@@ -927,6 +1232,28 @@ exports.processInput = onDocumentCreated(
               processedAt: admin.firestore.FieldValue.serverTimestamp(),
               processedBy: "functions.processInput",
             });
+
+            const granted = grantAchievementsInTransaction({
+              tx,
+              userRef: senderRef,
+              userId: fromUid,
+              trigger: "moment_redeem",
+              currentAchievements: senderData.conquistas || {},
+              statsBefore: existingStats,
+              statsAfter: updatedStats,
+              eventContext: {
+                items: sanitizedItems,
+                totalCost,
+                totalRedeemed: updatedMomentsStats.total,
+              },
+            });
+
+            if (granted.length) {
+              console.log(
+                  "processInput: conquistas concedidas (moment_redeem)",
+                  granted.map((ach) => ach.id),
+              );
+            }
           });
 
           console.log("processInput: moment_redeem processado", inputId);

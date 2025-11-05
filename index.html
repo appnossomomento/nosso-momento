@@ -299,6 +299,21 @@
     }
 }
 
+.achievements-overlay {
+    animation: fadeIn 0.25s ease-out forwards;
+}
+
+.achievements-popup-card {
+    animation: slideInUp 0.35s ease-out forwards;
+}
+
+@media (max-width: 640px) {
+    .achievements-popup-card {
+        margin-top: 48px;
+        margin-bottom: 32px;
+    }
+}
+
 /* Instagram CTA com borda em gradiente e fundo discreto */
 .instagram-cta-outline {
     display: inline-block;
@@ -474,6 +489,69 @@
     }
 
     // Main application state
+    // Deve permanecer sincronizado com a definição em functions/index.js (ACHIEVEMENTS)
+    const ACHIEVEMENTS = [
+    {
+        id: 'first_check_in',
+        trigger: 'daily_check_in',
+        title: 'Primeiro Passo',
+        description: 'Realize seu primeiro check-in diário com o seu par.',
+        hint: 'Envie um foguinho pela tela de check-in.',
+        icon: 'fa-person-rays',
+        accentColor: '#fbbf24',
+    },
+    {
+        id: 'checkin_streak_7',
+        trigger: 'daily_check_in',
+        title: 'Foguinho Semanal',
+        description: 'Complete 7 check-ins em dias consecutivos.',
+        hint: 'Faça check-ins diários sem perder nenhum dia.',
+        icon: 'fa-calendar-week',
+        accentColor: '#34d399',
+    },
+    {
+        id: 'checkin_master',
+        trigger: 'daily_check_in',
+        title: 'Mestre do Check-in',
+        description: 'Realize 30 check-ins no total.',
+        hint: 'Consistência é tudo: presenteie seu par frequentemente.',
+        icon: 'fa-stopwatch',
+        accentColor: '#60a5fa',
+    },
+    {
+        id: 'first_moment_redeem',
+        trigger: 'moment_redeem',
+        title: 'Primeiro Momento',
+        description: 'Resgate o seu primeiro momento.',
+        hint: 'Escolha um momento e resgate com foguinhos.',
+        icon: 'fa-heart',
+        accentColor: '#f472b6',
+    },
+    {
+        id: 'moment_collector',
+        trigger: 'moment_redeem',
+        title: 'Colecionador de Momentos',
+        description: 'Resgate 5 momentos diferentes.',
+        hint: 'Continue resgatando momentos para o seu mural.',
+        icon: 'fa-gift',
+        accentColor: '#c084fc',
+    },
+    {
+        id: 'foguinhos_investor',
+        trigger: 'moment_redeem',
+        title: 'Investidor de Foguinhos',
+        description: 'Gaste 50 foguinhos em momentos.',
+        hint: 'Momentos incríveis custam foguinhos – continue investindo!',
+        icon: 'fa-coins',
+        accentColor: '#facc15',
+    },
+];
+
+const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
+    acc[achievement.id] = achievement;
+    return acc;
+}, {});
+
         const state = {
     usuario: null,
     pareado: false,
@@ -481,6 +559,7 @@
     idPareamentoAmigavel: null,
     notificacoesTarefasNaoLidas: 0,
     notificacoesPresentesNaoLidas: 0,
+    notificacoesConquistasNaoLidas: 0,
     notificacoes: [],
     etapa: 'landing',
     carrinho: [],
@@ -496,7 +575,10 @@
     pendingPairingRequest: null,
     showCartSidebar: false,
     showFoguinhosPopup: false,
-    abaTarefasAtiva: 'recebidos'
+    showAchievementsPopup: false,
+    abaTarefasAtiva: 'recebidos',
+    conquistas: {},
+    achievementStats: {}
 };
 
 let unsubscribeNotifications = null;
@@ -511,6 +593,9 @@ let unsubscribePendingPairing = null;
     let bottomNavBar; // Referência para a barra de navegação inferior
     let mainHeader; // Referência para o cabeçalho principal
 
+    window.ACHIEVEMENTS = ACHIEVEMENTS;
+    window.ACHIEVEMENTS_BY_ID = ACHIEVEMENTS_BY_ID;
+
 
     // --- Utils para datas ---
     function isSameDay(d1, d2) {
@@ -518,6 +603,34 @@ let unsubscribePendingPairing = null;
                d1.getMonth() === d2.getMonth() &&
                d1.getDate() === d2.getDate();
     }
+
+        function formatarDataCurta(timestamp) {
+            if (!timestamp) {
+                return '';
+            }
+
+            try {
+                let data;
+                if (timestamp.toDate) {
+                    data = timestamp.toDate();
+                } else if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+                    data = new Date(timestamp.seconds * 1000);
+                } else if (timestamp instanceof Date) {
+                    data = timestamp;
+                } else {
+                    return '';
+                }
+
+                return data.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            } catch (err) {
+                console.warn('Não foi possível formatar a data da conquista:', err);
+                return '';
+            }
+        }
 
     function showToast(message, type = 'sucesso') {
         const container = document.getElementById('toast-container');
@@ -567,6 +680,17 @@ let unsubscribePendingPairing = null;
         } else {
             console.warn(`gtag() não definido. Evento "${eventName}" não rastreado.`);
         }
+    }
+
+    function escapeHtmlAttr(texto) {
+        if (typeof texto !== 'string') {
+            return '';
+        }
+        return texto
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     }
 
     // ==========================================================
@@ -841,7 +965,18 @@ if (firebase.messaging.isSupported()) {
         // Em vez de uma notificação do sistema, mostramos um "toast"
         const title = payload.data.title;
         const body = payload.data.body;
-        showToast(`🔔 ${title}: ${body}`, 'sucesso');
+        const notificationType = payload.data?.type || null;
+        if (notificationType === 'achievement') {
+            showToast(`🏆 ${title}: ${body}`, 'sucesso');
+            trackGAEvent('unlock_achievement', {
+                achievement_id: payload.data?.achievementId || 'unknown',
+            });
+            trackMetaEvent('UnlockAchievement', {
+                achievement_id: payload.data?.achievementId || 'unknown',
+            });
+        } else {
+            showToast(`🔔 ${title}: ${body}`, 'sucesso');
+        }
         updateFixedUI();
     });
 }
@@ -1101,7 +1236,6 @@ appContainer.innerHTML = content;
     // Nova função para renderizar o pop-up de Foguinhos
     async function renderFoguinhosPopupContent() {
     
-    // ==================================================================
     // 1. Limpa a "bolinha" de notificações de PRESENTES (fa-gift)
     // ==================================================================
     try {
@@ -1211,6 +1345,7 @@ function setupNotificationListener(userId) {
         // ==========================================================
         let tarefasNaoLidas = 0;
         let presentesNaoLidos = 0;
+        let conquistasNaoLidas = 0;
         
         notifs.forEach(n => {
             if (!n.lida) {
@@ -1218,6 +1353,8 @@ function setupNotificationListener(userId) {
                     tarefasNaoLidas++;
                 } else if (n.icone === 'fa-gift') { // Notificação de Presente
                     presentesNaoLidos++;
+                } else if (n.tipo === 'achievement' || n.icone === 'fa-trophy') {
+                    conquistasNaoLidas++;
                 }
             }
         });
@@ -1225,9 +1362,10 @@ function setupNotificationListener(userId) {
         // Atualiza os contadores separados no state
         state.notificacoesTarefasNaoLidas = tarefasNaoLidas;
         state.notificacoesPresentesNaoLidas = presentesNaoLidos;
+    state.notificacoesConquistasNaoLidas = conquistasNaoLidas;
         // ==========================================================
 
-        console.log(`Notificações carregadas: ${notifs.length}, Tarefas não lidas: ${tarefasNaoLidas}, Presentes não lidos: ${presentesNaoLidos}`);
+    console.log(`Notificações carregadas: ${notifs.length}, Tarefas não lidas: ${tarefasNaoLidas}, Presentes não lidos: ${presentesNaoLidos}, Conquistas não lidas: ${conquistasNaoLidas}`);
 
         // Se o usuário estiver na tela de notificações, atualiza a lista
         if (state.etapa === 'notificacoes') {
@@ -1237,6 +1375,72 @@ function setupNotificationListener(userId) {
         // Atualiza a UI fixa (bolinha do sino e cor do fogo)
         updateFixedUI();
     });
+}
+
+async function renderAchievementsPopup() {
+    await marcarNotificacoesDeConquistaComoLidas();
+
+    const conquistasUsuario = state.usuario?.conquistas || {};
+
+    const gridHtml = ACHIEVEMENTS.map((achievement) => {
+        const conquista = conquistasUsuario[achievement.id];
+        const desbloqueada = !!conquista;
+        const cor = achievement.accentColor || '#fbbf24';
+        const titulo = achievement.title;
+        const descricao = achievement.description;
+        const dica = achievement.hint || '';
+        const dataDesbloqueio = desbloqueada ? formatarDataCurta(conquista.unlockedAt) : '';
+        const iconClass = achievement.icon || 'fa-trophy';
+        const hintAttr = dica ? `title="${escapeHtmlAttr(dica)}"` : '';
+
+        return `
+            <div class="rounded-2xl p-5 sm:p-6 border transition ${desbloqueada ? 'bg-gray-900 border-transparent shadow-lg shadow-black/30' : 'bg-gray-800/40 border-gray-700 backdrop-blur-sm opacity-70'}" ${hintAttr}>
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${desbloqueada ? '' : 'border border-gray-600'}" style="${desbloqueada ? `background: ${cor}; color: #111827;` : ''}">
+                        <i class="fas ${iconClass} text-lg sm:text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-base sm:text-lg ${desbloqueada ? '' : 'text-gray-300'}">${titulo}</h4>
+                        <p class="text-xs sm:text-sm ${desbloqueada ? 'text-gray-300' : 'text-gray-500'}">${descricao}</p>
+                        ${desbloqueada ? `<p class="text-xs text-emerald-400 mt-2"><i class="fas fa-check-circle mr-1"></i>${dataDesbloqueio ? `Conquistado em ${dataDesbloqueio}` : 'Conquista desbloqueada!'}</p>` : `<p class="text-[11px] text-gray-500 mt-2">${dica || 'Complete a tarefa para desbloquear.'}</p>`}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    appContainer.innerHTML = `
+        <div class="achievements-overlay min-h-screen w-full bg-black bg-opacity-90 text-white px-4 sm:px-8 py-12 sm:py-16 flex justify-center items-start sm:items-center overflow-y-auto">
+            <div class="card achievements-popup-card w-full max-w-3xl relative overflow-hidden shadow-2xl flex flex-col sm:max-h-[85vh] p-6 sm:p-10">
+                <div class="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-yellow-500 opacity-10 pointer-events-none"></div>
+                <div class="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-pink-500 opacity-10 pointer-events-none"></div>
+                <div class="flex items-center justify-between mb-6 sm:mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-yellow-500/20 text-yellow-300 flex items-center justify-center">
+                            <i class="fas fa-trophy text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-3xl font-bold">Mural de Conquistas</h2>
+                            <p class="text-sm text-gray-400">Celebre seus troféus e descubra o que falta desbloquear.</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="toggleAchievementsPopup()" class="text-gray-400 hover:text-white text-lg focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="Fechar mural">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-6 sm:mt-8 sm:flex-1 sm:overflow-y-auto sm:pr-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                        ${gridHtml}
+                    </div>
+                </div>
+                <div class="mt-6 sm:mt-8 flex justify-center">
+                    <button type="button" onclick="toggleAchievementsPopup()" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Voltar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
     // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
@@ -1453,12 +1657,46 @@ function normalizarPreco(valor, fallback) {
     return Number.isFinite(numero) && numero >= 0 ? numero : fallback;
 }
 
+async function marcarNotificacoesDeConquistaComoLidas() {
+    if (!state.usuario?.uid || state.notificacoesConquistasNaoLidas <= 0) {
+        return;
+    }
+
+    try {
+        const batch = db.batch();
+        let totalMarcadas = 0;
+
+        state.notificacoes.forEach((notif) => {
+            if (!notif.lida && (notif.tipo === 'achievement' || notif.icone === 'fa-trophy')) {
+                const notifRef = db.collection('notificacoes').doc(notif.id);
+                batch.update(notifRef, { lida: true });
+                totalMarcadas++;
+            }
+        });
+
+        if (totalMarcadas > 0) {
+            await batch.commit();
+            state.notificacoesConquistasNaoLidas = 0;
+            updateFixedUI();
+        }
+    } catch (err) {
+        console.error('Erro ao marcar conquistas como lidas:', err);
+    }
+}
+
 function renderGerenciarCatalogo() {
 const userGender = state.usuario?.sexo || 'Masculino';
 const momentosDisponiveis = state.momentosMestres.filter(m => m.targetGender === userGender || m.targetGender === 'Unisex');
 const catalogoSalvo = state.usuario?.catalogoPersonalizado || {};
 const categorias = [...new Set(momentosDisponiveis.map(m => m.categoria))];
 const fotoUrl = state.usuario?.fotoUrl || 'assets/icons/iconprincipal.png';
+const conquistasNaoLidas = state.notificacoesConquistasNaoLidas || 0;
+const muralBadgeHtml = conquistasNaoLidas > 0
+    ? `<span class="px-3 py-1 rounded-full bg-red-600/80 text-white text-xs font-semibold shadow-lg shadow-red-900/40">${conquistasNaoLidas} novo${conquistasNaoLidas > 1 ? 's' : ''}</span>`
+    : '';
+const muralCardAccent = conquistasNaoLidas > 0
+    ? 'ring-1 ring-yellow-400/60 shadow-lg'
+    : 'hover:bg-gray-800/40';
 
 let notificationButtonHtml = '';
 if (window.Notification) {
@@ -1506,6 +1744,23 @@ appContainer.innerHTML = `
         </div>
 
         <div class="space-y-4 max-w-2xl mx-auto">
+            <div class="card mb-12 p-6 cursor-pointer transition group ${muralCardAccent} focus:outline-none focus:ring-2 focus:ring-yellow-300/80" role="button" tabindex="0" aria-label="Abrir mural de conquistas" onclick="toggleAchievementsPopup()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAchievementsPopup();}">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-500/20 text-yellow-300">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Mural de Conquistas</h3>
+                            <p class="text-sm text-gray-400">Veja os troféus que você já desbloqueou e quais ainda pode conquistar.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-gray-400 group-hover:text-yellow-200 transition">
+                        ${muralBadgeHtml}
+                        <i class="fas fa-chevron-right text-base"></i>
+                    </div>
+                </div>
+            </div>
             ${categorias.map(categoria => `
                 <div class="card overflow-hidden">
                     <button onclick="toggleAccordion(this)" class="w-full p-4 text-left font-bold text-lg flex justify-between items-center">
@@ -1912,8 +2167,12 @@ try {
         foguinhos: 10,
         lastCheckInDate: null,
         pareadoCom: null,
-        catalogoPersonalizado: {} // <-- E AQUI TAMBÉM, para consistência.
+        catalogoPersonalizado: {}, // <-- E AQUI TAMBÉM, para consistência.
+        conquistas: {},
+        achievementStats: {}
     };
+    state.conquistas = {};
+    state.achievementStats = {};
     state.etapa = 'parear';
     renderApp();
     alert('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.');
@@ -1960,6 +2219,11 @@ try {
     state.pendingPairingRequest = null;
     state.showCartSidebar = false;
     state.showFoguinhosPopup = false;
+    state.conquistas = {};
+    state.achievementStats = {};
+    state.notificacoesTarefasNaoLidas = 0;
+    state.notificacoesPresentesNaoLidas = 0;
+    state.notificacoesConquistasNaoLidas = 0;
 
     renderApp(); // Volta para a tela inicial
 } catch (error) {
@@ -2221,6 +2485,9 @@ renderApp();
             case 'foguinhosPopup':
                 renderFoguinhosPopupContent();
                 break;
+            case 'achievementsPopup':
+                renderAchievementsPopup();
+                break;
             default:
                 renderLandingPage(); // Fallback
         }
@@ -2451,6 +2718,7 @@ if (state.etapa === newStep) {
 state.showCartSidebar = false;
 state.showFoguinhosPopup = false;
 state.showPartnerInfoPopup = false;
+state.showAchievementsPopup = false;
 
 // Renderiza a aplicação com o novo estado definido
 renderApp();
@@ -2480,7 +2748,7 @@ renderApp();
     const notificationDot = document.getElementById('notificationDot');
     if (notificationDot) {
         // AGORA VERIFICA O CONTADOR DE TAREFAS
-        if (state.notificacoesTarefasNaoLidas > 0) {
+        if ((state.notificacoesTarefasNaoLidas || 0) + (state.notificacoesConquistasNaoLidas || 0) > 0) {
             notificationDot.classList.remove('hidden');
         } else {
             notificationDot.classList.add('hidden');
@@ -2588,6 +2856,18 @@ renderApp();
         console.log('state.showPartnerInfoPopup DEPOIS:', state.showPartnerInfoPopup);
     }
 
+    function toggleAchievementsPopup() {
+        console.log('toggleAchievementsPopup chamada. state.showAchievementsPopup ANTES:', state.showAchievementsPopup);
+        if (state.etapa === 'achievementsPopup') {
+            state.etapa = 'gerenciarCatalogo';
+        } else {
+            state.etapa = 'achievementsPopup';
+        }
+        state.showAchievementsPopup = !state.showAchievementsPopup;
+        renderApp();
+        console.log('state.showAchievementsPopup DEPOIS:', state.showAchievementsPopup);
+    }
+
     // Carrega dados do usuário e do parceiro se pareado
     
 async function loadUserDataAndNavigate(uid, email) {
@@ -2605,6 +2885,10 @@ try {
     if (userDoc.exists) {
     state.usuario = { uid: uid, email: email, ...userDoc.data() };
     state.usuario.notificationsEnabled = !!state.usuario.notificationsEnabled;
+    state.usuario.conquistas = state.usuario.conquistas || {};
+    state.usuario.achievementStats = state.usuario.achievementStats || {};
+    state.conquistas = state.usuario.conquistas;
+    state.achievementStats = state.usuario.achievementStats;
         state.usuario.pareadoUid = state.usuario.pareadoUid || null;
 
         const hasPairUid = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
@@ -2668,6 +2952,10 @@ try {
             state.usuario = { uid: uid, email: email, ...doc.data() };
             state.usuario.notificationsEnabled = !!state.usuario.notificationsEnabled;
             state.usuario.pareadoUid = state.usuario.pareadoUid || null;
+            state.usuario.conquistas = state.usuario.conquistas || {};
+            state.usuario.achievementStats = state.usuario.achievementStats || {};
+            state.conquistas = state.usuario.conquistas;
+            state.achievementStats = state.usuario.achievementStats;
             const hasUidPair = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
             const hasPhonePair = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
             state.pareado = hasUidPair || hasPhonePair;
@@ -2730,7 +3018,7 @@ try {
             });
     } else {
         console.log('Usuário logado via Auth, mas sem documento de perfil no Firestore.');
-        state.usuario = { uid: uid, email: email };
+    state.usuario = { uid: uid, email: email, conquistas: {}, achievementStats: {} };
         state.etapa = 'register';
         alert('Por favor, complete seu cadastro para acessar todas as funcionalidades.');
     }
@@ -2803,6 +3091,7 @@ try {
         window.cancelPendingPairingRequest = cancelPendingPairingRequest;
         window.toggleFoguinhosPopup = toggleFoguinhosPopup;
         window.togglePartnerInfoPopup = togglePartnerInfoPopup;
+    window.toggleAchievementsPopup = toggleAchievementsPopup;
         window.solicitarPermissaoDeNotificacao = solicitarPermissaoDeNotificacao;
         window.desativarNotificacoes = desativarNotificacoes;
         window.handleNotificationToggle = handleNotificationToggle;

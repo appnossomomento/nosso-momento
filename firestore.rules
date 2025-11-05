@@ -35,16 +35,18 @@ service cloud.firestore {
 
       allow create: if isOwner(userId)
         && request.resource.data.keys().hasOnly([
-          'catalogoPersonalizado', 'createdAt', 'email', 'fcmToken', 'foguinhos',
-          'fotoUrl', 'lastCheckInDate', 'nome', 'notificationsEnabled',
-          'pareadoCom', 'pareadoUid', 'sexo', 'telefone'
+          'achievementStats', 'catalogoPersonalizado', 'conquistas', 'createdAt',
+          'email', 'fcmToken', 'foguinhos', 'fotoUrl', 'lastCheckInDate', 'nome',
+          'notificationsEnabled', 'pareadoCom', 'pareadoUid', 'sexo', 'telefone'
         ])
         && request.resource.data.foguinhos is int
         && request.resource.data.foguinhos == 10
         && (!('pareadoUid' in request.resource.data) || request.resource.data.pareadoUid == null)
         && (!('pareadoCom' in request.resource.data) || request.resource.data.pareadoCom == null)
         && (!('lastCheckInDate' in request.resource.data) || request.resource.data.lastCheckInDate == null)
-        && request.resource.data.catalogoPersonalizado is map;
+        && request.resource.data.catalogoPersonalizado is map
+        && (!hasField(request.resource.data, 'achievementStats') || request.resource.data.achievementStats is map)
+        && (!hasField(request.resource.data, 'conquistas') || request.resource.data.conquistas is map);
 
       allow update: if isOwner(userId)
         && fieldUnchanged('createdAt')
@@ -57,7 +59,9 @@ service cloud.firestore {
         && fieldUnchanged('sexo')
         && fieldUnchanged('telefone')
         && fieldUnchanged('lastCheckInDate')
-        && fieldUnchanged('fcmToken')
+  && fieldUnchanged('fcmToken')
+  && fieldUnchanged('conquistas')
+  && fieldUnchanged('achievementStats')
   && (hasField(request.resource.data, 'catalogoPersonalizado') || !hasField(resource.data, 'catalogoPersonalizado'))
   && (!hasField(request.resource.data, 'catalogoPersonalizado') || request.resource.data.catalogoPersonalizado is map)
   && (!hasField(request.resource.data, 'fotoUrl') || request.resource.data.fotoUrl is string || request.resource.data.fotoUrl == null);
