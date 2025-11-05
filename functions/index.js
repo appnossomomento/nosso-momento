@@ -218,6 +218,26 @@ function getMomentsRedeemedTotal(stats) {
   return stats.momentsRedeemed.total || 0;
 }
 
+function summarizeStats(stats) {
+  if (!stats) {
+    return {
+      totalCheckins: 0,
+      currentDailyStreak: 0,
+      bestDailyStreak: 0,
+      totalFoguinhosGastos: 0,
+      momentsRedeemedTotal: 0,
+    };
+  }
+
+  return {
+    totalCheckins: stats.totalCheckins || 0,
+    currentDailyStreak: stats.currentDailyStreak || 0,
+    bestDailyStreak: stats.bestDailyStreak || 0,
+    totalFoguinhosGastos: stats.totalFoguinhosGastos || 0,
+    momentsRedeemedTotal: getMomentsRedeemedTotal(stats),
+  };
+}
+
 function grantAchievementsInTransaction({
   tx,
   userRef,
@@ -233,6 +253,14 @@ function grantAchievementsInTransaction({
   const now = admin.firestore.Timestamp.now();
 
   const knownAchievements = {...currentAchievements};
+
+  console.log("grantAchievementsInTransaction:start", {
+    trigger,
+    userId,
+    before: summarizeStats(statsBefore),
+    after: summarizeStats(statsAfter),
+    alreadyUnlocked: Object.keys(currentAchievements || {}),
+  });
 
   for (const definition of ACHIEVEMENTS) {
     if (definition.trigger !== trigger && definition.trigger !== "any") {
@@ -251,6 +279,15 @@ function grantAchievementsInTransaction({
     });
 
     if (!meetsRequirement) {
+      if (definition.id === "first_check_in" ||
+        definition.id === "first_moment_redeem") {
+        console.log("grantAchievementsInTransaction:requisito_nao_atendido", {
+          trigger,
+          userId,
+          achievementId: definition.id,
+          stats: summarizeStats(statsAfter),
+        });
+      }
       continue;
     }
 
@@ -258,6 +295,12 @@ function grantAchievementsInTransaction({
     knownAchievements[definition.id] = {
       unlockedAt: now,
     };
+
+    console.log("grantAchievementsInTransaction:desbloqueado", {
+      trigger,
+      userId,
+      achievementId: definition.id,
+    });
 
     const snapshot = definition.snapshot ? definition.snapshot({
       stats: statsAfter,

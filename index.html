@@ -182,6 +182,69 @@
         .badge-yellow { background-color: #f59e0b; /* yellow-500 */ }
         .badge-gray { background-color: #6b7280; /* gray-500 */ }
 
+        .achievement-celebration-wrapper {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translate(-50%, -20px);
+            opacity: 0;
+            z-index: 200;
+            pointer-events: none;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        .achievement-celebration-wrapper.entered {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+        .achievement-celebration-wrapper.exiting {
+            opacity: 0;
+            transform: translate(-50%, -16px);
+        }
+        .achievement-celebration {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.94), rgba(17, 24, 39, 0.94));
+            border-radius: 9999px;
+            padding: 16px 26px;
+            border: 1px solid rgba(251, 191, 36, 0.55);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        }
+        .achievement-celebration__icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #111827;
+            font-size: 22px;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.25);
+            animation: trophyPop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .achievement-celebration__eyebrow {
+            font-size: 0.72rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.65);
+            margin-bottom: 2px;
+        }
+        .achievement-celebration__title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #f9fafb;
+        }
+        .achievement-celebration__message {
+            margin-top: 4px;
+            font-size: 0.85rem;
+            color: rgba(226, 232, 240, 0.95);
+        }
+        @keyframes trophyPop {
+            0% { transform: scale(0.5) rotate(-12deg); opacity: 0; }
+            55% { transform: scale(1.12) rotate(4deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
         #foguinhosBadge,
         #carrinhoBadge {
             /* 1. Posiciona o badge com base no centro do botão */
@@ -584,6 +647,25 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
 let unsubscribeNotifications = null;
 let unsubscribeUserDoc = null;
 let unsubscribePendingPairing = null;
+let hasProcessedInitialConquistas = false;
+let activeAchievementCelebration = null;
+let activeAchievementCelebrationTimeout = null;
+let hasProcessedInitialNotifications = false;
+let lastNotificationIds = new Set();
+const recentAchievementCelebrations = new Map();
+
+function triggerAchievementCelebration(notif) {
+    const achievementId = notif?.achievementId || null;
+    const celebrationInfo = showAchievementCelebration(achievementId);
+    if (celebrationInfo) {
+        const celebrationText = celebrationInfo.description
+            ? `${celebrationInfo.title}: ${celebrationInfo.description}`
+            : celebrationInfo.title;
+        showToast(`🏆 ${celebrationText}`, 'sucesso');
+    } else if (notif?.mensagem) {
+        showToast(`🏆 ${notif.mensagem}`, 'sucesso');
+    }
+}
 
     // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
     let appContainer;
@@ -662,6 +744,98 @@ let unsubscribePendingPairing = null;
                 toastElement.remove();
             }, 500);
         }, 2000);
+    }
+
+    function showAchievementCelebration(achievementId) {
+        const normalizedId = achievementId || null;
+        const definition = (normalizedId && ACHIEVEMENTS_BY_ID[normalizedId]) || null;
+        const accent = definition?.accentColor || '#fbbf24';
+        const iconClass = definition?.icon || 'fa-trophy';
+        const title = definition?.title || 'Nova conquista desbloqueada!';
+        const description = definition?.description || '';
+
+        if (normalizedId && recentAchievementCelebrations.has(normalizedId)) {
+            console.log('Banner de conquista ignorado porque já foi exibido recentemente:', normalizedId);
+            return null;
+        }
+
+        if (!document.body) {
+            console.warn('showAchievementCelebration chamado antes do document.body estar pronto.');
+            return { title, description };
+        }
+
+        if (activeAchievementCelebrationTimeout) {
+            clearTimeout(activeAchievementCelebrationTimeout);
+            activeAchievementCelebrationTimeout = null;
+        }
+        if (activeAchievementCelebration && activeAchievementCelebration.parentNode) {
+            activeAchievementCelebration.parentNode.removeChild(activeAchievementCelebration);
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'achievement-celebration-wrapper';
+
+        const inner = document.createElement('div');
+        inner.className = 'achievement-celebration';
+        inner.style.borderColor = accent;
+
+        const iconContainer = document.createElement('div');
+        iconContainer.className = 'achievement-celebration__icon';
+        iconContainer.style.background = accent;
+        const icon = document.createElement('i');
+        icon.className = `fas ${iconClass}`;
+        iconContainer.appendChild(icon);
+
+        const textContainer = document.createElement('div');
+        const eyebrow = document.createElement('p');
+        eyebrow.className = 'achievement-celebration__eyebrow';
+        eyebrow.textContent = 'Nova conquista!';
+        const titleEl = document.createElement('p');
+        titleEl.className = 'achievement-celebration__title';
+        titleEl.textContent = title;
+        textContainer.appendChild(eyebrow);
+        textContainer.appendChild(titleEl);
+        if (description) {
+            const messageEl = document.createElement('p');
+            messageEl.className = 'achievement-celebration__message';
+            messageEl.textContent = description;
+            textContainer.appendChild(messageEl);
+        }
+
+        inner.appendChild(iconContainer);
+        inner.appendChild(textContainer);
+        wrapper.appendChild(inner);
+    document.body.appendChild(wrapper);
+    console.log('Exibindo banner de conquista:', normalizedId || 'desconhecida', title);
+
+        requestAnimationFrame(() => {
+            wrapper.classList.add('entered');
+        });
+
+        activeAchievementCelebrationTimeout = setTimeout(() => {
+            wrapper.classList.remove('entered');
+            wrapper.classList.add('exiting');
+            setTimeout(() => {
+                if (wrapper.parentNode) {
+                    wrapper.parentNode.removeChild(wrapper);
+                }
+            }, 320);
+            activeAchievementCelebration = null;
+            activeAchievementCelebrationTimeout = null;
+        }, 4200);
+
+        activeAchievementCelebration = wrapper;
+        if (normalizedId) {
+            const previousTimer = recentAchievementCelebrations.get(normalizedId);
+            if (previousTimer) {
+                clearTimeout(previousTimer);
+            }
+            const cleanupTimer = setTimeout(() => {
+                recentAchievementCelebrations.delete(normalizedId);
+            }, 6000);
+            recentAchievementCelebrations.set(normalizedId, cleanupTimer);
+        }
+        return { title, description };
     }
 
 // ==========================================================
@@ -967,7 +1141,11 @@ if (firebase.messaging.isSupported()) {
         const body = payload.data.body;
         const notificationType = payload.data?.type || null;
         if (notificationType === 'achievement') {
-            showToast(`🏆 ${title}: ${body}`, 'sucesso');
+            const celebrationInfo = showAchievementCelebration(payload.data?.achievementId || null);
+            const toastMessage = celebrationInfo
+                ? `🏆 ${celebrationInfo.title}${celebrationInfo.description ? `: ${celebrationInfo.description}` : ''}`
+                : `🏆 ${title}: ${body}`;
+            showToast(toastMessage, 'sucesso');
             trackGAEvent('unlock_achievement', {
                 achievement_id: payload.data?.achievementId || 'unknown',
             });
@@ -1327,6 +1505,9 @@ function setupNotificationListener(userId) {
         unsubscribeNotifications();
     }
 
+    hasProcessedInitialNotifications = false;
+    lastNotificationIds = new Set();
+
     const notificationsQuery = db.collection('notificacoes')
         .where('userId', '==', userId)
         .orderBy('timestamp', 'desc')
@@ -1338,7 +1519,7 @@ function setupNotificationListener(userId) {
             notifs.push({ id: doc.id, ...doc.data() });
         });
 
-        state.notificacoes = notifs; // Guarda a lista completa no state
+    state.notificacoes = notifs; // Guarda a lista completa no state
         
         // ==========================================================
         // AQUI ESTÁ A NOVA LÓGICA DE CONTAGEM
@@ -1364,6 +1545,26 @@ function setupNotificationListener(userId) {
         state.notificacoesPresentesNaoLidas = presentesNaoLidos;
     state.notificacoesConquistasNaoLidas = conquistasNaoLidas;
         // ==========================================================
+        const docChanges = snapshot.docChanges ? snapshot.docChanges() : [];
+        if (hasProcessedInitialNotifications && docChanges.length) {
+            const newAchievementNotifs = [];
+            docChanges.forEach((change) => {
+                if (change.type === 'added') {
+                    const notifData = { id: change.doc.id, ...change.doc.data() };
+                    if (!notifData.lida && (notifData.tipo === 'achievement' || notifData.icone === 'fa-trophy')) {
+                        newAchievementNotifs.push(notifData);
+                    }
+                }
+            });
+            if (newAchievementNotifs.length) {
+                console.log('Novas notificações de conquista detectadas:', newAchievementNotifs.map((notif) => notif.id));
+                newAchievementNotifs.forEach(triggerAchievementCelebration);
+            }
+        }
+
+        const currentNotificationIds = new Set(notifs.map((notif) => notif.id));
+        lastNotificationIds = currentNotificationIds;
+        hasProcessedInitialNotifications = true;
 
     console.log(`Notificações carregadas: ${notifs.length}, Tarefas não lidas: ${tarefasNaoLidas}, Presentes não lidos: ${presentesNaoLidos}, Conquistas não lidas: ${conquistasNaoLidas}`);
 
@@ -2874,6 +3075,7 @@ async function loadUserDataAndNavigate(uid, email) {
 console.log('loadUserDataAndNavigate chamada para UID:', uid);
 await carregarMomentosMestres();
 try {
+    hasProcessedInitialConquistas = false;
     if (!uid) {
         console.error('UID do usuário é nulo ou indefinido em loadUserDataAndNavigate. Abortando carregamento.');
         state.etapa = 'landing';
@@ -2949,12 +3151,24 @@ try {
         }
         unsubscribeUserDoc = db.collection('usuarios').doc(uid).onSnapshot((doc) => {
             if (!doc.exists) return;
-            state.usuario = { uid: uid, email: email, ...doc.data() };
+
+            const docData = doc.data() || {};
+            const previousConquistas = { ...(state.conquistas || {}) };
+            const nextConquistas = docData.conquistas ? { ...docData.conquistas } : {};
+            const newlyUnlockedIds = hasProcessedInitialConquistas
+                ? Object.keys(nextConquistas).filter((achievementId) => nextConquistas[achievementId] && !previousConquistas[achievementId])
+                : [];
+
+            state.usuario = {
+                uid: uid,
+                email: email,
+                ...docData,
+                conquistas: nextConquistas,
+                achievementStats: docData.achievementStats ? { ...docData.achievementStats } : {},
+            };
             state.usuario.notificationsEnabled = !!state.usuario.notificationsEnabled;
             state.usuario.pareadoUid = state.usuario.pareadoUid || null;
-            state.usuario.conquistas = state.usuario.conquistas || {};
-            state.usuario.achievementStats = state.usuario.achievementStats || {};
-            state.conquistas = state.usuario.conquistas;
+            state.conquistas = nextConquistas;
             state.achievementStats = state.usuario.achievementStats;
             const hasUidPair = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
             const hasPhonePair = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
@@ -2991,6 +3205,19 @@ try {
                     renderApp();
                 }).catch((err) => console.error('Erro ao carregar parceiro pareado:', err));
             }
+            if (hasProcessedInitialConquistas && newlyUnlockedIds.length) {
+                console.log('Conquistas novas detectadas via snapshot:', newlyUnlockedIds);
+                newlyUnlockedIds.forEach((achievementId) => {
+                    const celebrationInfo = showAchievementCelebration(achievementId);
+                    if (celebrationInfo) {
+                        const celebrationText = celebrationInfo.description
+                            ? `${celebrationInfo.title}: ${celebrationInfo.description}`
+                            : celebrationInfo.title;
+                        showToast(`🏆 ${celebrationText}`, 'sucesso');
+                    }
+                });
+            }
+            hasProcessedInitialConquistas = true;
             renderApp();
         });
 
