@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosso Momento | Acesso Antecipado</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #0f0b10;
+            --color-hero: linear-gradient(140deg, #ff4d61 0%, #301531 55%, #110412 100%);
+            --color-section: linear-gradient(160deg, rgba(255, 77, 97, 0.14), rgba(35, 16, 38, 0.7));
+            --color-card: rgba(21, 15, 24, 0.88);
+            --color-surface: rgba(19, 11, 23, 0.92);
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #d2d2dc;
+            --color-text-tertiary: rgba(210, 210, 220, 0.72);
+            --color-highlight: #f59e0b;
+            --color-primary: #ff4d61;
+            --gradient-button: linear-gradient(135deg, #ff4d61 0%, #ff7584 100%);
+            --gradient-badge: linear-gradient(135deg, rgba(255, 77, 97, 0.3), rgba(245, 158, 11, 0.35));
+            --radius-lg: 36px;
+            --radius-md: 24px;
+            --radius-sm: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 120px;
+        }
+
+        section,
+        header {
+            width: min(1120px, 92vw);
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: clamp(2.6rem, 4vw, 3.6rem);
+            line-height: 1.1;
+            letter-spacing: -0.015em;
+            margin: 0;
+        }
+
+        h2 {
+            font-size: clamp(2.1rem, 3.2vw, 2.9rem);
+            line-height: 1.14;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        h3 {
+            font-size: 1.35rem;
+            margin: 0;
+        }
+
+        p {
+            margin: 0;
+            color: var(--color-text-secondary);
+            font-size: 1.06rem;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .hero {
+            position: relative;
+            margin-top: 48px;
+            padding: clamp(56px, 8vw, 96px) clamp(48px, 6vw, 72px);
+            border-radius: var(--radius-lg);
+            background: var(--color-hero);
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+            gap: clamp(38px, 6vw, 68px);
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: -25% -10% auto auto;
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 70%);
+            opacity: 0.18;
+            filter: blur(60px);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .hero-badge {
+            align-self: flex-start;
+            padding: 10px 20px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--color-text-primary);
+            font-weight: 600;
+            font-size: 0.82rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .hero-subtitle {
+            font-size: 1.18rem;
+            color: var(--color-text-secondary);
+            max-width: 520px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .btn-primary,
+        .btn-ghost {
+            border-radius: 999px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            padding: 16px 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--gradient-button);
+            color: var(--color-text-primary);
+            box-shadow: 0 18px 30px rgba(255, 77, 97, 0.32);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 22px 36px rgba(255, 77, 97, 0.36);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--color-text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+        }
+
+        .btn-ghost:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .hero-trust {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .hero-trust small {
+            color: var(--color-text-tertiary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .hero-trust ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .hero-trust li {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+        }
+
+        .hero-panel {
+            position: relative;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .signup-card {
+            position: relative;
+            width: min(420px, 100%);
+            padding: 26px 28px 30px;
+            border-radius: var(--radius-md);
+            background: var(--color-card);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            box-shadow: 0 28px 46px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .signup-card header {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .signup-card header img {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+        }
+
+        .signup-card header div {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .signup-card strong {
+            font-size: 1.15rem;
+        }
+
+        form {
+            display: grid;
+            gap: 16px;
+        }
+
+        label {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        input {
+            background: rgba(13, 7, 16, 0.9);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px;
+            font-size: 1rem;
+            color: var(--color-text-primary);
+            transition: border 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input::placeholder {
+            color: rgba(210, 210, 220, 0.48);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: rgba(255, 117, 132, 0.9);
+            box-shadow: 0 0 0 4px rgba(255, 117, 132, 0.18);
+        }
+
+        .form-info {
+            font-size: 0.85rem;
+            color: var(--color-text-tertiary);
+        }
+
+        .form-feedback {
+            font-size: 0.9rem;
+            color: var(--color-highlight);
+            min-height: 1.3rem;
+        }
+
+        .metric-band {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+        }
+
+        .metric-card {
+            padding: 26px;
+            border-radius: var(--radius-md);
+            background: var(--color-section);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 24px 40px rgba(0, 0, 0, 0.32);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .metric-card span {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .experience-section {
+            display: grid;
+            gap: 48px;
+        }
+
+        .experience-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 28px;
+        }
+
+        .experience-card {
+            padding: 28px;
+            border-radius: var(--radius-md);
+            background: var(--color-card);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 26px 44px rgba(0, 0, 0, 0.36);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .experience-card header {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .experience-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            display: grid;
+            place-items: center;
+            font-size: 1.4rem;
+        }
+
+        .experience-card a {
+            align-self: flex-start;
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            font-weight: 500;
+            color: var(--color-primary);
+            text-decoration: none;
+            margin-top: 6px;
+        }
+
+        .story-section {
+            padding: clamp(48px, 6vw, 72px);
+            border-radius: var(--radius-lg);
+            background: var(--color-section);
+            display: grid;
+            gap: 32px;
+        }
+
+        blockquote {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--color-text-primary);
+        }
+
+        .story-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            color: var(--color-text-tertiary);
+        }
+
+        .cta-section {
+            position: relative;
+            padding: clamp(48px, 6vw, 72px);
+            border-radius: var(--radius-lg);
+            background: linear-gradient(145deg, rgba(255, 77, 97, 0.22), rgba(20, 9, 24, 0.92));
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr);
+            gap: clamp(32px, 5vw, 52px);
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: "";
+            position: absolute;
+            inset: -35% auto auto 20%;
+            width: 420px;
+            height: 420px;
+            background: radial-gradient(circle, rgba(255, 77, 97, 0.32), transparent 70%);
+            opacity: 0.5;
+            filter: blur(38px);
+        }
+
+        .cta-copy {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .cta-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 12px;
+            color: var(--color-text-primary);
+        }
+
+        .cta-list li {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .cta-list li span {
+            font-size: 1.3rem;
+        }
+
+        .cta-button {
+            width: min(420px, 100%);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .founders-badge {
+            position: relative;
+            background: var(--color-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 0 26px 44px rgba(0, 0, 0, 0.38);
+        }
+
+        .founders-badge::before {
+            content: "";
+            position: absolute;
+            inset: -18% 40% auto -20%;
+            width: 220px;
+            height: 220px;
+            background: var(--gradient-badge);
+            opacity: 0.75;
+            filter: blur(12px);
+        }
+
+        .badge-header {
+            position: relative;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .badge-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            display: grid;
+            place-items: center;
+            font-size: 1.6rem;
+        }
+
+        .badge-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .badge-pill {
+            align-self: flex-start;
+            padding: 8px 18px;
+            border-radius: 999px;
+            background: rgba(255, 77, 97, 0.22);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        footer {
+            width: min(1120px, 92vw);
+            margin: 0 auto 64px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            color: var(--color-text-tertiary);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .footer-links,
+        .social-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .footer-links a,
+        .social-links a {
+            color: var(--color-text-tertiary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover,
+        .social-links a:hover {
+            color: var(--color-text-primary);
+        }
+
+        @media (max-width: 1024px) {
+            .hero,
+            .cta-section {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-section::before {
+                left: 5%;
+            }
+        }
+
+        @media (max-width: 720px) {
+            main {
+                gap: 96px;
+            }
+
+            .hero,
+            .cta-section,
+            .story-section {
+                padding: 40px 32px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .signup-card {
+                padding: 24px;
+            }
+
+            .founders-badge {
+                padding: 26px;
+            }
+        }
+
+        @media (max-width: 540px) {
+            h1 {
+                font-size: 2.4rem;
+            }
+
+            .hero,
+            .cta-section,
+            .story-section {
+                padding: 34px 24px;
+            }
+
+            .hero-trust ul {
+                gap: 12px;
+            }
+
+            .badge-icon {
+                width: 52px;
+                height: 52px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <header class="hero" id="hero">
+            <div class="hero-content">
+                <span class="hero-badge">Acesso antecipado</span>
+                <h1>Conquiste momentos épicos juntos. Comece uma economia de amor só do casal.</h1>
+                <p class="hero-subtitle">O Nosso Momento transforma desejos em conquistas reais. Vocês definem recompensas, distribuem foguinhos e mantêm a chama acesa com experiências que fogem da rotina.</p>
+                <div class="hero-actions">
+                    <button class="btn-primary" type="button" onclick="document.getElementById('hero-form').scrollIntoView({behavior: 'smooth'})">Entrar na lista VIP</button>
+                    <a class="btn-ghost" href="#experiencias">Ver como funciona</a>
+                </div>
+                <div class="hero-trust">
+                    <small>Casais que já estão jogando</small>
+                    <ul>
+                        <li>💘 +1.500 momentos resgatados</li>
+                        <li>🔥 Foguinhos liberados todos os dias</li>
+                        <li>🛡️ Privacidade criptografada</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="hero-panel">
+                <div class="signup-card">
+                    <header>
+                        <img src="assets/icons/logo-app-white.png" alt="Logo do aplicativo Nosso Momento" loading="lazy">
+                        <div>
+                            <strong>Lista VIP + 50 foguinhos</strong>
+                            <span class="form-info">Casais fundadores liberam bônus exclusivo</span>
+                        </div>
+                    </header>
+                    <form id="hero-form" aria-label="Formulário de lista VIP">
+                        <label>
+                            Digite seu melhor e-mail
+                            <input type="email" name="email" placeholder="seuemail@exemplo.com" required>
+                        </label>
+                        <label>
+                            Seu WhatsApp (opcional)
+                            <input type="tel" name="whatsapp" placeholder="(00) 00000-0000" inputmode="tel">
+                        </label>
+                        <button class="btn-primary" type="submit">Garantir minha vaga + bônus</button>
+                        <span class="form-info">Acesso antecipado gratuito para casais fundadores.</span>
+                        <span class="form-feedback" role="status" aria-live="polite"></span>
+                    </form>
+                </div>
+            </div>
+        </header>
+
+        <section class="metric-band" aria-label="Indicadores do Nosso Momento">
+            <article class="metric-card">
+                <span>92%</span>
+                <p>dos casais piloto afirmam se sentir mais conectados após 2 semanas usando o app.</p>
+            </article>
+            <article class="metric-card">
+                <span>3x</span>
+                <p>mais momentos especiais planejados quando os foguinhos entram em jogo.</p>
+            </article>
+            <article class="metric-card">
+                <span>24h</span>
+                <p>para receber o primeiro kit de desafios e liberar missões exclusivas.</p>
+            </article>
+        </section>
+
+        <section class="experience-section" id="experiencias">
+            <div>
+                <h2>Escolha o mood do casal e desbloqueie experiências sob medida</h2>
+                <p>Inspirado nos hubs do Bumble, criamos modos de jogo que encaixam nos objetivos de vocês: do romance casual ao próximo grande salto.</p>
+            </div>
+            <div class="experience-grid">
+                <article class="experience-card">
+                    <header>
+                        <span class="experience-icon" aria-hidden="true">💞</span>
+                        <div>
+                            <h3>Modo Romance</h3>
+                            <small>Crie rituais de carinho sem cair na rotina.</small>
+                        </div>
+                    </header>
+                    <p>Monte um catálogo com surpresas fofas, playlists secretas e convites para noites temáticas. Cada gesto gera foguinhos extras.</p>
+                    <a href="#hero">Explorar modo</a>
+                </article>
+                <article class="experience-card">
+                    <header>
+                        <span class="experience-icon" aria-hidden="true">🎯</span>
+                        <div>
+                            <h3>Modo Missões</h3>
+                            <small>Gamifique metas conjuntas.</small>
+                        </div>
+                    </header>
+                    <p>Definam desafios semanais, check-ins diários e recompensas épicas. Ideal para casais que querem evolução constante.</p>
+                    <a href="#hero">Explorar modo</a>
+                </article>
+                <article class="experience-card">
+                    <header>
+                        <span class="experience-icon" aria-hidden="true">🔥</span>
+                        <div>
+                            <h3>Modo Playful</h3>
+                            <small>Para quem gosta de ousar.</small>
+                        </div>
+                    </header>
+                    <p>Cardápio apimentado, conquistas rápidas e notificações que atiçam a curiosidade. Tudo dentro da privacidade do casal.</p>
+                    <a href="#hero">Explorar modo</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="story-section">
+            <div>
+                <h2>Histórias reais de casais que transformaram a rotina</h2>
+            </div>
+            <blockquote>“Os foguinhos viraram nossa moeda do amor. A cada presente, ganhamos créditos para um momento ainda maior. É viciante (no melhor dos sentidos).”</blockquote>
+            <div class="story-meta">
+                <strong>Ana & Rafa</strong>
+                <span>Juntos há 6 anos · Casais fundadores desde o beta</span>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="cta-copy">
+                <h2>Torne-se um Casal Fundador e ganhe acesso prioritário</h2>
+                <p>Estamos liberando convites por ondas. Assine agora para receber o link exclusivo e começar com vantagem dentro do jogo.</p>
+                <ul class="cta-list">
+                    <li><span>🚀</span>Acesso antecipado ao beta fechado.</li>
+                    <li><span>🎁</span>50 foguinhos extras para investir nos primeiros desejos.</li>
+                    <li><span>👑</span>Selo permanente de casal fundador dentro do app.</li>
+                </ul>
+                <button class="btn-primary cta-button" type="button" onclick="document.getElementById('hero-form').scrollIntoView({behavior: 'smooth'})">Quero meus 50 foguinhos agora</button>
+            </div>
+            <aside class="founders-badge">
+                <div class="badge-header">
+                    <span class="badge-icon" aria-hidden="true">💑</span>
+                    <div class="badge-text">
+                        <strong>Badge Casal Fundador</strong>
+                        <span class="form-info">Exclusivo para os 200 primeiros convites</span>
+                    </div>
+                </div>
+                <p>Desbloqueie um selo premium dentro do aplicativo, participação em encontros secretos da comunidade e prioridade nos próximos recursos.</p>
+                <span class="badge-pill">Convite único</span>
+            </aside>
+        </section>
+    </main>
+
+    <footer>
+        <nav class="footer-links" aria-label="Links institucionais">
+            <a href="#hero">Contato</a>
+            <a href="#hero">Termos de Uso</a>
+            <a href="#hero">Política de Privacidade</a>
+        </nav>
+        <div class="social-links" aria-label="Redes sociais">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer">TikTok</a>
+        </div>
+        <span>© 2024 Nosso Momento. Todos os direitos reservados.</span>
+    </footer>
+
+    <script>
+        const form = document.getElementById('hero-form');
+        const feedback = document.querySelector('.form-feedback');
+
+        if (form && feedback) {
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const emailField = form.querySelector('input[type="email"]');
+                if (!emailField || !emailField.value.trim()) {
+                    feedback.textContent = 'Ops! Precisamos do seu melhor e-mail para liberar o convite.';
+                    feedback.style.color = '#ff7584';
+                    emailField && emailField.focus();
+                    return;
+                }
+
+                feedback.textContent = 'Tudo certo! Você está na lista VIP. Em breve enviaremos as próximas instruções.';
+                feedback.style.color = 'var(--color-highlight)';
+                form.reset();
+            });
+        }
+    </script>
+</body>
+</html>
