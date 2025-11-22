@@ -562,6 +562,7 @@
         hint: 'Envie um foguinho pela tela de check-in.',
         icon: 'fa-person-rays',
         accentColor: '#fbbf24',
+        reward: 1,
     },
     {
         id: 'checkin_streak_7',
@@ -571,6 +572,7 @@
         hint: 'Faça check-ins diários sem perder nenhum dia.',
         icon: 'fa-calendar-week',
         accentColor: '#34d399',
+        reward: 3,
     },
     {
         id: 'checkin_master',
@@ -580,6 +582,7 @@
         hint: 'Consistência é tudo: presenteie seu par frequentemente.',
         icon: 'fa-stopwatch',
         accentColor: '#60a5fa',
+        reward: 10,
     },
     {
         id: 'first_moment_redeem',
@@ -589,6 +592,7 @@
         hint: 'Escolha um momento e resgate com foguinhos.',
         icon: 'fa-heart',
         accentColor: '#f472b6',
+        reward: 1,
     },
     {
         id: 'moment_collector',
@@ -598,6 +602,7 @@
         hint: 'Continue resgatando momentos para o seu mural.',
         icon: 'fa-gift',
         accentColor: '#c084fc',
+        reward: 3,
     },
     {
         id: 'foguinhos_investor',
@@ -607,6 +612,7 @@
         hint: 'Momentos incríveis custam foguinhos – continue investindo!',
         icon: 'fa-coins',
         accentColor: '#facc15',
+        reward: 10,
     },
 ];
 
@@ -1593,6 +1599,8 @@ async function renderAchievementsPopup() {
         const dataDesbloqueio = desbloqueada ? formatarDataCurta(conquista.unlockedAt) : '';
         const iconClass = achievement.icon || 'fa-trophy';
         const hintAttr = dica ? `title="${escapeHtmlAttr(dica)}"` : '';
+        const recompensa = typeof achievement.reward === 'number' ? achievement.reward : null;
+        const recompensaTexto = recompensa !== null ? `Recompensa: ${recompensa} foguinho${recompensa === 1 ? '' : 's'}` : '';
 
         return `
             <div class="rounded-2xl p-5 sm:p-6 border transition ${desbloqueada ? 'bg-gray-900 border-transparent shadow-lg shadow-black/30' : 'bg-gray-800/40 border-gray-700 backdrop-blur-sm opacity-70'}" ${hintAttr}>
@@ -1603,7 +1611,8 @@ async function renderAchievementsPopup() {
                     <div class="flex-1">
                         <h4 class="font-semibold text-base sm:text-lg ${desbloqueada ? '' : 'text-gray-300'}">${titulo}</h4>
                         <p class="text-xs sm:text-sm ${desbloqueada ? 'text-gray-300' : 'text-gray-500'}">${descricao}</p>
-                        ${desbloqueada ? `<p class="text-xs text-emerald-400 mt-2"><i class="fas fa-check-circle mr-1"></i>${dataDesbloqueio ? `Conquistado em ${dataDesbloqueio}` : 'Conquista desbloqueada!'}</p>` : `<p class="text-[11px] text-gray-500 mt-2">${dica || 'Complete a tarefa para desbloquear.'}</p>`}
+                        ${recompensaTexto ? `<p class="text-xs sm:text-sm font-semibold text-amber-400 mt-2">${recompensaTexto}</p>` : ''}
+                        ${desbloqueada ? `<p class="text-xs text-emerald-400 mt-1"><i class="fas fa-check-circle mr-1"></i>${dataDesbloqueio ? `Conquistado em ${dataDesbloqueio}` : 'Conquista desbloqueada!'}</p>` : `<p class="text-[11px] text-gray-500 mt-1">${dica || 'Complete a tarefa para desbloquear.'}</p>`}
                     </div>
                 </div>
             </div>

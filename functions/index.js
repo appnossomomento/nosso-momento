@@ -211,6 +211,15 @@ const ACHIEVEMENTS = [
   },
 ];
 
+const ACHIEVEMENT_REWARDS = {
+  first_check_in: 1,
+  checkin_streak_7: 3,
+  checkin_master: 10,
+  first_moment_redeem: 1,
+  moment_collector: 3,
+  foguinhos_investor: 10,
+};
+
 function getMomentsRedeemedTotal(stats) {
   if (!stats || !stats.momentsRedeemed) {
     return 0;
@@ -251,6 +260,7 @@ function grantAchievementsInTransaction({
   const unlocked = [];
   const achievementUpdates = {};
   const now = admin.firestore.Timestamp.now();
+  let totalAchievementReward = 0;
 
   const knownAchievements = {...currentAchievements};
 
@@ -321,6 +331,15 @@ function grantAchievementsInTransaction({
       achievementPayload.progressSnapshot = snapshot;
     }
 
+    const rewardAmount = ACHIEVEMENT_REWARDS[definition.id] || 0;
+    if (rewardAmount > 0) {
+      totalAchievementReward += rewardAmount;
+      achievementPayload.reward = {
+        amount: rewardAmount,
+        grantedAt: now,
+      };
+    }
+
     achievementUpdates[`conquistas.${definition.id}`] = achievementPayload;
 
     const notifRef = admin.firestore().collection("notificacoes").doc();
@@ -338,7 +357,16 @@ function grantAchievementsInTransaction({
   }
 
   if (Object.keys(achievementUpdates).length) {
+    if (totalAchievementReward > 0) {
+      achievementUpdates.foguinhos = admin.firestore.FieldValue.increment(
+          totalAchievementReward,
+      );
+    }
     tx.update(userRef, achievementUpdates);
+  } else if (totalAchievementReward > 0) {
+    tx.update(userRef, {
+      foguinhos: admin.firestore.FieldValue.increment(totalAchievementReward),
+    });
   }
 
   return unlocked;
@@ -1094,7 +1122,7 @@ exports.processInput = onDocumentCreated(
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
             });
 
-            const granted = grantAchievementsInTransaction({
+            const granted = await grantAchievementsInTransaction({
               tx,
               userRef: senderRef,
               userId: fromUid,
@@ -1276,7 +1304,7 @@ exports.processInput = onDocumentCreated(
               processedBy: "functions.processInput",
             });
 
-            const granted = grantAchievementsInTransaction({
+            const granted = await grantAchievementsInTransaction({
               tx,
               userRef: senderRef,
               userId: fromUid,
@@ -1448,6 +1476,112 @@ exports.processInput = onDocumentCreated(
         } catch (e) {
           console.error("processInput: erro marcando input com erro", e);
         }
+      }
+    },
+);
+
+exports.handleMomentTaskUpdate = onDocumentUpdated(
+    "tarefasMomentos/{taskId}",
+    async (event) => {
+      const beforeSnap = event.data && event.data.before;
+      const afterSnap = event.data && event.data.after;
+
+      if (!beforeSnap || !afterSnap) {
+        console.log("handleMomentTaskUpdate: snapshots ausentes");
+        return;
+      }
+
+      const beforeData = beforeSnap.data();
+      const afterData = afterSnap.data();
+      if (!beforeData || !afterData) {
+        console.log("handleMomentTaskUpdate: dados ausentes");
+        return;
+      }
+
+      if (beforeData.status === afterData.status) {
+        return;
+      }
+
+      if (afterData.status !== "Realizado") {
+        return;
+      }
+
+      const taskId = event.params && event.params.taskId;
+      if (!taskId) {
+        console.log("handleMomentTaskUpdate: taskId ausente");
+        return;
+      }
+
+      const taskRef = admin
+          .firestore()
+          .collection("tarefasMomentos")
+          .doc(taskId);
+
+      try {
+        await admin.firestore().runTransaction(async (tx) => {
+          const taskSnap = await tx.get(taskRef);
+          if (!taskSnap.exists) {
+            return;
+          }
+
+          const taskData = taskSnap.data() || {};
+          if (taskData.status !== "Realizado") {
+            return;
+          }
+
+          const executeUid = taskData.executadoPorUid;
+          const rawIntensity = Number(taskData.custoFoguinhos);
+          const intensity = Number.isFinite(rawIntensity) ? rawIntensity : 0;
+          const baseReward = Math.round(intensity * 0.5);
+          const rewardAmount = intensity > 0 ? Math.max(1, baseReward) : 0;
+
+          if (!executeUid || rewardAmount <= 0) {
+            tx.update(taskRef, {
+              bonusGrantedAt: admin.firestore.FieldValue.serverTimestamp(),
+              bonusAmount: 0,
+            });
+            return;
+          }
+
+          const executeRef = admin
+              .firestore()
+              .collection("usuarios")
+              .doc(executeUid);
+
+          const nowTs = admin.firestore.Timestamp.now();
+
+          tx.update(executeRef, {
+            foguinhos: admin.firestore.FieldValue.increment(rewardAmount),
+          });
+
+          const momentName = taskData.momentoNome || "momento";
+          const messageParts = [
+            `Você ganhou ${rewardAmount} foguinho(s)`,
+            `ao realizar "${momentName}".`,
+          ];
+          const message = messageParts.join(" ");
+
+          const notifRef = admin.firestore().collection("notificacoes").doc();
+          tx.set(notifRef, {
+            userId: executeUid,
+            titulo: "Missão concluída!",
+            mensagem: message,
+            icone: "fa-fire",
+            tipo: "moment_completion",
+            lida: false,
+            timestamp: nowTs,
+          });
+
+          tx.update(taskRef, {
+            bonusGrantedAt: nowTs,
+            bonusAmount: rewardAmount,
+          });
+        });
+      } catch (error) {
+        console.error("handleMomentTaskUpdate: erro ao conceder bônus", {
+          taskId,
+          error,
+        });
       }
     },
 );
