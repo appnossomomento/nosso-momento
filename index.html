@@ -370,6 +370,37 @@
     animation: slideInUp 0.35s ease-out forwards;
 }
 
+.achievements-popup-card .achievements-scroll-area {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(251, 191, 36, 0.65) rgba(30, 30, 30, 0.6);
+}
+
+.achievements-popup-card .achievements-scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.achievements-popup-card .achievements-scroll-area::-webkit-scrollbar-track {
+    background: rgba(30, 30, 30, 0.6);
+    border-radius: 9999px;
+}
+
+.achievements-popup-card .achievements-scroll-area::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(251, 191, 36, 0.85), rgba(249, 115, 22, 0.85));
+    border-radius: 9999px;
+}
+
+.achievements-popup-card .achievements-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(251, 191, 36, 1), rgba(249, 115, 22, 1));
+}
+
+.achievement-card {
+    padding: 16px;
+}
+
+.achievement-card.sm-card-padding {
+    padding: 20px;
+}
+
 @media (max-width: 640px) {
     .achievements-popup-card {
         margin-top: 48px;
@@ -1603,7 +1634,7 @@ async function renderAchievementsPopup() {
         const recompensaTexto = recompensa !== null ? `Recompensa: ${recompensa} foguinho${recompensa === 1 ? '' : 's'}` : '';
 
         return `
-            <div class="rounded-2xl p-5 sm:p-6 border transition ${desbloqueada ? 'bg-gray-900 border-transparent shadow-lg shadow-black/30' : 'bg-gray-800/40 border-gray-700 backdrop-blur-sm opacity-70'}" ${hintAttr}>
+            <div class="achievement-card sm-card-padding rounded-2xl border transition ${desbloqueada ? 'bg-gray-900 border-transparent shadow-lg shadow-black/30' : 'bg-gray-800/40 border-gray-700 backdrop-blur-sm opacity-70'}" ${hintAttr}>
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${desbloqueada ? '' : 'border border-gray-600'}" style="${desbloqueada ? `background: ${cor}; color: #111827;` : ''}">
                         <i class="fas ${iconClass} text-lg sm:text-xl"></i>
@@ -1638,7 +1669,7 @@ async function renderAchievementsPopup() {
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="mt-6 sm:mt-8 sm:flex-1 sm:overflow-y-auto sm:pr-3">
+                <div class="mt-6 sm:mt-8 sm:flex-1 sm:overflow-y-auto sm:pr-3 achievements-scroll-area">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                         ${gridHtml}
                     </div>
