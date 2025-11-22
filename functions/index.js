@@ -159,6 +159,23 @@ const ACHIEVEMENTS = [
     }),
   },
   {
+    id: "sou_fiel",
+    trigger: "daily_check_in",
+    title: "Sou Fiel",
+    description: "Realize 60 check-ins no total.",
+    hint: "Mantenha o ritmo diário para mostrar compromisso.",
+    icon: "fa-hand-holding-heart",
+    accentColor: "#38bdf8",
+    notificationIcon: "fa-trophy",
+    notificationTitle: "🏆 Você é pura constância!",
+    notificationMessage: "60 check-ins completos — fidelidade em alta!",
+    check: ({stats}) => (stats.totalCheckins || 0) >= 60,
+    snapshot: ({stats}) => ({
+      totalCheckins: stats.totalCheckins || 0,
+      bestDailyStreak: stats.bestDailyStreak || 0,
+    }),
+  },
+  {
     id: "first_moment_redeem",
     trigger: "moment_redeem",
     title: "Primeiro Momento",
@@ -209,15 +226,34 @@ const ACHIEVEMENTS = [
       momentsRedeemed: getMomentsRedeemedTotal(stats),
     }),
   },
+  {
+    id: "caliente",
+    trigger: "moment_redeem",
+    title: "Caliente",
+    description: "Gaste 100 foguinhos em momentos.",
+    hint: "Continue investindo para viver experiências intensas.",
+    icon: "fa-fire-flame-curved",
+    accentColor: "#fb923c",
+    notificationIcon: "fa-trophy",
+    notificationTitle: "🔥 Modo Caliente ativado!",
+    notificationMessage: "Você já investiu 100 foguinhos em momentos!",
+    check: ({stats}) => (stats.totalFoguinhosGastos || 0) >= 100,
+    snapshot: ({stats}) => ({
+      totalFoguinhosGastos: stats.totalFoguinhosGastos || 0,
+      momentsRedeemed: getMomentsRedeemedTotal(stats),
+    }),
+  },
 ];
 
 const ACHIEVEMENT_REWARDS = {
   first_check_in: 1,
   checkin_streak_7: 3,
   checkin_master: 10,
+  sou_fiel: 20,
   first_moment_redeem: 1,
   moment_collector: 3,
   foguinhos_investor: 10,
+  caliente: 20,
 };
 
 function getMomentsRedeemedTotal(stats) {
