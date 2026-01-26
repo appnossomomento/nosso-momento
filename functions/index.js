@@ -6,7 +6,9 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-setGlobalOptions({region: "southamerica-east1"});
+setGlobalOptions({
+  region: "southamerica-east1",
+});
 
 function normalizePhone(value) {
   if (!value) return null;
@@ -2147,12 +2149,19 @@ exports.setNotificationToken = https.onRequest(async (req, res) => {
 // documento em `inputs` com privilégios admin.
 exports.createInput = https.onRequest(async (req, res) => {
   // CORS: permitir chamadas do browser (preflight OPTIONS + POST)
-  const origin = req.get("Origin") || req.get("origin") || "*";
-  res.set("Access-Control-Allow-Origin", origin);
+  const originHeader = req.get("Origin") || req.get("origin") || "";
+  const allowOrigin = (
+      originHeader === "null" || !originHeader ? "*" : originHeader
+  );
+  const requestedHeaders = req.get("Access-Control-Request-Headers");
+
+  res.set("Access-Control-Allow-Origin", allowOrigin);
   res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  // Opcional: permitir credenciais se necessário
-  // res.set('Access-Control-Allow-Credentials', 'true');
+  res.set(
+      "Access-Control-Allow-Headers",
+      requestedHeaders || "Authorization, Content-Type",
+  );
+  res.set("Vary", "Origin");
 
   if (req.method === "OPTIONS") {
     // Preflight request

@@ -507,6 +507,7 @@
     const storage = firebase.storage();
     const CREATE_INPUT_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/createInput';
     const SET_NOTIFICATION_TOKEN_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/setNotificationToken';
+    const REGISTRATION_ENABLED = false;
   </script>
 
     <script>
@@ -993,6 +994,13 @@ function triggerAchievementCelebration(notif) {
     // Apenas o conteúdo DENTRO da #app será renderizado por estas funções
 
     function renderLandingPage() {
+        const registerButton = REGISTRATION_ENABLED ? `
+                        <button onclick="changeStep('register')" class="btn-red w-full py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: none;">
+                            <span class="text-lg">CADASTRO</span>
+                            <i class="fas fa-user-plus"></i>
+                        </button>
+        ` : '';
+
         appContainer.innerHTML = `
             <div class="min-h-screen flex flex-col justify-center items-center px-4" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
                 
@@ -1008,10 +1016,7 @@ function triggerAchievementCelebration(notif) {
                             <span class="text-lg">ENTRAR</span>
                             <i class="fas fa-sign-in-alt"></i>
                         </button>
-                        <button onclick="changeStep('register')" class="btn-red w-full py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: none;">
-                            <span class="text-lg">CADASTRO</span>
-                            <i class="fas fa-user-plus"></i>
-                        </button>
+                        ${registerButton}
                     </div>
                 </div>
             </div>
@@ -2729,7 +2734,12 @@ renderApp();
                 renderSignIn();
                 break;
             case 'register':
-                renderRegister();
+                if (REGISTRATION_ENABLED) {
+                    renderRegister();
+                } else {
+                    state.etapa = 'signIn';
+                    renderSignIn();
+                }
                 break;
             case 'parear':
                 renderPareamento();
@@ -2960,6 +2970,11 @@ async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
 
     // Função para mudar a etapa da aplicação
     function changeStep(newStep) {
+// Bloqueia navegação para cadastro quando desativado
+if (!REGISTRATION_ENABLED && newStep === 'register') {
+    showToast('Cadastros estão fechados nesta fase.', 'aviso');
+    newStep = 'signIn';
+}
 // Lógica de Navegação Simplificada
 // Se o usuário clicar no ícone da tela em que ele já está...
 if (state.etapa === newStep) {
@@ -3306,8 +3321,13 @@ try {
     } else {
         console.log('Usuário logado via Auth, mas sem documento de perfil no Firestore.');
     state.usuario = { uid: uid, email: email, conquistas: {}, achievementStats: {} };
-        state.etapa = 'register';
-        alert('Por favor, complete seu cadastro para acessar todas as funcionalidades.');
+        if (REGISTRATION_ENABLED) {
+            state.etapa = 'register';
+            alert('Por favor, complete seu cadastro para acessar todas as funcionalidades.');
+        } else {
+            state.etapa = 'signIn';
+            alert('Perfil incompleto. Entre em contato com o suporte do MVP.');
+        }
     }
 } catch (error) {
     console.error('Erro ao carregar dados do usuário:', error);
