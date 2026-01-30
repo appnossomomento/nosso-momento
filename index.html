@@ -129,7 +129,7 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 70px; /* Altura da barra */
+            height: 48px; /* Altura da barra */
             display: flex;
             justify-content: space-around;
             align-items: center;
@@ -151,9 +151,6 @@
             text-align: center; /* Centraliza o conteúdo dentro do item */
         }
         .bottom-nav-item.active {
-            color: #FF6B7C; /* Cor de destaque */
-        }
-        .bottom-nav-item:hover {
             color: #FF6B7C; /* Cor de destaque no hover */
         }
         .bottom-nav-item i {
@@ -203,41 +200,41 @@
         .achievement-celebration {
             display: flex;
             align-items: center;
-            gap: 14px;
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.94), rgba(17, 24, 39, 0.94));
-            border-radius: 9999px;
-            padding: 16px 26px;
-            border: 1px solid rgba(251, 191, 36, 0.55);
-            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+            gap: 12px;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 12px 18px;
+            border: 1px solid rgba(255, 45, 63, 0.15);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.2);
         }
         .achievement-celebration__icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #111827;
-            font-size: 22px;
-            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.25);
+            color: #ffffff;
+            font-size: 18px;
+            box-shadow: 0 6px 16px rgba(255, 45, 63, 0.28);
             animation: trophyPop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .achievement-celebration__eyebrow {
-            font-size: 0.72rem;
-            letter-spacing: 0.14em;
+            font-size: 0.68rem;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.65);
+            color: rgba(55, 65, 81, 0.7);
             margin-bottom: 2px;
         }
         .achievement-celebration__title {
             font-weight: 700;
-            font-size: 1.05rem;
-            color: #f9fafb;
+            font-size: 0.98rem;
+            color: #111827;
         }
         .achievement-celebration__message {
-            margin-top: 4px;
-            font-size: 0.85rem;
-            color: rgba(226, 232, 240, 0.95);
+            margin-top: 2px;
+            font-size: 0.82rem;
+            color: rgba(55, 65, 81, 0.85);
         }
         @keyframes trophyPop {
             0% { transform: scale(0.5) rotate(-12deg); opacity: 0; }
@@ -299,25 +296,128 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 60px;   /* Tamanho do círculo */
-    height: 60px;  /* Tamanho do círculo */
+    width: 52px;   /* Tamanho do círculo */
+    height: 52px;  /* Tamanho do círculo */
     background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
     color: white;
     border-radius: 50%; /* Deixa o botão redondo */
     border: 3px solid #1f2937; /* Cor de fundo da sua barra de navegação, para dar um efeito de recorte */
-    transform: translateY(-20px); /* Move o botão para cima */
+    transform: translateY(-14px); /* Move o botão para cima */
     box-shadow: 0 -5px 15px rgba(255, 53, 71, 0.4);
     transition: all 0.3s ease;
 }
 
 .bottom-nav-item-center:hover {
-    transform: translateY(-23px) scale(1.05); /* Efeito suave ao passar o mouse */
+    transform: translateY(-16px) scale(1.05); /* Efeito suave ao passar o mouse */
     box-shadow: 0 -8px 20px rgba(255, 53, 71, 0.5);
 }
 
 .bottom-nav-item-center i {
-    font-size: 24px;
+    font-size: 22px;
+    color: #ffffff;
 }
+
+        .icon-gradient {
+            background: linear-gradient(135deg, #ff2d3f 0%, #ff5565 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+
+        .notification-shell {
+            background: rgba(16, 12, 20, 0.92);
+            border-radius: 32px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+        }
+        .notification-card {
+            background: rgba(17, 24, 39, 0.55);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+        }
+        .notification-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .notification-time {
+            font-size: 11px;
+            color: rgba(255,255,255,0.55);
+        }
+        .notification-pill {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .notif-shell {
+            background: #120b16;
+            border-radius: 28px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+        }
+        .notif-card-white {
+            background: #f8f8fb;
+            border-radius: 20px;
+            padding: 18px;
+            color: #1f2937;
+        }
+        .notif-tab {
+            flex: 1;
+            min-width: 0;
+            padding: 7px 10px;
+            border-radius: 999px;
+            font-weight: 600;
+            text-align: center;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.75);
+            border: 1px solid rgba(255,255,255,0.12);
+            transition: all 0.2s ease;
+            backdrop-filter: blur(6px);
+            font-size: 0.82rem;
+            line-height: 1.1;
+            white-space: nowrap;
+        }
+        .notif-tab:hover {
+            background: rgba(255,255,255,0.16);
+        }
+        .notif-tab.active {
+            background: linear-gradient(135deg, #ff2d3f 0%, #ff5565 100%);
+            color: #fff;
+            border-color: rgba(255,255,255,0.2);
+            box-shadow: 0 8px 18px rgba(255, 45, 63, 0.25);
+        }
+        .notif-list-shell {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 14px;
+        }
+        .notif-item {
+            background: #efeff1;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #374151;
+        }
+        .notif-item img {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
 
 /*
 // =========================================
@@ -429,6 +529,37 @@
 .instagram-cta-inner i { font-size: 16px; }
 .instagram-cta-inner:hover { transform: translateY(-2px); }
 
+.pending-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background: #ffffff;
+    color: #ff2d3f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 16px rgba(255, 45, 63, 0.35);
+    animation: pendingPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pendingPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
         </style>
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-556FY0WV3Q"></script>
@@ -466,19 +597,18 @@
 </head>
 <body class="bg-black text-white font-sans">
     <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800" style="display: none;">
-    <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
-        <div class="flex items-center">
-            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento Logo" class="h-[55px] w-auto">
+    <div class="container mx-auto px-4 py-3 flex items-center header-content">
+        <div class="flex-1">
+            <button onclick="changeStep('dashboard')" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
+                <i class="fas fa-home text-xs"></i> <span class="hidden sm:inline">Início</span>
+            </button>
         </div>
 
-        <div class="flex items-center gap-4">
-            <button onclick="changeStep('notificacoes')" class="relative text-gray-400 hover:text-white transition">
-                <i class="fas fa-bell text-xl"></i>
-                <span id="notificationDot" class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span>
-            </button>
-            
-            <img id="headerProfilePic" src="" class="w-8 h-8 rounded-full object-cover hidden sm:block">
-            <span id="userNameDisplay" class="text-gray-300 text-sm font-medium hidden sm:inline"></span>
+        <div class="flex-1 flex justify-center">
+            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento Logo" class="h-[36px] w-auto">
+        </div>
+
+        <div class="flex-1 flex justify-end">
             <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
                 <i class="fas fa-sign-out-alt text-xs"></i> <span class="hidden sm:inline">Sair</span>
             </button>
@@ -508,6 +638,7 @@
     const CREATE_INPUT_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/createInput';
     const SET_NOTIFICATION_TOKEN_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/setNotificationToken';
     const REGISTRATION_ENABLED = false;
+    const NOTIFICATION_HIGHLIGHT = 'rgba(251, 191, 36, 0.2)';
   </script>
 
     <script>
@@ -682,6 +813,14 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     notificacoesPresentesNaoLidas: 0,
     notificacoesConquistasNaoLidas: 0,
     notificacoes: [],
+    notificacoesTab: 'checkin',
+    pendingChallenge: null,
+    showChallengePopup: false,
+    challengeSecondsLeft: 0,
+    challengeTimerId: null,
+    challengeDeadline: null,
+    activeWeeklyChallengeId: null,
+    parceirosAtivos: [],
     etapa: 'landing',
     carrinho: [],
     momentosMestres: [],
@@ -692,19 +831,31 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     pareadoUid: null,
     parceiroTelefone: null,
     parceiroNome: null,
+    parceiroApelido: null,
+    pendingPartnerName: null,
     showPartnerInfo: false,
     pendingPairingRequest: null,
     showCartSidebar: false,
     showFoguinhosPopup: false,
     showAchievementsPopup: false,
+    showPairingModal: false,
+    showVipPopup: false,
     abaTarefasAtiva: 'recebidos',
+    desafiosTab: 'emAberto',
+    desafiosSemanais: [],
+    hasTriggeredFirstPairingChallenge: false,
+    desafiosCountdownId: null,
+    showRealizadoPhotoPrompt: false,
+    pendingRealizadoAction: null,
+    pendingRealizadoPhotoData: null,
     conquistas: {},
-    achievementStats: {}
+    achievementStats: {},
 };
 
 let unsubscribeNotifications = null;
 let unsubscribeUserDoc = null;
 let unsubscribePendingPairing = null;
+let unsubscribeWeeklyChallenge = null;
 let hasProcessedInitialConquistas = false;
 let activeAchievementCelebration = null;
 let activeAchievementCelebrationTimeout = null;
@@ -715,14 +866,9 @@ const recentAchievementCelebrations = new Map();
 function triggerAchievementCelebration(notif) {
     const achievementId = notif?.achievementId || null;
     const celebrationInfo = showAchievementCelebration(achievementId);
-    if (celebrationInfo) {
-        const celebrationText = celebrationInfo.description
-            ? `${celebrationInfo.title}: ${celebrationInfo.description}`
-            : celebrationInfo.title;
-        showToast(`🏆 ${celebrationText}`, 'sucesso');
-    } else if (notif?.mensagem) {
-        showToast(`🏆 ${notif.mensagem}`, 'sucesso');
-    }
+        if (celebrationInfo) {
+            return;
+        }
 }
 
     // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
@@ -1023,6 +1169,89 @@ function triggerAchievementCelebration(notif) {
         `;
     }
 
+    function renderDashboard() {
+        const pendingCount = (state.notificacoesTarefasNaoLidas || 0) +
+            (state.notificacoesPresentesNaoLidas || 0) +
+            (state.notificacoesConquistasNaoLidas || 0);
+        const hasPending = pendingCount > 0;
+        const userName = state.usuario && state.usuario.nome ? state.usuario.nome : 'Amor';
+        const fotoPerfil = (state.usuario && state.usuario.fotoUrl) || '/assets/icons/iconprincipal.png';
+        const notificationStyle = hasPending ? `background: ${NOTIFICATION_HIGHLIGHT};` : '';
+        const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
+        const hasPendingChallenge = desafiosSemanais.some((desafio) => !(desafio.concluido || desafio.completed || desafio.status === 'finalizado')) || !!state.pendingChallenge;
+
+        appContainer.innerHTML = `
+            <div class="min-h-screen bg-black text-white">
+                <section class="px-0 pt-11 pb-14" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                    <div class="flex flex-col items-center text-center -mt-3">
+                        <div class="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-3 -mt-1">
+                            <img src="${fotoPerfil}" class="w-16 h-16 rounded-full object-cover" alt="Foto de perfil">
+                        </div>
+                        <div class="-mt-2">
+                            <h2 class="text-xl font-semibold leading-tight">Olá, ${userName}</h2>
+                            <p class="text-sm text-white/80 leading-snug">Apimente suas relações</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="px-5 pb-24 -mt-10">
+                    <div class="rounded-[32px] bg-[#0f0b14] p-6 shadow-lg">
+                        <div class="grid grid-cols-2 gap-4">
+                            <button onclick="changeStep('notificacoes')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20" style="${notificationStyle}">
+                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
+                                    <i class="fas fa-bell text-xl icon-gradient"></i>
+                                </div>
+                                <h3 class="text-sm font-semibold">Notificações</h3>
+                                <p class="text-xs text-white/70">${hasPending ? `${pendingCount} pendentes` : 'Tudo em dia'}</p>
+                            </button>
+
+                            <button onclick="changeStep('gerenciarCatalogo')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
+                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
+                                    <i class="fas fa-store text-xl icon-gradient"></i>
+                                </div>
+                                <h3 class="text-sm font-semibold">Meu Catálogo</h3>
+                                <p class="text-xs text-white/70">Personalize-os</p>
+                            </button>
+
+                            <button onclick="changeStep('foguinhosPopup')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
+                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
+                                    <i class="fas fa-fire text-xl icon-gradient"></i>
+                                </div>
+                                <h3 class="text-sm font-semibold">Foguinhos</h3>
+                                <p class="text-xs text-white/70">Saldo e histórico</p>
+                            </button>
+
+                            <button onclick="changeStep('momentos')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
+                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
+                                    <i class="fas fa-heart text-xl icon-gradient"></i>
+                                </div>
+                                <h3 class="text-sm font-semibold">Momentos</h3>
+                                <p class="text-xs text-white/70">Veja agora</p>
+                            </button>
+
+                            <button onclick="changeStep('achievementsPopup')" class="relative rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
+                                ${hasPendingChallenge ? `<span class="pending-indicator"><i class="fas fa-clock text-[10px]"></i></span>` : ''}
+                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
+                                    <i class="fas fa-trophy text-xl icon-gradient"></i>
+                                </div>
+                                <h3 class="text-sm font-semibold">Desafios</h3>
+                                <p class="text-xs text-white/70">Seu progresso</p>
+                            </button>
+
+                            <button onclick="changeStep('meuPerfil')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
+                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
+                                    <i class="fas fa-user text-xl icon-gradient"></i>
+                                </div>
+                                <h3 class="text-sm font-semibold">Meu Perfil</h3>
+                                <p class="text-xs text-white/70">Ver e Editar</p>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        `;
+    }
+
     function renderSignIn() {
         appContainer.innerHTML = `
             <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
@@ -1094,6 +1323,384 @@ function triggerAchievementCelebration(notif) {
             </div>
         `;
     }
+
+function ensureFirstPairingChallenge() {
+    if (!state.pareado || state.hasTriggeredFirstPairingChallenge) {
+        return;
+    }
+
+    const docId = getWeeklyChallengeDocId();
+    const desafioId = docId || 'alma_gemea_local';
+
+    const perguntaSelecionada = getStableChallengeQuestion(desafioId);
+
+    const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
+    const existingChallenge = desafiosSemanais.find((desafio) => desafio.id === desafioId || desafio.id?.startsWith('alma_gemea_'));
+    const alreadyExists = !!existingChallenge;
+    if (!alreadyExists) {
+        const desafioBase = {
+            id: desafioId,
+            challengeId: 'alma_gemea',
+            titulo: 'Alma Gêmea',
+            descricao: 'Respondam a mesma pergunta para ganhar 1 foguinho.',
+            pergunta: perguntaSelecionada,
+            icon: 'fa-heart',
+            reward: 1,
+            prazoTexto: '6d 23h 59m',
+            status: 'pendente',
+            criadoEm: new Date(),
+        };
+        state.desafiosSemanais = [
+            ...desafiosSemanais,
+            desafioBase,
+        ];
+        saveLocalWeeklyChallenge(desafioBase);
+        if (docId) {
+            persistWeeklyChallenge(desafioBase);
+        }
+    }
+
+    const perguntaFinal = existingChallenge?.pergunta || perguntaSelecionada;
+    state.pendingChallenge = {
+        id: desafioId,
+        titulo: 'Alma Gêmea',
+        pergunta: perguntaFinal,
+    };
+
+    state.hasTriggeredFirstPairingChallenge = true;
+    if (docId) {
+        setupWeeklyChallengeListener();
+    }
+}
+
+function getStableChallengeQuestion(seed) {
+    const perguntasAlmaGemea = [
+        'Qual é a música que representa vocês dois?',
+        'Qual o local que nós demos o primeiro beijo?',
+        'Qual foi o primeiro filme que vimos juntos?',
+        'Qual é a nossa comida favorita para pedir juntos?',
+    ];
+    const seedStr = seed || 'alma_gemea';
+    let hash = 0;
+    for (let i = 0; i < seedStr.length; i++) {
+        hash = (hash << 5) - hash + seedStr.charCodeAt(i);
+        hash |= 0;
+    }
+    const index = Math.abs(hash) % perguntasAlmaGemea.length;
+    return perguntasAlmaGemea[index];
+}
+
+const PRAZO_DESAFIO_SEMANAL_MS = ((6 * 24 + 23) * 60 + 59) * 60 * 1000;
+
+function getDateFromValue(value) {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (typeof value.toDate === 'function') return value.toDate();
+    if (typeof value === 'number') return new Date(value);
+    return null;
+}
+
+function getPrazoRestanteTexto(desafio) {
+    const createdValue = desafio?.criadoEm || desafio?.createdAt || desafio?.createdEm || null;
+    const createdAt = getDateFromValue(createdValue) || new Date();
+    const now = Date.now();
+    const deadline = createdAt.getTime() + PRAZO_DESAFIO_SEMANAL_MS;
+    const remaining = Math.max(0, deadline - now);
+
+    const days = Math.ceil(remaining / (24 * 60 * 60 * 1000));
+
+    return `${days}d`;
+}
+
+function getChallengeDeadlineMs(desafio) {
+    const startValue = desafio?.startedAt || desafio?.prazoInicio || desafio?.startedEm || null;
+    const startedAt = getDateFromValue(startValue);
+    if (!startedAt) return null;
+    return startedAt.getTime() + 60000;
+}
+
+function getLocalChallengeStartMs(challengeId) {
+    if (!challengeId) return null;
+    const raw = localStorage.getItem(`weeklyChallengeStart:${challengeId}`);
+    const ms = raw ? Number(raw) : NaN;
+    return Number.isFinite(ms) ? ms : null;
+}
+
+function setLocalChallengeStartMs(challengeId, ms) {
+    if (!challengeId || !Number.isFinite(ms)) return;
+    localStorage.setItem(`weeklyChallengeStart:${challengeId}`, String(ms));
+}
+
+function updateDesafioPrazoLabels() {
+    if (state.etapa !== 'achievementsPopup') return;
+    const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
+    desafiosSemanais.forEach((desafio) => {
+        const concluido = !!(desafio.concluido || desafio.completed || desafio.status === 'finalizado');
+        if (concluido) return;
+        const prazoEl = document.getElementById(`desafioPrazo-${desafio.id}`);
+        if (prazoEl) {
+            prazoEl.textContent = `Prazo: ${getPrazoRestanteTexto(desafio)}`;
+        }
+    });
+}
+
+function startDesafiosCountdown() {
+    if (state.desafiosCountdownId) {
+        clearInterval(state.desafiosCountdownId);
+        state.desafiosCountdownId = null;
+    }
+    if (state.etapa !== 'achievementsPopup') {
+        return;
+    }
+    updateDesafioPrazoLabels();
+    state.desafiosCountdownId = setInterval(() => {
+        if (state.etapa !== 'achievementsPopup') {
+            clearInterval(state.desafiosCountdownId);
+            state.desafiosCountdownId = null;
+            return;
+        }
+        updateDesafioPrazoLabels();
+    }, 60000);
+}
+
+function getWeeklyChallengeDocId() {
+    const uid = state.usuario?.uid || null;
+    const partnerUid = state.usuario?.pareadoUid || null;
+    const base = uid && partnerUid ? [uid, partnerUid].sort().join('_') : null;
+    return base ? `alma_gemea_${base}` : null;
+}
+
+function getWeeklyChallengeStorageKey() {
+    const docId = getWeeklyChallengeDocId();
+    return docId ? `weeklyChallenge:${docId}` : null;
+}
+
+function saveLocalWeeklyChallenge(data) {
+    const key = getWeeklyChallengeStorageKey();
+    if (!key || !data) return;
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch (err) {
+        console.warn('Falha ao salvar desafio semanal local:', err);
+    }
+}
+
+function loadLocalWeeklyChallenge() {
+    const key = getWeeklyChallengeStorageKey();
+    if (!key) return null;
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch (err) {
+        console.warn('Falha ao ler desafio semanal local:', err);
+        return null;
+    }
+}
+
+function applyLocalWeeklyChallenge() {
+    const local = loadLocalWeeklyChallenge();
+    if (!local) return;
+    state.desafiosSemanais = [local];
+    const concluido = !!(local.concluido || local.completed || local.status === 'finalizado' || local.status === 'finalizado_sem_recompensa');
+    state.pendingChallenge = concluido ? null : {
+        id: local.id,
+        titulo: local.titulo || 'Alma Gêmea',
+        pergunta: local.pergunta || 'Pergunta indisponível.',
+    };
+    state.hasTriggeredFirstPairingChallenge = true;
+}
+
+function setupWeeklyChallengeListener() {
+    return;
+}
+
+function seedWeeklyChallengeDocIfMissing(docId) {
+    if (!docId) return;
+    const existing = Array.isArray(state.desafiosSemanais)
+        ? state.desafiosSemanais.find((desafio) => desafio.id === docId || desafio.challengeId === 'alma_gemea')
+        : null;
+    if (!existing) return;
+    const payload = sanitizeWeeklyChallengePayload({
+        ...existing,
+        id: docId,
+        challengeId: existing.challengeId || 'alma_gemea',
+    });
+    safeAddInput({
+        type: 'weekly_challenge_seed',
+        challengeId: existing.challengeId || 'alma_gemea',
+        challengeDocId: docId,
+        payloadJson: JSON.stringify(payload),
+        titulo: payload.titulo || null,
+        pergunta: payload.pergunta || null,
+        status: payload.status || null,
+        reward: Number(payload.reward || 0),
+        createdAtMs: Number(payload.criadoEm || payload.createdAt || payload.createdAtMs || payload.createdAtTimestamp || 0) || Date.now(),
+        createdAt: Date.now(),
+    }).catch((err) => console.warn('Falha ao solicitar seed do desafio semanal:', err));
+}
+
+function sanitizeWeeklyChallengePayload(desafio) {
+    const sanitizeValue = (value) => {
+        if (value instanceof Date) {
+            return value.getTime();
+        }
+        if (value && typeof value.toDate === 'function') {
+            return value.toDate().getTime();
+        }
+        if (value && typeof value === 'object' && Number.isFinite(value.seconds) && Number.isFinite(value.nanoseconds)) {
+            return value.seconds * 1000 + Math.floor(value.nanoseconds / 1e6);
+        }
+        if (Array.isArray(value)) {
+            return value.map(sanitizeValue);
+        }
+        if (value && typeof value === 'object') {
+            const cleaned = {};
+            Object.keys(value).forEach((key) => {
+                const next = sanitizeValue(value[key]);
+                if (next !== undefined) {
+                    cleaned[key] = next;
+                }
+            });
+            return cleaned;
+        }
+        if (typeof value === 'function') {
+            return undefined;
+        }
+        return value;
+    };
+
+    return sanitizeValue(desafio);
+}
+
+function persistWeeklyChallenge(desafio) {
+    const docId = getWeeklyChallengeDocId();
+    if (!docId) {
+        return;
+    }
+    const payload = sanitizeWeeklyChallengePayload({
+        ...desafio,
+        id: docId,
+        challengeId: desafio.challengeId || 'alma_gemea',
+    });
+    return safeAddInput({
+        type: 'weekly_challenge_upsert',
+        challengeId: desafio.challengeId || 'alma_gemea',
+        challengeDocId: docId,
+        payloadJson: JSON.stringify(payload),
+        titulo: payload.titulo || null,
+        pergunta: payload.pergunta || null,
+        status: payload.status || null,
+        reward: Number(payload.reward || 0),
+        createdAtMs: Number(payload.criadoEm || payload.createdAt || payload.createdAtMs || payload.createdAtTimestamp || 0) || Date.now(),
+        startedAtMs: Number(payload.startedAt || payload.startedEm || payload.prazoInicio || 0) || null,
+        completedAtMs: Number(payload.completedAt || payload.concluidoEm || 0) || null,
+        respostaUsuario: payload.respostaUsuario || null,
+        respostaParceiro: payload.respostaParceiro || null,
+        updatedAt: Date.now(),
+    }).catch((err) => console.warn('Falha ao solicitar upsert do desafio semanal:', err));
+}
+
+function markWeeklyChallengeStarted(desafioId) {
+    const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
+    const index = desafiosSemanais.findIndex((item) => item.id === desafioId);
+    if (index === -1) return;
+    const desafioAtual = desafiosSemanais[index];
+    if (desafioAtual.startedAt || desafioAtual.prazoInicio) return;
+
+    const startedAt = new Date();
+    setLocalChallengeStartMs(desafioId, startedAt.getTime());
+    desafiosSemanais[index] = {
+        ...desafioAtual,
+        startedAt,
+    };
+    state.desafiosSemanais = desafiosSemanais;
+    saveLocalWeeklyChallenge(desafiosSemanais[index]);
+    persistWeeklyChallenge(desafiosSemanais[index]);
+
+    safeAddInput({
+        type: 'weekly_challenge_start',
+        challengeId: desafiosSemanais[index].challengeId || 'alma_gemea',
+        challengeDocId: desafiosSemanais[index].id || desafioId,
+        startedAt: Date.now(),
+    }).catch((err) => console.warn('Falha ao registrar início do desafio semanal:', err));
+}
+
+function normalizeChallengeAnswer(answer) {
+    return (answer || '')
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function applyWeeklyChallengeAnswer(desafioId, answer, responderUid, responderName) {
+    const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
+    const index = desafiosSemanais.findIndex((item) => item.id === desafioId);
+    if (index === -1) {
+        return { status: 'not_found' };
+    }
+
+    const desafioAtual = desafiosSemanais[index];
+    const normalizedAnswer = normalizeChallengeAnswer(answer);
+    const isCurrentUser = responderUid && responderUid === state.usuario?.uid;
+
+    const updated = {
+        ...desafioAtual,
+        respondeuEm: new Date(),
+        status: 'aguardando_parceiro',
+    };
+
+    if (isCurrentUser) {
+        updated.respostaUsuario = normalizedAnswer;
+        updated.respondidoPor = responderUid;
+    } else {
+        updated.respostaParceiro = normalizedAnswer;
+        updated.respondidoPorParceiro = responderUid || updated.respondidoPorParceiro || null;
+        updated.parceiroNomeResposta = responderName || updated.parceiroNomeResposta || null;
+    }
+
+    const respostaUsuario = updated.respostaUsuario || null;
+    const respostaParceiro = updated.respostaParceiro || null;
+
+    if (respostaUsuario && respostaParceiro) {
+        if (respostaUsuario === respostaParceiro) {
+            updated.status = 'finalizado';
+            updated.concluido = true;
+            updated.completedAt = new Date();
+            if (!updated.rewarded) {
+                const reward = Number(updated.reward || 1);
+                if (state.usuario) {
+                    state.usuario.foguinhos = (state.usuario.foguinhos || 0) + reward;
+                }
+                updated.rewarded = true;
+            }
+            state.pendingChallenge = null;
+        } else {
+            updated.status = 'respostas_diferentes';
+            updated.concluido = false;
+        }
+    }
+
+    desafiosSemanais[index] = updated;
+    state.desafiosSemanais = desafiosSemanais;
+    saveLocalWeeklyChallenge(updated);
+    persistWeeklyChallenge(updated);
+    safeAddInput({
+        type: 'weekly_challenge_answer',
+        challengeId: updated.challengeId || 'alma_gemea',
+        challengeDocId: updated.id || desafioId,
+        responderUid: responderUid || null,
+        responderName: responderName || null,
+        answer: normalizedAnswer,
+        status: updated.status,
+        answeredAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }).catch((err) => console.warn('Falha ao enviar resposta do desafio:', err));
+
+    return { status: updated.status, updated };
+}
 
 async function solicitarPermissaoDeNotificacao() {
 if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -1203,11 +1810,7 @@ if (firebase.messaging.isSupported()) {
         const body = payload.data.body;
         const notificationType = payload.data?.type || null;
         if (notificationType === 'achievement') {
-            const celebrationInfo = showAchievementCelebration(payload.data?.achievementId || null);
-            const toastMessage = celebrationInfo
-                ? `🏆 ${celebrationInfo.title}${celebrationInfo.description ? `: ${celebrationInfo.description}` : ''}`
-                : `🏆 ${title}: ${body}`;
-            showToast(toastMessage, 'sucesso');
+            showAchievementCelebration(payload.data?.achievementId || null);
             trackGAEvent('unlock_achievement', {
                 achievement_id: payload.data?.achievementId || 'unknown',
             });
@@ -1223,10 +1826,20 @@ if (firebase.messaging.isSupported()) {
 }
 
     async function sendPairingRequest() {
-const codigoDigitado = document.getElementById('codigoParceiro').value;
+    const codigoDigitado = document.getElementById('codigoParceiro').value;
+    const apelidoDigitado = document.getElementById('apelidoParceiro').value;
+    const hasPending = !!(state.usuario && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_'));
+    if (hasPending) {
+        showToast('Você já tem uma solicitação pendente.', 'aviso');
+        return;
+    }
 
-if (!codigoDigitado || codigoDigitado.length !== 11 || !/^\d+$/.test(codigoDigitado)) {
+if (!codigoDigitado || codigoDigitado.length !== 11 || !/^(\d+)$/.test(codigoDigitado)) {
     showToast('Por favor, digite um telefone com 11 dígitos.', 'aviso');
+    return;
+}
+if (!apelidoDigitado || !apelidoDigitado.trim()) {
+    showToast('Por favor, informe um apelido carinhoso.', 'aviso');
     return;
 }
 if (codigoDigitado === state.usuario.telefone) {
@@ -1234,12 +1847,15 @@ if (codigoDigitado === state.usuario.telefone) {
     return;
 }
 try {
+    const apelidoFormatado = apelidoDigitado.trim();
     const inputData = {
         type: 'pairing_request',
         fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
         fromName: state.usuario.nome,
         fromPhone: state.usuario.telefone,
         toPhone: codigoDigitado,
+        partnerNickname: apelidoFormatado,
+        resolvePartnerName: false,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         processed: false,
     };
@@ -1253,9 +1869,11 @@ try {
     // Atualiza apenas o estado local/imediato do sender; o backend atualizará
     // os documentos reais quando processar o input.
     state.usuario.pareadoCom = `pending_${codigoDigitado}`;
+    state.pendingPartnerName = apelidoFormatado;
     showToast('Solicitação enviada! Aguardando confirmação.', 'sucesso');
-    state.etapa = 'parear';
+    state.etapa = 'pareamentos';
     state.codigoDigitando = false;
+    state.showPairingModal = false;
     renderApp();
 } catch (error) {
     console.error('Erro ao enviar solicitação de pareamento:', error);
@@ -1325,7 +1943,8 @@ if (confirm('Tem certeza que deseja cancelar esta solicitação de pareamento?')
     state.parceiroTelefone = null;
     state.idPareamentoAmigavel = null;
     state.pareado = false;
-        state.etapa = 'parear';
+        state.pendingPartnerName = null;
+        state.etapa = 'pareamentos';
         renderApp();
     } catch (error) {
         console.error('Erro ao cancelar solicitação:', error);
@@ -1370,48 +1989,7 @@ if (state.pareado && state.parceiroData) {
                 </div>
             </div>
         </div>
-        ${state.showCartSidebar ? `
-<div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
-<div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
-    <div class="flex justify-between items-center mb-6">
-        <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
-        <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-
-    <div class="space-y-3">
-        ${state.carrinho.length === 0 ? `
-            <p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>
-        ` : state.carrinho.map((item, index) => `
-            <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
-                <div>
-                    <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
-                    <small class="text-gray-400 text-sm">${item.categoria}</small>
-                    <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1">
-                        <i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos
-                    </div>
-                </div>
-                <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `).join('')}
-    </div>
-
-    <div class="mt-8 pt-6 border-t border-gray-800">
-        <button onclick="finalizarPedido()" 
-            class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all
-            ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
-            ${state.carrinho.length === 0 ? 'disabled' : ''}>
-            Finalizar Pedido
-        </button>
-        <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
-            Continuar Resgatando
-        </button>
-    </div>
-</div>
-` : ''}
+        ${state.showCartSidebar ? renderCartSidebar() : ''}
     `;
     return;
 }
@@ -1512,52 +2090,103 @@ appContainer.innerHTML = content;
     const historicoPresentes = state.notificacoes.filter(notif => notif.icone === 'fa-gift');
 
     // 3. Renderiza o HTML da página
-    appContainer.innerHTML = `
-    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8 pt-24 pb-24">
-        <div class="card p-6 md:p-8 max-w-md w-full relative overflow-hidden">
-            <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
-            <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
-            
-            <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
-                <i class="fas fa-fire mr-2"></i> Meus Foguinhos
-            </h2>
-            <div class="text-center mb-6">
-                <p class="mb-4 text-xl">Você tem:</p>
-                <div class="relative inline-block">
-                    <i class="fas fa-fire text-6xl text-yellow-400 animate-pulse"></i>
-                    <span class="badge-notification badge-yellow text-2xl" style="top: 0px; right: -20px; min-width: 40px; height: 40px;">
-                        ${state.usuario ? state.usuario.foguinhos : 0}
-                    </span>
-                </div>
-                <p class="mt-4 text-sm text-gray-300">Use-os para resgatar momentos!</p>
-            </div>
+    const partnerBalances = Array.isArray(state.parceirosAtivos)
+        ? state.parceirosAtivos
+        : [];
+    const showPartnerBalances = partnerBalances.length > 1;
+    const totalFromPartners = partnerBalances.reduce((acc, partner) => {
+        const saldo = Number(partner.foguinhos ?? partner.saldoFoguinhos ?? 0);
+        return acc + (Number.isFinite(saldo) ? saldo : 0);
+    }, 0);
+    const totalFoguinhos = totalFromPartners > 0
+        ? totalFromPartners
+        : (state.usuario ? state.usuario.foguinhos : 0);
 
-            <div class="border-t border-gray-700 mt-6 pt-6">
-                <h3 class="font-bold text-lg text-center text-gray-300 mb-4">Histórico de Presentes</h3>
-                
-                <div class="space-y-3 max-h-48 overflow-y-auto pr-2">
-                    ${historicoPresentes.length === 0
-                        ? `<p class="text-center text-gray-500 py-4">Nenhum presente recebido ainda.</p>`
-                        : historicoPresentes.map(notif => `
-                            <div class="bg-gray-800/50 p-3 rounded-lg flex items-center gap-3 ${notif.lida ? '' : 'border-l-2 border-yellow-400'}">
-                                <i class="fas ${notif.icone || 'fa-info-circle'} text-xl text-yellow-400"></i>
-                                <div>
-                                    <p class="text-sm text-gray-200">${notif.mensagem}</p>
-                                    <p class="text-xs text-gray-500 mt-1">${notif.timestamp ? new Date(notif.timestamp.seconds * 1000).toLocaleString('pt-BR') : ''}</p>
+    const partnerBalancesHtml = showPartnerBalances
+        ? `
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-semibold text-white/80">Saldo por parceiro</h4>
+                    <span class="text-xs text-white/50">${partnerBalances.length} conexões</span>
+                </div>
+                <div class="notif-list-shell space-y-3">
+                    ${partnerBalances.map((partner) => {
+                        const partnerName = partner.nome || 'Parceiro';
+                        const partnerPhoto = partner.fotoUrl || '';
+                        const saldo = Number(partner.foguinhos ?? partner.saldoFoguinhos ?? 0);
+                        return `
+                            <div class="notif-item">
+                                ${partnerPhoto
+                                    ? `<img src="${partnerPhoto}" alt="${partnerName}">`
+                                    : `<div class="notification-avatar"><i class="fas fa-user text-white/80"></i></div>`}
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-gray-800">${partnerName}</p>
+                                    <p class="text-xs text-gray-500">Saldo atual</p>
+                                </div>
+                                <div class="flex items-center gap-2 text-amber-500 font-semibold">
+                                    <i class="fas fa-fire"></i>
+                                    <span>${Number.isFinite(saldo) ? saldo : 0}</span>
                                 </div>
                             </div>
-                        `).join('')
-                    }
+                        `;
+                    }).join('')}
                 </div>
             </div>
+        `
+        : '';
 
-            <div class="flex justify-center mt-8">
-                <button onclick="changeStep('main');" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
-                    Voltar
-                </button>
-            </div>
+    appContainer.innerHTML = `
+        <div class="min-h-screen bg-black text-white">
+            <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                <div class="flex flex-col items-center text-center -mt-6">
+                    <i class="fas fa-fire text-3xl mb-3"></i>
+                    <h2 class="text-3xl font-semibold">Foguinhos</h2>
+                    <p class="text-white/80">Acompanhe seu saldo e ganhos</p>
+                </div>
+            </section>
+
+            <section class="px-5 pb-24 -mt-10">
+                <div class="notif-shell max-w-2xl mx-auto space-y-6">
+                    <div class="notif-card-white flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-red-500">Saldo total</h3>
+                            <p class="text-sm text-gray-600">Use-os para resgatar momentos</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-fire text-2xl text-amber-500"></i>
+                            <span class="text-2xl font-bold text-gray-800">${totalFoguinhos}</span>
+                        </div>
+                    </div>
+
+                    ${partnerBalancesHtml}
+
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-semibold text-white/80">Histórico de Presentes</h4>
+                            <span class="text-xs text-white/50">${historicoPresentes.length} itens</span>
+                        </div>
+                        <div class="notif-list-shell space-y-3">
+                            ${historicoPresentes.length === 0
+                                ? `<p class="text-center text-gray-500 py-6">Nenhum presente recebido ainda.</p>`
+                                : historicoPresentes.map(notif => `
+                                    <div class="notif-item ${notif.lida ? 'opacity-70' : ''}">
+                                        <div class="notification-avatar">
+                                            <i class="fas ${notif.icone || 'fa-info-circle'} text-lg text-amber-500"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-gray-800">${notif.titulo || 'Presente recebido'}</p>
+                                            <p class="text-sm text-gray-600">${notif.mensagem}</p>
+                                            <p class="text-xs text-gray-500 mt-1">${notif.timestamp ? new Date(notif.timestamp.seconds * 1000).toLocaleString('pt-BR') : ''}</p>
+                                        </div>
+                                    </div>
+                                `).join('')
+                            }
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
-    </div>
+        ${state.showChallengePopup ? renderChallengePopup() : ''}
     `;
 }
 
@@ -1644,31 +2273,86 @@ async function renderAchievementsPopup() {
     await marcarNotificacoesDeConquistaComoLidas();
 
     const conquistasUsuario = state.usuario?.conquistas || {};
+    const totalConquistas = ACHIEVEMENTS.length;
+    const conquistasDesbloqueadas = ACHIEVEMENTS.reduce((total, achievement) => {
+        return conquistasUsuario[achievement.id] ? total + 1 : total;
+    }, 0);
+    const mostrarTodas = !!state.mostrarTodasConquistas;
+    const desafiosTab = state.desafiosTab || 'conquistas';
 
-    const gridHtml = ACHIEVEMENTS.map((achievement) => {
-        const conquista = conquistasUsuario[achievement.id];
-        const desbloqueada = !!conquista;
-        const cor = achievement.accentColor || '#fbbf24';
-        const titulo = achievement.title;
-        const descricao = achievement.description;
-        const dica = achievement.hint || '';
-        const dataDesbloqueio = desbloqueada ? formatarDataCurta(conquista.unlockedAt) : '';
-        const iconClass = achievement.icon || 'fa-trophy';
+    const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
+    const desafiosSemanaisAbertos = desafiosSemanais.filter((desafio) => {
+        const concluido = !!(desafio.concluido || desafio.completed || desafio.status === 'finalizado' || desafio.status === 'finalizado_sem_recompensa');
+        return !concluido;
+    });
+    const desafiosSemanaisFinalizados = desafiosSemanais.filter((desafio) => {
+        return !!(desafio.concluido || desafio.completed || desafio.status === 'finalizado' || desafio.status === 'finalizado_sem_recompensa');
+    });
+
+    let itensFiltrados = [];
+    if (desafiosTab === 'emAberto') {
+        const conquistasEmAberto = ACHIEVEMENTS.filter((achievement) => !conquistasUsuario[achievement.id]).map((achievement) => ({
+            ...achievement,
+            tipo: 'conquista',
+        }));
+        const semanaisEmAberto = desafiosSemanaisAbertos.map((desafio) => ({
+            ...desafio,
+            tipo: 'semanal',
+        }));
+        itensFiltrados = [...semanaisEmAberto, ...conquistasEmAberto];
+    } else if (desafiosTab === 'finalizados') {
+        itensFiltrados = desafiosSemanaisFinalizados.map((desafio) => ({
+            ...desafio,
+            tipo: 'semanal',
+        }));
+    } else {
+        itensFiltrados = ACHIEVEMENTS.filter((achievement) => !!conquistasUsuario[achievement.id]).map((achievement) => ({
+            ...achievement,
+            tipo: 'conquista',
+        }));
+    }
+
+    const itensVisiveis = mostrarTodas ? itensFiltrados : itensFiltrados.slice(0, 4);
+    const mostrarBotaoVerMais = itensFiltrados.length > 4;
+
+    const gridHtml = itensVisiveis.map((item) => {
+        const isConquista = item.tipo === 'conquista';
+        const isSemanalEmAberto = item.tipo === 'semanal' && desafiosTab === 'emAberto';
+        const isSemanal = item.tipo === 'semanal';
+        const isAguardandoParceiro = isSemanal && (item.status === 'aguardando_parceiro');
+        const isRespostasDiferentes = isSemanal && (item.status === 'respostas_diferentes');
+        const isFinalizadoSemRecompensa = isSemanal && (item.status === 'finalizado_sem_recompensa');
+        const cardClickable = isSemanal && !isAguardandoParceiro && !isFinalizadoSemRecompensa && !!item.pergunta;
+        const cardOnClick = cardClickable ? `onclick="openWeeklyChallengePopup('${item.id}')"` : '';
+        const prazoTexto = isSemanalEmAberto ? getPrazoRestanteTexto(item) : (item.prazoTexto || '6d 23h 59m');
+        const conquista = isConquista ? conquistasUsuario[item.id] : null;
+        const desbloqueada = isConquista ? !!conquista : !!(item.concluido || item.completed || item.status === 'finalizado');
+        const cor = item.accentColor || '#fbbf24';
+        const titulo = item.title || item.titulo || 'Desafio';
+        const descricao = item.description || item.descricao || '';
+        const dica = item.hint || item.dica || '';
+        const dataBase = (isConquista ? conquista?.unlockedAt : (item.completedAt || item.concluidoEm)) || null;
+        const dataDesbloqueio = desbloqueada && dataBase ? formatarDataCurta(dataBase) : '';
+        const iconClass = item.icon || 'fa-trophy';
         const hintAttr = dica ? `title="${escapeHtmlAttr(dica)}"` : '';
-        const recompensa = typeof achievement.reward === 'number' ? achievement.reward : null;
+        const recompensa = typeof item.reward === 'number' ? item.reward : null;
         const recompensaTexto = recompensa !== null ? `Recompensa: ${recompensa} foguinho${recompensa === 1 ? '' : 's'}` : '';
 
         return `
-            <div class="achievement-card sm-card-padding rounded-2xl border transition ${desbloqueada ? 'bg-gray-900 border-transparent shadow-lg shadow-black/30' : 'bg-gray-800/40 border-gray-700 backdrop-blur-sm opacity-70'}" ${hintAttr}>
+            <div class="achievement-card sm-card-padding rounded-2xl border transition ${isSemanalEmAberto ? 'bg-white border-transparent shadow-lg text-gray-900' : (desbloqueada ? 'bg-gray-900 border-transparent shadow-lg shadow-black/30' : 'bg-gray-800/40 border-gray-700 backdrop-blur-sm opacity-70')} ${cardClickable ? 'cursor-pointer hover:-translate-y-0.5' : ''}" ${hintAttr} ${cardOnClick}>
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${desbloqueada ? '' : 'border border-gray-600'}" style="${desbloqueada ? `background: ${cor}; color: #111827;` : ''}">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${desbloqueada || isSemanalEmAberto ? '' : 'border border-gray-600'}" style="${desbloqueada || isSemanalEmAberto ? `background: ${cor}; color: #111827;` : ''}">
                         <i class="fas ${iconClass} text-lg sm:text-xl"></i>
                     </div>
                     <div class="flex-1">
-                        <h4 class="font-semibold text-base sm:text-lg ${desbloqueada ? '' : 'text-gray-300'}">${titulo}</h4>
-                        <p class="text-xs sm:text-sm ${desbloqueada ? 'text-gray-300' : 'text-gray-500'}">${descricao}</p>
+                        <h4 class="font-semibold text-base sm:text-lg ${desbloqueada || isSemanalEmAberto ? '' : 'text-gray-300'}">${titulo}</h4>
+                        <p class="text-xs sm:text-sm ${desbloqueada || isSemanalEmAberto ? 'text-gray-600' : 'text-gray-500'}">${descricao}</p>
                         ${recompensaTexto ? `<p class="text-xs sm:text-sm font-semibold text-amber-400 mt-2">${recompensaTexto}</p>` : ''}
-                        ${desbloqueada ? `<p class="text-xs text-emerald-400 mt-1"><i class="fas fa-check-circle mr-1"></i>${dataDesbloqueio ? `Conquistado em ${dataDesbloqueio}` : 'Conquista desbloqueada!'}</p>` : `<p class="text-[11px] text-gray-500 mt-1">${dica || 'Complete a tarefa para desbloquear.'}</p>`}
+                        ${isSemanalEmAberto && !isAguardandoParceiro ? `<p id="desafioPrazo-${item.id}" class="text-xs font-semibold text-pink-500 mt-2">Prazo: ${prazoTexto}</p>` : ''}
+                        ${isAguardandoParceiro ? `<p class="text-xs font-semibold text-amber-500 mt-2">Aguardando ${state.parceiroApelido || state.parceiroNome || 'parceiro'} responder</p>` : ''}
+                        ${isRespostasDiferentes ? `<p class="text-xs font-semibold text-rose-400 mt-2">Respostas diferentes. Tentem novamente.</p>` : ''}
+                        ${desbloqueada ? `<p class="text-xs text-emerald-400 mt-1"><i class="fas fa-check-circle mr-1"></i>${dataDesbloqueio ? `Finalizado em ${dataDesbloqueio}` : (isConquista ? 'Conquista desbloqueada!' : 'Desafio finalizado!')}</p>` : `<p class="text-[11px] text-gray-500 mt-1">${dica || 'Complete a tarefa para desbloquear.'}</p>`}
+                        ${isFinalizadoSemRecompensa ? `<p class="text-xs text-gray-500 mt-1">Tempo esgotado. Sem recompensa.</p>` : ''}
                     </div>
                 </div>
             </div>
@@ -1676,37 +2360,375 @@ async function renderAchievementsPopup() {
     }).join('');
 
     appContainer.innerHTML = `
-        <div class="achievements-overlay min-h-screen w-full bg-black bg-opacity-90 text-white px-4 sm:px-8 py-12 sm:py-16 flex justify-center items-start sm:items-center overflow-y-auto">
-            <div class="card achievements-popup-card w-full max-w-3xl relative overflow-hidden shadow-2xl flex flex-col sm:max-h-[85vh] p-6 sm:p-10">
-                <div class="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-yellow-500 opacity-10 pointer-events-none"></div>
-                <div class="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-pink-500 opacity-10 pointer-events-none"></div>
-                <div class="flex items-center justify-between mb-6 sm:mb-8">
-                    <div class="flex items-center gap-4">
-                        <div class="w-14 h-14 rounded-full bg-yellow-500/20 text-yellow-300 flex items-center justify-center">
-                            <i class="fas fa-trophy text-2xl"></i>
-                        </div>
+        <div class="min-h-screen bg-black text-white">
+            <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                <div class="flex flex-col items-center text-center -mt-6">
+                    <i class="fas fa-flag-checkered text-3xl mb-3"></i>
+                    <h2 class="text-3xl font-semibold">Desafios</h2>
+                    <p class="text-white/80">Acompanhe seus desafios e conquistas</p>
+                </div>
+            </section>
+
+            <section class="px-5 pb-24 -mt-10">
+                <div class="notif-shell max-w-4xl mx-auto space-y-6">
+                    <div class="notif-card-white flex items-center justify-between">
                         <div>
-                            <h2 class="text-3xl font-bold">Mural de Conquistas</h2>
-                            <p class="text-sm text-gray-400">Celebre seus troféus e descubra o que falta desbloquear.</p>
+                            <p class="text-sm text-gray-500">Conquistados</p>
+                            <p class="text-2xl font-semibold text-gray-800">${conquistasDesbloqueadas}/${totalConquistas}</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center">
+                            <i class="fas fa-trophy text-red-500 text-xl"></i>
                         </div>
                     </div>
-                    <button type="button" onclick="toggleAchievementsPopup()" class="text-gray-400 hover:text-white text-lg focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="Fechar mural">
+                    <div class="flex gap-2">
+                        <button class="notif-tab ${desafiosTab === 'emAberto' ? 'active' : ''}" onclick="setDesafiosTab('emAberto')">Em Aberto</button>
+                        <button class="notif-tab ${desafiosTab === 'finalizados' ? 'active' : ''}" onclick="setDesafiosTab('finalizados')">Finalizados</button>
+                        <button class="notif-tab ${desafiosTab === 'conquistas' ? 'active' : ''}" onclick="setDesafiosTab('conquistas')">Conquistas</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                        ${gridHtml || '<p class="text-center text-gray-500 py-6 col-span-full">Nenhum item para exibir.</p>'}
+                    </div>
+                    ${mostrarBotaoVerMais ? `
+                        <div class="text-center">
+                            <button type="button" onclick="toggleMostrarConquistas()" class="btn-red px-10 py-3">
+                                ${mostrarTodas ? 'Ver menos' : 'Ver mais'}
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            </section>
+        </div>
+        ${state.showChallengePopup ? renderChallengePopup() : ''}
+    `;
+}
+
+function buildPareamentosLista() {
+    const lista = Array.isArray(state.parceirosAtivos) ? [...state.parceirosAtivos] : [];
+
+    if (!lista.length && state.parceiroData) {
+        lista.push({
+            uid: state.parceiroData.uid || state.usuario?.pareadoUid || null,
+            nome: state.parceiroApelido || state.parceiroData.nome || state.parceiroNome || 'Parceiro',
+            fotoUrl: state.parceiroData.fotoUrl || '',
+            pareamentoId: state.idPareamentoAmigavel || '',
+            foguinhos: state.parceiroData.foguinhos ?? 0,
+        });
+    }
+
+    return lista.map((partner) => ({
+        uid: partner.uid || partner.parceiroUid || partner.userId || null,
+        nome: partner.apelido || partner.nickname || partner.partnerNickname || partner.nome || 'Parceiro',
+        fotoUrl: partner.fotoUrl || partner.photoUrl || '',
+        pareamentoId: partner.pareamentoId || partner.pareamentoAmigavelId || partner.idPareamento || '',
+        foguinhos: Number(partner.foguinhos ?? partner.saldoFoguinhos ?? 0),
+        pareadoDesde: partner.pareadoDesde || partner.pareadoEm || null,
+        sexo: partner.sexo || null,
+        catalogoPersonalizado: partner.catalogoPersonalizado || null,
+    }));
+}
+
+function getFoguinhosConexao(partnerUid) {
+    const lista = Array.isArray(state.parceirosAtivos) ? state.parceirosAtivos : [];
+    const match = lista.find((partner) => partner.uid === partnerUid || partner.parceiroUid === partnerUid);
+    const saldo = match ? Number(match.foguinhos ?? match.saldoFoguinhos ?? 0) : NaN;
+    if (Number.isFinite(saldo)) {
+        return saldo;
+    }
+    return state.usuario ? (state.usuario.foguinhos || 0) : 0;
+}
+
+function renderPareamentosLista() {
+    const pareamentos = buildPareamentosLista();
+    const total = pareamentos.length;
+    const maximo = 5;
+    const hasPareamentos = total > 0;
+    const isVip = !!(state.usuario && state.usuario.vip);
+    const hasPending = !!(state.usuario && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_'));
+    const pendingPhone = hasPending ? state.usuario.pareadoCom.replace('pending_', '') : '';
+    const pendingName = state.pendingPartnerName || 'Apelido carinhoso';
+    const lastCheckIn = state.usuario?.lastCheckInDate?.toDate
+        ? state.usuario.lastCheckInDate.toDate()
+        : (state.usuario?.lastCheckInDate ? new Date(state.usuario.lastCheckInDate) : null);
+    const canCheckIn = !lastCheckIn || !isSameDay(lastCheckIn, new Date());
+    const pendingCardHtml = hasPending ? `
+        <div class="rounded-2xl p-4 bg-amber-400/90 text-gray-900 shadow-[0_12px_30px_rgba(251,191,36,0.35)]">
+            <div class="flex items-center gap-4">
+                <div class="w-20 h-20 rounded-full bg-white/70 flex items-center justify-center">
+                    <i class="fas fa-heart text-amber-600 text-2xl"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-lg font-semibold">${pendingName}</p>
+                    <p class="text-xs text-gray-800/80">Pareamento Pendente</p>
+                    <div class="mt-3 flex flex-col gap-2">
+                        <button class="px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-500 cursor-not-allowed" disabled>
+                            <i class="fas fa-fire-flame-curved mr-2"></i>Check-in diário
+                        </button>
+                        <button class="px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-500 cursor-not-allowed" disabled>
+                            <i class="fas fa-store mr-2"></i>Ir ao Catálogo
+                        </button>
+                        <button onclick="cancelPendingPairingRequest()" class="px-4 py-2 rounded-lg font-semibold bg-gray-900 text-white hover:bg-gray-800">
+                            <i class="fas fa-times mr-2"></i>Cancelar solicitação
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    ` : '';
+
+    appContainer.innerHTML = `
+        <div class="min-h-screen bg-black text-white">
+            <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                <div class="flex flex-col items-center text-center -mt-6">
+                    <i class="fas fa-heart text-3xl mb-3"></i>
+                    <h2 class="text-3xl font-semibold">Pareamentos</h2>
+                    <p class="text-white/80">Escolha sua conexão</p>
+                </div>
+            </section>
+
+            <section class="px-5 pb-24 -mt-10">
+                <div class="notif-shell max-w-2xl mx-auto space-y-6">
+                    <div class="notif-card-white flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500">Pareamentos</p>
+                            <p class="text-2xl font-semibold text-gray-800">${total}/${maximo}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold border tracking-wide ${isVip ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-gray-200 text-gray-600 border-gray-300'}">${isVip ? 'POLIAMOR' : 'MONOGAMIA'}</span>
+                    </div>
+
+                    <div class="space-y-4">
+                        ${pareamentos.length ? pareamentos.map((partner, index) => {
+                            const nome = partner.nome || 'Parceiro';
+                            const foto = partner.fotoUrl;
+                            const pareadoDesde = partner.pareadoDesde
+                                ? new Date(partner.pareadoDesde).toLocaleDateString('pt-BR')
+                                : '—';
+                            return `
+                                <div class="relative rounded-2xl p-4 bg-[#ff4457] shadow-[0_12px_30px_rgba(255,68,87,0.35)]">
+                                    <button type="button" class="absolute top-3 right-3 p-1 text-black hover:text-black/70 transition" onclick="requestUnpairFromList(${index})" title="Desparear">
+                                        <i class="fas fa-link-slash text-sm"></i>
+                                    </button>
+                                    <div class="flex items-center gap-4">
+                                        <button class="w-20 h-20 rounded-full bg-white overflow-hidden flex items-center justify-center" onclick="abrirCatalogoPareamento(${index})">
+                                            ${foto ? `<img src="${foto}" class="w-full h-full object-cover" alt="${nome}">` : `<i class="fas fa-user text-red-400 text-2xl"></i>`}
+                                        </button>
+                                        <div class="flex-1">
+                                            <p class="text-lg font-semibold text-white">${nome}</p>
+                                            <p class="text-xs text-white/80">Pareado desde: ${pareadoDesde}</p>
+                                            <div class="mt-3 flex flex-col gap-2">
+                                                <button onclick="handleCheckInFromList(${index})" class="px-4 py-2 rounded-lg font-semibold ${canCheckIn ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-gray-600 text-gray-300 cursor-not-allowed'}" ${canCheckIn ? '' : 'disabled'}>
+                                                    <i class="fas fa-fire-flame-curved mr-2"></i>Check-in diário
+                                                </button>
+                                                <button onclick="abrirCatalogoPareamento(${index})" class="px-4 py-2 rounded-lg font-semibold bg-amber-500 hover:bg-amber-600 text-white">
+                                                    <i class="fas fa-store mr-2"></i>Ir ao Catálogo
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') : ''}
+                        ${pendingCardHtml}
+                        ${!pareamentos.length && !hasPending ? `
+                            <div class="notif-card-white text-center">
+                                <p class="text-sm text-gray-500">Nenhum pareamento ativo no momento.</p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div class="text-center">
+                        <button type="button" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-gray-800 font-semibold shadow-lg" onclick="handlePairingCtaClick()">
+                            <i class="fas ${(hasPareamentos || hasPending) ? 'fa-gem text-blue-500' : 'fa-heart text-red-500'}"></i>
+                            Adicionar Conexão
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+        ${state.showPairingModal ? renderPairingModal() : ''}
+        ${state.showVipPopup ? renderVipPopup() : ''}
+    `;
+}
+
+function renderPairingModal() {
+    const codigoUsuario = state.usuario?.telefone ? state.usuario.telefone.replace(/\D/g, '') : '';
+    return `
+        <div class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onclick="closePairingModal()"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center px-4" onclick="closePairingModal()">
+            <div class="w-full max-w-md rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7" onclick="event.stopPropagation()">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest text-white/60">Pareamento</p>
+                        <h3 class="text-2xl font-semibold mt-1">Conectar com seu amor</h3>
+                        <p class="text-sm text-white/70 mt-2">Digite o telefone e o apelido carinhoso para personalizar a conexão.</p>
+                    </div>
+                    <button class="text-white/70 hover:text-white" onclick="closePairingModal()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="mt-6 sm:mt-8 sm:flex-1 sm:overflow-y-auto sm:pr-3 achievements-scroll-area">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                        ${gridHtml}
+
+                <div class="mt-5 space-y-4">
+                    <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
+                        <p class="text-xs text-white/60">Seu código</p>
+                        <p class="text-lg font-semibold mt-1">${codigoUsuario || '—'}</p>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-white/70">Telefone do parceiro (11 dígitos)</label>
+                        <input id="codigoParceiro" inputmode="numeric" maxlength="11" placeholder="Ex: 11999999999" class="mt-2 w-full rounded-xl bg-white/10 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-rose-400" />
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-white/70">Apelido carinhoso</label>
+                        <input id="apelidoParceiro" maxlength="32" placeholder="Ex: Meu Amor" class="mt-2 w-full rounded-xl bg-white/10 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-rose-400" />
                     </div>
                 </div>
-                <div class="mt-6 sm:mt-8 flex justify-center">
-                    <button type="button" onclick="toggleAchievementsPopup()" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition focus:outline-none focus:ring-2 focus:ring-gray-300">
-                        Voltar
-                    </button>
+
+                <div class="mt-6 flex flex-col gap-3">
+                    <button onclick="sendPairingRequest()" class="w-full rounded-xl bg-gradient-to-r from-rose-500 to-red-500 py-3 text-white font-semibold shadow-lg">Enviar solicitação</button>
+                    <button onclick="closePairingModal()" class="w-full rounded-xl bg-white/10 py-3 text-white/80 font-semibold">Cancelar</button>
                 </div>
             </div>
         </div>
     `;
+}
+
+function openPairingModal() {
+    state.showPairingModal = true;
+    renderPareamentosLista();
+}
+
+function closePairingModal() {
+    state.showPairingModal = false;
+    renderPareamentosLista();
+}
+
+function handlePairingCtaClick() {
+    const hasPending = !!(state.usuario && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_'));
+    const hasPareamentos = buildPareamentosLista().length > 0;
+    if (hasPareamentos || hasPending) {
+        openVipPopup();
+        return;
+    }
+    openPairingModal();
+}
+
+function renderVipPopup() {
+    return `
+        <div class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onclick="closeVipPopup()"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center px-4" onclick="closeVipPopup()">
+            <div class="w-full max-w-md rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7" onclick="event.stopPropagation()">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest text-white/60">Ambiente VIP</p>
+                        <h3 class="text-2xl font-semibold mt-1">Acesso exclusivo</h3>
+                    </div>
+                    <button class="text-white/70 hover:text-white" onclick="closeVipPopup()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-white/80">
+                    Ambiente VIP - Para se tornar um usuário VIP e usufruir dos benefícios. Entre em contato com <span class="text-white font-semibold">faleconosco@nossomomento.app</span>
+                </div>
+
+                <div class="mt-6">
+                    <button onclick="closeVipPopup()" class="w-full rounded-xl bg-white/10 py-3 text-white/80 font-semibold">Entendi</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function openVipPopup() {
+    state.showVipPopup = true;
+    renderPareamentosLista();
+}
+
+function closeVipPopup() {
+    state.showVipPopup = false;
+    renderPareamentosLista();
+}
+
+function requestUnpairFromList(index) {
+    const pareamentos = buildPareamentosLista();
+    const partner = pareamentos[index];
+    if (!partner || !partner.uid) {
+        showToast('Parceiro inválido para desfazer pareamento.', 'erro');
+        return;
+    }
+
+    state.usuario.pareadoUid = partner.uid;
+    state.parceiroNome = partner.nome || state.parceiroNome;
+    state.idPareamentoAmigavel = partner.pareamentoId || state.idPareamentoAmigavel;
+    state.parceiroData = {
+        ...(state.parceiroData || {}),
+        uid: partner.uid,
+        nome: partner.nome,
+        fotoUrl: partner.fotoUrl || '',
+        sexo: partner.sexo || null,
+        catalogoPersonalizado: partner.catalogoPersonalizado || {},
+    };
+
+    desparearParceiro();
+}
+
+async function handleCheckInFromList(index) {
+    const pareamentos = buildPareamentosLista();
+    const partner = pareamentos[index];
+    if (!partner || !partner.uid) {
+        showToast('Parceiro inválido para check-in.', 'erro');
+        return;
+    }
+
+    const lastCheckIn = state.usuario?.lastCheckInDate?.toDate
+        ? state.usuario.lastCheckInDate.toDate()
+        : (state.usuario?.lastCheckInDate ? new Date(state.usuario.lastCheckInDate) : null);
+    if (lastCheckIn && isSameDay(lastCheckIn, new Date())) {
+        showToast('Check-in já realizado hoje.', 'aviso');
+        renderPareamentosLista();
+        return;
+    }
+
+    try {
+        await safeAddInput({
+            type: 'daily_check_in',
+            fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+            partnerUid: partner.uid,
+            pareamentoId: partner.pareamentoId || state.idPareamentoAmigavel || '',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        state.usuario.lastCheckInDate = new Date();
+        showToast('Check-in enviado!', 'sucesso');
+        renderPareamentosLista();
+    } catch (error) {
+        console.error('Erro ao enviar check-in:', error);
+        showToast('Erro ao enviar check-in.', 'erro');
+    }
+}
+
+function abrirCatalogoPareamento(index) {
+    const pareamentos = buildPareamentosLista();
+    const partner = pareamentos[index];
+    if (!partner) {
+        return;
+    }
+
+    if (partner.uid) {
+        state.usuario.pareadoUid = partner.uid;
+        state.parceiroNome = partner.nome || state.parceiroNome;
+        state.idPareamentoAmigavel = partner.pareamentoId || state.idPareamentoAmigavel;
+        state.parceiroData = {
+            ...(state.parceiroData || {}),
+            uid: partner.uid,
+            nome: partner.nome,
+            fotoUrl: partner.fotoUrl,
+            sexo: partner.sexo || state.parceiroData?.sexo || null,
+            catalogoPersonalizado: partner.catalogoPersonalizado || state.parceiroData?.catalogoPersonalizado || {},
+        };
+    }
+
+    state.etapa = 'main';
+    renderApp();
 }
 
     // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
@@ -1755,145 +2777,207 @@ async function renderAchievementsPopup() {
 
 
     function renderMain() {
-if (!state.pareado || !state.parceiroData) {
-    appContainer.innerHTML = `
-            <div class="min-h-screen container mx-auto px-4 py-8 text-center flex flex-col justify-center items-center">
-            <h2 class="text-2xl font-bold mb-4">Você ainda não está pareado(a).</h2>
-            <p class="text-gray-400 mb-6">Pareie com seu/sua parceiro(a) para ver o catálogo de momentos dele(a).</p>
-            <button onclick="changeStep('parear')" class="btn-red">Parear agora</button>
+        if (!state.pareado || !state.parceiroData) {
+            appContainer.innerHTML = `
+                <div class="min-h-screen bg-black text-white">
+                    <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                        <div class="flex flex-col items-center text-center -mt-6">
+                            <i class="fas fa-store text-3xl mb-3"></i>
+                            <h2 class="text-3xl font-semibold">Catálogo</h2>
+                            <p class="text-white/80">Escolha momentos para viver</p>
+                        </div>
+                    </section>
+                    <section class="px-5 pb-24 -mt-10">
+                        <div class="notif-shell max-w-2xl mx-auto">
+                            <div class="notif-card-white text-center">
+                                <h3 class="text-lg font-semibold text-red-500">Você ainda não está pareado(a)</h3>
+                                <p class="text-sm text-gray-600 mt-2">Pareie com seu parceiro para acessar o catálogo de momentos.</p>
+                                <button onclick="changeStep('parear')" class="mt-4 w-full py-2 rounded-lg bg-red-500 text-white font-semibold">
+                                    Parear agora
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            `;
+            return;
+        }
 
-            <!-- CTA social abaixo do botão de parear (discreto com borda em gradiente) -->
-            <button onclick="window.open('https://instagram.com/nossomomentoapp','_blank')" class="instagram-cta-outline mt-4 inline-block">
-                <span class="instagram-cta-inner inline-flex items-center gap-2">
-                    <i class="fab fa-instagram"></i> Siga-nos no Instagram!
-                </span>
-            </button>
-        </div>
-    `;
-    return;
+        const partnerGender = state.parceiroData.sexo;
+        const foguinhosConexao = getFoguinhosConexao(state.usuario?.pareadoUid || state.parceiroData?.uid || '');
+        const momentosParaParceiro = state.momentosMestres.filter(m => m.targetGender === partnerGender || m.targetGender === 'Unisex');
+        const catalogoParceiro = state.parceiroData.catalogoPersonalizado || {};
+        const categorias = [...new Set(momentosParaParceiro.map(m => m.categoria))].map(nomeCat => {
+            const momentoExemplo = state.momentosMestres.find(m => m.categoria === nomeCat);
+            return {
+                nome: nomeCat,
+                emoji: momentoExemplo.emoji,
+            };
+        });
+
+        const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/logo-instagram-white.png';
+
+        appContainer.innerHTML = `
+            <div class="min-h-screen bg-black text-white">
+                <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                    <div class="flex flex-col items-center text-center -mt-6">
+                        <img src="${fotoParceiroUrl}" class="w-20 h-20 rounded-full object-cover border-2 border-white/40 mb-3">
+                        <h2 class="text-3xl font-semibold">Catálogo de Momentos</h2>
+                        <p class="text-white/80">${state.parceiroNome}</p>
+                        <div class="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white text-sm">
+                            <i class="fas fa-fire text-yellow-200"></i>
+                            <span>Seus foguinhos: ${Number.isFinite(foguinhosConexao) ? foguinhosConexao : 0}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="px-5 pb-24 -mt-10">
+                    <div class="notif-shell max-w-5xl mx-auto space-y-6">
+                        <div class="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
+                            <button onclick="filtrarMomentos(null)" class="notif-tab ${!state.filtro ? 'active' : ''}">
+                                Todos
+                            </button>
+                            ${categorias.map(cat => {
+                                const displayName = cat.nome === 'Sair da Rotina' ? 'Rotina' : cat.nome;
+                                return `
+                                    <button onclick="filtrarMomentos('${cat.nome}')" class="notif-tab ${state.filtro === cat.nome ? 'active' : ''}">
+                                        ${displayName}
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${(state.filtro ? momentosParaParceiro.filter(m => m.categoria === state.filtro) : momentosParaParceiro).map(momento => {
+                                const configParceiro = catalogoParceiro[momento.nome];
+                                const preco = configParceiro?.preco !== undefined ? configParceiro.preco : momento.intensidade * 2;
+                                const bloqueado = configParceiro?.bloqueado || false;
+                                const momentoParaCarrinho = { ...momento, custoFoguinhos: preco };
+                                return `
+                                    <div class="notification-card p-4 ${bloqueado ? 'opacity-50' : ''}">
+                                        <div class="relative overflow-hidden rounded-xl">
+                                            <img src="${momento.img}" alt="${momento.nome}" class="w-full h-40 object-cover">
+                                            ${bloqueado ? `<div class="absolute inset-0 bg-black/70 flex items-center justify-center"><i class="fas fa-lock text-3xl text-white"></i></div>` : ''}
+                                        </div>
+                                        <div class="mt-4">
+                                            <h3 class="font-semibold">${momento.nome}</h3>
+                                            <div class="flex justify-between items-center mt-3">
+                                                <span class="text-amber-300 text-sm flex items-center gap-1">
+                                                    <i class="fas fa-fire"></i> ${preco} Foguinhos
+                                                </span>
+                                                <button onclick='adicionarAoCarrinho(${JSON.stringify(momentoParaCarrinho).replace(/"/g, "&quot;")})'
+                                                    class="text-sm px-3 py-2 rounded-lg transition ${bloqueado ? 'bg-gray-700 cursor-not-allowed' : 'bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white'}"
+                                                    ${bloqueado ? 'disabled' : ''}>
+                                                    ${bloqueado ? '🔒' : 'Resgatar'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            ${state.showCartSidebar ? renderCartSidebar() : ''}
+        `;
+
+        startDesafiosCountdown();
 }
 
-const partnerGender = state.parceiroData.sexo;
+function renderCartSidebar() {
+    const totalFoguinhos = state.carrinho.reduce((total, item) => {
+        const valor = Number(item?.custoFoguinhos ?? 0);
+        return total + (Number.isFinite(valor) ? valor : 0);
+    }, 0);
+    const saldoAtual = Number(state.usuario?.foguinhos ?? 0) || 0;
+    const saldoFinal = saldoAtual - totalFoguinhos;
 
-const momentosParaParceiro = state.momentosMestres.filter(m => m.targetGender === partnerGender || m.targetGender === 'Unisex');
-const catalogoParceiro = state.parceiroData.catalogoPersonalizado || {};
-const categorias = [...new Set(momentosParaParceiro.map(m => m.categoria))].map(nomeCat => {
-    const momentoExemplo = state.momentosMestres.find(m => m.categoria === nomeCat);
-    let cor = 'bg-gray-800'; // Cor padrão (fallback)
-        if (momentoExemplo) {
-            switch (momentoExemplo.categoria) {
-                case 'Quentes':
-                    cor = 'bg-pink-600'; // Vibrante, alinhado ao logo
-                    break;
-                case 'Lovezin':
-                    cor = 'bg-red-600'; // Cor da paixão
-                    break;
-                case 'Sair da Rotina':
-                    cor = 'bg-amber-600'; // Laranja/Âmbar, alinhado aos "foguinhos"
-                    break;
-            }
-        }
-    return {
-        nome: nomeCat,
-        emoji: momentoExemplo.emoji,
-        color: cor
-    };
-});
+    const itemsHtml = state.carrinho.length === 0
+        ? '<p class="text-white/70 text-center py-6">Seu carrinho está vazio.</p>'
+        : state.carrinho.map((item, index) => {
+            const imageHtml = item.img
+                ? `<img src="${item.img}" alt="${item.nome}" class="w-full h-full object-cover">`
+                : `<span class="text-2xl">${item.emoji || '🔥'}</span>`;
 
-const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/logo-instagram-white.png';
-
-appContainer.innerHTML = `
-    <main class="container mx-auto px-4 py-8 pb-24 pt-24 bg-gradient-to-br from-gray-900 to-black text-white">
-        <div class="mb-12 text-center">
-            <img src="${fotoParceiroUrl}" class="w-24 h-24 rounded-full object-cover border-4 border-pink-500/50 mx-auto mb-6">
-            <h2 class="text-3xl md:text-4xl font-bold mb-4">Catálogo de ${state.parceiroNome}</h2>
-            <p class="text-gray-400 max-w-2xl mx-auto">Escolha os momentos que você deseja viver!</p>
-        </div>
-        
-        <div class="flex flex-wrap justify-center gap-3 mb-12">
-            <button onclick="filtrarMomentos(null)"
-                class="px-4 py-2 rounded-full transition-all ${!state.filtro ? 'bg-pink-600 text-white shadow-lg' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}"
-                style="background: ${!state.filtro ? 'linear-gradient(45deg, #FF3547 0%, #FF6B7B 100%)' : ''}">
-                Todos
-            </button>
-            ${categorias.map(cat => `
-                <button onclick="filtrarMomentos('${cat.nome}')"
-                    class="px-4 py-2 rounded-full transition-all ${state.filtro === cat.nome ? 'text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800/50'} ${cat.color}">
-                    ${cat.emoji} ${cat.nome}
-                </button>
-            `).join('')}
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-            ${(state.filtro ? momentosParaParceiro.filter(m => m.categoria === state.filtro) : momentosParaParceiro).map(momento => {
-                const configParceiro = catalogoParceiro[momento.nome];
-                const preco = configParceiro?.preco !== undefined ? configParceiro.preco : momento.intensidade * 2;
-                const bloqueado = configParceiro?.bloqueado || false;
-                const momentoParaCarrinho = { ...momento, custoFoguinhos: preco };
-
-                return `
-                <div class="product-card group ${bloqueado ? 'opacity-50' : ''}">
-                    <div class="relative overflow-hidden">
-                        <img src="${momento.img}" alt="${momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
-                        <span class="product-badge">${momento.emoji} ${momento.categoria}</span>
-                        ${bloqueado ? `<div class="absolute inset-0 bg-black/70 flex items-center justify-center"><i class="fas fa-lock text-4xl text-white"></i></div>` : ''}
+            return `
+                <div class="bg-white rounded-2xl p-4 flex gap-3 items-center shadow-md">
+                    <div class="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden">
+                        ${imageHtml}
                     </div>
-                    <div class="p-4">
-                        <h3 class="font-medium">${momento.nome}</h3>
-                        <div class="flex justify-between items-center mt-4">
-                            <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
-                                <i class="fas fa-fire"></i> ${preco} Foguinhos
-                            </span>
-                            <button onclick='adicionarAoCarrinho(${JSON.stringify(momentoParaCarrinho).replace(/"/g, "&quot;")})'
-                                class="text-sm px-4 py-2 rounded-lg transition ${bloqueado ? 'bg-gray-700 cursor-not-allowed' : 'bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white'}"
-                                ${bloqueado ? 'disabled' : ''}>
-                                ${bloqueado ? '🔒' : 'Resgatar'}
+                    <div class="flex-1">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-900">${item.emoji ? `${item.emoji} ` : ''}${item.nome}</h4>
+                                <p class="text-xs text-gray-500">${item.categoria || 'Geral'}</p>
+                            </div>
+                            <button onclick="removerDoCarrinho(${index})" class="text-gray-400 hover:text-red-500">
+                                <i class="fas fa-xmark"></i>
                             </button>
+                        </div>
+                        <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
+                            <span>Qtde: 1</span>
+                            <span class="text-amber-500 font-semibold flex items-center gap-1">
+                                <i class="fas fa-fire"></i> ${item.custoFoguinhos}
+                            </span>
                         </div>
                     </div>
                 </div>
-                `;
-            }).join('')}
-        </div>
-    </main>
+            `;
+        }).join('');
 
-    ${state.showCartSidebar ? `
+    return `
         <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
-        <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
-                <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white">
-                    <i class="fas fa-times"></i>
+        <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-[#120b16] z-30 border-l border-white/10 p-6 overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-6">
+                <button onclick="toggleCartSidebar()" class="text-white/70 hover:text-white">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <h3 class="text-lg font-semibold text-center flex-1">Meu carrinho</h3>
+                <button class="text-white/70 hover:text-white" aria-label="Opções do carrinho">
+                    <i class="fas fa-ellipsis-vertical"></i>
                 </button>
             </div>
+
             <div class="space-y-3">
-                ${state.carrinho.length === 0 ? `<p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>` : state.carrinho.map((item, index) => `
-                    <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
-                        <div>
-                            <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
-                            <small class="text-gray-400 text-sm">${item.categoria}</small>
-                            <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1">
-                                <i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos
-                            </div>
-                        </div>
-                        <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `).join('')}
+                ${itemsHtml}
             </div>
-            <div class="mt-8 pt-6 border-t border-gray-800">
+
+            <div class="mt-6 rounded-2xl bg-white/90 text-gray-900 p-4 shadow-sm">
+                <h4 class="text-sm font-semibold mb-3">Resumo</h4>
+                <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex justify-between">
+                        <span>Itens</span>
+                        <span>${state.carrinho.length}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Meu Saldo</span>
+                        <span class="font-semibold text-emerald-600">${saldoAtual}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Custo Total (Foguinhos)</span>
+                        <span class="font-semibold text-red-500">-${totalFoguinhos}</span>
+                    </div>
+                    <div class="pt-2 mt-2 border-t border-gray-200 flex justify-between text-gray-900">
+                        <span class="font-semibold">Saldo Final</span>
+                        <span class="font-semibold">${saldoFinal}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
                 <button onclick="finalizarPedido()" 
-                    class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                    class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-xl font-semibold transition-all ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
                     ${state.carrinho.length === 0 ? 'disabled' : ''}>
                     Finalizar Pedido
                 </button>
-                <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+                <button onclick="toggleCartSidebar()" class="w-full mt-3 py-2 text-white/70 hover:text-white transition">
                     Continuar Resgatando
                 </button>
             </div>
         </div>
-    ` : ''}
-`;
+    `;
 }
 
 function calcularPrecoBase(momento) {
@@ -1962,7 +3046,7 @@ const muralBadgeHtml = conquistasNaoLidas > 0
     : '';
 const muralCardAccent = conquistasNaoLidas > 0
     ? 'ring-1 ring-yellow-400/60 shadow-lg'
-    : 'hover:bg-gray-800/40';
+    : 'hover:bg-gray-100';
 
 let notificationButtonHtml = '';
 if (window.Notification) {
@@ -1988,128 +3072,189 @@ if (window.Notification) {
 }
 
 appContainer.innerHTML = `
-    <div class="container mx-auto px-4 py-8 pb-24 pt-24">
-        <div class="text-center mb-10">
-            <h2 class="text-3xl md:text-4xl font-bold mb-2">Meu Perfil e Catálogo</h2>
-            <p class="text-gray-400 max-w-2xl mx-auto">Gerencie sua foto, preços e a disponibilidade dos momentos.</p>
-        </div>
-
-        <div class="max-w-2xl mx-auto mb-12 p-6 card flex flex-col items-center">
-            <h3 class="font-bold text-xl mb-4">Sua Foto de Perfil</h3>
-            <img id="profilePicPreview" src="${fotoUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-gray-600 mb-4">
-            <input type="file" id="fileInput" onchange="handleFileSelect(event)" accept="image/*" class="hidden">
-            <button onclick="document.getElementById('fileInput').click()" class="text-pink-400 hover:text-pink-300 font-semibold">
-                Trocar Foto
-            </button>
-
-            ${notificationButtonHtml}
-
-            <div id="uploadProgress" class="w-full bg-gray-700 rounded-full h-2.5 mt-4 hidden">
-                <div id="uploadProgressBar" class="bg-pink-600 h-2.5 rounded-full" style="width: 0%"></div>
+    <div class="min-h-screen bg-black text-white">
+        <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+            <div class="flex flex-col items-center text-center -mt-6">
+                <i class="fas fa-store text-3xl mb-3"></i>
+                <h2 class="text-3xl font-semibold">Meu Catálogo</h2>
+                <p class="text-white/80">Gerencie preços e disponibilidade</p>
             </div>
-        </div>
+        </section>
 
-        <div class="space-y-4 max-w-2xl mx-auto">
-            <div class="card mb-12 p-6 cursor-pointer transition group ${muralCardAccent} focus:outline-none focus:ring-2 focus:ring-yellow-300/80" role="button" tabindex="0" aria-label="Abrir mural de conquistas" onclick="toggleAchievementsPopup()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAchievementsPopup();}">
-                <div class="flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-500/20 text-yellow-300">
-                            <i class="fas fa-trophy"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold">Mural de Conquistas</h3>
-                            <p class="text-sm text-gray-400">Veja os troféus que você já desbloqueou e quais ainda pode conquistar.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3 text-sm text-gray-400 group-hover:text-yellow-200 transition">
-                        ${muralBadgeHtml}
-                        <i class="fas fa-chevron-right text-base"></i>
-                    </div>
-                </div>
-            </div>
-            ${categorias.map(categoria => `
-                <div class="card overflow-hidden">
-                    <button onclick="toggleAccordion(this)" class="w-full p-4 text-left font-bold text-lg flex justify-between items-center">
-                        <span>${categoria}</span>
-                        <i class="fas fa-chevron-down transition-transform duration-300"></i>
-                    </button>
-                    <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
-                        <div class="space-y-2 p-4 border-t border-gray-700">
-                            ${momentosDisponiveis.filter(m => m.categoria === categoria).map(momento => {
-                                const configSalva = catalogoSalvo[momento.nome];
-                                const precoPadrao = calcularPrecoBase(momento);
-                                const preco = normalizarPreco(configSalva?.preco, precoPadrao);
-                                if (configSalva && configSalva.preco !== preco) {
-                                    configSalva.preco = preco;
-                                }
-                                const bloqueado = configSalva?.bloqueado || false;
-                                // A CORREÇÃO ESTÁ AQUI: O "return" AGORA COMEÇA DIRETAMENTE COM O ACENTO GRAVE `
-                                return `
-                                <div class="p-2 flex items-center justify-between gap-4">
-                                    <div class="flex items-center gap-4">
-                                        <img src="${momento.img}" class="w-12 h-12 rounded-lg object-cover">
-                                        <div><h3 class="font-semibold">${momento.nome}</h3></div>
-                                    </div>
-                                    <div class="flex items-center gap-4">
-                                        <div class="flex items-center gap-1 bg-gray-800 rounded-lg p-2">
-                                            <i class="fas fa-fire text-yellow-400"></i>
-                                            <input type="number" min="0" step="1" value="${preco}" id="preco-${momento.nome.replace(/\s+/g, '-')}" class="bg-transparent w-16 text-center font-bold">
-                                        </div>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" ${bloqueado ? 'checked' : ''} class="sr-only peer" id="bloqueado-${momento.nome.replace(/\s+/g, '-')}">
-                                            <div class="relative w-14 h-7 bg-pink-600 peer-checked:bg-gray-600 rounded-full transition-colors flex items-center justify-between px-2">
-                                                <i class="fas fa-lock text-white text-xs"></i>
-                                                <i class="fas fa-lock-open text-white text-xs"></i>
+        <section class="px-5 pb-24 -mt-10">
+            <div class="notif-shell max-w-5xl mx-auto space-y-6">
+                <div class="space-y-4">
+                    ${categorias.map(categoria => `
+                        <div class="notification-card overflow-hidden">
+                            <button onclick="toggleAccordion(this)" class="w-full p-4 text-left font-semibold text-base flex justify-between items-center text-white">
+                                <span>${categoria}</span>
+                                <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                            </button>
+                            <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                                <div class="space-y-2 p-4 border-t border-white/10">
+                                    ${momentosDisponiveis.filter(m => m.categoria === categoria).map(momento => {
+                                        const configSalva = catalogoSalvo[momento.nome];
+                                        const precoPadrao = calcularPrecoBase(momento);
+                                        const preco = normalizarPreco(configSalva?.preco, precoPadrao);
+                                        if (configSalva && configSalva.preco !== preco) {
+                                            configSalva.preco = preco;
+                                        }
+                                        const bloqueado = configSalva?.bloqueado || false;
+                                        return `
+                                        <div class="p-2 flex items-center justify-between gap-4">
+                                            <div class="flex items-center gap-4">
+                                                <img src="${momento.img}" class="w-12 h-12 rounded-lg object-cover">
+                                                <div><h3 class="font-semibold text-white">${momento.nome}</h3></div>
                                             </div>
-                                            <div class="absolute top-0.5 left-[2px] w-6 h-6 bg-white rounded-full border border-gray-300 transition-transform transform peer-checked:translate-x-full"></div>
-                                        </label>
-                                    </div>
+                                            <div class="flex items-center gap-4">
+                                                <div class="flex items-center gap-1 bg-black/40 rounded-lg p-2">
+                                                    <i class="fas fa-fire text-yellow-400"></i>
+                                                    <input type="number" min="0" step="1" value="${preco}" id="preco-${momento.nome.replace(/\s+/g, '-')}" class="bg-transparent w-16 text-center font-bold text-white">
+                                                </div>
+                                                <label class="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" ${bloqueado ? 'checked' : ''} class="sr-only peer" id="bloqueado-${momento.nome.replace(/\s+/g, '-')}">
+                                                    <div class="relative w-14 h-7 bg-pink-600 peer-checked:bg-gray-600 rounded-full transition-colors flex items-center justify-between px-2">
+                                                        <i class="fas fa-lock text-white text-xs"></i>
+                                                        <i class="fas fa-lock-open text-white text-xs"></i>
+                                                    </div>
+                                                    <div class="absolute top-0.5 left-[2px] w-6 h-6 bg-white rounded-full border border-gray-300 transition-transform transform peer-checked:translate-x-full"></div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        `;
+                                    }).join('')}
                                 </div>
-                                `;
-                            }).join('')}
+                            </div>
                         </div>
-                    </div>
+                    `).join('')}
                 </div>
-            `).join('')}
-        </div>
 
-        <div class="mt-10 text-center">
-            <button onclick="handleSaveCatalogo()" class="btn-red px-10 py-4">
-                Salvar Alterações
-            </button>
-        </div>
+                <div class="text-center">
+                    <button onclick="handleSaveCatalogo()" class="btn-red px-10 py-4">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </div>
+        </section>
     </div>
 
-    ${state.showCartSidebar ? `
-        <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
-        <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
-                <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="space-y-3">
-                ${state.carrinho.length === 0 ? `<p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>` : state.carrinho.map((item, index) => `
-                    <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
-                        <div>
-                            <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
-                            <small class="text-gray-400 text-sm">${item.categoria}</small>
-                            <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1"><i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos</div>
-                        </div>
-                        <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
-                    </div>
-                `).join('')}
-            </div>
-            <div class="mt-8 pt-6 border-t border-gray-800">
-                <button onclick="finalizarPedido()" class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${state.carrinho.length === 0 ? 'disabled' : ''}>
-                    Finalizar Pedido
-                </button>
-                <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
-                    Continuar Resgatando
-                </button>
-            </div>
-        </div>
-    ` : ''}
+    ${state.showCartSidebar ? renderCartSidebar() : ''}
 `;
+}
+
+function renderMeuPerfil() {
+    const userName = state.usuario?.nome || 'Amor';
+    const email = state.usuario?.email || '—';
+    const telefone = state.usuario?.telefone || '—';
+    const sexo = state.usuario?.sexo || '—';
+    const idade = state.usuario?.idade ?? 'XX';
+    const fotoUrl = state.usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
+
+    let notificationButtonHtml = '';
+    if (window.Notification) {
+        if (state.usuario && state.usuario.notificationsEnabled && Notification.permission === 'granted') {
+            notificationButtonHtml = `
+                <button onclick="handleNotificationToggle()" class="mt-4 bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-lg transition">
+                    <i class="fas fa-bell-slash"></i> Desativar Notificações
+                </button>
+            `;
+        } else if (Notification.permission === 'denied') {
+            notificationButtonHtml = `
+                <button onclick="handleNotificationToggle()" class="mt-4 bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed" title="Você precisa permitir as notificações nas configurações do seu navegador.">
+                    <i class="fas fa-ban"></i> Notificações Bloqueadas
+                </button>
+            `;
+        } else {
+            notificationButtonHtml = `
+                <button onclick="handleNotificationToggle()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                    <i class="fas fa-bell"></i> Ativar Notificações
+                </button>
+            `;
+        }
+    }
+
+    appContainer.innerHTML = `
+        <div class="min-h-screen bg-black text-white">
+            <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                <div class="flex flex-col items-center text-center -mt-6">
+                    <i class="fas fa-user text-3xl mb-3"></i>
+                    <h2 class="text-3xl font-semibold">Meu Perfil</h2>
+                    <p class="text-white/80">Seus dados e preferências</p>
+                </div>
+            </section>
+
+            <section class="px-5 pb-24 -mt-10">
+                <div class="notif-shell max-w-3xl mx-auto space-y-6">
+                    <div class="rounded-2xl p-4 bg-[#ff4457] shadow-[0_12px_30px_rgba(255,68,87,0.35)]">
+                        <div class="flex flex-col sm:flex-row sm:items-start gap-5">
+                            <div class="flex flex-col items-start gap-3">
+                                <div class="w-24 h-32 rounded-2xl bg-white overflow-hidden flex items-center justify-center">
+                                    <img id="profilePicPreview" src="${fotoUrl}" class="w-full h-full object-cover" alt="Foto de perfil">
+                                </div>
+                                <label class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white cursor-pointer">
+                                    <i class="fas fa-camera"></i>
+                                    Trocar foto
+                                    <input type="file" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                                </label>
+                            </div>
+                            <div class="flex flex-col gap-4 flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs uppercase tracking-wide text-white/80">Nome:</span>
+                                    <span class="text-base font-semibold text-white">${userName}</span>
+                                    <button type="button" onclick="handleEditarNome()" class="text-white/90 hover:text-white" aria-label="Editar nome">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs uppercase tracking-wide text-white/80">Idade:</span>
+                                    <span class="text-base font-semibold text-white">${idade}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="uploadProgress" class="hidden mt-4 w-full bg-gray-200 rounded-full h-2">
+                            <div id="uploadProgressBar" class="h-2 rounded-full bg-red-500 w-0"></div>
+                        </div>
+                    </div>
+
+                    <div class="notification-card p-5">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                                <span class="text-sm text-white/70">Telefone</span>
+                                <span class="text-sm font-semibold">${telefone}</span>
+                            </div>
+                            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                                <span class="text-sm text-white/70">Sexo</span>
+                                <span class="text-sm font-semibold">${sexo}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-white/70">Email</span>
+                                <span class="text-sm font-semibold">${email}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notif-card-white p-5">
+                        <h3 class="text-lg font-semibold text-gray-800">Notificações</h3>
+                        <p class="text-sm text-gray-500">Ao ativar, você receberá mensagens de push com as movimentações dentro do app.</p>
+                        ${notificationButtonHtml}
+                    </div>
+
+                </div>
+            </section>
+        </div>
+    `;
+}
+
+function toggleMostrarConquistas() {
+    state.mostrarTodasConquistas = !state.mostrarTodasConquistas;
+    renderAchievementsPopup();
+}
+
+function setDesafiosTab(tab) {
+    if (state.desafiosTab !== tab) {
+        state.desafiosTab = tab;
+        renderAchievementsPopup();
+    }
 }
 
 async function handleSaveCatalogo() {
@@ -2285,6 +3430,36 @@ reader.readAsDataURL(file);
 
 // Inicia o processo de upload
 uploadProfilePic(file);
+}
+
+async function handleEditarNome() {
+    if (!state.usuario) {
+        return;
+    }
+
+    const nomeAtual = state.usuario.nome || '';
+    const novoNome = prompt('Digite o novo nome:', nomeAtual);
+
+    if (!novoNome || !novoNome.trim()) {
+        return;
+    }
+
+    const nomeFormatado = novoNome.trim();
+    if (nomeFormatado === nomeAtual) {
+        return;
+    }
+
+    try {
+        await db.collection('usuarios').doc(state.usuario.uid).update({
+            nome: nomeFormatado
+        });
+        state.usuario.nome = nomeFormatado;
+        renderMeuPerfil();
+        updateFixedUI();
+    } catch (error) {
+        console.error('Erro ao atualizar nome:', error);
+        alert('Não foi possível atualizar o nome. Tente novamente.');
+    }
 }
 
 // Função 2: Faz o upload do arquivo para o Firebase Storage
@@ -2490,6 +3665,9 @@ try {
     state.notificacoesTarefasNaoLidas = 0;
     state.notificacoesPresentesNaoLidas = 0;
     state.notificacoesConquistasNaoLidas = 0;
+    state.showPairingModal = false;
+        state.showVipPopup = false;
+    state.pendingPartnerName = null;
 
     renderApp(); // Volta para a tela inicial
 } catch (error) {
@@ -2724,6 +3902,11 @@ renderApp();
         console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar, 'state.showFoguinhosPopup:', state.showFoguinhosPopup);
         // Atualiza os elementos da header e footer que são fixos no DOM
         updateFixedUI();
+
+        if (state.etapa !== 'achievementsPopup' && state.desafiosCountdownId) {
+            clearInterval(state.desafiosCountdownId);
+            state.desafiosCountdownId = null;
+        }
         
         // Renderiza o conteúdo principal dentro da #app
         switch (state.etapa) {
@@ -2732,6 +3915,9 @@ renderApp();
                 break;
             case 'signIn':
                 renderSignIn();
+                break;
+            case 'dashboard':
+                renderDashboard();
                 break;
             case 'register':
                 if (REGISTRATION_ENABLED) {
@@ -2744,8 +3930,14 @@ renderApp();
             case 'parear':
                 renderPareamento();
                 break;
+            case 'pareamentos':
+                renderPareamentosLista();
+                break;
             case 'main':
                 renderMain();
+                break;
+            case 'momentos':
+                renderMomentos();
                 break;
             case 'gerenciarCatalogo':
                 renderGerenciarCatalogo();
@@ -2759,6 +3951,9 @@ renderApp();
             case 'achievementsPopup':
                 renderAchievementsPopup();
                 break;
+            case 'meuPerfil':
+                renderMeuPerfil();
+                break;
             default:
                 renderLandingPage(); // Fallback
         }
@@ -2766,69 +3961,146 @@ renderApp();
 
     async function renderNossasTarefas() {
     
-    // (Bloco de limpeza de notificações que adicionamos - continua igual)
+        // (Bloco de limpeza de notificações - marca todas como lidas ao abrir)
     try {
-        if (state.notificacoesTarefasNaoLidas > 0) {
+            const hasUnread = state.notificacoes && state.notificacoes.some((notif) => !notif.lida);
+            if (hasUnread) {
             const batch = db.batch();
-            let notificacoesDeTarefasLidas = 0;
+                let notificacoesLidas = 0;
 
             state.notificacoes.forEach(notif => {
-                if (!notif.lida && notif.icone === 'fa-shopping-bag') {
+                    if (!notif.lida) {
                     const notifRef = db.collection('notificacoes').doc(notif.id);
                     batch.update(notifRef, { lida: true });
-                    notificacoesDeTarefasLidas++;
+                        notificacoesLidas++;
                 }
             });
 
-            if (notificacoesDeTarefasLidas > 0) {
+                if (notificacoesLidas > 0) {
                 await batch.commit();
-                console.log(`Marcou ${notificacoesDeTarefasLidas} notificações de tarefa como lidas.`);
+                    console.log(`Marcou ${notificacoesLidas} notificações como lidas.`);
                 state.notificacoesTarefasNaoLidas = 0;
+                    state.notificacoesPresentesNaoLidas = 0;
+                    state.notificacoesConquistasNaoLidas = 0;
                 updateFixedUI(); 
             }
         }
     } catch (err) {
-        console.error("Erro ao marcar notificações de tarefa como lidas:", err);
+            console.error("Erro ao marcar notificações como lidas:", err);
     }
     // (Fim do bloco de limpeza)
 
+        const pendingCount = (state.notificacoesTarefasNaoLidas || 0) +
+            (state.notificacoesPresentesNaoLidas || 0) +
+            (state.notificacoesConquistasNaoLidas || 0);
+        const hasPending = pendingCount > 0;
+        const notifications = state.notificacoes || [];
+        const tab = state.notificacoesTab || 'checkin';
+        const filteredNotifications = notifications.filter((notif) => {
+            if (tab === 'momentos') {
+                return notif.icone === 'fa-shopping-bag';
+            }
+            if (tab === 'pareamento') {
+                return notif.tipo === 'pairing' || notif.icone === 'fa-heart';
+            }
+            return notif.icone === 'fa-gift' || notif.tipo === 'checkin';
+        });
 
+        const notificationsHtml = filteredNotifications.length
+            ? filteredNotifications.map((notif) => {
+                const avatarUrl = notif.partnerPhotoUrl || notif.partnerFotoUrl || '';
+                const iconClass = notif.icone || 'fa-bell';
+                const timestamp = notif.timestamp && notif.timestamp.seconds
+                    ? new Date(notif.timestamp.seconds * 1000).toLocaleString('pt-BR')
+                    : '';
+                let tabIcon = 'fa-fire';
+                let tabIconColor = 'text-red-500';
+                if (tab === 'momentos') {
+                    tabIcon = 'fa-gift';
+                    tabIconColor = 'text-amber-500';
+                } else if (tab === 'pareamento') {
+                    tabIcon = 'fa-heart';
+                    tabIconColor = 'text-red-500';
+                }
+                return `
+                    <div class="notif-item ${notif.lida ? 'opacity-70' : ''}">
+                        ${avatarUrl
+                            ? `<img src="${avatarUrl}" alt="Parceiro">`
+                            : `<div class="notification-avatar"><i class="fas ${iconClass} text-lg text-white/80"></i></div>`}
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold">${notif.titulo || 'Atualização'}</p>
+                            <p class="text-sm text-gray-600">${notif.mensagem || 'Você recebeu uma atualização.'}</p>
+                            ${timestamp ? `<p class="text-xs text-gray-500 mt-1">${timestamp}</p>` : ''}
+                        </div>
+                        <i class="fas ${tabIcon} ${tabIconColor}"></i>
+                    </div>
+                `;
+            }).join('')
+            : `<p class="text-center text-gray-500 py-8">Nenhuma notificação disponível.</p>`;
+
+        const challengePending = !!state.pendingChallenge;
+        appContainer.innerHTML = `
+            <div class="min-h-screen bg-black text-white">
+                <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                    <div class="flex flex-col items-center text-center -mt-6">
+                        <i class="fas fa-bell text-3xl mb-3"></i>
+                        <h2 class="text-3xl font-semibold">Notificações</h2>
+                        <p class="text-white/80">Veja as novidades do seu perfil</p>
+                    </div>
+                </section>
+
+                <section class="px-5 pb-24 -mt-10">
+                    <div class="notif-shell max-w-2xl mx-auto space-y-6">
+                        <div class="flex gap-2">
+                            <button class="notif-tab ${tab === 'checkin' ? 'active' : ''}" onclick="setNotificacoesTab('checkin')">Check-in</button>
+                            <button class="notif-tab ${tab === 'momentos' ? 'active' : ''}" onclick="setNotificacoesTab('momentos')">Momentos</button>
+                            <button class="notif-tab ${tab === 'pareamento' ? 'active' : ''}" onclick="setNotificacoesTab('pareamento')">Pareamento</button>
+                        </div>
+
+                        <div class="notif-list-shell space-y-3">
+                            ${notificationsHtml}
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            ${state.showChallengePopup ? renderChallengePopup() : ''}
+        `;
+}
+
+async function renderMomentos() {
     const abaAtiva = state.abaTarefasAtiva || 'recebidos';
-    
-    // 1. Define o HTML base da página (continua igual)
     appContainer.innerHTML = `
-        <div class="container mx-auto px-4 py-8 pb-24 pt-24">
-            <div class="text-center mb-10">
-                <h2 class="text-3xl md:text-4xl font-bold mb-2">Nossas Tarefas</h2>
-                <p class="text-gray-400">Momentos resgatados para curtir.</p>
-            </div>
-
-            <div class="flex justify-center mb-6 border-b border-gray-700">
-                <button 
-                    onclick="trocarAbaTarefas('recebidos')" 
-                    class="py-3 px-6 font-semibold transition-all duration-300 ${abaAtiva === 'recebidos' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-gray-500'}">
-                    Recebidos
-                </button>
-                <button 
-                    onclick="trocarAbaTarefas('enviados')" 
-                    class="py-3 px-6 font-semibold transition-all duration-300 ${abaAtiva === 'enviados' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-gray-500'}">
-                    Enviados
-                </button>
-            </div>
-
-            <div id="tarefas-list-container" class="space-y-4 max-w-2xl mx-auto">
-                <div class="text-center py-10">
-                    <i class="fas fa-spinner fa-spin text-4xl text-pink-500"></i>
-                    <p class="mt-2 text-gray-400">Buscando tarefas...</p>
+        <div class="min-h-screen bg-black text-white">
+            <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                <div class="flex flex-col items-center text-center -mt-6">
+                    <i class="fas fa-heart text-3xl mb-3"></i>
+                    <h2 class="text-3xl font-semibold">Momentos</h2>
+                    <p class="text-white/80">Recebidos e enviados</p>
                 </div>
-            </div>
+            </section>
+
+            <section class="px-5 pb-24 -mt-10">
+                <div class="notif-shell max-w-2xl mx-auto space-y-6">
+                    <div class="flex gap-2">
+                        <button class="notif-tab ${abaAtiva === 'recebidos' ? 'active' : ''}" onclick="trocarAbaTarefas('recebidos')">Recebidos</button>
+                        <button class="notif-tab ${abaAtiva === 'enviados' ? 'active' : ''}" onclick="trocarAbaTarefas('enviados')">Enviados</button>
+                    </div>
+
+                    <div id="tarefas-list-container" class="notif-list-shell space-y-3">
+                        <div class="text-center py-8">
+                            <i class="fas fa-spinner fa-spin text-3xl text-red-500"></i>
+                            <p class="mt-2 text-gray-500">Buscando momentos...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     `;
 
-    // 4. Busca os dados no Firestore (continua igual)
     let tarefas = [];
-    let queryField = ''; 
-    
+    let queryField = '';
+
     if (abaAtiva === 'recebidos') {
         queryField = 'executadoPorUid';
     } else {
@@ -2842,81 +4114,385 @@ renderApp();
             .orderBy('dataResgate', 'desc')
             .limit(30)
             .get();
-        
+
         querySnapshot.forEach(doc => {
             tarefas.push({ id: doc.id, ...doc.data() });
         });
-
     } catch (error) {
         console.error("Erro ao buscar tarefas:", error);
-        showToast("Erro ao carregar tarefas.", "erro");
+        showToast("Erro ao carregar momentos.", "erro");
     }
 
-    // 5. Renderiza a lista de tarefas no container (AQUI ESTÃO AS MUDANÇAS)
     const container = document.getElementById('tarefas-list-container');
+    if (!container) {
+        return;
+    }
+
     if (tarefas.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-500 py-10">Nenhuma tarefa encontrada aqui.</p>`;
+        container.innerHTML = `<p class="text-center text-gray-500 py-8">Nenhum momento encontrado aqui.</p>`;
     } else {
         container.innerHTML = tarefas.map(tarefa => {
             const isPendente = tarefa.status === 'Pendente';
-            const statusCor = isPendente ? 'text-yellow-400' : 'text-green-400';
+            const statusCor = isPendente ? 'text-yellow-500' : 'text-green-600';
             const statusIcon = isPendente ? 'fa-clock' : 'fa-check-circle';
             const dataFormatada = tarefa.dataResgate ? new Date(tarefa.dataResgate.seconds * 1000).toLocaleDateString('pt-BR') : 'Data indisponível';
-
-            // ==================================================================
-            // MUDANÇA 1: Buscar a imagem do momento na lista mestre 'momentos'
-            // ==================================================================
             const momentoInfo = state.momentosMestres.find(m => m.nome === tarefa.momentoNome);
-            // Usamos a imagem encontrada, ou o emoji como fallback, ou uma imagem padrão
-            const imagemHtml = momentoInfo 
+            const imagemHtml = momentoInfo
                 ? `<img src="${momentoInfo.img}" class="w-12 h-12 rounded-lg object-cover">`
-                : `<span class="text-3xl">${tarefa.momentoEmoji}</span>`; // Fallback para o emoji se não achar
+                : `<span class="text-2xl">${tarefa.momentoEmoji || '🔥'}</span>`;
 
             return `
-                <div class="card p-4 flex items-center justify-between gap-4 ${!isPendente ? 'opacity-50' : ''}">
-                    <div class="flex items-center gap-4">
-                        
-                        ${imagemHtml} 
-
-                        <div>
-                            <h3 class="font-bold">${tarefa.momentoNome}</h3>
-                            <p class="text-sm text-gray-300">
-                                ${abaAtiva === 'recebidos' ? `Resgatado por: ${tarefa.resgatadoPorNome}` : `Aguardando: ${tarefa.executadoPorNome}`}
-                            </p>
-                            <p class="text-xs text-gray-500 mt-2">Resgatado em: ${dataFormatada}</p>
-                        </div>
+                <div class="notif-item ${!isPendente ? 'opacity-70' : ''}">
+                    ${imagemHtml}
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-gray-800">${tarefa.momentoNome}</p>
+                        <p class="text-xs text-gray-500">
+                            ${abaAtiva === 'recebidos' ? `Resgatado por: ${tarefa.resgatadoPorNome}` : `Aguardando: ${tarefa.executadoPorNome}`}
+                        </p>
+                        <p class="text-xs text-gray-400 mt-1">${dataFormatada}</p>
                     </div>
-                    
-                    <div class="text-right flex-shrink-0"> <div class="flex items-center justify-end gap-2 font-semibold ${statusCor} mb-3">
+                    <div class="text-right">
+                        <div class="flex items-center justify-end gap-1 ${statusCor} text-xs font-semibold mb-2">
                             <i class="fas ${statusIcon}"></i>
                             <span>${tarefa.status}</span>
                         </div>
-                        
                         ${(abaAtiva === 'enviados' && isPendente) ? `
-                            <button 
-                                onclick="handleDarCheck('${tarefa.id}', '${tarefa.momentoNome}', ${tarefa.custoFoguinhos || 0})"
-                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
-                                
-                                <i class="fas fa-check"></i> Realizado
-                            
+                            <button onclick="requestRealizadoWithPhoto('${tarefa.id}', '${tarefa.momentoNome}', ${tarefa.custoFoguinhos || 0})"
+                                class="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-2 rounded-lg inline-flex items-center gap-1">
+                                <i class="fas fa-check"></i>
+                                <span>Realizado</span>
                             </button>
-                        ` : ''}
-
-                         ${(!isPendente && tarefa.dataConclusao) ? `
-                            <p class="text-xs text-gray-400">Concluído em: ${new Date(tarefa.dataConclusao.seconds * 1000).toLocaleDateString('pt-BR')}</p>
                         ` : ''}
                     </div>
                 </div>
             `;
         }).join('');
     }
+
+    appContainer.innerHTML += `
+        ${state.showRealizadoPhotoPrompt ? renderRealizadoPhotoPrompt() : ''}
+    `;
 }
 
 function trocarAbaTarefas(aba) {
     if (state.abaTarefasAtiva !== aba) {
         state.abaTarefasAtiva = aba;
-        renderNossasTarefas(); // Re-renderiza a tela com a nova aba
+        renderMomentos(); // Re-renderiza a tela com a nova aba
     }
+}
+
+function renderChallengePopup() {
+    const secondsLeft = state.challengeSecondsLeft || 60;
+    const disabled = secondsLeft <= 0;
+    const pergunta = state.pendingChallenge?.pergunta || 'Pergunta indisponível.';
+    return `
+        <div class="fixed inset-0 bg-black/80 z-40 flex items-center justify-center px-4" onclick="closeChallengePopup()">
+            <div class="card p-6 w-full max-w-md" onclick="event.stopPropagation()">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-amber-200">Desafio da Semana</h3>
+                    <button onclick="closeChallengePopup()" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-300 mb-2">${pergunta}</p>
+                <p class="text-xs text-gray-500 mb-4">Responda igual ao seu par para ganhar o foguinho.</p>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs text-gray-400">Tempo restante</span>
+                    <span id="challengeCountdown" class="text-lg font-bold text-amber-200">${secondsLeft}s</span>
+                </div>
+                <input id="challengeAnswer" type="text" placeholder="Digite sua resposta" ${disabled ? 'disabled' : ''} class="w-full mb-4">
+                <button onclick="submitWeeklyChallengeAnswer()" class="w-full py-2 rounded-lg ${disabled ? 'bg-gray-700 text-gray-400' : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200'}" ${disabled ? 'disabled' : ''}>
+                    Enviar resposta
+                </button>
+                ${disabled ? '<p class="text-xs text-gray-400 mt-3">Tempo esgotado.</p>' : ''}
+            </div>
+        </div>
+    `;
+}
+
+function renderRealizadoPhotoPrompt() {
+    const hasPreview = !!state.pendingRealizadoPhotoData;
+    const previewHtml = hasPreview
+        ? `
+            <div class="w-full h-44 rounded-2xl bg-white/10 overflow-hidden flex items-center justify-center mb-4">
+                <img src="${state.pendingRealizadoPhotoData}" alt="Preview da foto" class="w-full h-full object-cover">
+            </div>
+        `
+        : '';
+
+    const actionsHtml = hasPreview
+        ? `
+            <div class="flex gap-3">
+                <button onclick="confirmRealizadoWithPhoto()" class="flex-1 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold">Usar foto</button>
+                <button onclick="openRealizadoPhotoPicker()" class="flex-1 py-2 rounded-lg bg-white/10 text-white/80">Trocar</button>
+            </div>
+            <button onclick="handleRealizadoPhotoChoice(false)" class="w-full mt-3 py-2 rounded-lg text-white/70 hover:text-white">Sem foto</button>
+        `
+        : `
+            <div class="flex gap-3">
+                <button onclick="handleRealizadoPhotoChoice(true)" class="flex-1 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold">Sim</button>
+                <button onclick="handleRealizadoPhotoChoice(false)" class="flex-1 py-2 rounded-lg bg-white/10 text-white/80">Não</button>
+            </div>
+        `;
+
+    return `
+        <div class="fixed inset-0 bg-black/80 z-40 flex items-center justify-center px-4" onclick="closeRealizadoPhotoPrompt()">
+            <div class="card p-6 w-full max-w-sm" onclick="event.stopPropagation()">
+                <h3 class="text-lg font-semibold text-white mb-2">Adicionar foto?</h3>
+                <p class="text-sm text-gray-300 mb-4">Deseja incluir uma foto deste momento realizado?</p>
+                ${previewHtml}
+                ${actionsHtml}
+                <input id="realizadoPhotoInput" type="file" accept="image/*" class="hidden" onchange="handleRealizadoPhotoSelect(event)">
+            </div>
+        </div>
+    `;
+}
+
+function requestRealizadoWithPhoto(tarefaId, momentoNome, custoFoguinhos) {
+    state.pendingRealizadoAction = { tarefaId, momentoNome, custoFoguinhos };
+    state.pendingRealizadoPhotoData = null;
+    state.showRealizadoPhotoPrompt = true;
+    renderMomentos();
+}
+
+function closeRealizadoPhotoPrompt() {
+    state.showRealizadoPhotoPrompt = false;
+    state.pendingRealizadoAction = null;
+    state.pendingRealizadoPhotoData = null;
+    renderMomentos();
+}
+
+function handleRealizadoPhotoChoice(shouldAdd) {
+    const pending = state.pendingRealizadoAction;
+    if (!pending) {
+        closeRealizadoPhotoPrompt();
+        return;
+    }
+
+    if (shouldAdd) {
+        openRealizadoPhotoPicker();
+        return;
+    }
+
+    state.showRealizadoPhotoPrompt = false;
+    state.pendingRealizadoAction = null;
+    state.pendingRealizadoPhotoData = null;
+    renderMomentos();
+    handleDarCheck(pending.tarefaId, pending.momentoNome, pending.custoFoguinhos);
+}
+
+function openRealizadoPhotoPicker() {
+    const input = document.getElementById('realizadoPhotoInput');
+    if (input) {
+        input.click();
+    }
+}
+
+function confirmRealizadoWithPhoto() {
+    const pending = state.pendingRealizadoAction;
+    if (!pending) {
+        closeRealizadoPhotoPrompt();
+        return;
+    }
+
+    state.showRealizadoPhotoPrompt = false;
+    state.pendingRealizadoAction = null;
+    renderMomentos();
+    handleDarCheck(pending.tarefaId, pending.momentoNome, pending.custoFoguinhos);
+}
+
+function handleRealizadoPhotoSelect(event) {
+    const file = event.target.files && event.target.files[0];
+    const pending = state.pendingRealizadoAction;
+
+    if (!pending) {
+        return;
+    }
+
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            state.pendingRealizadoPhotoData = e.target.result;
+            state.showRealizadoPhotoPrompt = true;
+            renderMomentos();
+        };
+        reader.readAsDataURL(file);
+    } else {
+        state.pendingRealizadoPhotoData = null;
+        state.showRealizadoPhotoPrompt = true;
+        renderMomentos();
+    }
+
+    event.target.value = '';
+}
+
+function setNotificacoesTab(tab) {
+    if (state.notificacoesTab !== tab) {
+        state.notificacoesTab = tab;
+        renderNossasTarefas();
+    }
+}
+
+function openChallengePopup() {
+    state.showChallengePopup = true;
+    if (!state.challengeSecondsLeft || state.challengeSecondsLeft <= 0) {
+        state.challengeSecondsLeft = 60;
+    }
+    if (state.challengeTimerId) {
+        clearInterval(state.challengeTimerId);
+    }
+    renderNossasTarefas();
+    state.challengeTimerId = setInterval(() => {
+        if (state.challengeSecondsLeft <= 0) {
+            clearInterval(state.challengeTimerId);
+            state.challengeTimerId = null;
+            const countdownEl = document.getElementById('challengeCountdown');
+            if (countdownEl) {
+                countdownEl.textContent = '0s';
+            }
+            return;
+        }
+        state.challengeSecondsLeft -= 1;
+        const countdownEl = document.getElementById('challengeCountdown');
+        if (countdownEl) {
+            countdownEl.textContent = `${state.challengeSecondsLeft}s`;
+        }
+    }, 1000);
+}
+
+function openWeeklyChallengePopup(desafioId) {
+    const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
+    const desafio = desafiosSemanais.find((item) => item.id === desafioId) || null;
+    if (!desafio) {
+        return;
+    }
+    state.pendingChallenge = {
+        id: desafio.id,
+        titulo: desafio.titulo || 'Desafio da Semana',
+        pergunta: desafio.pergunta || 'Pergunta indisponível.',
+    };
+    state.showChallengePopup = true;
+    if (!desafio.startedAt && !desafio.prazoInicio && !desafio.startedEm) {
+        markWeeklyChallengeStarted(desafio.id);
+    }
+    state.activeWeeklyChallengeId = desafio.id;
+    const deadlineFromChallenge = getChallengeDeadlineMs(desafio);
+    const localStartMs = getLocalChallengeStartMs(desafio.id);
+    if (deadlineFromChallenge) {
+        state.challengeDeadline = deadlineFromChallenge;
+    } else if (localStartMs) {
+        state.challengeDeadline = localStartMs + 60000;
+    } else if (!state.challengeDeadline) {
+        state.challengeDeadline = Date.now() + 60000;
+        setLocalChallengeStartMs(desafio.id, Date.now());
+    }
+    const remainingMs = Math.max(0, (state.challengeDeadline || Date.now()) - Date.now());
+    state.challengeSecondsLeft = Math.ceil(remainingMs / 1000);
+    if (state.challengeTimerId) {
+        clearInterval(state.challengeTimerId);
+    }
+    renderAchievementsPopup();
+    state.challengeTimerId = setInterval(() => {
+        if (!state.activeWeeklyChallengeId || !state.challengeDeadline) {
+            clearInterval(state.challengeTimerId);
+            state.challengeTimerId = null;
+            return;
+        }
+        const remainingMs = Math.max(0, state.challengeDeadline - Date.now());
+        state.challengeSecondsLeft = Math.ceil(remainingMs / 1000);
+        const countdownEl = document.getElementById('challengeCountdown');
+        if (countdownEl) {
+            countdownEl.textContent = `${state.challengeSecondsLeft}s`;
+        }
+        if (remainingMs <= 0) {
+            handleWeeklyChallengeTimeout(state.activeWeeklyChallengeId);
+            clearInterval(state.challengeTimerId);
+            state.challengeTimerId = null;
+        }
+    }, 1000);
+}
+
+function submitWeeklyChallengeAnswer() {
+    const input = document.getElementById('challengeAnswer');
+    const answer = (input && input.value ? input.value.trim() : '');
+    if (!answer) {
+        showToast('Digite sua resposta antes de enviar.', 'aviso');
+        return;
+    }
+
+    const challengeId = state.pendingChallenge?.id || 'alma_gemea';
+    const result = applyWeeklyChallengeAnswer(
+        challengeId,
+        answer,
+        state.usuario?.uid || null,
+        state.usuario?.nome || null
+    );
+
+    state.showChallengePopup = false;
+    state.activeWeeklyChallengeId = null;
+    state.challengeDeadline = null;
+    if (state.challengeTimerId) {
+        clearInterval(state.challengeTimerId);
+        state.challengeTimerId = null;
+    }
+
+    if (result.status === 'finalizado') {
+        showToast('Respostas iguais! Desafio concluído.', 'sucesso');
+    } else if (result.status === 'respostas_diferentes') {
+        showToast('Respostas diferentes. Tentem novamente.', 'aviso');
+    } else {
+        showToast('Resposta enviada! Aguardando seu par.', 'sucesso');
+    }
+    renderAchievementsPopup();
+}
+
+function handlePartnerChallengeAnswer(desafioId, answer, partnerName) {
+    const result = applyWeeklyChallengeAnswer(desafioId, answer, state.usuario?.pareadoUid || null, partnerName);
+    if (result.status === 'finalizado') {
+        showToast('Respostas iguais! Desafio concluído.', 'sucesso');
+    } else if (result.status === 'respostas_diferentes') {
+        showToast('Respostas diferentes. Tentem novamente.', 'aviso');
+    }
+    renderAchievementsPopup();
+}
+
+function closeChallengePopup() {
+    state.showChallengePopup = false;
+    if (state.challengeTimerId && !state.activeWeeklyChallengeId) {
+        clearInterval(state.challengeTimerId);
+        state.challengeTimerId = null;
+    }
+    renderAchievementsPopup();
+}
+
+function handleWeeklyChallengeTimeout(desafioId) {
+    const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
+    const index = desafiosSemanais.findIndex((item) => item.id === desafioId);
+    if (index === -1) {
+        return;
+    }
+    const desafioAtual = desafiosSemanais[index];
+    desafiosSemanais[index] = {
+        ...desafioAtual,
+        status: 'finalizado_sem_recompensa',
+        concluido: true,
+        completedAt: new Date(),
+        rewarded: false,
+    };
+    state.desafiosSemanais = desafiosSemanais;
+    persistWeeklyChallenge(desafiosSemanais[index]);
+    safeAddInput({
+        type: 'weekly_challenge_timeout',
+        challengeId: desafiosSemanais[index].challengeId || 'alma_gemea',
+        challengeDocId: desafiosSemanais[index].id || desafioId,
+        timedOutAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }).catch((err) => console.warn('Falha ao enviar timeout do desafio:', err));
+    state.showChallengePopup = false;
+    state.activeWeeklyChallengeId = null;
+    state.challengeDeadline = null;
+    state.pendingChallenge = null;
+    showToast('Tempo esgotado. Desafio finalizado sem recompensa.', 'aviso');
+    renderAchievementsPopup();
 }
 
 async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
@@ -2960,7 +4536,7 @@ async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
         showToast("Momento confirmado com sucesso!", "sucesso");
         
         // Re-renderiza a tela para mostrar a mudança de status
-        renderNossasTarefas();
+        renderMomentos();
 
     } catch (error) {
         console.error("Erro ao confirmar tarefa:", error);
@@ -2979,10 +4555,10 @@ if (!REGISTRATION_ENABLED && newStep === 'register') {
 // Se o usuário clicar no ícone da tela em que ele já está...
 if (state.etapa === newStep) {
     // ...e essa tela NÃO for a principal, então ele volta para a principal (efeito de fechar).
-    if (newStep !== 'main') {
-        state.etapa = 'main';
+    if (newStep !== 'dashboard') {
+        state.etapa = 'dashboard';
     } else {
-        // Se ele já está na 'main' e clica na 'main', não faz nada.
+        // Se ele já está na 'dashboard' e clica na 'dashboard', não faz nada.
         return;
     }
 } else {
@@ -2995,6 +4571,8 @@ state.showCartSidebar = false;
 state.showFoguinhosPopup = false;
 state.showPartnerInfoPopup = false;
 state.showAchievementsPopup = false;
+state.showPairingModal = false;
+state.showVipPopup = false;
 
 // Renderiza a aplicação com o novo estado definido
 renderApp();
@@ -3024,10 +4602,26 @@ renderApp();
     const notificationDot = document.getElementById('notificationDot');
     if (notificationDot) {
         // AGORA VERIFICA O CONTADOR DE TAREFAS
-        if ((state.notificacoesTarefasNaoLidas || 0) + (state.notificacoesConquistasNaoLidas || 0) > 0) {
+        if ((state.notificacoesTarefasNaoLidas || 0) + (state.notificacoesPresentesNaoLidas || 0) + (state.notificacoesConquistasNaoLidas || 0) > 0) {
             notificationDot.classList.remove('hidden');
         } else {
             notificationDot.classList.add('hidden');
+        }
+    }
+
+    const notificationsButton = document.getElementById('notificationsButton');
+    if (notificationsButton) {
+        const pendingCount = (state.notificacoesTarefasNaoLidas || 0) +
+            (state.notificacoesPresentesNaoLidas || 0) +
+            (state.notificacoesConquistasNaoLidas || 0);
+        if (pendingCount > 0) {
+            notificationsButton.style.background = NOTIFICATION_HIGHLIGHT;
+            notificationsButton.style.borderRadius = '999px';
+            notificationsButton.style.padding = '6px';
+        } else {
+            notificationsButton.style.background = '';
+            notificationsButton.style.borderRadius = '';
+            notificationsButton.style.padding = '';
         }
     }
 
@@ -3041,13 +4635,22 @@ renderApp();
 
     // LÓGICA DE VISIBILIDADE DAS BARRAS (igual)
     if (bottomNavBar && mainHeader) {
-        const telasComBarraVisivel = ['main', 'parear', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes'];
+        const telasComBarraVisivel = ['dashboard', 'main', 'momentos', 'parear', 'pareamentos', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes', 'achievementsPopup', 'meuPerfil'];
         if (telasComBarraVisivel.includes(state.etapa)) {
             bottomNavBar.style.display = 'flex';
             mainHeader.style.display = 'flex';
         } else {
             bottomNavBar.style.display = 'none';
             mainHeader.style.display = 'none';
+        }
+    }
+
+    const catalogActions = document.getElementById('catalogActions');
+    if (catalogActions) {
+        if (state.etapa === 'main') {
+            catalogActions.classList.remove('hidden');
+        } else {
+            catalogActions.classList.add('hidden');
         }
     }
 
@@ -3096,7 +4699,7 @@ renderApp();
         // (Lógica de ativação dos outros botões - continua igual)
         if (item.querySelector('.fas.fa-store') && state.etapa === 'gerenciarCatalogo') {
             item.classList.add('active');
-        } else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
+        } else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'pareamentos' || state.etapa === 'partnerInfoPopup')) {
             item.classList.add('active');
         } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) {
             item.classList.add('active');
@@ -3161,16 +4764,32 @@ try {
     const userDoc = await db.collection('usuarios').doc(uid).get();
     if (userDoc.exists) {
     state.usuario = { uid: uid, email: email, ...userDoc.data() };
+    state.parceirosAtivos = Array.isArray(state.usuario.pareamentosAtivos)
+        ? state.usuario.pareamentosAtivos
+        : [];
     state.usuario.notificationsEnabled = !!state.usuario.notificationsEnabled;
     state.usuario.conquistas = state.usuario.conquistas || {};
     state.usuario.achievementStats = state.usuario.achievementStats || {};
     state.conquistas = state.usuario.conquistas;
     state.achievementStats = state.usuario.achievementStats;
+    state.pendingPartnerName = state.usuario.pendingPartnerName || state.pendingPartnerName || null;
         state.usuario.pareadoUid = state.usuario.pareadoUid || null;
 
+        const wasPareado = state.pareado;
         const hasPairUid = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
         const hasPairPhone = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
         state.pareado = hasPairUid || hasPairPhone;
+        if (!wasPareado && state.pareado) {
+            ensureFirstPairingChallenge();
+        }
+        if (state.pareado) {
+            setupWeeklyChallengeListener();
+            applyLocalWeeklyChallenge();
+        }
+
+        if (state.pareado && state.pendingPartnerName && !state.parceiroApelido) {
+            state.parceiroApelido = state.pendingPartnerName;
+        }
 
         state.parceiroCodigo = state.usuario.pareadoCom || null;
         state.parceiroData = null;
@@ -3189,7 +4808,7 @@ try {
             if (parceiroSnap.exists) {
                 const parceiroData = { uid: parceiroSnap.id, ...parceiroSnap.data() };
                 state.parceiroData = parceiroData;
-                state.parceiroNome = parceiroData.nome;
+                state.parceiroNome = state.parceiroApelido || parceiroData.nome;
                 state.parceiroCodigo = parceiroData.telefone || state.parceiroCodigo;
                 if (parceiroData.telefone) {
                     state.parceiroTelefone = '55' + parceiroData.telefone.replace(/\D/g, '');
@@ -3204,6 +4823,7 @@ try {
                     if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
                         state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
                         console.log('ID Amigável carregado:', state.idPareamentoAmigavel);
+                        setupWeeklyChallengeListener();
                     }
                 }
             } else {
@@ -3218,6 +4838,8 @@ try {
             state.idPareamentoAmigavel = null;
         }
         
+        state.etapa = 'dashboard';
+
         // Ouvinte em tempo real: documento do usuário (para refletir mudanças
         // feitas pelo backend, como remoção de pending quando rejeitado)
         if (unsubscribeUserDoc) {
@@ -3245,16 +4867,30 @@ try {
             state.usuario.pareadoUid = state.usuario.pareadoUid || null;
             state.conquistas = nextConquistas;
             state.achievementStats = state.usuario.achievementStats;
+            state.pendingPartnerName = docData.pendingPartnerName || state.pendingPartnerName;
+            const wasPareado = state.pareado;
             const hasUidPair = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
             const hasPhonePair = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
             state.pareado = hasUidPair || hasPhonePair;
+            if (!wasPareado && state.pareado) {
+                ensureFirstPairingChallenge();
+            }
+            if (state.pareado) {
+                setupWeeklyChallengeListener();
+                applyLocalWeeklyChallenge();
+            }
             state.parceiroCodigo = state.usuario.pareadoCom || null;
+            if (state.pareado && state.pendingPartnerName && !state.parceiroApelido) {
+                state.parceiroApelido = state.pendingPartnerName;
+            }
             if (!state.pareado && (!state.usuario.pareadoCom || !state.usuario.pareadoCom.startsWith('pending_'))) {
                 state.pendingPairingRequest = null;
                 state.parceiroData = null;
                 state.parceiroNome = null;
                 state.parceiroTelefone = null;
                 state.idPareamentoAmigavel = null;
+                state.pendingPartnerName = null;
+                state.parceiroApelido = null;
             }
 
             if (state.pareado && state.usuario.pareadoUid && (!state.parceiroData || state.parceiroData.uid !== state.usuario.pareadoUid)) {
@@ -3262,7 +4898,7 @@ try {
                     if (partnerSnap.exists) {
                         const parceiroData = { uid: partnerSnap.id, ...partnerSnap.data() };
                         state.parceiroData = parceiroData;
-                        state.parceiroNome = parceiroData.nome;
+                        state.parceiroNome = state.parceiroApelido || parceiroData.nome;
                         state.parceiroCodigo = parceiroData.telefone || state.usuario.pareadoCom || null;
                         state.parceiroTelefone = parceiroData.telefone ? '55' + parceiroData.telefone.replace(/\D/g, '') : null;
 
@@ -3314,7 +4950,7 @@ try {
                     state.etapa = 'parear';
                     state.pendingPairingRequest = null;
                 } else {
-                    state.etapa = 'main';
+                    state.etapa = 'dashboard';
                 }
                 renderApp();
             });
@@ -3362,6 +4998,9 @@ try {
                 state.showCartSidebar = false;
                 state.showFoguinhosPopup = false;
                 state.showPartnerInfoPopup = false; // Resetar pop-up de parceiro
+                state.showPairingModal = false;
+                    state.showVipPopup = false;
+                state.pendingPartnerName = null;
                 renderApp();
             }
         });
@@ -3388,6 +5027,7 @@ try {
         window.acceptPairingRequest = acceptPairingRequest;
         window.rejectPairingRequest = rejectPairingRequest;
         window.handleDailyCheckIn = handleDailyCheckIn;
+        window.handleCheckInFromList = handleCheckInFromList;
         window.handleContinuarSemParear = handleContinuarSemParear;
         window.filtrarMomentos = filtrarMomentos;
         window.adicionarAoCarrinho = adicionarAoCarrinho;
@@ -3398,7 +5038,22 @@ try {
         window.cancelPendingPairingRequest = cancelPendingPairingRequest;
         window.toggleFoguinhosPopup = toggleFoguinhosPopup;
         window.togglePartnerInfoPopup = togglePartnerInfoPopup;
+        window.abrirCatalogoPareamento = abrirCatalogoPareamento;
     window.toggleAchievementsPopup = toggleAchievementsPopup;
+        window.openChallengePopup = openChallengePopup;
+        window.closeChallengePopup = closeChallengePopup;
+        window.openWeeklyChallengePopup = openWeeklyChallengePopup;
+        window.submitWeeklyChallengeAnswer = submitWeeklyChallengeAnswer;
+        window.handlePartnerChallengeAnswer = handlePartnerChallengeAnswer;
+        window.handleWeeklyChallengeTimeout = handleWeeklyChallengeTimeout;
+        window.openPairingModal = openPairingModal;
+        window.closePairingModal = closePairingModal;
+        window.handlePairingCtaClick = handlePairingCtaClick;
+        window.openVipPopup = openVipPopup;
+        window.closeVipPopup = closeVipPopup;
+        window.requestUnpairFromList = requestUnpairFromList;
+        window.setDesafiosTab = setDesafiosTab;
+        window.setNotificacoesTab = setNotificacoesTab;
         window.solicitarPermissaoDeNotificacao = solicitarPermissaoDeNotificacao;
         window.desativarNotificacoes = desativarNotificacoes;
         window.handleNotificationToggle = handleNotificationToggle;
@@ -3407,6 +5062,12 @@ try {
         window.handleFileSelect = handleFileSelect;
         window.trocarAbaTarefas = trocarAbaTarefas;
         window.handleDarCheck = handleDarCheck;
+        window.requestRealizadoWithPhoto = requestRealizadoWithPhoto;
+        window.closeRealizadoPhotoPrompt = closeRealizadoPhotoPrompt;
+        window.handleRealizadoPhotoChoice = handleRealizadoPhotoChoice;
+        window.handleRealizadoPhotoSelect = handleRealizadoPhotoSelect;
+        window.openRealizadoPhotoPicker = openRealizadoPhotoPicker;
+        window.confirmRealizadoWithPhoto = confirmRealizadoWithPhoto;
 
         console.log("✅ Funções de evento prontas.");
 
@@ -3419,26 +5080,16 @@ try {
 </script>
 
 <nav class="bottom-nav-bar" id="bottom-nav-bar" style="display: none;">
-    <button class="bottom-nav-item" onclick="changeStep('gerenciarCatalogo');">
-        <i class="fas fa-store"></i>
-    </button>
-    <button class="bottom-nav-item" onclick="changeStep('parear');">
+    <button class="bottom-nav-item-center" onclick="changeStep('pareamentos');">
         <i class="fas fa-heart"></i>
     </button>
-
-    <button class="bottom-nav-item-center" onclick="changeStep('main');">
-        <i class="fas fa-shopping-bag"></i>
-    </button>
-
-    <button class="bottom-nav-item relative" onclick="toggleCartSidebar();">
-        <i class="fas fa-shopping-cart"></i>
-        <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
-    </button>
-    
-    <button id="foguinhosNavButton" class="bottom-nav-item" onclick="changeStep('foguinhosPopup');">
-        
-        <i class="fas fa-fire"></i> <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
-    </button>
+    <div id="catalogActions" class="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-3 hidden">
+        <button id="cartNavButton" class="bottom-nav-item" onclick="toggleCartSidebar()">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="text-[10px] leading-none mt-0.5">Carrinho</span>
+            <span id="carrinhoBadge" class="badge-notification badge-yellow">0</span>
+        </button>
+    </div>
 </nav>
 <div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] space-y-2 w-auto max-w-sm"></div>
 
