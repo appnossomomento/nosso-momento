@@ -152,6 +152,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /weeklyChallenges/{cid} {
+      allow get, list: if isAuthenticated() && (
+        (resource.data.pairUids is list && resource.data.pairUids.hasAny([authUid()])) ||
+        cid.matches('.*' + authUid() + '.*')
+      );
+      allow create, update, delete: if false;
+    }
+
+    match /memorias/{mid} {
+      allow get, list: if false;
+      allow create, update, delete: if false;
+    }
+
     match /userNotificationTokens/{uid} {
       allow read, write: if false;
     }

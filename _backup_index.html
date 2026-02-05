@@ -1,0 +1,3446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosso Momento</title>
+    <link rel="icon" href="/assets/icons/iconprincipal.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            /* Adicionado padding-bottom para que o conteúdo não fique por baixo do footer fixo */
+            overflow-x: hidden; /* Esconder a barra de rolagem horizontal se algo escapar */
+        }
+        .product-card {
+            transition: all 0.3s ease-out;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 53, 71, 0.2);
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .product-img {
+            height: 160px;
+            object-fit: cover;
+            width: 100%;
+        }
+        .product-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 32px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .carrinho-item {
+            animation: fadeIn 0.5s ease-out;
+            border-radius: 12px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn-red {
+            background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 10px 20px rgba(255, 53, 71, 0.3);
+            padding: 14px 24px;
+            border: none;
+            outline: none;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        .btn-red:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(255, 53, 71, 0.4);
+            background: linear-gradient(135deg, #FF4252 0%, #FF7B8A 100%);
+        }
+        .bg-overlay {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        /* Modern button styles */
+        .btn-modern {
+            border-radius: 50px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        /* Input styles */
+        input {
+            border-radius: 12px !important;
+            padding: 14px 16px !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            background: rgba(255,255,255,0.05) !important;
+            color: white !important;
+        }
+        input::placeholder {
+            color: rgba(255,255,255,0.5) !important;
+        }
+        /* Card styles */
+        .card {
+            border-radius: 20px;
+            background: rgba(30,30,30,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        /* Footer custom style */
+        /* REMOVED: .app-footer style is no longer needed for the fixed footer structure */
+        /*
+        .app-footer {
+            background: linear-gradient(90deg, #FF3547 0%, #FF6B7C 100%);
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            padding: 16px;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 40px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        */
+
+        /* Novo estilo para a barra de navegação inferior (footer) */
+        .bottom-nav-bar {
+            background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(0,0,0,0.95) 100%);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px; /* Altura da barra */
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100; /* Garante que fique acima de outros elementos como a sidebar */
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.4);
+            padding-bottom: env(safe-area-inset-bottom); /* Para iPhones com notch inferior */
+        }
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.6);
+            transition: color 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            height: 100%;
+            flex-grow: 1;
+            text-align: center; /* Centraliza o conteúdo dentro do item */
+        }
+        .bottom-nav-item.active {
+            color: #FF6B7C; /* Cor de destaque */
+        }
+        .bottom-nav-item:hover {
+            color: #FF6B7C; /* Cor de destaque no hover */
+        }
+        .bottom-nav-item i {
+            font-size: 20px;
+        }
+
+        /* Estilo para as bolinhas de notificação */
+        .badge-notification {
+            position: absolute;
+            top: 5px; /* Ajusta a posição vertical */
+            right: 5px;  /* Ajusta a posição horizontal */
+            min-width: 20px; /* Largura mínima para 1-2 dígitos */
+            height: 20px;
+            border-radius: 50%;
+            color: white;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            pointer-events: none; /* Garante que o clique passe para o botão pai */
+            transform: translate(50%, -50%); /* Ajusta para centralizar na quina do ícone */
+        }
+        /* Cores das bolinhas */
+        .badge-yellow { background-color: #f59e0b; /* yellow-500 */ }
+        .badge-gray { background-color: #6b7280; /* gray-500 */ }
+
+        .achievement-celebration-wrapper {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translate(-50%, -20px);
+            opacity: 0;
+            z-index: 200;
+            pointer-events: none;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        .achievement-celebration-wrapper.entered {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+        .achievement-celebration-wrapper.exiting {
+            opacity: 0;
+            transform: translate(-50%, -16px);
+        }
+        .achievement-celebration {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.94), rgba(17, 24, 39, 0.94));
+            border-radius: 9999px;
+            padding: 16px 26px;
+            border: 1px solid rgba(251, 191, 36, 0.55);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        }
+        .achievement-celebration__icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #111827;
+            font-size: 22px;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.25);
+            animation: trophyPop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .achievement-celebration__eyebrow {
+            font-size: 0.72rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.65);
+            margin-bottom: 2px;
+        }
+        .achievement-celebration__title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #f9fafb;
+        }
+        .achievement-celebration__message {
+            margin-top: 4px;
+            font-size: 0.85rem;
+            color: rgba(226, 232, 240, 0.95);
+        }
+        @keyframes trophyPop {
+            0% { transform: scale(0.5) rotate(-12deg); opacity: 0; }
+            55% { transform: scale(1.12) rotate(4deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        #foguinhosBadge,
+        #carrinhoBadge {
+            /* 1. Posiciona o badge com base no centro do botão */
+            top: 50%;
+            left: 50%;
+            
+            /* 2. Anula o 'right: 5px' da regra original */
+            right: auto; 
+            
+            /* 3. Anula a transformação original e aplica a nova:
+                - Move 14px para a direita (para ficar ao lado do ícone)
+                - Move 70% da sua própria altura para cima (para ficar ligeiramente 
+                  acima do centro, como no seu 'green square')
+            */
+            transform: translate(14px, -70%);
+        }
+
+
+        /* Esconder a barra de rolagem horizontal se algo escapar */
+        body {
+            overflow-x: hidden;
+        }
+
+        /* Ajuste para telas pequenas - header */
+        @media (max-width: 640px) { /* sm breakpoint no Tailwind */
+            .header-content {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+                align-items: center;
+                padding-left: 1rem; /* px-4 */
+                padding-right: 1rem; /* px-4 */
+            }
+            .header-content > div:nth-child(2) { /* Ações à direita */
+                display: flex;
+                gap: 0.5rem; /* Menor gap para caber tudo */
+            }
+            .header-content h1 { /* Ajuste para o título do app na header */
+                font-size: 1.5rem; /* Reduz o tamanho da fonte em telas pequenas */
+            }
+        }
+
+.accordion-content.open {
+    overflow: visible;
+}
+.accordion-button.open i {
+    transform: rotate(180deg);
+}
+
+        /* Adicione este novo estilo para o botão central */
+.bottom-nav-item-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;   /* Tamanho do círculo */
+    height: 60px;  /* Tamanho do círculo */
+    background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
+    color: white;
+    border-radius: 50%; /* Deixa o botão redondo */
+    border: 3px solid #1f2937; /* Cor de fundo da sua barra de navegação, para dar um efeito de recorte */
+    transform: translateY(-20px); /* Move o botão para cima */
+    box-shadow: 0 -5px 15px rgba(255, 53, 71, 0.4);
+    transition: all 0.3s ease;
+}
+
+.bottom-nav-item-center:hover {
+    transform: translateY(-23px) scale(1.05); /* Efeito suave ao passar o mouse */
+    box-shadow: 0 -8px 20px rgba(255, 53, 71, 0.5);
+}
+
+.bottom-nav-item-center i {
+    font-size: 24px;
+}
+
+/*
+// =========================================
+// NOVO SISTEMA DE NOTIFICAÇÕES (TOASTS)
+// =========================================
+*/
+.toast {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px; /* Padding vertical diminuído */
+    font-size: 14px; /* Fonte menor */
+    border-radius: 9999px; /* Formato de pílula */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    animation: slideInUp 0.5s ease-out forwards; /* Nova animação de entrada */
+}
+
+.toast.exiting {
+    animation: slideOutDown 0.4s ease-in forwards;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideOutDown {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+
+.achievements-overlay {
+    animation: fadeIn 0.25s ease-out forwards;
+}
+
+.achievements-popup-card {
+    animation: slideInUp 0.35s ease-out forwards;
+}
+
+.achievements-popup-card .achievements-scroll-area {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(251, 191, 36, 0.65) rgba(30, 30, 30, 0.6);
+}
+
+.achievements-popup-card .achievements-scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.achievements-popup-card .achievements-scroll-area::-webkit-scrollbar-track {
+    background: rgba(30, 30, 30, 0.6);
+    border-radius: 9999px;
+}
+
+.achievements-popup-card .achievements-scroll-area::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(251, 191, 36, 0.85), rgba(249, 115, 22, 0.85));
+    border-radius: 9999px;
+}
+
+.achievements-popup-card .achievements-scroll-area::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(251, 191, 36, 1), rgba(249, 115, 22, 1));
+}
+
+.achievement-card {
+    padding: 16px;
+}
+
+.achievement-card.sm-card-padding {
+    padding: 20px;
+}
+
+@media (max-width: 640px) {
+    .achievements-popup-card {
+        margin-top: 48px;
+        margin-bottom: 32px;
+    }
+}
+
+/* Instagram CTA com borda em gradiente e fundo discreto */
+.instagram-cta-outline {
+    display: inline-block;
+    padding: 2px; /* espaço para a borda em gradiente */
+    border-radius: 12px;
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+.instagram-cta-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #000; /* Fundo discreto */
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+}
+.instagram-cta-inner i { font-size: 16px; }
+.instagram-cta-inner:hover { transform: translateY(-2px); }
+
+        </style>
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-556FY0WV3Q"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-556FY0WV3Q');
+        </script>
+        <script>
+                    gtag('config', 'G-556FY0WV3Q');
+                </script>
+
+                <script>
+                !function(f,b,e,v,n,t,s)
+                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                n.queue=[];t=b.createElement(e);t.async=!0;
+                t.src=v;s=b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t,s)}(window, document,'script',
+                'https://connect.facebook.net/en_US/fbevents.js');
+                fbq('init', '1883535982201745');
+                fbq('track', 'PageView');
+                </script>
+                <noscript><img height="1" width="1" style="display:none"
+                src="https://www.facebook.com/tr?id=1883535982201745&ev=PageView&noscript=1"
+                /></noscript>
+            <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+            <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+</head>
+<body class="bg-black text-white font-sans">
+    <header id="mainHeader" class="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-800" style="display: none;">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center header-content">
+        <div class="flex items-center">
+            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento Logo" class="h-[55px] w-auto">
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button onclick="changeStep('notificacoes')" class="relative text-gray-400 hover:text-white transition">
+                <i class="fas fa-bell text-xl"></i>
+                <span id="notificationDot" class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full hidden"></span>
+            </button>
+            
+            <img id="headerProfilePic" src="" class="w-8 h-8 rounded-full object-cover hidden sm:block">
+            <span id="userNameDisplay" class="text-gray-300 text-sm font-medium hidden sm:inline"></span>
+            <button onclick="handleLogout()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
+                <i class="fas fa-sign-out-alt text-xs"></i> <span class="hidden sm:inline">Sair</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+    <div id="app">
+        </div>
+
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAppTP2vJuLofr9ueWsK3djbwSeEm5qb2c",
+      authDomain: "nosso-momento-app.firebaseapp.com",
+      projectId: "nosso-momento-app",
+      storageBucket: "nosso-momento-app.firebasestorage.app",
+      messagingSenderId: "503855316994",
+      appId: "1:503855316994:web:7d5ee171b44c4f8b86a71b",
+    };
+
+    // Inicialização do Firebase, Firestore e Auth
+    firebase.initializeApp(firebaseConfig);
+    console.log("✅ Firebase: Initialized com sucesso!");
+        const db = firebase.firestore();
+        const auth = firebase.auth(); // Inicializa o Firebase Auth
+    const storage = firebase.storage();
+    const CREATE_INPUT_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/createInput';
+    const SET_NOTIFICATION_TOKEN_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/setNotificationToken';
+    const REGISTRATION_ENABLED = false;
+  </script>
+
+    <script>
+    /**
+     * Adiciona um input ao Firestore garantindo que o token do Auth esteja
+     * válido e tentando um refresh antes de falhar com permission errors.
+     * Retorna o DocumentReference resolvido pela chamada .add().
+     */
+    async function safeAddInput(inputObj) {
+        const payload = {...inputObj};
+
+        if (!payload.fromUid) {
+            if (auth.currentUser) {
+                payload.fromUid = auth.currentUser.uid;
+            } else if (state.usuario && state.usuario.uid) {
+                payload.fromUid = state.usuario.uid;
+            }
+        }
+
+        // Sempre delegamos ao backend, então removemos sentinelas do Firestore.
+        delete payload.timestamp;
+        payload.processed = false;
+
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            const authError = new Error('auth_required');
+            authError.code = 'auth_required';
+            throw authError;
+        }
+
+        if (payload.fromUid !== currentUser.uid) {
+            payload.fromUid = currentUser.uid;
+        }
+
+        const callBackend = async (forceRefreshToken = false) => {
+            const idToken = await currentUser.getIdToken(forceRefreshToken);
+            const response = await fetch(CREATE_INPUT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({input: payload}),
+            });
+
+            let body = null;
+            try {
+                body = await response.json();
+            } catch (jsonErr) {
+                console.warn('safeAddInput: corpo não pôde ser parseado', jsonErr);
+            }
+
+            if (response.ok) {
+                return body && body.id ? {id: body.id} : body;
+            }
+
+            const errorCode = body && body.error ? body.error : `http_${response.status}`;
+            const backendError = new Error(errorCode);
+            backendError.code = errorCode;
+            backendError.status = response.status;
+            backendError.details = body;
+            throw backendError;
+        };
+
+        try {
+            return await callBackend(false);
+        } catch (err) {
+            if (err.status === 401 || err.status === 403) {
+                // Força refresh do token e tenta novamente uma vez.
+                return await callBackend(true);
+            }
+            throw err;
+        }
+    }
+
+    // Main application state
+    // Deve permanecer sincronizado com a definição em functions/index.js (ACHIEVEMENTS)
+    const ACHIEVEMENTS = [
+    {
+        id: 'first_check_in',
+        trigger: 'daily_check_in',
+        title: 'Primeiro Passo',
+        description: 'Realize seu primeiro check-in diário com o seu par.',
+        hint: 'Envie um foguinho pela tela de check-in.',
+        icon: 'fa-person-rays',
+        accentColor: '#fbbf24',
+        reward: 1,
+    },
+    {
+        id: 'checkin_streak_7',
+        trigger: 'daily_check_in',
+        title: 'Foguinho Semanal',
+        description: 'Complete 7 check-ins em dias consecutivos.',
+        hint: 'Faça check-ins diários sem perder nenhum dia.',
+        icon: 'fa-calendar-week',
+        accentColor: '#34d399',
+        reward: 3,
+    },
+    {
+        id: 'checkin_master',
+        trigger: 'daily_check_in',
+        title: 'Mestre do Check-in',
+        description: 'Realize 30 check-ins no total.',
+        hint: 'Consistência é tudo: presenteie seu par frequentemente.',
+        icon: 'fa-stopwatch',
+        accentColor: '#60a5fa',
+        reward: 10,
+    },
+    {
+        id: 'sou_fiel',
+        trigger: 'daily_check_in',
+        title: 'Sou Fiel',
+        description: 'Realize 60 check-ins no total.',
+        hint: 'Mantenha o ritmo diário para mostrar compromisso.',
+        icon: 'fa-hand-holding-heart',
+        accentColor: '#38bdf8',
+        reward: 20,
+    },
+    {
+        id: 'first_moment_redeem',
+        trigger: 'moment_redeem',
+        title: 'Primeiro Momento',
+        description: 'Resgate o seu primeiro momento.',
+        hint: 'Escolha um momento e resgate com foguinhos.',
+        icon: 'fa-heart',
+        accentColor: '#f472b6',
+        reward: 1,
+    },
+    {
+        id: 'moment_collector',
+        trigger: 'moment_redeem',
+        title: 'Colecionador de Momentos',
+        description: 'Resgate 5 momentos diferentes.',
+        hint: 'Continue resgatando momentos para o seu mural.',
+        icon: 'fa-gift',
+        accentColor: '#c084fc',
+        reward: 3,
+    },
+    {
+        id: 'foguinhos_investor',
+        trigger: 'moment_redeem',
+        title: 'Investidor de Foguinhos',
+        description: 'Gaste 50 foguinhos em momentos.',
+        hint: 'Momentos incríveis custam foguinhos – continue investindo!',
+        icon: 'fa-coins',
+        accentColor: '#facc15',
+        reward: 10,
+    },
+    {
+        id: 'caliente',
+        trigger: 'moment_redeem',
+        title: 'Caliente',
+        description: 'Gaste 100 foguinhos em momentos.',
+        hint: 'Quanto mais foguinhos, mais experiências intensas.',
+        icon: 'fa-fire-flame-curved',
+        accentColor: '#fb923c',
+        reward: 20,
+    },
+];
+
+const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
+    acc[achievement.id] = achievement;
+    return acc;
+}, {});
+
+        const state = {
+    usuario: null,
+    pareado: false,
+    parceiroData: null,
+    idPareamentoAmigavel: null,
+    notificacoesTarefasNaoLidas: 0,
+    notificacoesPresentesNaoLidas: 0,
+    notificacoesConquistasNaoLidas: 0,
+    notificacoes: [],
+    etapa: 'landing',
+    carrinho: [],
+    momentosMestres: [],
+    fcmToken: null,
+    codigoUsuario: null,
+    codigoDigitando: false,
+    parceiroCodigo: null,
+    pareadoUid: null,
+    parceiroTelefone: null,
+    parceiroNome: null,
+    showPartnerInfo: false,
+    pendingPairingRequest: null,
+    showCartSidebar: false,
+    showFoguinhosPopup: false,
+    showAchievementsPopup: false,
+    abaTarefasAtiva: 'recebidos',
+    conquistas: {},
+    achievementStats: {}
+};
+
+let unsubscribeNotifications = null;
+let unsubscribeUserDoc = null;
+let unsubscribePendingPairing = null;
+let hasProcessedInitialConquistas = false;
+let activeAchievementCelebration = null;
+let activeAchievementCelebrationTimeout = null;
+let hasProcessedInitialNotifications = false;
+let lastNotificationIds = new Set();
+const recentAchievementCelebrations = new Map();
+
+function triggerAchievementCelebration(notif) {
+    const achievementId = notif?.achievementId || null;
+    const celebrationInfo = showAchievementCelebration(achievementId);
+    if (celebrationInfo) {
+        const celebrationText = celebrationInfo.description
+            ? `${celebrationInfo.title}: ${celebrationInfo.description}`
+            : celebrationInfo.title;
+        showToast(`🏆 ${celebrationText}`, 'sucesso');
+    } else if (notif?.mensagem) {
+        showToast(`🏆 ${notif.mensagem}`, 'sucesso');
+    }
+}
+
+    // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
+    let appContainer;
+    let userNameDisplay;
+    let foguinhosBadge;
+    let carrinhoBadge;
+    let bottomNavBar; // Referência para a barra de navegação inferior
+    let mainHeader; // Referência para o cabeçalho principal
+
+    window.ACHIEVEMENTS = ACHIEVEMENTS;
+    window.ACHIEVEMENTS_BY_ID = ACHIEVEMENTS_BY_ID;
+
+
+    // --- Utils para datas ---
+    function isSameDay(d1, d2) {
+        return d1.getFullYear() === d2.getFullYear() &&
+               d1.getMonth() === d2.getMonth() &&
+               d1.getDate() === d2.getDate();
+    }
+
+        function formatarDataCurta(timestamp) {
+            if (!timestamp) {
+                return '';
+            }
+
+            try {
+                let data;
+                if (timestamp.toDate) {
+                    data = timestamp.toDate();
+                } else if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+                    data = new Date(timestamp.seconds * 1000);
+                } else if (timestamp instanceof Date) {
+                    data = timestamp;
+                } else {
+                    return '';
+                }
+
+                return data.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+            } catch (err) {
+                console.warn('Não foi possível formatar a data da conquista:', err);
+                return '';
+            }
+        }
+
+    function showToast(message, type = 'sucesso') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        let iconClass = 'fa-check-circle';
+        let toastClass = 'toast-sucesso';
+
+        if (type === 'erro') {
+            iconClass = 'fa-times-circle';
+            toastClass = 'toast-erro';
+        } else if (type === 'aviso') {
+            iconClass = 'fa-exclamation-triangle';
+            toastClass = 'toast-aviso';
+        }
+
+        const toastElement = document.createElement('div');
+        toastElement.className = `toast ${toastClass}`;
+        toastElement.innerHTML = `
+            <i class="fas ${iconClass} toast-icon"></i>
+            <span>${message}</span>
+        `;
+
+        container.appendChild(toastElement);
+
+        setTimeout(() => {
+            toastElement.classList.add('exiting');
+            setTimeout(() => {
+                toastElement.remove();
+            }, 500);
+        }, 2000);
+    }
+
+    function showAchievementCelebration(achievementId) {
+        const normalizedId = achievementId || null;
+        const definition = (normalizedId && ACHIEVEMENTS_BY_ID[normalizedId]) || null;
+        const accent = definition?.accentColor || '#fbbf24';
+        const iconClass = definition?.icon || 'fa-trophy';
+        const title = definition?.title || 'Nova conquista desbloqueada!';
+        const description = definition?.description || '';
+
+        if (normalizedId && recentAchievementCelebrations.has(normalizedId)) {
+            console.log('Banner de conquista ignorado porque já foi exibido recentemente:', normalizedId);
+            return null;
+        }
+
+        if (!document.body) {
+            console.warn('showAchievementCelebration chamado antes do document.body estar pronto.');
+            return { title, description };
+        }
+
+        if (activeAchievementCelebrationTimeout) {
+            clearTimeout(activeAchievementCelebrationTimeout);
+            activeAchievementCelebrationTimeout = null;
+        }
+        if (activeAchievementCelebration && activeAchievementCelebration.parentNode) {
+            activeAchievementCelebration.parentNode.removeChild(activeAchievementCelebration);
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'achievement-celebration-wrapper';
+
+        const inner = document.createElement('div');
+        inner.className = 'achievement-celebration';
+        inner.style.borderColor = accent;
+
+        const iconContainer = document.createElement('div');
+        iconContainer.className = 'achievement-celebration__icon';
+        iconContainer.style.background = accent;
+        const icon = document.createElement('i');
+        icon.className = `fas ${iconClass}`;
+        iconContainer.appendChild(icon);
+
+        const textContainer = document.createElement('div');
+        const eyebrow = document.createElement('p');
+        eyebrow.className = 'achievement-celebration__eyebrow';
+        eyebrow.textContent = 'Nova conquista!';
+        const titleEl = document.createElement('p');
+        titleEl.className = 'achievement-celebration__title';
+        titleEl.textContent = title;
+        textContainer.appendChild(eyebrow);
+        textContainer.appendChild(titleEl);
+        if (description) {
+            const messageEl = document.createElement('p');
+            messageEl.className = 'achievement-celebration__message';
+            messageEl.textContent = description;
+            textContainer.appendChild(messageEl);
+        }
+
+        inner.appendChild(iconContainer);
+        inner.appendChild(textContainer);
+        wrapper.appendChild(inner);
+    document.body.appendChild(wrapper);
+    console.log('Exibindo banner de conquista:', normalizedId || 'desconhecida', title);
+
+        requestAnimationFrame(() => {
+            wrapper.classList.add('entered');
+        });
+
+        activeAchievementCelebrationTimeout = setTimeout(() => {
+            wrapper.classList.remove('entered');
+            wrapper.classList.add('exiting');
+            setTimeout(() => {
+                if (wrapper.parentNode) {
+                    wrapper.parentNode.removeChild(wrapper);
+                }
+            }, 320);
+            activeAchievementCelebration = null;
+            activeAchievementCelebrationTimeout = null;
+        }, 4200);
+
+        activeAchievementCelebration = wrapper;
+        if (normalizedId) {
+            const previousTimer = recentAchievementCelebrations.get(normalizedId);
+            if (previousTimer) {
+                clearTimeout(previousTimer);
+            }
+            const cleanupTimer = setTimeout(() => {
+                recentAchievementCelebrations.delete(normalizedId);
+            }, 6000);
+            recentAchievementCelebrations.set(normalizedId, cleanupTimer);
+        }
+        return { title, description };
+    }
+
+// ==========================================================
+    // NOVA FUNÇÃO DE RASTREAMENTO (ANALYTICS)
+    // ==========================================================
+    /**
+     * Envia um evento customizado para o Google Analytics (GA4).
+     * @param {string} eventName O nome do evento (ex: 'sign_up', 'purchase_moment').
+     * @param {Object} [eventParams={}] Parâmetros adicionais (ex: { value: 10, currency: 'BRL' }).
+     */
+    function trackGAEvent(eventName, eventParams = {}) {
+        // Verifica se a função gtag() está disponível
+        if (typeof gtag === 'function') {
+            console.log(`GA Event: ${eventName}`, eventParams);
+            gtag('event', eventName, eventParams);
+        } else {
+            console.warn(`gtag() não definido. Evento "${eventName}" não rastreado.`);
+        }
+    }
+
+    function escapeHtmlAttr(texto) {
+        if (typeof texto !== 'string') {
+            return '';
+        }
+        return texto
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    // ==========================================================
+    // COLE ESTA NOVA FUNÇÃO AQUI (LOGO ABAIXO DA ANTERIOR)
+    // ==========================================================
+    /**
+     * Envia um evento customizado para o Meta Pixel.
+     * @param {string} eventName O nome do evento (ex: 'CompleteRegistration', 'Purchase').
+     * @param {Object} [eventParams={}] Parâmetros adicionais (ex: { value: 10, currency: 'BRL' }).
+     */
+    function trackMetaEvent(eventName, eventParams = {}) {
+        // Verifica se a função fbq() está disponível
+        if (typeof fbq === 'function') {
+            console.log(`Meta Event: ${eventName}`, eventParams);
+            fbq('track', eventName, eventParams);
+        } else {
+            console.warn(`fbq() não definido. Evento "${eventName}" não rastreado.`);
+        }
+    }
+
+    async function syncNotificationToken(payload) {
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            const authError = new Error('auth_required');
+            authError.code = 'auth_required';
+            throw authError;
+        }
+
+        const callBackend = async (forceRefreshToken = false) => {
+            const idToken = await currentUser.getIdToken(forceRefreshToken);
+            const response = await fetch(SET_NOTIFICATION_TOKEN_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            let body = null;
+            try {
+                body = await response.json();
+            } catch (jsonErr) {
+                console.warn('syncNotificationToken: corpo não pôde ser parseado', jsonErr);
+            }
+
+            if (response.ok) {
+                return body || {};
+            }
+
+            const errorCode = body && body.error ? body.error : `http_${response.status}`;
+            const backendError = new Error(errorCode);
+            backendError.code = errorCode;
+            backendError.status = response.status;
+            backendError.details = body;
+            throw backendError;
+        };
+
+        try {
+            return await callBackend(false);
+        } catch (err) {
+            if (err.status === 401 || err.status === 403) {
+                return await callBackend(true);
+            }
+            throw err;
+        }
+    }
+    // --- Funções de Renderização das Etapas ---
+    // Apenas o conteúdo DENTRO da #app será renderizado por estas funções
+
+    function renderLandingPage() {
+        const registerButton = REGISTRATION_ENABLED ? `
+                        <button onclick="changeStep('register')" class="btn-red w-full py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); box-shadow: none;">
+                            <span class="text-lg">CADASTRO</span>
+                            <i class="fas fa-user-plus"></i>
+                        </button>
+        ` : '';
+
+        appContainer.innerHTML = `
+            <div class="min-h-screen flex flex-col justify-center items-center px-4" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                
+                <div class="card p-6 sm:p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                    
+                    <div class="text-center mb-10">
+                        <img src="/assets/icons/logo-topdown-white-txt.png" alt="Nosso Momento" class="w-2/3 max-w-[200px] mx-auto mb-6">
+                        <p class="text-gray-300 tracking-wider">Apimente a relação.<br>Deixe tudo mais gostoso!</p>
+                    </div>
+                    
+                    <div class="space-y-5">
+                        <button onclick="changeStep('signIn')" class="btn-red w-full py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3">
+                            <span class="text-lg">ENTRAR</span>
+                            <i class="fas fa-sign-in-alt"></i>
+                        </button>
+                        ${registerButton}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderSignIn() {
+        appContainer.innerHTML = `
+            <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                    <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
+                        <i class="fas fa-arrow-left mr-2"></i> Voltar
+                    </button>
+                    <div class="text-center mb-10">
+                        <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">ENTRAR</h2>
+                        <p class="text-gray-300 tracking-wider">Acesse sua conta para continuar</p>
+                    </div>
+                    <div class="space-y-5">
+                        <div>
+                            <input id="signInEmail" type="email" placeholder="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                        </div>
+                        <div>
+                            <input id="signInPassword" type="password" placeholder="Senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                        </div>
+                    </div>
+                    <button onclick="handleSignIn()" class="btn-red w-full mt-8 py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3">
+                        <span class="text-lg">LOGIN</span>
+                        <i class="fas fa-sign-in-alt"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderRegister() {
+        appContainer.innerHTML = `
+            <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                    <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
+                        <i class="fas fa-arrow-left mr-2"></i> Voltar
+                    </button>
+                    <div class="text-center mb-10">
+                        <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">CADASTRO</h2>
+                        <p class="text-gray-300 tracking-wider">Crie sua conta para começar a apimentar!</p>
+                    </div>
+                    <div class="space-y-5">
+                        <div>
+                            <input id="registerNome" placeholder="Seu nome" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                        </div>
+                        <div>
+                            <input id="registerEmail" type="email" placeholder="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                        </div>
+                        <div>
+                            <input id="registerTelefone" type="tel" placeholder="Telefone (apenas números, ex: 11999991111)" pattern="[0-9]{11}" required class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                        </div>
+                        <div>
+                            <input id="registerSenha" type="password" placeholder="Crie uma senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                        </div>
+                        <div>
+                            <select id="registerSexo" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300">
+                                <option value="" disabled selected>Selecione seu sexo</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Feminino">Feminino</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="handleRegister()" class="btn-red w-full mt-8 py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3">
+                        <span class="text-lg">CADASTRAR</span>
+                        <i class="fas fa-arrow-right-long"></i>
+                    </button>
+                    <p class="text-center mt-6 text-gray-400 text-sm">
+                        Ao continuar, você concorda com nossos <a href="#" class="text-pink-400 hover:underline">Termos</a> e <a href="#" class="text-pink-400 hover:underline">Política de Privacidade</a>
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+async function solicitarPermissaoDeNotificacao() {
+if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.warn("Este navegador não suporta notificações Push.");
+    return;
+}
+
+try {
+    const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+    console.log('Service Worker registrado com sucesso:', registration);
+
+    const permission = await Notification.requestPermission();
+
+    if (permission !== "granted") {
+        console.log("Permissão de notificação negada.");
+        showToast("Você não receberá notificações.", "aviso");
+        return;
+    }
+
+    console.log("Permissão de notificação concedida.");
+
+    const messaging = firebase.messaging();
+    const fcmToken = await messaging.getToken({
+        vapidKey: "BDTOlIk3SKC6BV_MD0Eu2DZfm7rPOnGbz6hvYL1K_3lYnR1YXvO6qbOMuHHzBqzHhtyKw8YJMetHIas4V8wrWpI",
+        serviceWorkerRegistration: registration
+    });
+
+    if (!fcmToken) {
+        console.log("Não foi possível obter o token do FCM. Tente recarregar a página.");
+        showToast("Não foi possível ativar notificações agora.", "aviso");
+        return;
+    }
+
+    console.log("Token do FCM obtido:", fcmToken);
+    await syncNotificationToken({ token: fcmToken });
+
+    state.fcmToken = fcmToken;
+    if (!state.usuario) {
+        state.usuario = {};
+    }
+    state.usuario.notificationsEnabled = true;
+
+    showToast("Notificações ativadas!", "sucesso");
+    renderApp();
+} catch (error) {
+    console.error("Erro detalhado ao solicitar permissão:", error);
+    showToast("Erro ao ativar notificações.", "erro");
+}
+}
+
+async function desativarNotificacoes() {
+try {
+    console.log("Iniciando processo de desativação...");
+    // Encontra o registro do Service Worker
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) {
+        console.log("Nenhum Service Worker encontrado.");
+        return;
+    }
+
+    // Pega a assinatura de Push
+    const subscription = await registration.pushManager.getSubscription();
+    if (subscription) {
+        // Cancela a assinatura no navegador
+        await subscription.unsubscribe();
+        console.log("Assinatura de Push cancelada no navegador.");
+    }
+
+    const tokenParaRemover = state.fcmToken || state.usuario?.fcmToken || null;
+    await syncNotificationToken({ revoke: true, token: tokenParaRemover || undefined });
+
+    if (tokenParaRemover && firebase.messaging && firebase.messaging.isSupported && firebase.messaging.isSupported()) {
+        try {
+            await firebase.messaging().deleteToken(tokenParaRemover);
+            console.log("Token removido do Firebase Messaging neste dispositivo.");
+        } catch (deleteErr) {
+            console.warn("Falha ao remover token local do FCM:", deleteErr);
+        }
+    }
+
+    if (state.usuario) {
+        state.usuario.notificationsEnabled = false;
+    }
+    state.fcmToken = null;
+
+    console.log("Token FCM removido do backend.");
+    showToast("Notificações desativadas com sucesso!", 'sucesso');
+
+    // Força a re-renderização da página para atualizar o botão
+    renderApp();
+
+} catch (error) {
+    console.error("Erro ao desativar notificações:", error);
+    showToast("Erro ao desativar notificações.", 'erro');
+}
+}
+
+function setupForegroundMessageHandler() {
+// Certifique-se de que 'firebase.messaging' está disponível
+if (firebase.messaging.isSupported()) {
+    const messaging = firebase.messaging();
+    messaging.onMessage((payload) => {
+        console.log("Notificação Push recebida em primeiro plano: ", payload);
+
+        // Em vez de uma notificação do sistema, mostramos um "toast"
+        const title = payload.data.title;
+        const body = payload.data.body;
+        const notificationType = payload.data?.type || null;
+        if (notificationType === 'achievement') {
+            const celebrationInfo = showAchievementCelebration(payload.data?.achievementId || null);
+            const toastMessage = celebrationInfo
+                ? `🏆 ${celebrationInfo.title}${celebrationInfo.description ? `: ${celebrationInfo.description}` : ''}`
+                : `🏆 ${title}: ${body}`;
+            showToast(toastMessage, 'sucesso');
+            trackGAEvent('unlock_achievement', {
+                achievement_id: payload.data?.achievementId || 'unknown',
+            });
+            trackMetaEvent('UnlockAchievement', {
+                achievement_id: payload.data?.achievementId || 'unknown',
+            });
+        } else {
+            showToast(`🔔 ${title}: ${body}`, 'sucesso');
+        }
+        updateFixedUI();
+    });
+}
+}
+
+    async function sendPairingRequest() {
+const codigoDigitado = document.getElementById('codigoParceiro').value;
+
+if (!codigoDigitado || codigoDigitado.length !== 11 || !/^\d+$/.test(codigoDigitado)) {
+    showToast('Por favor, digite um telefone com 11 dígitos.', 'aviso');
+    return;
+}
+if (codigoDigitado === state.usuario.telefone) {
+    showToast('Você não pode parear consigo mesmo!', 'erro');
+    return;
+}
+try {
+    const inputData = {
+        type: 'pairing_request',
+        fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+        fromName: state.usuario.nome,
+        fromPhone: state.usuario.telefone,
+        toPhone: codigoDigitado,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        processed: false,
+    };
+
+    // Cria um input para o backend processar a solicitação de pareamento.
+    await safeAddInput(inputData);
+
+    trackGAEvent('initiate_pairing');
+    trackMetaEvent('InitiatePairing');
+
+    // Atualiza apenas o estado local/imediato do sender; o backend atualizará
+    // os documentos reais quando processar o input.
+    state.usuario.pareadoCom = `pending_${codigoDigitado}`;
+    showToast('Solicitação enviada! Aguardando confirmação.', 'sucesso');
+    state.etapa = 'parear';
+    state.codigoDigitando = false;
+    renderApp();
+} catch (error) {
+    console.error('Erro ao enviar solicitação de pareamento:', error);
+    showToast('Erro ao enviar solicitação. Tente novamente.', 'erro');
+}
+}
+
+    async function acceptPairingRequest(requestId, senderUid, senderPhone) {
+try {
+    if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
+        showToast('Você já está pareado com outra pessoa.', 'aviso');
+        return;
+    }
+
+    // Cria um input indicando que o receiver aceitou a solicitação. O backend
+    // processará a aceitação (atualizará `usuarios` e criará `pareamentos`).
+    await safeAddInput({
+        type: 'pairing_response',
+        fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+        requestId: requestId,
+        response: 'accepted',
+    });
+    showToast('Solicitação aceita. Aguardando processamento...', 'sucesso');
+    setTimeout(() => loadUserDataAndNavigate(state.usuario.uid, state.usuario.email), 800);
+} catch (error) {
+    console.error('Erro ao aceitar pareamento:', error);
+    showToast('Erro ao aceitar pareamento. Tente novamente.', 'erro');
+}
+}
+
+    async function rejectPairingRequest(requestId) {
+try {
+    // Cria um input indicando que o receiver rejeitou a solicitação. O backend
+    // irá processar a rejeição e limpar o estado do sender.
+    await safeAddInput({
+        type: 'pairing_response',
+        fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+        requestId: requestId,
+        response: 'rejected',
+    });
+    showToast('Solicitação de pareamento rejeitada.', 'sucesso');
+    state.pendingPairingRequest = null;
+    renderApp();
+} catch (error) {
+    console.error('Erro ao rejeitar pareamento:', error);
+    showToast('Erro ao rejeitar solicitação.', 'erro');
+}
+}
+
+    // Função para cancelar uma solicitação de pareamento pendente (do lado do sender)
+    async function cancelPendingPairingRequest() {
+if (confirm('Tem certeza que deseja cancelar esta solicitação de pareamento?')) {
+    try {
+        const senderUid = state.usuario.uid;
+        const receiverPhone = state.usuario.pareadoCom.replace('pending_', '');
+        await safeAddInput({
+            type: 'pairing_cancel',
+            fromUid: (auth.currentUser && auth.currentUser.uid) || senderUid,
+            partnerPhone: receiverPhone,
+        });
+
+        showToast('Solicitação de pareamento cancelada. Aguardando processamento', 'sucesso');
+        state.usuario.pareadoCom = null;
+    state.usuario.pareadoUid = null;
+    state.parceiroData = null;
+    state.parceiroNome = null;
+    state.parceiroTelefone = null;
+    state.idPareamentoAmigavel = null;
+    state.pareado = false;
+        state.etapa = 'parear';
+        renderApp();
+    } catch (error) {
+        console.error('Erro ao cancelar solicitação:', error);
+        showToast('Erro ao cancelar solicitação.', 'erro');
+    }
+}
+}
+
+
+    function renderPareamento() {
+if (state.pareado && state.parceiroData) {
+    // Mostra o Perfil do Parceiro se estiver pareado
+    const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/iconprincipal.png';
+    const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+    const canCheckIn = !lastCheckIn || !isSameDay(lastCheckIn, new Date());
+    const checkInButtonText = canCheckIn ? 'Presentear com 1 🔥' : 'Presenteado Hoje';
+    const checkInButtonClasses = canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed';
+
+    appContainer.innerHTML = `
+        <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+            <div class="max-w-md mx-auto card text-center p-8">
+                <h2 class="text-2xl font-bold mb-4 text-gray-300">Conectado com</h2>
+                <img src="${fotoParceiroUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-pink-500/50 mx-auto mb-4">
+                <h3 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500">${state.parceiroData.nome}</h3>
+                
+                <p class="text-gray-500 text-sm mt-2">ID do Casal: ${state.idPareamentoAmigavel || 'Indisponível'}</p>
+
+                <div class="mt-8 space-y-4">
+                    <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''} class="w-full py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${checkInButtonClasses}">
+                        <i class="fas fa-gift"></i> ${checkInButtonText}
+                    </button>
+                    <button onclick="desparearParceiro()" class="w-full py-3 bg-red-800/60 hover:bg-red-700 text-white rounded-lg font-semibold transition">
+                        Desfazer Pareamento
+                    </button>
+
+                    <!-- Botão de seguir no Instagram (discreto, com borda em gradiente) -->
+                    <button onclick="window.open('https://instagram.com/nossomomentoapp','_blank')" class="instagram-cta-outline w-full mt-2">
+                        <span class="instagram-cta-inner w-full justify-center">
+                            <i class="fab fa-instagram"></i> Siga-nos no Instagram!
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        ${state.showCartSidebar ? `
+<div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+<div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
+        <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="space-y-3">
+        ${state.carrinho.length === 0 ? `
+            <p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>
+        ` : state.carrinho.map((item, index) => `
+            <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
+                <div>
+                    <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
+                    <small class="text-gray-400 text-sm">${item.categoria}</small>
+                    <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1">
+                        <i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos
+                    </div>
+                </div>
+                <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('')}
+    </div>
+
+    <div class="mt-8 pt-6 border-t border-gray-800">
+        <button onclick="finalizarPedido()" 
+            class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all
+            ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+            ${state.carrinho.length === 0 ? 'disabled' : ''}>
+            Finalizar Pedido
+        </button>
+        <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+            Continuar Resgatando
+        </button>
+    </div>
+</div>
+` : ''}
+    `;
+    return;
+}
+
+// Se não estiver pareado, mostra a lógica antiga de pareamento
+const codigoUsuario = state.usuario.telefone.replace(/\D/g, '');
+let content = '';
+
+if (state.pendingPairingRequest) {
+    content = `
+        <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+            <div class="card p-8 max-w-md w-full text-center">
+                <h2 class="text-3xl font-bold mb-4 text-pink-400">Solicitação Recebida</h2>
+                <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
+                <div class="text-2xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block mb-6">${state.pendingPairingRequest.senderName}</div>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="acceptPairingRequest('${state.pendingPairingRequest.id}', '${state.pendingPairingRequest.senderUid}', '${state.pendingPairingRequest.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">Aceitar</button>
+                    <button onclick="rejectPairingRequest('${state.pendingPairingRequest.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">Rejeitar</button>
+                </div>
+            </div>
+        </div>`;
+} else if (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+    const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
+    content = `
+        <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+            <div class="card p-8 max-w-md w-full text-center">
+                <h2 class="text-3xl font-bold mb-4 text-yellow-400">Solicitação Enviada</h2>
+                <p class="mb-4">Sua solicitação para ${pendingPhone} está pendente.</p>
+                <p class="text-sm text-gray-300 mb-6">Aguardando aceitação...</p>
+                <button onclick="cancelPendingPairingRequest()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">Cancelar Solicitação</button>
+            </div>
+        </div>`;
+} else {
+    content = `
+        <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+            <div class="card p-8 max-w-md w-full text-center">
+                <h2 class="text-3xl font-bold mb-4 text-pink-400">Parear com seu Amor</h2>
+                ${!state.codigoDigitando ? `
+                    <p class="mb-4">Seu código de pareamento é:</p>
+                    <div class="text-4xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">${codigoUsuario}</div>
+                    <p class="mt-4 text-sm text-gray-300 mb-6">Compartilhe este código com seu/sua parceiro(a).</p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-4">
+                        <button onclick="state.codigoDigitando = true; renderApp();" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded text-white font-semibold transition">Digitar Código</button>
+                        <button onclick="handleContinuarSemParear()" class="btn-red">Fazer Isso Depois</button>
+                    </div>
+                ` : `
+                    <div class="mb-6">
+                        <label class="block mb-2">Digite o código do seu parceiro(a)</label>
+                        <input id="codigoParceiro" type="text" class="w-full p-3 rounded text-white text-center" placeholder="11999991111" maxlength="11" />
+                    </div>
+                    <div class="flex gap-4">
+                        <button onclick="state.codigoDigitando = false; renderApp();" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded font-semibold transition">Voltar</button>
+                        <button onclick="sendPairingRequest()" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded font-semibold transition flex-1">Enviar Solicitação</button>
+                    </div>
+                `}
+            </div>
+        </div>`;
+}
+appContainer.innerHTML = content;
+}
+
+    // Nova função para renderizar o pop-up de Foguinhos
+    async function renderFoguinhosPopupContent() {
+    
+    // 1. Limpa a "bolinha" de notificações de PRESENTES (fa-gift)
+    // ==================================================================
+    try {
+        if (state.notificacoesPresentesNaoLidas > 0) {
+            const batch = db.batch();
+            let notificacoesDePresenteLidas = 0;
+
+            state.notificacoes.forEach(notif => {
+                // Marcamos como lidas APENAS as notificações de 'fa-gift'
+                if (!notif.lida && notif.icone === 'fa-gift') {
+                    const notifRef = db.collection('notificacoes').doc(notif.id);
+                    batch.update(notifRef, { lida: true });
+                    notificacoesDePresenteLidas++;
+                }
+            });
+
+            if (notificacoesDePresenteLidas > 0) {
+                await batch.commit();
+                console.log(`Marcou ${notificacoesDePresenteLidas} notificações de presente como lidas.`);
+                // Atualiza o state local (só subtrai as que limpamos)
+                state.notificacoesPresentesNaoLidas = 0;
+                updateFixedUI(); // Atualiza a bolinha
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao marcar notificações de presente como lidas:", err);
+    }
+    // ==================================================================
+    // FIM DO BLOCO DE LIMPEZA
+    // ==================================================================
+
+
+    // 2. Busca o histórico de presentes (filtrando as notificações)
+    const historicoPresentes = state.notificacoes.filter(notif => notif.icone === 'fa-gift');
+
+    // 3. Renderiza o HTML da página
+    appContainer.innerHTML = `
+    <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8 pt-24 pb-24">
+        <div class="card p-6 md:p-8 max-w-md w-full relative overflow-hidden">
+            <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
+            <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
+            
+            <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-500">
+                <i class="fas fa-fire mr-2"></i> Meus Foguinhos
+            </h2>
+            <div class="text-center mb-6">
+                <p class="mb-4 text-xl">Você tem:</p>
+                <div class="relative inline-block">
+                    <i class="fas fa-fire text-6xl text-yellow-400 animate-pulse"></i>
+                    <span class="badge-notification badge-yellow text-2xl" style="top: 0px; right: -20px; min-width: 40px; height: 40px;">
+                        ${state.usuario ? state.usuario.foguinhos : 0}
+                    </span>
+                </div>
+                <p class="mt-4 text-sm text-gray-300">Use-os para resgatar momentos!</p>
+            </div>
+
+            <div class="border-t border-gray-700 mt-6 pt-6">
+                <h3 class="font-bold text-lg text-center text-gray-300 mb-4">Histórico de Presentes</h3>
+                
+                <div class="space-y-3 max-h-48 overflow-y-auto pr-2">
+                    ${historicoPresentes.length === 0
+                        ? `<p class="text-center text-gray-500 py-4">Nenhum presente recebido ainda.</p>`
+                        : historicoPresentes.map(notif => `
+                            <div class="bg-gray-800/50 p-3 rounded-lg flex items-center gap-3 ${notif.lida ? '' : 'border-l-2 border-yellow-400'}">
+                                <i class="fas ${notif.icone || 'fa-info-circle'} text-xl text-yellow-400"></i>
+                                <div>
+                                    <p class="text-sm text-gray-200">${notif.mensagem}</p>
+                                    <p class="text-xs text-gray-500 mt-1">${notif.timestamp ? new Date(notif.timestamp.seconds * 1000).toLocaleString('pt-BR') : ''}</p>
+                                </div>
+                            </div>
+                        `).join('')
+                    }
+                </div>
+            </div>
+
+            <div class="flex justify-center mt-8">
+                <button onclick="changeStep('main');" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition">
+                    Voltar
+                </button>
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+function setupNotificationListener(userId) {
+    // Se já existe um ouvinte, desliga ele primeiro
+    if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+    }
+
+    hasProcessedInitialNotifications = false;
+    lastNotificationIds = new Set();
+
+    const notificationsQuery = db.collection('notificacoes')
+        .where('userId', '==', userId)
+        .orderBy('timestamp', 'desc')
+        .limit(20);
+
+    unsubscribeNotifications = notificationsQuery.onSnapshot(snapshot => {
+        const notifs = [];
+        snapshot.forEach(doc => {
+            notifs.push({ id: doc.id, ...doc.data() });
+        });
+
+    state.notificacoes = notifs; // Guarda a lista completa no state
+        
+        // ==========================================================
+        // AQUI ESTÁ A NOVA LÓGICA DE CONTAGEM
+        // ==========================================================
+        let tarefasNaoLidas = 0;
+        let presentesNaoLidos = 0;
+        let conquistasNaoLidas = 0;
+        
+        notifs.forEach(n => {
+            if (!n.lida) {
+                if (n.icone === 'fa-shopping-bag') { // Notificação de Tarefa
+                    tarefasNaoLidas++;
+                } else if (n.icone === 'fa-gift') { // Notificação de Presente
+                    presentesNaoLidos++;
+                } else if (n.tipo === 'achievement' || n.icone === 'fa-trophy') {
+                    conquistasNaoLidas++;
+                }
+            }
+        });
+
+        // Atualiza os contadores separados no state
+        state.notificacoesTarefasNaoLidas = tarefasNaoLidas;
+        state.notificacoesPresentesNaoLidas = presentesNaoLidos;
+    state.notificacoesConquistasNaoLidas = conquistasNaoLidas;
+        // ==========================================================
+        const docChanges = snapshot.docChanges ? snapshot.docChanges() : [];
+        if (hasProcessedInitialNotifications && docChanges.length) {
+            const newAchievementNotifs = [];
+            docChanges.forEach((change) => {
+                if (change.type === 'added') {
+                    const notifData = { id: change.doc.id, ...change.doc.data() };
+                    if (!notifData.lida && (notifData.tipo === 'achievement' || notifData.icone === 'fa-trophy')) {
+                        newAchievementNotifs.push(notifData);
+                    }
+                }
+            });
+            if (newAchievementNotifs.length) {
+                console.log('Novas notificações de conquista detectadas:', newAchievementNotifs.map((notif) => notif.id));
+                newAchievementNotifs.forEach(triggerAchievementCelebration);
+            }
+        }
+
+        const currentNotificationIds = new Set(notifs.map((notif) => notif.id));
+        lastNotificationIds = currentNotificationIds;
+        hasProcessedInitialNotifications = true;
+
+    console.log(`Notificações carregadas: ${notifs.length}, Tarefas não lidas: ${tarefasNaoLidas}, Presentes não lidos: ${presentesNaoLidos}, Conquistas não lidas: ${conquistasNaoLidas}`);
+
+        // Se o usuário estiver na tela de notificações, atualiza a lista
+        if (state.etapa === 'notificacoes') {
+            renderNossasTarefas(); // (Já tínhamos mudado isso)
+        }
+
+        // Atualiza a UI fixa (bolinha do sino e cor do fogo)
+        updateFixedUI();
+    });
+}
+
+async function renderAchievementsPopup() {
+    await marcarNotificacoesDeConquistaComoLidas();
+
+    const conquistasUsuario = state.usuario?.conquistas || {};
+
+    const gridHtml = ACHIEVEMENTS.map((achievement) => {
+        const conquista = conquistasUsuario[achievement.id];
+        const desbloqueada = !!conquista;
+        const cor = achievement.accentColor || '#fbbf24';
+        const titulo = achievement.title;
+        const descricao = achievement.description;
+        const dica = achievement.hint || '';
+        const dataDesbloqueio = desbloqueada ? formatarDataCurta(conquista.unlockedAt) : '';
+        const iconClass = achievement.icon || 'fa-trophy';
+        const hintAttr = dica ? `title="${escapeHtmlAttr(dica)}"` : '';
+        const recompensa = typeof achievement.reward === 'number' ? achievement.reward : null;
+        const recompensaTexto = recompensa !== null ? `Recompensa: ${recompensa} foguinho${recompensa === 1 ? '' : 's'}` : '';
+
+        return `
+            <div class="achievement-card sm-card-padding rounded-2xl border transition ${desbloqueada ? 'bg-gray-900 border-transparent shadow-lg shadow-black/30' : 'bg-gray-800/40 border-gray-700 backdrop-blur-sm opacity-70'}" ${hintAttr}>
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${desbloqueada ? '' : 'border border-gray-600'}" style="${desbloqueada ? `background: ${cor}; color: #111827;` : ''}">
+                        <i class="fas ${iconClass} text-lg sm:text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-base sm:text-lg ${desbloqueada ? '' : 'text-gray-300'}">${titulo}</h4>
+                        <p class="text-xs sm:text-sm ${desbloqueada ? 'text-gray-300' : 'text-gray-500'}">${descricao}</p>
+                        ${recompensaTexto ? `<p class="text-xs sm:text-sm font-semibold text-amber-400 mt-2">${recompensaTexto}</p>` : ''}
+                        ${desbloqueada ? `<p class="text-xs text-emerald-400 mt-1"><i class="fas fa-check-circle mr-1"></i>${dataDesbloqueio ? `Conquistado em ${dataDesbloqueio}` : 'Conquista desbloqueada!'}</p>` : `<p class="text-[11px] text-gray-500 mt-1">${dica || 'Complete a tarefa para desbloquear.'}</p>`}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    appContainer.innerHTML = `
+        <div class="achievements-overlay min-h-screen w-full bg-black bg-opacity-90 text-white px-4 sm:px-8 py-12 sm:py-16 flex justify-center items-start sm:items-center overflow-y-auto">
+            <div class="card achievements-popup-card w-full max-w-3xl relative overflow-hidden shadow-2xl flex flex-col sm:max-h-[85vh] p-6 sm:p-10">
+                <div class="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-yellow-500 opacity-10 pointer-events-none"></div>
+                <div class="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-pink-500 opacity-10 pointer-events-none"></div>
+                <div class="flex items-center justify-between mb-6 sm:mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-full bg-yellow-500/20 text-yellow-300 flex items-center justify-center">
+                            <i class="fas fa-trophy text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-3xl font-bold">Mural de Conquistas</h2>
+                            <p class="text-sm text-gray-400">Celebre seus troféus e descubra o que falta desbloquear.</p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="toggleAchievementsPopup()" class="text-gray-400 hover:text-white text-lg focus:outline-none focus:ring-2 focus:ring-gray-300" aria-label="Fechar mural">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-6 sm:mt-8 sm:flex-1 sm:overflow-y-auto sm:pr-3 achievements-scroll-area">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                        ${gridHtml}
+                    </div>
+                </div>
+                <div class="mt-6 sm:mt-8 flex justify-center">
+                    <button type="button" onclick="toggleAchievementsPopup()" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Voltar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+    // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
+    function renderPartnerInfoPopup() {
+        const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
+        const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
+
+        appContainer.innerHTML = `
+            <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+                <div class="card p-8 max-w-md w-full relative overflow-hidden">
+                    <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
+                    <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
+                    <h2 class="text-3xl font-bold text-center mb-8 text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-blue-500">
+                        <i class="fas fa-user-heart mr-2"></i> Seu Parceiro
+                    </h2>
+                    <div class="text-center mb-6">
+                        <p class="mb-2 text-xl">Nome: <span class="font-bold text-green-400">${state.parceiroNome || 'N/A'}</span></p>
+                        <p class="mb-4 text-md text-gray-300">Telefone: ${state.parceiroCodigo || 'N/A'}</p>
+                    </div>
+                    <div class="space-y-4">
+                        <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''}
+                            class="w-full text-sm px-6 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2
+                            ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}">
+                            <i class="fas fa-gift text-xs"></i> Presentear 🔥
+                        </button>
+
+                        <button onclick="desparearParceiro()" class="w-full text-sm bg-red-800 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition">
+                            <i class="fas fa-unlink text-xs"></i> Desfazer Pareamento
+                        </button>
+
+                        <!-- Botão de seguir no Instagram (discreto, com borda em gradiente) -->
+                        <button onclick="window.open('https://instagram.com/nossomomentoapp','_blank')" class="instagram-cta-outline w-full">
+                            <span class="instagram-cta-inner w-full justify-center">
+                                <i class="fab fa-instagram text-xs"></i> Siga-nos no Instagram!
+                            </span>
+                        </button>
+
+                        <button onclick="togglePartnerInfoPopup();" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded text-white font-semibold transition w-full">
+                            Voltar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+
+    function renderMain() {
+if (!state.pareado || !state.parceiroData) {
+    appContainer.innerHTML = `
+            <div class="min-h-screen container mx-auto px-4 py-8 text-center flex flex-col justify-center items-center">
+            <h2 class="text-2xl font-bold mb-4">Você ainda não está pareado(a).</h2>
+            <p class="text-gray-400 mb-6">Pareie com seu/sua parceiro(a) para ver o catálogo de momentos dele(a).</p>
+            <button onclick="changeStep('parear')" class="btn-red">Parear agora</button>
+
+            <!-- CTA social abaixo do botão de parear (discreto com borda em gradiente) -->
+            <button onclick="window.open('https://instagram.com/nossomomentoapp','_blank')" class="instagram-cta-outline mt-4 inline-block">
+                <span class="instagram-cta-inner inline-flex items-center gap-2">
+                    <i class="fab fa-instagram"></i> Siga-nos no Instagram!
+                </span>
+            </button>
+        </div>
+    `;
+    return;
+}
+
+const partnerGender = state.parceiroData.sexo;
+
+const momentosParaParceiro = state.momentosMestres.filter(m => m.targetGender === partnerGender || m.targetGender === 'Unisex');
+const catalogoParceiro = state.parceiroData.catalogoPersonalizado || {};
+const categorias = [...new Set(momentosParaParceiro.map(m => m.categoria))].map(nomeCat => {
+    const momentoExemplo = state.momentosMestres.find(m => m.categoria === nomeCat);
+    let cor = 'bg-gray-800'; // Cor padrão (fallback)
+        if (momentoExemplo) {
+            switch (momentoExemplo.categoria) {
+                case 'Quentes':
+                    cor = 'bg-pink-600'; // Vibrante, alinhado ao logo
+                    break;
+                case 'Lovezin':
+                    cor = 'bg-red-600'; // Cor da paixão
+                    break;
+                case 'Sair da Rotina':
+                    cor = 'bg-amber-600'; // Laranja/Âmbar, alinhado aos "foguinhos"
+                    break;
+            }
+        }
+    return {
+        nome: nomeCat,
+        emoji: momentoExemplo.emoji,
+        color: cor
+    };
+});
+
+const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/logo-instagram-white.png';
+
+appContainer.innerHTML = `
+    <main class="container mx-auto px-4 py-8 pb-24 pt-24 bg-gradient-to-br from-gray-900 to-black text-white">
+        <div class="mb-12 text-center">
+            <img src="${fotoParceiroUrl}" class="w-24 h-24 rounded-full object-cover border-4 border-pink-500/50 mx-auto mb-6">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Catálogo de ${state.parceiroNome}</h2>
+            <p class="text-gray-400 max-w-2xl mx-auto">Escolha os momentos que você deseja viver!</p>
+        </div>
+        
+        <div class="flex flex-wrap justify-center gap-3 mb-12">
+            <button onclick="filtrarMomentos(null)"
+                class="px-4 py-2 rounded-full transition-all ${!state.filtro ? 'bg-pink-600 text-white shadow-lg' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}"
+                style="background: ${!state.filtro ? 'linear-gradient(45deg, #FF3547 0%, #FF6B7B 100%)' : ''}">
+                Todos
+            </button>
+            ${categorias.map(cat => `
+                <button onclick="filtrarMomentos('${cat.nome}')"
+                    class="px-4 py-2 rounded-full transition-all ${state.filtro === cat.nome ? 'text-white shadow-lg' : 'text-gray-300 hover:bg-gray-800/50'} ${cat.color}">
+                    ${cat.emoji} ${cat.nome}
+                </button>
+            `).join('')}
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+            ${(state.filtro ? momentosParaParceiro.filter(m => m.categoria === state.filtro) : momentosParaParceiro).map(momento => {
+                const configParceiro = catalogoParceiro[momento.nome];
+                const preco = configParceiro?.preco !== undefined ? configParceiro.preco : momento.intensidade * 2;
+                const bloqueado = configParceiro?.bloqueado || false;
+                const momentoParaCarrinho = { ...momento, custoFoguinhos: preco };
+
+                return `
+                <div class="product-card group ${bloqueado ? 'opacity-50' : ''}">
+                    <div class="relative overflow-hidden">
+                        <img src="${momento.img}" alt="${momento.nome}" class="product-img group-hover:scale-105 transition-transform duration-300">
+                        <span class="product-badge">${momento.emoji} ${momento.categoria}</span>
+                        ${bloqueado ? `<div class="absolute inset-0 bg-black/70 flex items-center justify-center"><i class="fas fa-lock text-4xl text-white"></i></div>` : ''}
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-medium">${momento.nome}</h3>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-yellow-400 text-sm flex items-center gap-1 font-semibold">
+                                <i class="fas fa-fire"></i> ${preco} Foguinhos
+                            </span>
+                            <button onclick='adicionarAoCarrinho(${JSON.stringify(momentoParaCarrinho).replace(/"/g, "&quot;")})'
+                                class="text-sm px-4 py-2 rounded-lg transition ${bloqueado ? 'bg-gray-700 cursor-not-allowed' : 'bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white'}"
+                                ${bloqueado ? 'disabled' : ''}>
+                                ${bloqueado ? '🔒' : 'Resgatar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('')}
+        </div>
+    </main>
+
+    ${state.showCartSidebar ? `
+        <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+        <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
+                <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                ${state.carrinho.length === 0 ? `<p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>` : state.carrinho.map((item, index) => `
+                    <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
+                            <small class="text-gray-400 text-sm">${item.categoria}</small>
+                            <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1">
+                                <i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos
+                            </div>
+                        </div>
+                        <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="mt-8 pt-6 border-t border-gray-800">
+                <button onclick="finalizarPedido()" 
+                    class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                    ${state.carrinho.length === 0 ? 'disabled' : ''}>
+                    Finalizar Pedido
+                </button>
+                <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+                    Continuar Resgatando
+                </button>
+            </div>
+        </div>
+    ` : ''}
+`;
+}
+
+function calcularPrecoBase(momento) {
+    if (momento == null) {
+        return 10;
+    }
+
+    const intensidade = Number(momento.intensidade);
+    if (Number.isFinite(intensidade) && intensidade >= 0) {
+        return intensidade * 2;
+    }
+
+    const custoFoguinhos = Number(momento.custoFoguinhos);
+    if (Number.isFinite(custoFoguinhos) && custoFoguinhos >= 0) {
+        return custoFoguinhos;
+    }
+
+    return 10;
+}
+
+function normalizarPreco(valor, fallback) {
+    if (valor === '' || valor === null || valor === undefined) {
+        return fallback;
+    }
+
+    const numero = Number(valor);
+    return Number.isFinite(numero) && numero >= 0 ? numero : fallback;
+}
+
+async function marcarNotificacoesDeConquistaComoLidas() {
+    if (!state.usuario?.uid || state.notificacoesConquistasNaoLidas <= 0) {
+        return;
+    }
+
+    try {
+        const batch = db.batch();
+        let totalMarcadas = 0;
+
+        state.notificacoes.forEach((notif) => {
+            if (!notif.lida && (notif.tipo === 'achievement' || notif.icone === 'fa-trophy')) {
+                const notifRef = db.collection('notificacoes').doc(notif.id);
+                batch.update(notifRef, { lida: true });
+                totalMarcadas++;
+            }
+        });
+
+        if (totalMarcadas > 0) {
+            await batch.commit();
+            state.notificacoesConquistasNaoLidas = 0;
+            updateFixedUI();
+        }
+    } catch (err) {
+        console.error('Erro ao marcar conquistas como lidas:', err);
+    }
+}
+
+function renderGerenciarCatalogo() {
+const userGender = state.usuario?.sexo || 'Masculino';
+const momentosDisponiveis = state.momentosMestres.filter(m => m.targetGender === userGender || m.targetGender === 'Unisex');
+const catalogoSalvo = state.usuario?.catalogoPersonalizado || {};
+const categorias = [...new Set(momentosDisponiveis.map(m => m.categoria))];
+const fotoUrl = state.usuario?.fotoUrl || 'assets/icons/iconprincipal.png';
+const conquistasNaoLidas = state.notificacoesConquistasNaoLidas || 0;
+const muralBadgeHtml = conquistasNaoLidas > 0
+    ? `<span class="px-3 py-1 rounded-full bg-red-600/80 text-white text-xs font-semibold shadow-lg shadow-red-900/40">${conquistasNaoLidas} novo${conquistasNaoLidas > 1 ? 's' : ''}</span>`
+    : '';
+const muralCardAccent = conquistasNaoLidas > 0
+    ? 'ring-1 ring-yellow-400/60 shadow-lg'
+    : 'hover:bg-gray-800/40';
+
+let notificationButtonHtml = '';
+if (window.Notification) {
+    if (state.usuario && state.usuario.notificationsEnabled && Notification.permission === 'granted') {
+        notificationButtonHtml = `
+            <button onclick="handleNotificationToggle()" class="mt-4 bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-lg transition">
+                <i class="fas fa-bell-slash"></i> Desativar Notificações
+            </button>
+        `;
+    } else if (Notification.permission === 'denied') {
+        notificationButtonHtml = `
+            <button onclick="handleNotificationToggle()" class="mt-4 bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed" title="Você precisa permitir as notificações nas configurações do seu navegador.">
+                <i class="fas fa-ban"></i> Notificações Bloqueadas
+            </button>
+        `;
+    } else {
+        notificationButtonHtml = `
+            <button onclick="handleNotificationToggle()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                <i class="fas fa-bell"></i> Ativar Notificações
+            </button>
+        `;
+    }
+}
+
+appContainer.innerHTML = `
+    <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl md:text-4xl font-bold mb-2">Meu Perfil e Catálogo</h2>
+            <p class="text-gray-400 max-w-2xl mx-auto">Gerencie sua foto, preços e a disponibilidade dos momentos.</p>
+        </div>
+
+        <div class="max-w-2xl mx-auto mb-12 p-6 card flex flex-col items-center">
+            <h3 class="font-bold text-xl mb-4">Sua Foto de Perfil</h3>
+            <img id="profilePicPreview" src="${fotoUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-gray-600 mb-4">
+            <input type="file" id="fileInput" onchange="handleFileSelect(event)" accept="image/*" class="hidden">
+            <button onclick="document.getElementById('fileInput').click()" class="text-pink-400 hover:text-pink-300 font-semibold">
+                Trocar Foto
+            </button>
+
+            ${notificationButtonHtml}
+
+            <div id="uploadProgress" class="w-full bg-gray-700 rounded-full h-2.5 mt-4 hidden">
+                <div id="uploadProgressBar" class="bg-pink-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="space-y-4 max-w-2xl mx-auto">
+            <div class="card mb-12 p-6 cursor-pointer transition group ${muralCardAccent} focus:outline-none focus:ring-2 focus:ring-yellow-300/80" role="button" tabindex="0" aria-label="Abrir mural de conquistas" onclick="toggleAchievementsPopup()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAchievementsPopup();}">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 flex items-center justify-center rounded-full bg-yellow-500/20 text-yellow-300">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Mural de Conquistas</h3>
+                            <p class="text-sm text-gray-400">Veja os troféus que você já desbloqueou e quais ainda pode conquistar.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-gray-400 group-hover:text-yellow-200 transition">
+                        ${muralBadgeHtml}
+                        <i class="fas fa-chevron-right text-base"></i>
+                    </div>
+                </div>
+            </div>
+            ${categorias.map(categoria => `
+                <div class="card overflow-hidden">
+                    <button onclick="toggleAccordion(this)" class="w-full p-4 text-left font-bold text-lg flex justify-between items-center">
+                        <span>${categoria}</span>
+                        <i class="fas fa-chevron-down transition-transform duration-300"></i>
+                    </button>
+                    <div class="accordion-content max-h-0 overflow-hidden transition-all duration-500 ease-in-out">
+                        <div class="space-y-2 p-4 border-t border-gray-700">
+                            ${momentosDisponiveis.filter(m => m.categoria === categoria).map(momento => {
+                                const configSalva = catalogoSalvo[momento.nome];
+                                const precoPadrao = calcularPrecoBase(momento);
+                                const preco = normalizarPreco(configSalva?.preco, precoPadrao);
+                                if (configSalva && configSalva.preco !== preco) {
+                                    configSalva.preco = preco;
+                                }
+                                const bloqueado = configSalva?.bloqueado || false;
+                                // A CORREÇÃO ESTÁ AQUI: O "return" AGORA COMEÇA DIRETAMENTE COM O ACENTO GRAVE `
+                                return `
+                                <div class="p-2 flex items-center justify-between gap-4">
+                                    <div class="flex items-center gap-4">
+                                        <img src="${momento.img}" class="w-12 h-12 rounded-lg object-cover">
+                                        <div><h3 class="font-semibold">${momento.nome}</h3></div>
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-1 bg-gray-800 rounded-lg p-2">
+                                            <i class="fas fa-fire text-yellow-400"></i>
+                                            <input type="number" min="0" step="1" value="${preco}" id="preco-${momento.nome.replace(/\s+/g, '-')}" class="bg-transparent w-16 text-center font-bold">
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" ${bloqueado ? 'checked' : ''} class="sr-only peer" id="bloqueado-${momento.nome.replace(/\s+/g, '-')}">
+                                            <div class="relative w-14 h-7 bg-pink-600 peer-checked:bg-gray-600 rounded-full transition-colors flex items-center justify-between px-2">
+                                                <i class="fas fa-lock text-white text-xs"></i>
+                                                <i class="fas fa-lock-open text-white text-xs"></i>
+                                            </div>
+                                            <div class="absolute top-0.5 left-[2px] w-6 h-6 bg-white rounded-full border border-gray-300 transition-transform transform peer-checked:translate-x-full"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+
+        <div class="mt-10 text-center">
+            <button onclick="handleSaveCatalogo()" class="btn-red px-10 py-4">
+                Salvar Alterações
+            </button>
+        </div>
+    </div>
+
+    ${state.showCartSidebar ? `
+        <div class="fixed inset-0 bg-black/50 z-20" onclick="toggleCartSidebar()"></div>
+        <div class="fixed right-0 top-0 h-full w-full sm:w-96 bg-gray-900 z-30 border-l border-gray-800 p-6 overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Meu Carrinho (${state.carrinho.length}/2)</h3>
+                <button onclick="toggleCartSidebar()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="space-y-3">
+                ${state.carrinho.length === 0 ? `<p class="text-gray-400 text-center py-4">Seu carrinho está vazio.</p>` : state.carrinho.map((item, index) => `
+                    <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-medium">${item.emoji} ${item.nome}</h4>
+                            <small class="text-gray-400 text-sm">${item.categoria}</small>
+                            <div class="text-yellow-400 text-sm flex items-center gap-1 mt-1"><i class="fas fa-fire"></i> ${item.custoFoguinhos} Foguinhos</div>
+                        </div>
+                        <button onclick="removerDoCarrinho(${index})" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="mt-8 pt-6 border-t border-gray-800">
+                <button onclick="finalizarPedido()" class="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white rounded-lg font-medium transition-all ${state.carrinho.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${state.carrinho.length === 0 ? 'disabled' : ''}>
+                    Finalizar Pedido
+                </button>
+                <button onclick="toggleCartSidebar()" class="w-full mt-4 py-2 text-gray-300 hover:text-white transition">
+                    Continuar Resgatando
+                </button>
+            </div>
+        </div>
+    ` : ''}
+`;
+}
+
+async function handleSaveCatalogo() {
+console.log('Iniciando salvamento do catálogo...');
+const novoCatalogo = {}; // 1. Começamos com um objeto vazio.
+
+// 2. Para cada momento da nossa lista mestra...
+state.momentosMestres.forEach(momento => {
+    // Montamos os IDs dos campos na tela, como fizemos ao criá-los.
+    const idPreco = `preco-${momento.nome.replace(/\s+/g, '-')}`;
+    const idBloqueado = `bloqueado-${momento.nome.replace(/\s+/g, '-')}`;
+
+    const inputPreco = document.getElementById(idPreco);
+    const inputBloqueado = document.getElementById(idBloqueado);
+
+    // Verificamos se encontramos os campos na tela, por segurança.
+    if (inputPreco && inputBloqueado) {
+        // 3. Coletamos os valores.
+        const precoPadrao = calcularPrecoBase(momento);
+        const preco = normalizarPreco(inputPreco.value, precoPadrao);
+        const bloqueado = inputBloqueado.checked; // 'checked' será true ou false.
+
+        // 4. Montamos o objeto para este momento específico.
+        novoCatalogo[momento.nome] = {
+            preco: preco,
+            bloqueado: bloqueado
+        };
+    }
+});
+
+try {
+    // 5. Usamos o comando 'update' para salvar o novo mapa no Firestore.
+    await db.collection('usuarios').doc(state.usuario.uid).update({
+        catalogoPersonalizado: novoCatalogo
+    });
+
+    // 6. Atualizamos o estado local para manter tudo sincronizado.
+    state.usuario.catalogoPersonalizado = novoCatalogo;
+
+    trackGAEvent('customize_catalog');
+    trackMetaEvent('CustomizeProduct');
+
+    // 7. Damos um feedback de sucesso.
+    alert('Seu catálogo foi salvo com sucesso!');
+    console.log('Catálogo salvo no Firestore:', novoCatalogo);
+
+} catch (error) {
+    console.error("Erro ao salvar o catálogo: ", error);
+    alert('Houve um erro ao salvar seu catálogo. Tente novamente.');
+}
+}
+
+async function carregarMomentosMestres() {
+    console.log("Buscando momentos mestres no Firestore...");
+
+    state.momentosMestres = [];
+
+    try {
+        const querySnapshot = await db.collection('momentosMestres')
+            .orderBy('nome') // Opcional: ordenar por nome
+            .get();
+
+        const momentosPorChave = new Map();
+
+        querySnapshot.forEach(doc => {
+            const data = { id: doc.id, ...doc.data() };
+            if (!data || !data.nome) {
+                console.warn('Documento de momento sem nome ignorado:', doc.id);
+                return;
+            }
+            const dedupeKey = `${data.nome}::${data.targetGender || 'any'}`;
+            if (!momentosPorChave.has(dedupeKey)) {
+                momentosPorChave.set(dedupeKey, data);
+            } else {
+                const existente = momentosPorChave.get(dedupeKey);
+                console.warn('Momento duplicado detectado no Firestore:', dedupeKey, 'doc existente:', existente.id, 'doc ignorado:', doc.id);
+            }
+        });
+
+        state.momentosMestres = Array.from(momentosPorChave.values());
+
+        // 2. Confirmação no console para nosso teste
+        console.log(`✅ Sucesso: ${state.momentosMestres.length} momentos mestres carregados.`);
+        console.log(state.momentosMestres); // <-- Mostra o que foi carregado
+
+    } catch (error) {
+        console.error("Erro ao carregar momentos mestres:", error);
+        // Se falhar, como fallback, podemos carregar a lista antiga (mas por enquanto, só avisamos)
+        showToast("Erro ao carregar catálogo de momentos.", "erro");
+    }
+}
+
+function toggleAccordion(buttonElement) {
+const content = buttonElement.nextElementSibling;
+const isOpening = !content.classList.contains('open');
+
+buttonElement.classList.toggle('open');
+content.classList.toggle('open');
+
+const finalizeTransition = (event) => {
+    if (event.target !== content || event.propertyName !== 'max-height') return;
+    if (content.classList.contains('open')) {
+        content.style.maxHeight = 'none';
+        content.style.overflow = 'visible';
+    } else {
+        content.style.maxHeight = '0';
+        content.style.overflow = 'hidden';
+    }
+    content.removeEventListener('transitionend', finalizeTransition);
+};
+
+content.addEventListener('transitionend', finalizeTransition);
+
+if (isOpening) {
+    content.style.overflow = 'hidden';
+    content.style.maxHeight = content.scrollHeight + 'px';
+    if (content.scrollHeight === 0) {
+        requestAnimationFrame(() => {
+            content.style.maxHeight = content.scrollHeight + 'px';
+        });
+    }
+} else {
+    if (content.style.maxHeight === 'none' || content.style.maxHeight === '') {
+        content.style.maxHeight = content.scrollHeight + 'px';
+        void content.offsetHeight;
+    }
+    content.style.overflow = 'hidden';
+    requestAnimationFrame(() => {
+        content.style.maxHeight = '0';
+    });
+}
+}
+
+async function handleNotificationToggle() {
+const notificationsActive = state.usuario && state.usuario.notificationsEnabled && Notification.permission === 'granted';
+
+if (Notification.permission === 'denied') {
+    alert("As notificações estão bloqueadas. Você precisa permitir manualmente nas configurações do seu navegador (clicando no ícone de cadeado 🔒 ao lado da URL).");
+} else if (notificationsActive) {
+    // Se está ativo, a ação é desativar
+    await desativarNotificacoes();
+} else {
+    // Se não está ativo, a ação é ativar
+    await solicitarPermissaoDeNotificacao();
+}
+}
+
+function handleFileSelect(event) {
+const file = event.target.files[0];
+if (!file) {
+    return; // O usuário não escolheu nenhum arquivo
+}
+
+// Validação simples: checa se é uma imagem e se tem menos de 5MB
+if (!file.type.startsWith('image/')){
+    alert('Por favor, selecione um arquivo de imagem (jpg, png, etc.).');
+    return;
+}
+if (file.size > 5 * 1024 * 1024) { // 5 Megabytes
+    alert('A imagem é muito grande. Por favor, escolha uma com menos de 5MB.');
+    return;
+}
+
+// Mostra a pré-visualização da imagem na tela
+const reader = new FileReader();
+reader.onload = function(e) {
+    const profilePicPreview = document.getElementById('profilePicPreview');
+    if (profilePicPreview) {
+        profilePicPreview.src = e.target.result;
+    }
+};
+reader.readAsDataURL(file);
+
+// Inicia o processo de upload
+uploadProfilePic(file);
+}
+
+// Função 2: Faz o upload do arquivo para o Firebase Storage
+async function uploadProfilePic(file) {
+if (!state.usuario) {
+    alert('Você precisa estar logado para enviar uma foto.');
+    return;
+}
+
+// Mostra a barra de progresso
+const progressContainer = document.getElementById('uploadProgress');
+const progressBar = document.getElementById('uploadProgressBar');
+if(progressContainer) progressContainer.classList.remove('hidden');
+
+// 1. Define o caminho onde a imagem será salva no Storage
+// Ex: profile_pics/UID_DO_USUARIO.jpg
+const filePath = `profile_pics/${state.usuario.uid}/${file.name}`;
+const fileRef = storage.ref(filePath);
+
+// 2. Inicia o upload
+const uploadTask = fileRef.put(file);
+
+// 3. Acompanha o progresso do upload
+uploadTask.on('state_changed', 
+    (snapshot) => {
+        // Atualiza a barra de progresso
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        if(progressBar) progressBar.style.width = progress + '%';
+        console.log('Upload is ' + progress + '% done');
+    }, 
+    (error) => {
+        // Em caso de erro
+        console.error("Erro no upload: ", error);
+        alert('Houve um erro ao enviar sua foto.');
+        if(progressContainer) progressContainer.classList.add('hidden');
+    }, 
+    () => {
+        // 4. Quando o upload terminar, pega a URL pública da imagem
+        uploadTask.snapshot.ref.getDownloadURL().then(async (downloadURL) => {
+            console.log('Arquivo disponível em', downloadURL);
+
+            // 5. Salva a URL da foto no perfil do usuário no Firestore
+            await db.collection('usuarios').doc(state.usuario.uid).update({
+                fotoUrl: downloadURL
+            });
+
+            // 6. Atualiza o estado local e a UI
+            state.usuario.fotoUrl = downloadURL;
+            updateFixedUI(); // Chama a função para atualizar a header
+
+            alert('Foto de perfil atualizada com sucesso!');
+            if(progressContainer) progressContainer.classList.add('hidden'); // Esconde a barra
+        });
+    }
+);
+}
+
+    // --- Funções de Manipulação de Eventos e Firebase Auth/Firestore ---
+
+    async function handleSignIn() {
+        const email = document.getElementById('signInEmail').value;
+        const password = document.getElementById('signInPassword').value;
+
+        if (!email || !password) {
+            alert('Por favor, preencha o email e a senha.');
+            return;
+        }
+
+        try {
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            console.log('Usuário logado com sucesso:', user);
+
+            await loadUserDataAndNavigate(user.uid, user.email);
+
+            trackGAEvent('login', { method: 'Email' });
+            trackMetaEvent('Login');
+
+        } catch (error) {
+            console.error('Erro no login:', error.code, error.message);
+            let errorMessage = 'Erro ao fazer login. Verifique seu email e senha.';
+            if (error.code === 'auth/user-not-found') {
+                errorMessage = 'Nenhum usuário encontrado com este email.';
+            } else if (error.code === 'auth/wrong-password') {
+                errorMessage = 'Senha incorreta.';
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'Email inválido.';
+            } else if (error.code === 'auth/invalid-credential') { 
+                errorMessage = 'Credenciais inválidas. Verifique seu email e senha.';
+            }
+            alert(errorMessage);
+        }
+    }
+
+    async function handleRegister() {
+const nome = document.getElementById('registerNome').value;
+const email = document.getElementById('registerEmail').value;
+const telefone = document.getElementById('registerTelefone').value;
+const senha = document.getElementById('registerSenha').value;
+const sexo = document.getElementById('registerSexo').value;
+
+// Validação de Frontend
+if (!nome || !email || !telefone || !senha || !sexo) {
+    alert('Por favor, preencha todos os campos.');
+    return;
+}
+if (telefone.length !== 11 || !/^\d+$/.test(telefone)) {
+    alert('O telefone deve conter exatamente 11 dígitos numéricos (com DDD).');
+    return;
+}
+if (senha.length < 6) {
+     alert('A senha deve ter no mínimo 6 caracteres.');
+     return;
+}
+
+try {
+    // 1. Criar usuário no Firebase Authentication
+    const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
+    const user = userCredential.user;
+    console.log('Usuário criado no Auth:', user);
+
+    // 2. Salvar dados adicionais no Firestore usando o UID do Firebase Auth como ID do documento
+    await db.collection('usuarios').doc(user.uid).set({
+        nome: nome,
+        telefone: telefone,
+        email: email,
+        sexo: sexo,
+        foguinhos: 10,
+        lastCheckInDate: null,
+        pareadoCom: null,
+        catalogoPersonalizado: {}, // <-- NOSSA NOVA LINHA! Inicializa o catálogo.
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    console.log("Dados do usuário salvos com sucesso no Firestore!");
+
+    trackGAEvent('sign_up');
+    trackMetaEvent('CompleteRegistration');
+
+    // Atualiza o estado local com os dados do novo usuário
+    state.usuario = {
+        uid: user.uid,
+        email: user.email,
+        nome,
+        telefone,
+        sexo,
+        foguinhos: 10,
+        lastCheckInDate: null,
+        pareadoCom: null,
+        catalogoPersonalizado: {}, // <-- E AQUI TAMBÉM, para consistência.
+        conquistas: {},
+        achievementStats: {}
+    };
+    state.conquistas = {};
+    state.achievementStats = {};
+    state.etapa = 'parear';
+    renderApp();
+    alert('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.');
+
+} catch (error) {
+    console.error('Erro no cadastro:', error.code, error.message);
+    let errorMessage = 'Erro ao cadastrar. Tente novamente.';
+    if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'Este email já está em uso. Tente fazer login ou use outro email.';
+    } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'O formato do email é inválido.';
+    } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'A senha é muito fraca (mínimo de 6 caracteres).';
+    }
+    alert(errorMessage);
+}
+}
+
+    async function handleLogout() {
+try {
+    // >>> DESLIGA O OUVINTE DE NOTIFICAÇÕES AQUI <<<
+    if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+        unsubscribeNotifications = null;
+    }
+
+    await auth.signOut();
+    console.log('Usuário deslogado com sucesso!');
+    
+    // Resetar todo o estado da aplicação para o padrão inicial
+    state.usuario = null;
+    state.pareado = false;
+    state.parceiroData = null;
+    state.idPareamentoAmigavel = null;
+    state.notificacoes = [];
+    state.etapa = 'landing';
+    state.carrinho = [];
+    state.codigoUsuario = null;
+    state.codigoDigitando = false;
+    state.parceiroCodigo = null;
+    state.parceiroTelefone = null;
+    state.parceiroNome = null;
+    state.showPartnerInfo = false;
+    state.pendingPairingRequest = null;
+    state.showCartSidebar = false;
+    state.showFoguinhosPopup = false;
+    state.conquistas = {};
+    state.achievementStats = {};
+    state.notificacoesTarefasNaoLidas = 0;
+    state.notificacoesPresentesNaoLidas = 0;
+    state.notificacoesConquistasNaoLidas = 0;
+
+    renderApp(); // Volta para a tela inicial
+} catch (error) {
+    console.error('Erro ao deslogar:', error);
+    showToast('Erro ao fazer logout.', 'erro');
+}
+}
+
+    async function handleDailyCheckIn() {
+if (!state.pareado || !state.usuario || !state.usuario.pareadoUid) {
+    showToast('Você precisa estar pareado para presentear.', 'aviso');
+    return;
+}
+
+try {
+    await safeAddInput({
+        type: 'daily_check_in',
+        fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+        partnerUid: state.usuario.pareadoUid,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    trackGAEvent('gift_foguinho');
+    trackMetaEvent('GiftFoguinho');
+
+    showToast(`Presente enviado!`, 'sucesso');
+} catch (error) {
+    console.error('Erro ao realizar Presentear (Check-in) diário:', error);
+    showToast('Erro ao presentear. Tente novamente.', 'erro');
+}
+}
+
+
+    function handleContinuarSemParear() {
+        state.etapa = 'main';
+        renderApp();
+    }
+
+    function filtrarMomentos(categoria) {
+        state.filtro = categoria;
+        renderApp(); // Re-renderiza a etapa atual, que é 'main'
+    }
+
+    async function adicionarAoCarrinho(momento) {
+// Validação 1: Limite de itens no carrinho
+if (state.carrinho.length >= 2) {
+    showToast('Limite de 2 itens no carrinho!', 'aviso');
+    return;
+}
+
+// Validação 2: Checa se o usuário está pareado
+if (!state.pareado) {
+    showToast('Você precisa estar pareado para resgatar momentos.', 'aviso');
+    return;
+}
+
+const custo = momento.custoFoguinhos;
+const foguinhosEmUso = state.carrinho.reduce((total, item) => total + item.custoFoguinhos, 0);
+const saldoDisponivel = (state.usuario.foguinhos || 0) - foguinhosEmUso;
+// Validação 3: Checa se o usuário tem "foguinhos" suficientes
+if (saldoDisponivel < custo) {
+    showToast(`Você precisa de ${custo} foguinhos para este momento.`, 'aviso');
+    return;
+}
+
+state.carrinho = [...state.carrinho, momento];
+trackGAEvent('add_to_cart', {
+            currency: 'FOG', // Moeda customizada "Foguinhos"
+            value: momento.custoFoguinhos,
+            items: [{
+                item_id: momento.nome.replace(/\s+/g, '_'), // ID do item (nome sem espaços)
+                item_name: momento.nome,
+                item_category: momento.categoria,
+                price: momento.custoFoguinhos,
+                quantity: 1
+            }]
+        });
+
+trackMetaEvent('AddToCart', {
+            currency: 'BRL', // A Meta prefere moedas reais, mas podemos ajustar se necessário.
+            value: 0, // Como é moeda virtual, o valor monetário é 0
+            content_name: momento.nome,
+            content_ids: [momento.nome.replace(/\s+/g, '_')],
+            content_type: 'product'
+        });
+
+showToast(`${momento.nome} adicionado ao carrinho!`, 'sucesso');
+renderApp();
+}
+
+    async function removerDoCarrinho(index) {
+const momentoRemovido = state.carrinho[index];
+state.carrinho = state.carrinho.filter((_, i) => i !== index);
+showToast(`Item removido do carrinho${momentoRemovido ? ` (${momentoRemovido.emoji || ''} ${momentoRemovido?.nome || ''})` : ''}.`, 'sucesso');
+renderApp();
+}
+
+    async function desparearParceiro() {
+        if (confirm('Tem certeza que deseja desfazer o pareamento? Isso irá resetar os foguinhos de ambos os usuários para 0.')) {
+            try {
+                // Ao invés de tentar atualizar `usuarios` diretamente (que viola
+                // regras de segurança para campos sensíveis), criaremos um
+                // input que o backend processará com privilégios de Admin.
+                // Use o uid do usuário autenticado no Auth (mais seguro)
+                const currentUser = auth.currentUser;
+                if (!currentUser) {
+                    throw new Error('Usuário não autenticado. Faça login antes de desfazer o pareamento.');
+                }
+                const usuarioUid = currentUser.uid;
+                const parceiroTelefone = state.parceiroCodigo || null;
+                const parceiroUid = state.usuario.pareadoUid || (state.parceiroData && state.parceiroData.uid) || null;
+
+                // Cria um input 'pairing_unpair' para o backend processar a
+                // operação com privilégios administrativos.
+                await safeAddInput({
+                    type: 'pairing_unpair',
+                    fromUid: usuarioUid,
+                    partnerUid: parceiroUid || null,
+                    partnerPhone: parceiroTelefone || null,
+                });
+
+                // Atualização otimista da UI (será corrigida pelo ouvinte do
+                // documento do usuário assim que o backend aplicar as mudanças).
+                state.pareado = false;
+                state.parceiroCodigo = null;
+                state.parceiroTelefone = null;
+                state.parceiroNome = null;
+                state.showPartnerInfo = false;
+                state.usuario.pareadoCom = null;
+                state.usuario.pareadoUid = null;
+                state.carrinho = [];
+                state.showCartSidebar = false;
+                state.pareado = false;
+                state.idPareamentoAmigavel = null;
+                showToast('Solicitação de desfazer pareamento enviada. Aguardando processamento...', 'sucesso');
+                renderApp();
+
+            } catch (error) {
+                console.error('Erro ao desfazer pareamento (criando input):', error);
+                if (error && error.message && error.message.toLowerCase().includes('autenticado')) {
+                    alert(error.message);
+                } else if (error && error.code === 'permission-denied') {
+                    alert('Permissão negada: sua sessão expirou ou você não está autenticado. Faça login novamente.');
+                } else {
+                    alert('Erro ao desfazer pareamento. Tente novamente.');
+                }
+            }
+        }
+    }
+
+    async function finalizarPedido() {
+    // 1. Validações iniciais
+    if (!state.pareado) {
+        showToast('Você precisa estar pareado para finalizar o pedido.', 'aviso');
+        return;
+    }
+    if (state.carrinho.length === 0) {
+        showToast('Seu carrinho está vazio.', 'aviso');
+        return;
+    }
+
+    if (!state.usuario || !state.usuario.pareadoUid) {
+        showToast('Erro: parceiro pareado não encontrado.', 'erro');
+        return;
+    }
+
+    try {
+        const payload = {
+            type: 'moment_redeem',
+            fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
+            partnerUid: state.usuario.pareadoUid,
+            pareamentoId: state.idPareamentoAmigavel || '',
+            items: state.carrinho.map(item => ({
+                nome: item.nome,
+                emoji: item.emoji || '',
+                categoria: item.categoria || 'Geral',
+                custoFoguinhos: item.custoFoguinhos,
+                img: item.img || '',
+            })),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        };
+
+        await safeAddInput(payload);
+
+        const totalCost = state.carrinho.reduce((sum, item) => sum + item.custoFoguinhos, 0);
+    trackGAEvent('purchase', {
+        currency: 'FOG', // Moeda customizada "Foguinhos"
+        value: totalCost,
+        items: state.carrinho.map(item => ({
+            item_id: item.nome.replace(/\s+/g, '_'),
+            item_name: item.nome,
+            item_category: item.categoria,
+            price: item.custoFoguinhos,
+            quantity: 1
+        }))
+    });
+
+    trackMetaEvent('Purchase', {
+        currency: 'BRL', // A Meta prefere moedas reais
+        value: 0, // O valor monetário é 0, pois é moeda virtual
+        content_ids: state.carrinho.map(item => item.nome.replace(/\s+/g, '_')),
+        content_name: state.carrinho.map(item => item.nome).join(', '),
+        content_type: 'product',
+        num_items: state.carrinho.length
+    });
+
+        const totalItens = state.carrinho.length;
+        const plural = totalItens > 1 ? 's' : '';
+        showToast(`Pedido enviado! ${totalItens} momento${plural} aguardando confirmação.`, 'sucesso');
+
+        // 7. Limpa o carrinho e atualiza a interface
+        state.carrinho = [];
+        state.showCartSidebar = false;
+        renderApp();
+
+    } catch (error) {
+        console.error("Erro ao finalizar pedido e criar tarefas:", error);
+        showToast("Ocorreu um erro ao finalizar o pedido.", "erro");
+    }
+}
+
+    // Função para alternar a visibilidade do carrinho
+    function toggleCartSidebar() {
+        console.log('toggleCartSidebar chamada. state.showCartSidebar ANTES:', state.showCartSidebar);
+        state.showCartSidebar = !state.showCartSidebar;
+        console.log('state.showCartSidebar DEPOIS:', state.showCartSidebar);
+        renderApp(); // Re-renderiza para exibir/esconder a sidebar
+    }
+
+    // --- Função Central de Renderização (Gerencia as etapas) ---
+    function renderApp() {
+        console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar, 'state.showFoguinhosPopup:', state.showFoguinhosPopup);
+        // Atualiza os elementos da header e footer que são fixos no DOM
+        updateFixedUI();
+        
+        // Renderiza o conteúdo principal dentro da #app
+        switch (state.etapa) {
+            case 'landing':
+                renderLandingPage();
+                break;
+            case 'signIn':
+                renderSignIn();
+                break;
+            case 'register':
+                if (REGISTRATION_ENABLED) {
+                    renderRegister();
+                } else {
+                    state.etapa = 'signIn';
+                    renderSignIn();
+                }
+                break;
+            case 'parear':
+                renderPareamento();
+                break;
+            case 'main':
+                renderMain();
+                break;
+            case 'gerenciarCatalogo':
+                renderGerenciarCatalogo();
+                break;
+            case 'notificacoes':
+                renderNossasTarefas();
+                break;
+            case 'foguinhosPopup':
+                renderFoguinhosPopupContent();
+                break;
+            case 'achievementsPopup':
+                renderAchievementsPopup();
+                break;
+            default:
+                renderLandingPage(); // Fallback
+        }
+    }
+
+    async function renderNossasTarefas() {
+    
+    // (Bloco de limpeza de notificações que adicionamos - continua igual)
+    try {
+        if (state.notificacoesTarefasNaoLidas > 0) {
+            const batch = db.batch();
+            let notificacoesDeTarefasLidas = 0;
+
+            state.notificacoes.forEach(notif => {
+                if (!notif.lida && notif.icone === 'fa-shopping-bag') {
+                    const notifRef = db.collection('notificacoes').doc(notif.id);
+                    batch.update(notifRef, { lida: true });
+                    notificacoesDeTarefasLidas++;
+                }
+            });
+
+            if (notificacoesDeTarefasLidas > 0) {
+                await batch.commit();
+                console.log(`Marcou ${notificacoesDeTarefasLidas} notificações de tarefa como lidas.`);
+                state.notificacoesTarefasNaoLidas = 0;
+                updateFixedUI(); 
+            }
+        }
+    } catch (err) {
+        console.error("Erro ao marcar notificações de tarefa como lidas:", err);
+    }
+    // (Fim do bloco de limpeza)
+
+
+    const abaAtiva = state.abaTarefasAtiva || 'recebidos';
+    
+    // 1. Define o HTML base da página (continua igual)
+    appContainer.innerHTML = `
+        <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl md:text-4xl font-bold mb-2">Nossas Tarefas</h2>
+                <p class="text-gray-400">Momentos resgatados para curtir.</p>
+            </div>
+
+            <div class="flex justify-center mb-6 border-b border-gray-700">
+                <button 
+                    onclick="trocarAbaTarefas('recebidos')" 
+                    class="py-3 px-6 font-semibold transition-all duration-300 ${abaAtiva === 'recebidos' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-gray-500'}">
+                    Recebidos
+                </button>
+                <button 
+                    onclick="trocarAbaTarefas('enviados')" 
+                    class="py-3 px-6 font-semibold transition-all duration-300 ${abaAtiva === 'enviados' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-gray-500'}">
+                    Enviados
+                </button>
+            </div>
+
+            <div id="tarefas-list-container" class="space-y-4 max-w-2xl mx-auto">
+                <div class="text-center py-10">
+                    <i class="fas fa-spinner fa-spin text-4xl text-pink-500"></i>
+                    <p class="mt-2 text-gray-400">Buscando tarefas...</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 4. Busca os dados no Firestore (continua igual)
+    let tarefas = [];
+    let queryField = ''; 
+    
+    if (abaAtiva === 'recebidos') {
+        queryField = 'executadoPorUid';
+    } else {
+        queryField = 'resgatadoPorUid';
+    }
+
+    try {
+        const querySnapshot = await db.collection('tarefasMomentos')
+            .where(queryField, '==', state.usuario.uid)
+            .where('idPareamento', '==', state.idPareamentoAmigavel)
+            .orderBy('dataResgate', 'desc')
+            .limit(30)
+            .get();
+        
+        querySnapshot.forEach(doc => {
+            tarefas.push({ id: doc.id, ...doc.data() });
+        });
+
+    } catch (error) {
+        console.error("Erro ao buscar tarefas:", error);
+        showToast("Erro ao carregar tarefas.", "erro");
+    }
+
+    // 5. Renderiza a lista de tarefas no container (AQUI ESTÃO AS MUDANÇAS)
+    const container = document.getElementById('tarefas-list-container');
+    if (tarefas.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-500 py-10">Nenhuma tarefa encontrada aqui.</p>`;
+    } else {
+        container.innerHTML = tarefas.map(tarefa => {
+            const isPendente = tarefa.status === 'Pendente';
+            const statusCor = isPendente ? 'text-yellow-400' : 'text-green-400';
+            const statusIcon = isPendente ? 'fa-clock' : 'fa-check-circle';
+            const dataFormatada = tarefa.dataResgate ? new Date(tarefa.dataResgate.seconds * 1000).toLocaleDateString('pt-BR') : 'Data indisponível';
+
+            // ==================================================================
+            // MUDANÇA 1: Buscar a imagem do momento na lista mestre 'momentos'
+            // ==================================================================
+            const momentoInfo = state.momentosMestres.find(m => m.nome === tarefa.momentoNome);
+            // Usamos a imagem encontrada, ou o emoji como fallback, ou uma imagem padrão
+            const imagemHtml = momentoInfo 
+                ? `<img src="${momentoInfo.img}" class="w-12 h-12 rounded-lg object-cover">`
+                : `<span class="text-3xl">${tarefa.momentoEmoji}</span>`; // Fallback para o emoji se não achar
+
+            return `
+                <div class="card p-4 flex items-center justify-between gap-4 ${!isPendente ? 'opacity-50' : ''}">
+                    <div class="flex items-center gap-4">
+                        
+                        ${imagemHtml} 
+
+                        <div>
+                            <h3 class="font-bold">${tarefa.momentoNome}</h3>
+                            <p class="text-sm text-gray-300">
+                                ${abaAtiva === 'recebidos' ? `Resgatado por: ${tarefa.resgatadoPorNome}` : `Aguardando: ${tarefa.executadoPorNome}`}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-2">Resgatado em: ${dataFormatada}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right flex-shrink-0"> <div class="flex items-center justify-end gap-2 font-semibold ${statusCor} mb-3">
+                            <i class="fas ${statusIcon}"></i>
+                            <span>${tarefa.status}</span>
+                        </div>
+                        
+                        ${(abaAtiva === 'enviados' && isPendente) ? `
+                            <button 
+                                onclick="handleDarCheck('${tarefa.id}', '${tarefa.momentoNome}', ${tarefa.custoFoguinhos || 0})"
+                                class="bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition">
+                                
+                                <i class="fas fa-check"></i> Realizado
+                            
+                            </button>
+                        ` : ''}
+
+                         ${(!isPendente && tarefa.dataConclusao) ? `
+                            <p class="text-xs text-gray-400">Concluído em: ${new Date(tarefa.dataConclusao.seconds * 1000).toLocaleDateString('pt-BR')}</p>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+}
+
+function trocarAbaTarefas(aba) {
+    if (state.abaTarefasAtiva !== aba) {
+        state.abaTarefasAtiva = aba;
+        renderNossasTarefas(); // Re-renderiza a tela com a nova aba
+    }
+}
+
+async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
+    if (!tarefaId) {
+        console.error("ID da tarefa não fornecido.");
+        return;
+    }
+
+    // Confirmação (opcional, mas recomendado)
+    if (!confirm("Tem certeza que deseja marcar este momento como 'Realizado'?")) {
+        return;
+    }
+
+    try {
+        const tarefaRef = db.collection('tarefasMomentos').doc(tarefaId);
+        
+        await tarefaRef.update({
+            status: 'Realizado',
+            dataConclusao: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        trackGAEvent('complete_moment', {
+            currency: 'FOG',
+            value: custoFoguinhos,
+            items: [{
+                item_id: (momentoNome || 'unknown').replace(/\s+/g, '_'),
+                item_name: momentoNome || 'unknown',
+                price: custoFoguinhos,
+                quantity: 1
+            }]
+        });
+
+        trackMetaEvent('CompleteMoment', {
+        currency: 'BRL',
+        value: 0,
+        content_name: momentoNome || 'unknown',
+        content_ids: [(momentoNome || 'unknown').replace(/\s+/g, '_')]
+    });
+        // ==========================================================
+
+        showToast("Momento confirmado com sucesso!", "sucesso");
+        
+        // Re-renderiza a tela para mostrar a mudança de status
+        renderNossasTarefas();
+
+    } catch (error) {
+        console.error("Erro ao confirmar tarefa:", error);
+        showToast("Erro ao confirmar o momento.", "erro");
+    }
+}
+
+    // Função para mudar a etapa da aplicação
+    function changeStep(newStep) {
+// Bloqueia navegação para cadastro quando desativado
+if (!REGISTRATION_ENABLED && newStep === 'register') {
+    showToast('Cadastros estão fechados nesta fase.', 'aviso');
+    newStep = 'signIn';
+}
+// Lógica de Navegação Simplificada
+// Se o usuário clicar no ícone da tela em que ele já está...
+if (state.etapa === newStep) {
+    // ...e essa tela NÃO for a principal, então ele volta para a principal (efeito de fechar).
+    if (newStep !== 'main') {
+        state.etapa = 'main';
+    } else {
+        // Se ele já está na 'main' e clica na 'main', não faz nada.
+        return;
+    }
+} else {
+    // Se ele clicar em um ícone de uma tela DIFERENTE, ele navega para ela. Simples assim.
+    state.etapa = newStep;
+}
+
+// Reseta o estado de outros elementos da UI ao navegar
+state.showCartSidebar = false;
+state.showFoguinhosPopup = false;
+state.showPartnerInfoPopup = false;
+state.showAchievementsPopup = false;
+
+// Renderiza a aplicação com o novo estado definido
+renderApp();
+}
+
+    // Nova função para atualizar elementos da UI fixa (header e footer)
+    function updateFixedUI() {
+    // ATUALIZA O NOME DO USUÁRIO (igual)
+    if (userNameDisplay) {
+        userNameDisplay.textContent = state.usuario && state.usuario.nome ? `Olá, ${state.usuario.nome}!` : '';
+    }
+
+    // ATUALIZA FOTO DE PERFIL NA HEADER (igual)
+    const headerPic = document.getElementById('headerProfilePic');
+    if (headerPic && state.usuario) {
+        const fotoPadrao = '/assets/icons/iconprincipal.png';
+        headerPic.src = state.usuario.fotoUrl || fotoPadrao;
+        headerPic.classList.remove('hidden');
+    } else if (headerPic) {
+        headerPic.classList.add('hidden');
+    }
+
+    // ==================================================================
+    // LÓGICA ATUALIZADA (PONTO VERMELHO)
+    // ==================================================================
+    // CONTROLA PONTO VERMELHO DE NOTIFICAÇÃO (SÓ PARA TAREFAS)
+    const notificationDot = document.getElementById('notificationDot');
+    if (notificationDot) {
+        // AGORA VERIFICA O CONTADOR DE TAREFAS
+        if ((state.notificacoesTarefasNaoLidas || 0) + (state.notificacoesConquistasNaoLidas || 0) > 0) {
+            notificationDot.classList.remove('hidden');
+        } else {
+            notificationDot.classList.add('hidden');
+        }
+    }
+
+    // ATUALIZA OS BADGES DA BARRA DE NAVEGAÇÃO (igual)
+    if (foguinhosBadge) {
+        foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
+    }
+    if (carrinhoBadge) {
+        carrinhoBadge.textContent = state.carrinho.length;
+    }
+
+    // LÓGICA DE VISIBILIDADE DAS BARRAS (igual)
+    if (bottomNavBar && mainHeader) {
+        const telasComBarraVisivel = ['main', 'parear', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes'];
+        if (telasComBarraVisivel.includes(state.etapa)) {
+            bottomNavBar.style.display = 'flex';
+            mainHeader.style.display = 'flex';
+        } else {
+            bottomNavBar.style.display = 'none';
+            mainHeader.style.display = 'none';
+        }
+    }
+
+    // LÓGICA PARA CORES E ESTADO "ATIVO" DOS ÍCONES (atualizada)
+    const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item, .bottom-nav-bar .bottom-nav-item-center');
+    
+    // ==================================================================
+    // NOVA LÓGICA DE COR (ÍCONE DE FOGO AMARELO)
+    // ==================================================================
+    // Primeiro, tratamos o ícone de fogo separadamente
+    const foguinhosBtn = document.getElementById('foguinhosNavButton');
+    if (foguinhosBtn) {
+        // Limpa os estados de cor primeiro
+        foguinhosBtn.classList.remove('active', 'text-yellow-400'); 
+        
+        if (state.etapa === 'foguinhosPopup') {
+            // 1. Se a tela está ATIVA, fica ROSA (cor 'active')
+            foguinhosBtn.classList.add('active');
+        } else if (state.notificacoesPresentesNaoLidas > 0) {
+            // 2. Se não está ativa, MAS TEM notificação, fica AMARELO
+            foguinhosBtn.classList.add('text-yellow-400');
+        }
+        // 3. Se não for nenhum dos casos, ele fica com a cor padrão (cinza)
+    }
+
+    // Agora, tratamos o resto dos ícones (exceto o de fogo)
+    bottomNavItems.forEach(item => {
+        // Não mexemos no de fogo, pois já fizemos isso
+        if (item.id === 'foguinhosNavButton') return; 
+
+        item.classList.remove('active');
+        
+        // (Lógica do ícone de coração - continua igual)
+        const heartIcon = item.querySelector('.fas.fa-heart');
+        if (heartIcon) {
+            heartIcon.classList.remove('text-red-500', 'text-yellow-400', 'text-gray-400');
+            if (state.pareado) {
+                heartIcon.classList.add('text-red-500');
+            } else if (state.usuario && state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+                heartIcon.classList.add('text-yellow-400');
+            } else {
+                heartIcon.classList.add('text-gray-400');
+            }
+        }
+
+        // (Lógica de ativação dos outros botões - continua igual)
+        if (item.querySelector('.fas.fa-store') && state.etapa === 'gerenciarCatalogo') {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'partnerInfoPopup')) {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-shopping-cart') && state.showCartSidebar) {
+            item.classList.add('active');
+        } else if (item.querySelector('.fas.fa-bell') && state.etapa === 'notificacoes') {
+            item.classList.add('active');
+        }
+    });
+}
+
+    // Função para alternar a visibilidade do pop-up de Foguinhos
+    function toggleFoguinhosPopup() {
+        console.log('toggleFoguinhosPopup chamada. state.showFoguinhosPopup ANTES:', state.showFoguinhosPopup);
+        if (state.etapa === 'foguinhosPopup') {
+            state.etapa = 'main'; // Volta para a tela principal
+        } else {
+            state.etapa = 'foguinhosPopup'; // Vai para a tela do pop-up
+        }
+        state.showFoguinhosPopup = !state.showFoguinhosPopup; // Atualiza a flag para logs/referência
+        renderApp();
+        console.log('state.showFoguinhosPopup DEPOIS:', state.showFoguinhosPopup);
+    }
+
+    // Função para alternar a visibilidade do pop-up de Informações do Parceiro Pareado
+    function togglePartnerInfoPopup() {
+        console.log('togglePartnerInfoPopup chamada. state.showPartnerInfoPopup ANTES:', state.showPartnerInfoPopup);
+        if (state.etapa === 'partnerInfoPopup') {
+            state.etapa = 'main'; // Volta para a tela principal
+        } else {
+            state.etapa = 'partnerInfoPopup'; // Vai para a tela do pop-up de informações do parceiro
+        }
+        state.showPartnerInfoPopup = !state.showPartnerInfoPopup; // Atualiza a flag
+        renderApp();
+        console.log('state.showPartnerInfoPopup DEPOIS:', state.showPartnerInfoPopup);
+    }
+
+    function toggleAchievementsPopup() {
+        console.log('toggleAchievementsPopup chamada. state.showAchievementsPopup ANTES:', state.showAchievementsPopup);
+        if (state.etapa === 'achievementsPopup') {
+            state.etapa = 'gerenciarCatalogo';
+        } else {
+            state.etapa = 'achievementsPopup';
+        }
+        state.showAchievementsPopup = !state.showAchievementsPopup;
+        renderApp();
+        console.log('state.showAchievementsPopup DEPOIS:', state.showAchievementsPopup);
+    }
+
+    // Carrega dados do usuário e do parceiro se pareado
+    
+async function loadUserDataAndNavigate(uid, email) {
+console.log('loadUserDataAndNavigate chamada para UID:', uid);
+await carregarMomentosMestres();
+try {
+    hasProcessedInitialConquistas = false;
+    if (!uid) {
+        console.error('UID do usuário é nulo ou indefinido em loadUserDataAndNavigate. Abortando carregamento.');
+        state.etapa = 'landing';
+        renderApp();
+        return;
+    }
+
+    const userDoc = await db.collection('usuarios').doc(uid).get();
+    if (userDoc.exists) {
+    state.usuario = { uid: uid, email: email, ...userDoc.data() };
+    state.usuario.notificationsEnabled = !!state.usuario.notificationsEnabled;
+    state.usuario.conquistas = state.usuario.conquistas || {};
+    state.usuario.achievementStats = state.usuario.achievementStats || {};
+    state.conquistas = state.usuario.conquistas;
+    state.achievementStats = state.usuario.achievementStats;
+        state.usuario.pareadoUid = state.usuario.pareadoUid || null;
+
+        const hasPairUid = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
+        const hasPairPhone = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
+        state.pareado = hasPairUid || hasPairPhone;
+
+        state.parceiroCodigo = state.usuario.pareadoCom || null;
+        state.parceiroData = null;
+        state.parceiroNome = null;
+        state.parceiroTelefone = null;
+        state.idPareamentoAmigavel = null;
+
+        // >>> LIGA O OUVINTE DE NOTIFICAÇÕES AQUI <<<
+        setupNotificationListener(uid);
+
+        // LIGA O OUVINTE DE NOTIFICAÇÕES PUSH EM PRIMEIRO PLANO
+        setupForegroundMessageHandler();
+
+        if (state.pareado && state.usuario.pareadoUid) {
+            const parceiroSnap = await db.collection('usuarios').doc(state.usuario.pareadoUid).get();
+            if (parceiroSnap.exists) {
+                const parceiroData = { uid: parceiroSnap.id, ...parceiroSnap.data() };
+                state.parceiroData = parceiroData;
+                state.parceiroNome = parceiroData.nome;
+                state.parceiroCodigo = parceiroData.telefone || state.parceiroCodigo;
+                if (parceiroData.telefone) {
+                    state.parceiroTelefone = '55' + parceiroData.telefone.replace(/\D/g, '');
+                }
+
+                const telefoneUsuario = state.usuario.telefone ? state.usuario.telefone.replace(/\D/g, '') : null;
+                const telefoneParceiro = parceiroData.telefone ? parceiroData.telefone.replace(/\D/g, '') : null;
+                if (telefoneUsuario && telefoneParceiro) {
+                    const telefonesOrdenados = [telefoneUsuario, telefoneParceiro].sort();
+                    const idPareamentoDoc = telefonesOrdenados.join('_');
+                    const pareamentoDoc = await db.collection('pareamentos').doc(idPareamentoDoc).get();
+                    if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
+                        state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
+                        console.log('ID Amigável carregado:', state.idPareamentoAmigavel);
+                    }
+                }
+            } else {
+                console.warn('Parceiro pareado não encontrado no Firestore.');
+                state.pareado = false;
+                state.usuario.pareadoUid = null;
+            }
+        }
+
+        if (!state.pareado) {
+            state.parceiroData = null;
+            state.idPareamentoAmigavel = null;
+        }
+        
+        // Ouvinte em tempo real: documento do usuário (para refletir mudanças
+        // feitas pelo backend, como remoção de pending quando rejeitado)
+        if (unsubscribeUserDoc) {
+            unsubscribeUserDoc();
+            unsubscribeUserDoc = null;
+        }
+        unsubscribeUserDoc = db.collection('usuarios').doc(uid).onSnapshot((doc) => {
+            if (!doc.exists) return;
+
+            const docData = doc.data() || {};
+            const previousConquistas = { ...(state.conquistas || {}) };
+            const nextConquistas = docData.conquistas ? { ...docData.conquistas } : {};
+            const newlyUnlockedIds = hasProcessedInitialConquistas
+                ? Object.keys(nextConquistas).filter((achievementId) => nextConquistas[achievementId] && !previousConquistas[achievementId])
+                : [];
+
+            state.usuario = {
+                uid: uid,
+                email: email,
+                ...docData,
+                conquistas: nextConquistas,
+                achievementStats: docData.achievementStats ? { ...docData.achievementStats } : {},
+            };
+            state.usuario.notificationsEnabled = !!state.usuario.notificationsEnabled;
+            state.usuario.pareadoUid = state.usuario.pareadoUid || null;
+            state.conquistas = nextConquistas;
+            state.achievementStats = state.usuario.achievementStats;
+            const hasUidPair = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
+            const hasPhonePair = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
+            state.pareado = hasUidPair || hasPhonePair;
+            state.parceiroCodigo = state.usuario.pareadoCom || null;
+            if (!state.pareado && (!state.usuario.pareadoCom || !state.usuario.pareadoCom.startsWith('pending_'))) {
+                state.pendingPairingRequest = null;
+                state.parceiroData = null;
+                state.parceiroNome = null;
+                state.parceiroTelefone = null;
+                state.idPareamentoAmigavel = null;
+            }
+
+            if (state.pareado && state.usuario.pareadoUid && (!state.parceiroData || state.parceiroData.uid !== state.usuario.pareadoUid)) {
+                db.collection('usuarios').doc(state.usuario.pareadoUid).get().then(async (partnerSnap) => {
+                    if (partnerSnap.exists) {
+                        const parceiroData = { uid: partnerSnap.id, ...partnerSnap.data() };
+                        state.parceiroData = parceiroData;
+                        state.parceiroNome = parceiroData.nome;
+                        state.parceiroCodigo = parceiroData.telefone || state.usuario.pareadoCom || null;
+                        state.parceiroTelefone = parceiroData.telefone ? '55' + parceiroData.telefone.replace(/\D/g, '') : null;
+
+                        const telefoneUsuario = state.usuario.telefone ? state.usuario.telefone.replace(/\D/g, '') : null;
+                        const telefoneParceiro = parceiroData.telefone ? parceiroData.telefone.replace(/\D/g, '') : null;
+                        if (telefoneUsuario && telefoneParceiro) {
+                            const telefonesOrdenados = [telefoneUsuario, telefoneParceiro].sort();
+                            const idPareamentoDoc = telefonesOrdenados.join('_');
+                            const pareamentoDoc = await db.collection('pareamentos').doc(idPareamentoDoc).get();
+                            if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
+                                state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
+                            }
+                        }
+                    }
+                    renderApp();
+                }).catch((err) => console.error('Erro ao carregar parceiro pareado:', err));
+            }
+            if (hasProcessedInitialConquistas && newlyUnlockedIds.length) {
+                console.log('Conquistas novas detectadas via snapshot:', newlyUnlockedIds);
+                newlyUnlockedIds.forEach((achievementId) => {
+                    const celebrationInfo = showAchievementCelebration(achievementId);
+                    if (celebrationInfo) {
+                        const celebrationText = celebrationInfo.description
+                            ? `${celebrationInfo.title}: ${celebrationInfo.description}`
+                            : celebrationInfo.title;
+                        showToast(`🏆 ${celebrationText}`, 'sucesso');
+                    }
+                });
+            }
+            hasProcessedInitialConquistas = true;
+            renderApp();
+        });
+
+        // Ouvinte para solicitações pendentes onde este usuário é receiver
+        if (unsubscribePendingPairing) {
+            unsubscribePendingPairing();
+            unsubscribePendingPairing = null;
+        }
+        unsubscribePendingPairing = db.collection('pairingRequests')
+            .where('receiverUid', '==', uid)
+            .where('status', '==', 'pending')
+            .limit(1)
+            .onSnapshot((snap) => {
+                if (!snap.empty) {
+                    const requestDoc = snap.docs[0];
+                    state.pendingPairingRequest = { id: requestDoc.id, ...requestDoc.data() };
+                    state.etapa = 'parear';
+                } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
+                    state.etapa = 'parear';
+                    state.pendingPairingRequest = null;
+                } else {
+                    state.etapa = 'main';
+                }
+                renderApp();
+            });
+    } else {
+        console.log('Usuário logado via Auth, mas sem documento de perfil no Firestore.');
+    state.usuario = { uid: uid, email: email, conquistas: {}, achievementStats: {} };
+        if (REGISTRATION_ENABLED) {
+            state.etapa = 'register';
+            alert('Por favor, complete seu cadastro para acessar todas as funcionalidades.');
+        } else {
+            state.etapa = 'signIn';
+            alert('Perfil incompleto. Entre em contato com o suporte do MVP.');
+        }
+    }
+} catch (error) {
+    console.error('Erro ao carregar dados do usuário:', error);
+    state.etapa = 'landing';
+} finally {
+    renderApp();
+}
+}
+
+
+    // Initialize app
+    function init() {
+        // Monitora o estado de autenticação do Firebase ao carregar a página
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                console.log('init: Usuário já logado no Auth:', user.email, user.uid);
+                await loadUserDataAndNavigate(user.uid, user.email);
+            } else {
+                console.log('init: Nenhum usuário logado no Auth. Redirecionando para landing page.');
+                // Limpa todo o estado do usuário ao deslogar
+                state.usuario = null;
+                state.pareado = false;
+                state.etapa = 'landing';
+                state.carrinho = [];
+                state.codigoUsuario = null;
+                state.codigoDigitando = false;
+                state.parceiroCodigo = null;
+                state.parceiroTelefone = null;
+                state.parceiroNome = null;
+                state.showPartnerInfo = false;
+                state.pendingPairingRequest = null;
+                state.showCartSidebar = false;
+                state.showFoguinhosPopup = false;
+                state.showPartnerInfoPopup = false; // Resetar pop-up de parceiro
+                renderApp();
+            }
+        });
+    }
+
+    // Função que inicializa o aplicativo
+    function initializeApp() {
+        console.log("🚀 Aplicação inicializando...");
+
+        // 1. Atribui os elementos do DOM a variáveis globais
+        appContainer = document.getElementById('app');
+        userNameDisplay = document.getElementById('userNameDisplay');
+        foguinhosBadge = document.getElementById('foguinhosBadge');
+        carrinhoBadge = document.getElementById('carrinhoBadge');
+        bottomNavBar = document.getElementById('bottom-nav-bar');
+        mainHeader = document.getElementById('mainHeader');
+
+        // 2. Torna as funções de evento acessíveis globalmente para o HTML
+        window.changeStep = changeStep;
+        window.handleSignIn = handleSignIn;
+        window.handleRegister = handleRegister;
+        window.handleLogout = handleLogout;
+        window.sendPairingRequest = sendPairingRequest;
+        window.acceptPairingRequest = acceptPairingRequest;
+        window.rejectPairingRequest = rejectPairingRequest;
+        window.handleDailyCheckIn = handleDailyCheckIn;
+        window.handleContinuarSemParear = handleContinuarSemParear;
+        window.filtrarMomentos = filtrarMomentos;
+        window.adicionarAoCarrinho = adicionarAoCarrinho;
+        window.removerDoCarrinho = removerDoCarrinho;
+        window.finalizarPedido = finalizarPedido;
+        window.desparearParceiro = desparearParceiro;
+        window.toggleCartSidebar = toggleCartSidebar;
+        window.cancelPendingPairingRequest = cancelPendingPairingRequest;
+        window.toggleFoguinhosPopup = toggleFoguinhosPopup;
+        window.togglePartnerInfoPopup = togglePartnerInfoPopup;
+    window.toggleAchievementsPopup = toggleAchievementsPopup;
+        window.solicitarPermissaoDeNotificacao = solicitarPermissaoDeNotificacao;
+        window.desativarNotificacoes = desativarNotificacoes;
+        window.handleNotificationToggle = handleNotificationToggle;
+        window.handleSaveCatalogo = handleSaveCatalogo;
+        window.toggleAccordion = toggleAccordion;
+        window.handleFileSelect = handleFileSelect;
+        window.trocarAbaTarefas = trocarAbaTarefas;
+        window.handleDarCheck = handleDarCheck;
+
+        console.log("✅ Funções de evento prontas.");
+
+        // 3. Inicia a lógica principal da aplicação
+        init();
+    }
+
+    // Ouve pelo evento que indica que o HTML está pronto
+    document.addEventListener('DOMContentLoaded', initializeApp);
+</script>
+
+<nav class="bottom-nav-bar" id="bottom-nav-bar" style="display: none;">
+    <button class="bottom-nav-item" onclick="changeStep('gerenciarCatalogo');">
+        <i class="fas fa-store"></i>
+    </button>
+    <button class="bottom-nav-item" onclick="changeStep('parear');">
+        <i class="fas fa-heart"></i>
+    </button>
+
+    <button class="bottom-nav-item-center" onclick="changeStep('main');">
+        <i class="fas fa-shopping-bag"></i>
+    </button>
+
+    <button class="bottom-nav-item relative" onclick="toggleCartSidebar();">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="carrinhoBadge" class="badge-notification badge-gray">0</span>
+    </button>
+    
+    <button id="foguinhosNavButton" class="bottom-nav-item" onclick="changeStep('foguinhosPopup');">
+        
+        <i class="fas fa-fire"></i> <span id="foguinhosBadge" class="badge-notification badge-yellow">0</span>
+    </button>
+</nav>
+<div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] space-y-2 w-auto max-w-sm"></div>
+
+</body>
+</html>

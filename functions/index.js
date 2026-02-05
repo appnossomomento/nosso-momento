@@ -3,6 +3,7 @@ const firestore = require("firebase-functions/v2/firestore");
 const {onDocumentCreated, onDocumentUpdated} = firestore;
 const {setGlobalOptions} = require("firebase-functions/v2");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 
 admin.initializeApp();
 
@@ -50,6 +51,34 @@ function areUsersPaired(senderData, partnerData, senderUid, partnerUid) {
 
   return (senderMatchesUid || senderPhonesMatch) &&
     (partnerMatchesUid || partnerPhonesMatch);
+}
+
+function normalizeChallengeAnswer(value) {
+  if (!value) return "";
+  return String(value)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+}
+
+function buildMemoriaDescricao(executado, resgatado, momentoNome) {
+  const executadoFinal = executado || "Alguém";
+  const resgatadoFinal = resgatado || "seu par";
+  const momentoFinal = momentoNome || "um momento especial";
+  return `${executadoFinal} realizou ${momentoFinal} para ${resgatadoFinal}` +
+    " e esse foi o registro desse momento especial";
+}
+
+function parsePayloadJson(input) {
+  if (!input || typeof input.payloadJson !== "string") return null;
+  try {
+    return JSON.parse(input.payloadJson);
+  } catch (err) {
+    console.error("weekly_challenge: payloadJson inválido", err);
+    return null;
+  }
 }
 
 function sanitizeMomentItems(rawItems) {
@@ -1366,6 +1395,369 @@ exports.processInput = onDocumentCreated(
           });
 
           console.log("processInput: moment_redeem processado", inputId);
+        } else if (input.type === "weekly_challenge_seed") {
+          const challengeDocId = input.challengeDocId || null;
+          if (!challengeDocId) {
+            await inputRef.update({
+              error: "missing_challenge_doc",
+              processed: false,
+            });
+            return;
+          }
+
+          const payload = parsePayloadJson(input) || {};
+          const challengeRef = admin
+              .firestore()
+              .collection("weeklyChallenges")
+              .doc(challengeDocId);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const challengeSnap = await tx.get(challengeRef);
+            if (!challengeSnap.exists) {
+              const createdAtMs = Number(
+                  payload.createdAtMs || payload.createdAt ||
+                  input.createdAtMs || input.createdAt || 0,
+              ) || Date.now();
+              const base = {
+                id: challengeDocId,
+                challengeId: input.challengeId ||
+                  payload.challengeId || "alma_gemea",
+                titulo: input.titulo || payload.titulo || "Alma Gêmea",
+                pergunta: input.pergunta || payload.pergunta || null,
+                reward: Number(input.reward || payload.reward || 1),
+                status: input.status || payload.status || "pendente",
+                criadoEm: admin.firestore.Timestamp.fromMillis(createdAtMs),
+                createdAtMs,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              };
+              tx.set(challengeRef, base, {merge: true});
+            }
+
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log(
+              "processInput: weekly_challenge_seed processado",
+              inputId,
+          );
+        } else if (input.type === "weekly_challenge_upsert") {
+          const challengeDocId = input.challengeDocId || null;
+          if (!challengeDocId) {
+            await inputRef.update({
+              error: "missing_challenge_doc",
+              processed: false,
+            });
+            return;
+          }
+
+          const payload = parsePayloadJson(input) || {};
+          const challengeRef = admin
+              .firestore()
+              .collection("weeklyChallenges")
+              .doc(challengeDocId);
+
+          const toTimestamp = (value) => {
+            const ms = Number(value || 0);
+            return Number.isFinite(ms) && ms > 0 ?
+              admin.firestore.Timestamp.fromMillis(ms) :
+              null;
+          };
+
+          const startedAtMs =
+            Number(
+                payload.startedAt || payload.startedEm ||
+                payload.prazoInicio || input.startedAtMs || 0,
+            ) || null;
+          const completedAtMs =
+            Number(
+                payload.completedAt || payload.concluidoEm ||
+                input.completedAtMs || 0,
+            ) || null;
+
+          const updates = {
+            id: challengeDocId,
+            challengeId: input.challengeId ||
+              payload.challengeId || "alma_gemea",
+            titulo: input.titulo || payload.titulo || undefined,
+            pergunta: input.pergunta || payload.pergunta || undefined,
+            reward: Number(input.reward || payload.reward || 1),
+            status: input.status || payload.status || undefined,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+
+          if (startedAtMs) {
+            updates.startedAt = toTimestamp(startedAtMs);
+            updates.startedAtMs = startedAtMs;
+          }
+          if (completedAtMs) {
+            updates.completedAt = toTimestamp(completedAtMs);
+            updates.completedAtMs = completedAtMs;
+          }
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            tx.set(challengeRef, updates, {merge: true});
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log(
+              "processInput: weekly_challenge_upsert processado",
+              inputId,
+          );
+        } else if (input.type === "weekly_challenge_start") {
+          const challengeDocId = input.challengeDocId || null;
+          if (!challengeDocId) {
+            await inputRef.update({
+              error: "missing_challenge_doc",
+              processed: false,
+            });
+            return;
+          }
+
+          const challengeRef = admin
+              .firestore()
+              .collection("weeklyChallenges")
+              .doc(challengeDocId);
+
+          const startedAtMs = Number(input.startedAt || 0) || Date.now();
+          const startedAt = admin.firestore.Timestamp.fromMillis(startedAtMs);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            tx.set(challengeRef, {
+              id: challengeDocId,
+              challengeId: input.challengeId || "alma_gemea",
+              startedAt,
+              startedAtMs,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }, {merge: true});
+
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log(
+              "processInput: weekly_challenge_start processado",
+              inputId,
+          );
+        } else if (input.type === "weekly_challenge_timeout") {
+          const challengeDocId = input.challengeDocId || null;
+          if (!challengeDocId) {
+            await inputRef.update({
+              error: "missing_challenge_doc",
+              processed: false,
+            });
+            return;
+          }
+
+          const challengeRef = admin
+              .firestore()
+              .collection("weeklyChallenges")
+              .doc(challengeDocId);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            tx.set(challengeRef, {
+              id: challengeDocId,
+              challengeId: input.challengeId || "alma_gemea",
+              status: "finalizado_sem_recompensa",
+              concluido: true,
+              rewarded: false,
+              completedAt: admin.firestore.FieldValue.serverTimestamp(),
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }, {merge: true});
+
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log(
+              "processInput: weekly_challenge_timeout processado",
+              inputId,
+          );
+        } else if (input.type === "weekly_challenge_answer") {
+          const challengeDocId = input.challengeDocId || null;
+          const responderUid = input.responderUid || input.fromUid || null;
+          if (!challengeDocId || !responderUid) {
+            await inputRef.update({
+              error: "missing_challenge_answer_info",
+              processed: false,
+            });
+            return;
+          }
+
+          const challengeRef = admin
+              .firestore()
+              .collection("weeklyChallenges")
+              .doc(challengeDocId);
+          const responderRef = admin
+              .firestore()
+              .collection("usuarios")
+              .doc(responderUid);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const responderSnap = await tx.get(responderRef);
+            if (!responderSnap.exists) {
+              tx.update(inputRef, {
+                error: "responder_not_found",
+                processed: false,
+              });
+              return;
+            }
+
+            const responderData = responderSnap.data();
+            const partnerUid = responderData.pareadoUid || null;
+            if (!partnerUid) {
+              tx.update(inputRef, {
+                error: "partner_not_found",
+                processed: false,
+              });
+              return;
+            }
+
+            const partnerRef = admin
+                .firestore()
+                .collection("usuarios")
+                .doc(partnerUid);
+            const partnerSnap = await tx.get(partnerRef);
+            if (!partnerSnap.exists) {
+              tx.update(inputRef, {
+                error: "partner_not_found",
+                processed: false,
+              });
+              return;
+            }
+
+            if (!areUsersPaired(
+                responderData,
+                partnerSnap.data(),
+                responderUid,
+                partnerUid,
+            )) {
+              tx.update(inputRef, {
+                error: "usuarios_nao_pareados",
+                processed: false,
+              });
+              return;
+            }
+
+            const challengeSnap = await tx.get(challengeRef);
+            const nowTs = admin.firestore.Timestamp.now();
+            const normalizedAnswer = normalizeChallengeAnswer(input.answer);
+
+            const challengeData = challengeSnap.exists ?
+              challengeSnap.data() : {};
+
+            const pairUids = Array.isArray(challengeData.pairUids) &&
+              challengeData.pairUids.length === 2 ?
+              [...challengeData.pairUids] :
+              [responderUid, partnerUid].sort();
+
+            const respostas = Object.assign({}, challengeData.respostas || {});
+            respostas[responderUid] = normalizedAnswer;
+            const respondeuEm = Object.assign(
+                {},
+                challengeData.respondeuEm || {},
+            );
+            respondeuEm[responderUid] = nowTs;
+            const respondeuNome = Object.assign(
+                {},
+                challengeData.respondeuNome || {},
+            );
+            if (input.responderName) {
+              respondeuNome[responderUid] = String(input.responderName);
+            }
+
+            let status = challengeData.status || "pendente";
+            let concluido = false;
+            let rewarded = !!challengeData.rewarded;
+            let completedAt = challengeData.completedAt || null;
+
+            const answerA = respostas[pairUids[0]] || "";
+            const answerB = respostas[pairUids[1]] || "";
+            if (answerA && answerB) {
+              concluido = true;
+              if (answerA === answerB) {
+                status = "finalizado";
+                if (!rewarded) {
+                  const reward = Number(challengeData.reward || 1);
+                  if (reward > 0) {
+                    tx.update(responderRef, {
+                      foguinhos: admin.firestore.FieldValue.increment(reward),
+                    });
+                    tx.update(partnerRef, {
+                      foguinhos: admin.firestore.FieldValue.increment(reward),
+                    });
+                  }
+                  rewarded = true;
+                }
+              } else {
+                status = "finalizado_sem_recompensa";
+                rewarded = false;
+              }
+              completedAt = nowTs;
+            }
+
+            const base = {
+              id: challengeDocId,
+              challengeId: input.challengeId ||
+                challengeData.challengeId || "alma_gemea",
+              pairUids,
+              respostas,
+              respondeuEm,
+              respondeuNome,
+              status,
+              concluido,
+              rewarded,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            };
+            if (completedAt) {
+              base.completedAt = completedAt;
+            }
+            tx.set(challengeRef, base, {merge: true});
+
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log(
+              "processInput: weekly_challenge_answer processado",
+              inputId,
+          );
         } else if (input.type === "pairing_unpair") {
           const fromUid = input.fromUid;
           const partnerUidInput = input.partnerUid || null;
@@ -2022,7 +2414,9 @@ exports.setNotificationToken = https.onRequest(async (req, res) => {
     return;
   }
 
-  const authHeader = req.get("Authorization") || req.get("authorization") || "";
+  const authHeader = req.get("Authorization") ||
+    req.get("authorization") ||
+    "";
   let idToken = null;
   if (authHeader && authHeader.startsWith("Bearer ")) {
     idToken = authHeader.split("Bearer ")[1];
@@ -2143,6 +2537,255 @@ exports.setNotificationToken = https.onRequest(async (req, res) => {
   }
 });
 
+exports.getMemorias = https.onRequest(async (req, res) => {
+  const originHeader = req.get("Origin") || req.get("origin") || "*";
+  const allowOrigin = originHeader === "null" ? "*" : originHeader;
+  const requestedHeaders = req.get("Access-Control-Request-Headers");
+
+  res.set("Access-Control-Allow-Origin", allowOrigin);
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set(
+      "Access-Control-Allow-Headers",
+      requestedHeaders || "Authorization, Content-Type",
+  );
+  res.set("Vary", "Origin");
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+
+  if (req.method !== "POST") {
+    res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  const authHeader = req.get("Authorization") || req.get("authorization") || "";
+  let idToken = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    idToken = authHeader.split("Bearer ")[1];
+  }
+
+  if (!idToken) {
+    res.status(401).send({error: "missing_id_token"});
+    return;
+  }
+
+  const rawLimit = req.body && req.body.limit;
+  const limitNum = Number(rawLimit);
+  const limit = Number.isFinite(limitNum) ?
+    Math.min(Math.max(limitNum, 1), 50) :
+    9;
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+
+    let snapshot = null;
+    try {
+      snapshot = await admin
+          .firestore()
+          .collection("memorias")
+          .where("pairUids", "array-contains", uid)
+          .orderBy("createdAtMs", "desc")
+          .limit(limit + 1)
+          .get();
+    } catch (err) {
+      const msg = String(err && err.message ? err.message : err);
+      const code = err && err.code ? err.code : null;
+      const shouldFallback = code === 9 ||
+        code === "FAILED_PRECONDITION" ||
+        msg.toLowerCase().includes("index");
+
+      if (!shouldFallback) {
+        throw err;
+      }
+
+      snapshot = await admin
+          .firestore()
+          .collection("memorias")
+          .where("pairUids", "array-contains", uid)
+          .limit(limit + 1)
+          .get();
+    }
+
+    const docs = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+    docs.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
+    const hasMore = docs.length > limit;
+    const items = docs.slice(0, limit);
+
+    res.send({items, hasMore});
+  } catch (err) {
+    console.error("getMemorias error:", err);
+    res.status(500).send({error: "get_memorias_failed"});
+  }
+});
+
+exports.createMemoriaFromPhoto = https.onRequest(async (req, res) => {
+  const originHeader = req.get("Origin") || req.get("origin") || "*";
+  const allowOrigin = originHeader === "null" ? "*" : originHeader;
+  const requestedHeaders = req.get("Access-Control-Request-Headers");
+
+  res.set("Access-Control-Allow-Origin", allowOrigin);
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set(
+      "Access-Control-Allow-Headers",
+      requestedHeaders || "Authorization, Content-Type",
+  );
+  res.set("Vary", "Origin");
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+
+  if (req.method !== "POST") {
+    res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  const authHeader = req.get("Authorization") || req.get("authorization") || "";
+  let idToken = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    idToken = authHeader.split("Bearer ")[1];
+  }
+
+  if (!idToken) {
+    res.status(401).send({error: "missing_id_token"});
+    return;
+  }
+
+  const body = req.body || {};
+  const tarefaId = typeof body.tarefaId === "string" ? body.tarefaId : "";
+  const fileName = typeof body.fileName === "string" ?
+    body.fileName :
+    "memoria";
+  const contentType = typeof body.contentType === "string" ?
+    body.contentType :
+    "image/jpeg";
+  const base64 = typeof body.base64 === "string" ? body.base64 : "";
+
+  if (!tarefaId || !base64) {
+    res.status(400).send({error: "invalid_payload"});
+    return;
+  }
+
+  if (!contentType.startsWith("image/")) {
+    res.status(400).send({error: "invalid_content_type"});
+    return;
+  }
+
+  let buffer = null;
+  try {
+    buffer = Buffer.from(base64, "base64");
+  } catch (err) {
+    res.status(400).send({error: "invalid_base64"});
+    return;
+  }
+
+  const maxBytes = 5 * 1024 * 1024;
+  if (buffer.length > maxBytes) {
+    res.status(400).send({error: "image_too_large"});
+    return;
+  }
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+    const db = admin.firestore();
+    const tarefaRef = db.collection("tarefasMomentos").doc(tarefaId);
+    const tarefaSnap = await tarefaRef.get();
+
+    if (!tarefaSnap.exists) {
+      res.status(404).send({error: "tarefa_not_found"});
+      return;
+    }
+
+    const tarefa = tarefaSnap.data() || {};
+    const executadoUid = tarefa.executadoPorUid || null;
+    const resgatadoUid = tarefa.resgatadoPorUid || null;
+
+    if (uid !== executadoUid && uid !== resgatadoUid) {
+      res.status(403).send({error: "forbidden"});
+      return;
+    }
+
+    const pareamentoId = tarefa.idPareamento ||
+      tarefa.pareamentoId ||
+      tarefa.pareamentoAmigavelId ||
+      "";
+    const pairUids = [executadoUid, resgatadoUid].filter(Boolean).sort();
+
+    const safeName = String(fileName).replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = `memorias/${pareamentoId}/${uid}/${tarefaId}/` +
+      `${Date.now()}_${safeName}`;
+
+    const bucket = admin.storage().bucket();
+    const token = crypto.randomUUID();
+    await bucket.file(filePath).save(buffer, {
+      metadata: {
+        contentType,
+        metadata: {
+          firebaseStorageDownloadTokens: token,
+        },
+      },
+    });
+
+    const encodedPath = encodeURIComponent(filePath);
+    const downloadURL =
+      `https://firebasestorage.googleapis.com/v0/b/${bucket.name}` +
+      `/o/${encodedPath}?alt=media&token=${token}`;
+
+    let executadoNome = tarefa.executadoPorNome || "";
+    let resgatadoNome = tarefa.resgatadoPorNome || "";
+
+    if (!executadoNome && executadoUid) {
+      const snap = await db
+          .collection("usuarios")
+          .doc(executadoUid)
+          .get();
+      executadoNome = snap.exists ? (snap.data().nome || "") : "";
+    }
+
+    if (!resgatadoNome && resgatadoUid) {
+      const snap = await db
+          .collection("usuarios")
+          .doc(resgatadoUid)
+          .get();
+      resgatadoNome = snap.exists ? (snap.data().nome || "") : "";
+    }
+
+    const descricao = buildMemoriaDescricao(
+        executadoNome,
+        resgatadoNome,
+        tarefa.momentoNome || null,
+    );
+
+    const payload = {
+      tarefaId,
+      momentoNome: tarefa.momentoNome || null,
+      fotoUrl: downloadURL,
+      fotoPath: filePath,
+      pareamentoId: pareamentoId || null,
+      pairUids,
+      executadoPorUid: executadoUid,
+      resgatadoPorUid: resgatadoUid,
+      executadoPorNome: executadoNome || null,
+      resgatadoPorNome: resgatadoNome || null,
+      descricao,
+      autorUid: uid,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdAtMs: Date.now(),
+    };
+
+    const memoriaRef = await db.collection("memorias").add(payload);
+    res.send({item: {id: memoriaRef.id, ...payload}});
+  } catch (err) {
+    console.error("createMemoriaFromPhoto error:", err);
+    res.status(500).send({error: "create_memoria_failed"});
+  }
+});
+
 // HTTP endpoint seguro para criar um `input` via Admin SDK.
 // O cliente envia um idToken (Authorization: Bearer <token>) e o objeto
 // `input` no body. A função verifica o token, valida fromUid e cria o
@@ -2209,6 +2852,11 @@ exports.createInput = https.onRequest(async (req, res) => {
       "gift",
       "daily_check_in",
       "moment_redeem",
+      "weekly_challenge_seed",
+      "weekly_challenge_start",
+      "weekly_challenge_upsert",
+      "weekly_challenge_answer",
+      "weekly_challenge_timeout",
     ];
     if (!input.type || !allowedTypes.includes(input.type)) {
       res.status(400).send({error: "unsupported_type"});
@@ -2229,6 +2877,129 @@ exports.createInput = https.onRequest(async (req, res) => {
       res.status(401).send({error: "invalid_token"});
     } else {
       res.status(500).send({error: String(err)});
+    }
+  }
+});
+
+async function deleteCollectionInBatches(db, collectionPath, batchSize = 200) {
+  let deleted = 0;
+  let hasMore = true;
+  while (hasMore) {
+    const snapshot = await db.collection(collectionPath)
+        .limit(batchSize)
+        .get();
+    if (snapshot.empty) {
+      break;
+    }
+    const batch = db.batch();
+    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+    deleted += snapshot.size;
+    hasMore = snapshot.size >= batchSize;
+  }
+  return deleted;
+}
+
+async function deleteWeeklyChallengeInputs(db, batchSize = 200) {
+  const types = [
+    "weekly_challenge_seed",
+    "weekly_challenge_start",
+    "weekly_challenge_upsert",
+    "weekly_challenge_answer",
+    "weekly_challenge_timeout",
+  ];
+  let deleted = 0;
+  for (const type of types) {
+    let hasMore = true;
+    while (hasMore) {
+      const snapshot = await db.collection("inputs")
+          .where("type", "==", type)
+          .limit(batchSize)
+          .get();
+      if (snapshot.empty) {
+        break;
+      }
+      const batch = db.batch();
+      snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+      await batch.commit();
+      deleted += snapshot.size;
+      hasMore = snapshot.size >= batchSize;
+    }
+  }
+  return deleted;
+}
+
+exports.resetWeeklyChallengesAdmin = https.onRequest(async (req, res) => {
+  const originHeader = req.get("Origin") || req.get("origin") || "";
+  const allowOrigin = (originHeader === "null" || !originHeader) ?
+    "*" :
+    originHeader;
+  const requestedHeaders = req.get("Access-Control-Request-Headers");
+
+  res.set("Access-Control-Allow-Origin", allowOrigin);
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set(
+      "Access-Control-Allow-Headers",
+      requestedHeaders || "Authorization, Content-Type",
+  );
+  res.set("Vary", "Origin");
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+  if (req.method !== "POST") {
+    res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  const authHeader = req.get("Authorization") ||
+    req.get("authorization") || "";
+  let idToken = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    idToken = authHeader.split("Bearer ")[1];
+  } else if (req.body && req.body.idToken) {
+    idToken = req.body.idToken;
+  }
+  if (!idToken) {
+    res.status(401).send({error: "missing_id_token"});
+    return;
+  }
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const adminClaim = decoded && decoded.admin === true;
+    let isAllowed = adminClaim;
+    if (!isAllowed) {
+      const adminDoc = await admin.firestore()
+          .collection("adminUsers")
+          .doc(decoded.uid)
+          .get();
+      isAllowed = adminDoc.exists;
+    }
+    if (!isAllowed) {
+      res.status(403).send({error: "forbidden"});
+      return;
+    }
+
+    const db = admin.firestore();
+    const weeklyChallengesDeleted = await deleteCollectionInBatches(
+        db,
+        "weeklyChallenges",
+    );
+    const inputsDeleted = await deleteWeeklyChallengeInputs(db);
+
+    res.send({
+      ok: true,
+      weeklyChallengesDeleted,
+      inputsDeleted,
+    });
+  } catch (err) {
+    console.error("resetWeeklyChallengesAdmin: error", err);
+    if (err && err.code === "auth/argument-error") {
+      res.status(401).send({error: "invalid_token"});
+    } else {
+      res.status(500).send({error: "internal_error"});
     }
   }
 });

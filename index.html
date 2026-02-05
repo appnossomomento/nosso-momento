@@ -7,12 +7,15 @@
     <link rel="icon" href="/assets/icons/iconprincipal.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             /* Adicionado padding-bottom para que o conteúdo não fique por baixo do footer fixo */
             overflow-x: hidden; /* Esconder a barra de rolagem horizontal se algo escapar */
+        }
+        .font-handwritten {
+            font-family: 'Pacifico', cursive;
         }
         .product-card {
             transition: all 0.3s ease-out;
@@ -97,6 +100,14 @@
         }
         input::placeholder {
             color: rgba(255,255,255,0.5) !important;
+        }
+        .no-number-spin::-webkit-outer-spin-button,
+        .no-number-spin::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .no-number-spin {
+            -moz-appearance: textfield;
         }
         /* Card styles */
         .card {
@@ -332,7 +343,7 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.35);
         }
         .notification-card {
-            background: rgba(17, 24, 39, 0.55);
+            background: rgba(12, 12, 16, 0.78);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 18px;
         }
@@ -637,6 +648,8 @@
     const storage = firebase.storage();
     const CREATE_INPUT_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/createInput';
     const SET_NOTIFICATION_TOKEN_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/setNotificationToken';
+    const GET_MEMORIAS_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/getMemorias';
+    const CREATE_MEMORIA_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/createMemoriaFromPhoto';
     const REGISTRATION_ENABLED = false;
     const NOTIFICATION_HIGHLIGHT = 'rgba(251, 191, 36, 0.2)';
   </script>
@@ -708,6 +721,54 @@
         } catch (err) {
             if (err.status === 401 || err.status === 403) {
                 // Força refresh do token e tenta novamente uma vez.
+                return await callBackend(true);
+            }
+            throw err;
+        }
+    }
+
+    async function safeFetchBackend(url, payload) {
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            const authError = new Error('auth_required');
+            authError.code = 'auth_required';
+            throw authError;
+        }
+
+        const callBackend = async (forceRefreshToken = false) => {
+            const idToken = await currentUser.getIdToken(forceRefreshToken);
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify(payload || {}),
+            });
+
+            let body = null;
+            try {
+                body = await response.json();
+            } catch (jsonErr) {
+                console.warn('safeFetchBackend: corpo não pôde ser parseado', jsonErr);
+            }
+
+            if (response.ok) {
+                return body;
+            }
+
+            const errorCode = body && body.error ? body.error : `http_${response.status}`;
+            const backendError = new Error(errorCode);
+            backendError.code = errorCode;
+            backendError.status = response.status;
+            backendError.details = body;
+            throw backendError;
+        };
+
+        try {
+            return await callBackend(false);
+        } catch (err) {
+            if (err.status === 401 || err.status === 403) {
                 return await callBackend(true);
             }
             throw err;
@@ -820,6 +881,7 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     challengeTimerId: null,
     challengeDeadline: null,
     activeWeeklyChallengeId: null,
+    challengePopupOpenedAt: 0,
     parceirosAtivos: [],
     etapa: 'landing',
     carrinho: [],
@@ -843,11 +905,21 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     abaTarefasAtiva: 'recebidos',
     desafiosTab: 'emAberto',
     desafiosSemanais: [],
+    weeklyChallengeFromServer: false,
     hasTriggeredFirstPairingChallenge: false,
     desafiosCountdownId: null,
     showRealizadoPhotoPrompt: false,
     pendingRealizadoAction: null,
     pendingRealizadoPhotoData: null,
+    pendingRealizadoPhotoFile: null,
+    memoriasView: 'welcome',
+    memoriasItems: [],
+    memoriasLimit: 9,
+    memoriasHasMore: false,
+    memoriasLoading: false,
+    memoriasViewerIndex: null,
+    showMemoriasViewer: false,
+    tarefasCache: [],
     conquistas: {},
     achievementStats: {},
 };
@@ -917,6 +989,30 @@ function triggerAchievementCelebration(notif) {
                 return '';
             }
         }
+
+            function formatarDataNumerica(timestamp) {
+                if (!timestamp) {
+                    return '';
+                }
+
+                try {
+                    let data;
+                    if (timestamp.toDate) {
+                        data = timestamp.toDate();
+                    } else if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+                        data = new Date(timestamp.seconds * 1000);
+                    } else if (timestamp instanceof Date) {
+                        data = timestamp;
+                    } else {
+                        return '';
+                    }
+
+                    return data.toLocaleDateString('pt-BR');
+                } catch (err) {
+                    console.warn('Não foi possível formatar a data numérica:', err);
+                    return '';
+                }
+            }
 
     function showToast(message, type = 'sucesso') {
         const container = document.getElementById('toast-container');
@@ -1071,6 +1167,13 @@ function triggerAchievementCelebration(notif) {
             .replace(/>/g, '&gt;');
     }
 
+    function escapeJsString(texto) {
+        if (typeof texto !== 'string') {
+            return '';
+        }
+        return texto.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
     // ==========================================================
     // COLE ESTA NOVA FUNÇÃO AQUI (LOGO ABAIXO DA ANTERIOR)
     // ==========================================================
@@ -1221,6 +1324,14 @@ function triggerAchievementCelebration(notif) {
                                 <p class="text-xs text-white/70">Saldo e histórico</p>
                             </button>
 
+                            <button onclick="changeStep('memorias')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
+                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
+                                    <i class="fas fa-book-open text-xl icon-gradient"></i>
+                                </div>
+                                <h3 class="text-sm font-semibold">Memórias</h3>
+                                <p class="text-xs text-white/70">Relembre</p>
+                            </button>
+
                             <button onclick="changeStep('momentos')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
                                 <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
                                     <i class="fas fa-heart text-xl icon-gradient"></i>
@@ -1325,12 +1436,41 @@ function triggerAchievementCelebration(notif) {
     }
 
 function ensureFirstPairingChallenge() {
-    if (!state.pareado || state.hasTriggeredFirstPairingChallenge) {
+    if (!state.pareado || !state.usuario?.pareadoUid || state.hasTriggeredFirstPairingChallenge) {
+        return;
+    }
+    if (state.weeklyChallengeFromServer) {
+        state.hasTriggeredFirstPairingChallenge = true;
+        return;
+    }
+
+    const uid = state.usuario?.uid || null;
+    const firstPairKey = uid ? `firstPairingChallengeTriggered:${uid}` : null;
+    const alreadyTriggered = !!(firstPairKey && localStorage.getItem(firstPairKey) === 'true');
+
+    const localChallenge = loadLocalWeeklyChallenge();
+    if (localChallenge) {
+        state.desafiosSemanais = [localChallenge];
+        const concluido = !!(localChallenge.concluido || localChallenge.completed || localChallenge.status === 'finalizado' || localChallenge.status === 'finalizado_sem_recompensa');
+        state.pendingChallenge = concluido ? null : {
+            id: localChallenge.id,
+            titulo: localChallenge.titulo || 'Alma Gêmea',
+            pergunta: localChallenge.pergunta || 'Pergunta indisponível.',
+        };
+        state.hasTriggeredFirstPairingChallenge = true;
+        return;
+    }
+
+    if (alreadyTriggered) {
+        state.hasTriggeredFirstPairingChallenge = true;
         return;
     }
 
     const docId = getWeeklyChallengeDocId();
-    const desafioId = docId || 'alma_gemea_local';
+    if (!docId) {
+        return;
+    }
+    const desafioId = docId;
 
     const perguntaSelecionada = getStableChallengeQuestion(desafioId);
 
@@ -1355,9 +1495,10 @@ function ensureFirstPairingChallenge() {
             desafioBase,
         ];
         saveLocalWeeklyChallenge(desafioBase);
-        if (docId) {
-            persistWeeklyChallenge(desafioBase);
+        if (firstPairKey) {
+            localStorage.setItem(firstPairKey, 'true');
         }
+        seedWeeklyChallengeDocIfMissing(docId);
     }
 
     const perguntaFinal = existingChallenge?.pergunta || perguntaSelecionada;
@@ -1368,9 +1509,7 @@ function ensureFirstPairingChallenge() {
     };
 
     state.hasTriggeredFirstPairingChallenge = true;
-    if (docId) {
-        setupWeeklyChallengeListener();
-    }
+    setupWeeklyChallengeListener();
 }
 
 function getStableChallengeQuestion(seed) {
@@ -1397,6 +1536,12 @@ function getDateFromValue(value) {
     if (value instanceof Date) return value;
     if (typeof value.toDate === 'function') return value.toDate();
     if (typeof value === 'number') return new Date(value);
+    if (typeof value === 'string') {
+        const asNumber = Number(value);
+        if (Number.isFinite(asNumber)) return new Date(asNumber);
+        const parsed = Date.parse(value);
+        if (Number.isFinite(parsed)) return new Date(parsed);
+    }
     return null;
 }
 
@@ -1420,15 +1565,41 @@ function getChallengeDeadlineMs(desafio) {
 }
 
 function getLocalChallengeStartMs(challengeId) {
-    if (!challengeId) return null;
-    const raw = localStorage.getItem(`weeklyChallengeStart:${challengeId}`);
-    const ms = raw ? Number(raw) : NaN;
-    return Number.isFinite(ms) ? ms : null;
+    const keys = [];
+    if (challengeId) {
+        keys.push(`weeklyChallengeStart:${challengeId}`);
+    }
+    const docId = getWeeklyChallengeDocId();
+    if (docId) {
+        keys.push(`weeklyChallengeStart:${docId}`);
+    }
+    keys.push('weeklyChallengeStart:alma_gemea_fallback');
+
+    for (const key of keys) {
+        const raw = localStorage.getItem(key);
+        const ms = raw ? Number(raw) : NaN;
+        if (Number.isFinite(ms)) {
+            return ms;
+        }
+    }
+    return null;
 }
 
 function setLocalChallengeStartMs(challengeId, ms) {
-    if (!challengeId || !Number.isFinite(ms)) return;
-    localStorage.setItem(`weeklyChallengeStart:${challengeId}`, String(ms));
+    if (!Number.isFinite(ms)) return;
+    const keys = [];
+    if (challengeId) {
+        keys.push(`weeklyChallengeStart:${challengeId}`);
+    }
+    const docId = getWeeklyChallengeDocId();
+    if (docId) {
+        keys.push(`weeklyChallengeStart:${docId}`);
+    }
+    keys.push('weeklyChallengeStart:alma_gemea_fallback');
+
+    keys.forEach((key) => {
+        localStorage.setItem(key, String(ms));
+    });
 }
 
 function updateDesafioPrazoLabels() {
@@ -1475,11 +1646,29 @@ function getWeeklyChallengeStorageKey() {
     return docId ? `weeklyChallenge:${docId}` : null;
 }
 
+function clearLocalWeeklyChallenge(challengeId) {
+    const key = getWeeklyChallengeStorageKey();
+    if (key) {
+        localStorage.removeItem(key);
+    }
+    const keys = [];
+    if (challengeId) {
+        keys.push(`weeklyChallengeStart:${challengeId}`);
+    }
+    const docId = getWeeklyChallengeDocId();
+    if (docId) {
+        keys.push(`weeklyChallengeStart:${docId}`);
+    }
+    keys.push('weeklyChallengeStart:alma_gemea_fallback');
+    keys.forEach((k) => localStorage.removeItem(k));
+}
+
 function saveLocalWeeklyChallenge(data) {
     const key = getWeeklyChallengeStorageKey();
     if (!key || !data) return;
     try {
-        localStorage.setItem(key, JSON.stringify(data));
+        const payload = sanitizeWeeklyChallengePayload(data);
+        localStorage.setItem(key, JSON.stringify(payload));
     } catch (err) {
         console.warn('Falha ao salvar desafio semanal local:', err);
     }
@@ -1499,20 +1688,90 @@ function loadLocalWeeklyChallenge() {
 }
 
 function applyLocalWeeklyChallenge() {
+    if (!state.pareado || !state.usuario?.pareadoUid) return;
+    if (state.weeklyChallengeFromServer) return;
     const local = loadLocalWeeklyChallenge();
     if (!local) return;
-    state.desafiosSemanais = [local];
-    const concluido = !!(local.concluido || local.completed || local.status === 'finalizado' || local.status === 'finalizado_sem_recompensa');
+    const docId = getWeeklyChallengeDocId();
+    const shouldMigrate = docId && local.id && local.id !== docId && local.id.startsWith('alma_gemea');
+    const migrated = shouldMigrate ? {
+        ...local,
+        id: docId,
+        challengeId: local.challengeId || 'alma_gemea',
+    } : local;
+    if (migrated.startedAt) {
+        const startedMs = getDateFromValue(migrated.startedAt)?.getTime() || Number(migrated.startedAt);
+        if (Number.isFinite(startedMs)) {
+            setLocalChallengeStartMs(migrated.id, startedMs);
+        }
+    }
+    state.desafiosSemanais = [migrated];
+    const concluido = !!(migrated.concluido || migrated.completed || migrated.status === 'finalizado' || migrated.status === 'finalizado_sem_recompensa');
     state.pendingChallenge = concluido ? null : {
-        id: local.id,
-        titulo: local.titulo || 'Alma Gêmea',
-        pergunta: local.pergunta || 'Pergunta indisponível.',
+        id: migrated.id,
+        titulo: migrated.titulo || 'Alma Gêmea',
+        pergunta: migrated.pergunta || 'Pergunta indisponível.',
     };
     state.hasTriggeredFirstPairingChallenge = true;
+    if (shouldMigrate) {
+        saveLocalWeeklyChallenge(migrated);
+    }
 }
 
 function setupWeeklyChallengeListener() {
-    return;
+    const docId = getWeeklyChallengeDocId();
+    if (!docId || !db) return;
+    if (unsubscribeWeeklyChallenge) {
+        unsubscribeWeeklyChallenge();
+    }
+    unsubscribeWeeklyChallenge = db
+        .collection('weeklyChallenges')
+        .doc(docId)
+        .onSnapshot((doc) => {
+            if (!doc.exists) {
+                state.weeklyChallengeFromServer = false;
+                state.desafiosSemanais = [];
+                state.pendingChallenge = null;
+                state.activeWeeklyChallengeId = null;
+                state.challengeDeadline = null;
+                state.challengeSecondsLeft = 0;
+                state.showChallengePopup = false;
+                if (state.challengeTimerId) {
+                    clearInterval(state.challengeTimerId);
+                    state.challengeTimerId = null;
+                }
+                clearLocalWeeklyChallenge(docId);
+                if (state.etapa === 'achievementsPopup') {
+                    renderAchievementsPopup();
+                }
+                return;
+            }
+            state.weeklyChallengeFromServer = true;
+            const data = doc.data() || {};
+            const currentUid = state.usuario?.uid || null;
+            const partnerUid = state.usuario?.pareadoUid || null;
+            const respostas = data.respostas || {};
+            const nomes = data.respondeuNome || {};
+            const merged = {
+                ...data,
+                id: doc.id,
+                challengeId: data.challengeId || 'alma_gemea',
+                respostaUsuario: currentUid ? respostas[currentUid] || data.respostaUsuario || null : data.respostaUsuario || null,
+                respostaParceiro: partnerUid ? respostas[partnerUid] || data.respostaParceiro || null : data.respostaParceiro || null,
+                parceiroNomeResposta: partnerUid ? nomes[partnerUid] || data.parceiroNomeResposta || null : data.parceiroNomeResposta || null,
+            };
+            state.desafiosSemanais = [merged];
+            const concluido = !!(merged.concluido || merged.completed || merged.status === 'finalizado' || merged.status === 'finalizado_sem_recompensa');
+            state.pendingChallenge = concluido ? null : {
+                id: merged.id,
+                titulo: merged.titulo || 'Alma Gêmea',
+                pergunta: merged.pergunta || 'Pergunta indisponível.',
+            };
+            saveLocalWeeklyChallenge(merged);
+            if (state.etapa === 'achievementsPopup' || state.showChallengePopup) {
+                renderAchievementsPopup();
+            }
+        }, (err) => console.warn('Falha no listener do desafio semanal:', err));
 }
 
 function seedWeeklyChallengeDocIfMissing(docId) {
@@ -1679,8 +1938,11 @@ function applyWeeklyChallengeAnswer(desafioId, answer, responderUid, responderNa
             }
             state.pendingChallenge = null;
         } else {
-            updated.status = 'respostas_diferentes';
-            updated.concluido = false;
+            updated.status = 'finalizado_sem_recompensa';
+            updated.concluido = true;
+            updated.completedAt = new Date();
+            updated.rewarded = false;
+            state.pendingChallenge = null;
         }
     }
 
@@ -1696,7 +1958,7 @@ function applyWeeklyChallengeAnswer(desafioId, answer, responderUid, responderNa
         responderName: responderName || null,
         answer: normalizedAnswer,
         status: updated.status,
-        answeredAt: firebase.firestore.FieldValue.serverTimestamp(),
+        answeredAt: Date.now(),
     }).catch((err) => console.warn('Falha ao enviar resposta do desafio:', err));
 
     return { status: updated.status, updated };
@@ -2272,6 +2534,11 @@ function setupNotificationListener(userId) {
 async function renderAchievementsPopup() {
     await marcarNotificacoesDeConquistaComoLidas();
 
+    if (!state.pareado || !state.usuario?.pareadoUid) {
+        state.desafiosSemanais = [];
+        state.pendingChallenge = null;
+    }
+
     const conquistasUsuario = state.usuario?.conquistas || {};
     const totalConquistas = ACHIEVEMENTS.length;
     const conquistasDesbloqueadas = ACHIEVEMENTS.reduce((total, achievement) => {
@@ -2280,7 +2547,9 @@ async function renderAchievementsPopup() {
     const mostrarTodas = !!state.mostrarTodasConquistas;
     const desafiosTab = state.desafiosTab || 'conquistas';
 
-    const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
+    const desafiosSemanais = (state.pareado && state.usuario?.pareadoUid && Array.isArray(state.desafiosSemanais))
+        ? state.desafiosSemanais
+        : [];
     const desafiosSemanaisAbertos = desafiosSemanais.filter((desafio) => {
         const concluido = !!(desafio.concluido || desafio.completed || desafio.status === 'finalizado' || desafio.status === 'finalizado_sem_recompensa');
         return !concluido;
@@ -2318,28 +2587,39 @@ async function renderAchievementsPopup() {
     const gridHtml = itensVisiveis.map((item) => {
         const isConquista = item.tipo === 'conquista';
         const isSemanalEmAberto = item.tipo === 'semanal' && desafiosTab === 'emAberto';
+        const isSemanalFinalizadoTab = item.tipo === 'semanal' && desafiosTab === 'finalizados';
         const isSemanal = item.tipo === 'semanal';
-        const isAguardandoParceiro = isSemanal && (item.status === 'aguardando_parceiro');
+        const usuarioRespondeu = isSemanal && !!item.respostaUsuario;
+        const parceiroRespondeu = isSemanal && !!item.respostaParceiro;
+        const isAguardandoParceiro = isSemanal && usuarioRespondeu && !parceiroRespondeu && (item.status === 'aguardando_parceiro');
         const isRespostasDiferentes = isSemanal && (item.status === 'respostas_diferentes');
         const isFinalizadoSemRecompensa = isSemanal && (item.status === 'finalizado_sem_recompensa');
         const cardClickable = isSemanal && !isAguardandoParceiro && !isFinalizadoSemRecompensa && !!item.pergunta;
-        const cardOnClick = cardClickable ? `onclick="openWeeklyChallengePopup('${item.id}')"` : '';
+        const cardOnClick = cardClickable ? `onclick="openWeeklyChallengePopup('${item.id}', event)"` : '';
         const prazoTexto = isSemanalEmAberto ? getPrazoRestanteTexto(item) : (item.prazoTexto || '6d 23h 59m');
         const conquista = isConquista ? conquistasUsuario[item.id] : null;
         const desbloqueada = isConquista ? !!conquista : !!(item.concluido || item.completed || item.status === 'finalizado');
+        const cardClasses = isSemanalEmAberto
+            ? 'bg-white border-transparent shadow-lg text-gray-900'
+            : (isSemanalFinalizadoTab
+                ? 'bg-white/20 border-white/20 backdrop-blur-sm text-gray-200 opacity-90'
+                : (desbloqueada
+                    ? 'bg-gray-900 border-transparent shadow-lg shadow-black/30'
+                    : 'bg-gray-800/40 border-gray-700 backdrop-blur-sm opacity-70'));
         const cor = item.accentColor || '#fbbf24';
         const titulo = item.title || item.titulo || 'Desafio';
         const descricao = item.description || item.descricao || '';
         const dica = item.hint || item.dica || '';
         const dataBase = (isConquista ? conquista?.unlockedAt : (item.completedAt || item.concluidoEm)) || null;
         const dataDesbloqueio = desbloqueada && dataBase ? formatarDataCurta(dataBase) : '';
+        const dataDesbloqueioNumerica = desbloqueada && dataBase ? formatarDataNumerica(dataBase) : '';
         const iconClass = item.icon || 'fa-trophy';
         const hintAttr = dica ? `title="${escapeHtmlAttr(dica)}"` : '';
         const recompensa = typeof item.reward === 'number' ? item.reward : null;
         const recompensaTexto = recompensa !== null ? `Recompensa: ${recompensa} foguinho${recompensa === 1 ? '' : 's'}` : '';
 
         return `
-            <div class="achievement-card sm-card-padding rounded-2xl border transition ${isSemanalEmAberto ? 'bg-white border-transparent shadow-lg text-gray-900' : (desbloqueada ? 'bg-gray-900 border-transparent shadow-lg shadow-black/30' : 'bg-gray-800/40 border-gray-700 backdrop-blur-sm opacity-70')} ${cardClickable ? 'cursor-pointer hover:-translate-y-0.5' : ''}" ${hintAttr} ${cardOnClick}>
+            <div class="achievement-card sm-card-padding rounded-2xl border transition ${cardClasses} ${cardClickable ? 'cursor-pointer hover:-translate-y-0.5' : ''}" ${hintAttr} ${cardOnClick}>
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${desbloqueada || isSemanalEmAberto ? '' : 'border border-gray-600'}" style="${desbloqueada || isSemanalEmAberto ? `background: ${cor}; color: #111827;` : ''}">
                         <i class="fas ${iconClass} text-lg sm:text-xl"></i>
@@ -2350,9 +2630,20 @@ async function renderAchievementsPopup() {
                         ${recompensaTexto ? `<p class="text-xs sm:text-sm font-semibold text-amber-400 mt-2">${recompensaTexto}</p>` : ''}
                         ${isSemanalEmAberto && !isAguardandoParceiro ? `<p id="desafioPrazo-${item.id}" class="text-xs font-semibold text-pink-500 mt-2">Prazo: ${prazoTexto}</p>` : ''}
                         ${isAguardandoParceiro ? `<p class="text-xs font-semibold text-amber-500 mt-2">Aguardando ${state.parceiroApelido || state.parceiroNome || 'parceiro'} responder</p>` : ''}
-                        ${isRespostasDiferentes ? `<p class="text-xs font-semibold text-rose-400 mt-2">Respostas diferentes. Tentem novamente.</p>` : ''}
-                        ${desbloqueada ? `<p class="text-xs text-emerald-400 mt-1"><i class="fas fa-check-circle mr-1"></i>${dataDesbloqueio ? `Finalizado em ${dataDesbloqueio}` : (isConquista ? 'Conquista desbloqueada!' : 'Desafio finalizado!')}</p>` : `<p class="text-[11px] text-gray-500 mt-1">${dica || 'Complete a tarefa para desbloquear.'}</p>`}
-                        ${isFinalizadoSemRecompensa ? `<p class="text-xs text-gray-500 mt-1">Tempo esgotado. Sem recompensa.</p>` : ''}
+                        ${isRespostasDiferentes ? `<p class="text-xs font-semibold text-rose-400 mt-2">Respostas diferentes. Sem sincronia.</p>` : ''}
+                        ${desbloqueada ? (isSemanal
+                            ? (isFinalizadoSemRecompensa
+                                ? `<div class="mt-1">
+                                    <p class="text-xs text-rose-400"><i class="fas fa-times-circle mr-1"></i>Conexão abalada!</p>
+                                    ${dataDesbloqueioNumerica ? `<p class="text-[11px] text-gray-400 mt-1">${dataDesbloqueioNumerica}</p>` : ''}
+                                </div>`
+                                : `<div class="mt-1">
+                                    <p class="text-xs text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Vocês estão sintonizados!</p>
+                                    ${dataDesbloqueioNumerica ? `<p class="text-[11px] text-gray-400 mt-1">${dataDesbloqueioNumerica}</p>` : ''}
+                                </div>`)
+                            : `<p class="text-xs text-emerald-400 mt-1"><i class="fas fa-check-circle mr-1"></i>${dataDesbloqueio ? dataDesbloqueio : 'Conquista desbloqueada!'}</p>`)
+                            : `<p class="text-[11px] text-gray-500 mt-1">${dica || 'Complete a tarefa para desbloquear.'}</p>`}
+                        ${isFinalizadoSemRecompensa ? `<div class="mt-2 inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-600"><i class="fas fa-flag"></i> Sem sincronia</div>` : ''}
                     </div>
                 </div>
             </div>
@@ -3101,24 +3392,40 @@ appContainer.innerHTML = `
                                         }
                                         const bloqueado = configSalva?.bloqueado || false;
                                         return `
-                                        <div class="p-2 flex items-center justify-between gap-4">
-                                            <div class="flex items-center gap-4">
-                                                <img src="${momento.img}" class="w-12 h-12 rounded-lg object-cover">
-                                                <div><h3 class="font-semibold text-white">${momento.nome}</h3></div>
-                                            </div>
-                                            <div class="flex items-center gap-4">
-                                                <div class="flex items-center gap-1 bg-black/40 rounded-lg p-2">
-                                                    <i class="fas fa-fire text-yellow-400"></i>
-                                                    <input type="number" min="0" step="1" value="${preco}" id="preco-${momento.nome.replace(/\s+/g, '-')}" class="bg-transparent w-16 text-center font-bold text-white">
+                                        <div class="p-2 flex items-start gap-3 sm:items-center sm:justify-between border-b border-white/10 last:border-b-0">
+                                            <div class="flex items-start gap-3 flex-1 min-w-0">
+                                                <img src="${momento.img}" class="w-14 h-14 rounded-lg object-cover shrink-0">
+                                                <div class="min-w-0 flex-1">
+                                                    <h3 class="text-sm font-semibold text-white truncate">${momento.nome}</h3>
+                                                    <div class="mt-2 flex items-center gap-2 sm:hidden">
+                                                        <label class="relative inline-flex items-center cursor-pointer">
+                                                            <input type="checkbox" ${bloqueado ? 'checked' : ''} class="sr-only peer" id="bloqueado-${momento.nome.replace(/\s+/g, '-')}">
+                                                            <div class="relative w-11 h-6 bg-pink-600 peer-checked:bg-gray-600 rounded-full transition-colors flex items-center justify-between px-1.5">
+                                                                <i class="fas fa-lock text-white text-[9px]"></i>
+                                                                <i class="fas fa-lock-open text-white text-[9px]"></i>
+                                                            </div>
+                                                            <div class="absolute top-0.5 left-[2px] w-5 h-5 bg-white rounded-full border border-gray-300 transition-transform transform peer-checked:translate-x-full"></div>
+                                                        </label>
+                                                        <div class="flex items-center gap-1 bg-transparent rounded-lg px-2 py-0.5">
+                                                            <i class="fas fa-fire text-yellow-400 text-xs"></i>
+                                                            <input type="number" min="0" step="1" value="${preco}" id="preco-${momento.nome.replace(/\s+/g, '-')}" class="no-number-spin bg-transparent w-14 h-6 text-center text-sm font-semibold text-white">
+                                                        </div>
+                                                    </div>
                                                 </div>
+                                            </div>
+                                            <div class="hidden sm:flex items-center gap-2 sm:ml-auto">
                                                 <label class="relative inline-flex items-center cursor-pointer">
                                                     <input type="checkbox" ${bloqueado ? 'checked' : ''} class="sr-only peer" id="bloqueado-${momento.nome.replace(/\s+/g, '-')}">
-                                                    <div class="relative w-14 h-7 bg-pink-600 peer-checked:bg-gray-600 rounded-full transition-colors flex items-center justify-between px-2">
-                                                        <i class="fas fa-lock text-white text-xs"></i>
-                                                        <i class="fas fa-lock-open text-white text-xs"></i>
+                                                    <div class="relative w-11 h-6 bg-pink-600 peer-checked:bg-gray-600 rounded-full transition-colors flex items-center justify-between px-1.5">
+                                                        <i class="fas fa-lock text-white text-[9px]"></i>
+                                                        <i class="fas fa-lock-open text-white text-[9px]"></i>
                                                     </div>
-                                                    <div class="absolute top-0.5 left-[2px] w-6 h-6 bg-white rounded-full border border-gray-300 transition-transform transform peer-checked:translate-x-full"></div>
+                                                    <div class="absolute top-0.5 left-[2px] w-5 h-5 bg-white rounded-full border border-gray-300 transition-transform transform peer-checked:translate-x-full"></div>
                                                 </label>
+                                                <div class="flex items-center gap-1 bg-transparent rounded-lg px-2 py-0.5">
+                                                    <i class="fas fa-fire text-yellow-400 text-xs"></i>
+                                                    <input type="number" min="0" step="1" value="${preco}" id="preco-${momento.nome.replace(/\s+/g, '-')}" class="no-number-spin bg-transparent w-14 h-6 text-center text-sm font-semibold text-white">
+                                                </div>
                                             </div>
                                         </div>
                                         `;
@@ -3939,6 +4246,9 @@ renderApp();
             case 'momentos':
                 renderMomentos();
                 break;
+            case 'memorias':
+                renderMemorias();
+                break;
             case 'gerenciarCatalogo':
                 renderGerenciarCatalogo();
                 break;
@@ -4123,6 +4433,8 @@ async function renderMomentos() {
         showToast("Erro ao carregar momentos.", "erro");
     }
 
+    state.tarefasCache = tarefas;
+
     const container = document.getElementById('tarefas-list-container');
     if (!container) {
         return;
@@ -4157,7 +4469,7 @@ async function renderMomentos() {
                             <span>${tarefa.status}</span>
                         </div>
                         ${(abaAtiva === 'enviados' && isPendente) ? `
-                            <button onclick="requestRealizadoWithPhoto('${tarefa.id}', '${tarefa.momentoNome}', ${tarefa.custoFoguinhos || 0})"
+                            <button onclick="requestRealizadoWithPhoto('${tarefa.id}', '${escapeJsString(tarefa.momentoNome || '')}', ${tarefa.custoFoguinhos || 0})"
                                 class="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-2 rounded-lg inline-flex items-center gap-1">
                                 <i class="fas fa-check"></i>
                                 <span>Realizado</span>
@@ -4172,6 +4484,177 @@ async function renderMomentos() {
     appContainer.innerHTML += `
         ${state.showRealizadoPhotoPrompt ? renderRealizadoPhotoPrompt() : ''}
     `;
+}
+
+async function loadMemoriasPosts() {
+    if (!state.pareado || !state.idPareamentoAmigavel) {
+        state.memoriasItems = [];
+        state.memoriasHasMore = false;
+        return;
+    }
+
+    state.memoriasLoading = true;
+    try {
+        const limit = state.memoriasLimit || 9;
+        const response = await safeFetchBackend(GET_MEMORIAS_URL, { limit });
+        const items = Array.isArray(response?.items) ? response.items : [];
+        state.memoriasHasMore = !!response?.hasMore;
+        state.memoriasItems = items;
+    } catch (err) {
+        console.warn('Erro ao carregar memórias:', err);
+        state.memoriasItems = [];
+        state.memoriasHasMore = false;
+    } finally {
+        state.memoriasLoading = false;
+    }
+}
+
+function openMemoriasFeed() {
+    state.memoriasView = 'feed';
+    state.memoriasLimit = 9;
+    state.showMemoriasViewer = false;
+    state.memoriasViewerIndex = null;
+    loadMemoriasPosts().then(() => renderMemorias());
+}
+
+function loadMoreMemorias() {
+    state.memoriasLimit += 9;
+    loadMemoriasPosts().then(() => renderMemorias());
+}
+
+function openMemoriaViewer(index) {
+    state.memoriasViewerIndex = index;
+    state.showMemoriasViewer = true;
+    renderMemorias();
+}
+
+function closeMemoriaViewer() {
+    state.showMemoriasViewer = false;
+    state.memoriasViewerIndex = null;
+    renderMemorias();
+}
+
+function changeMemoriaViewer(delta) {
+    const items = Array.isArray(state.memoriasItems) ? state.memoriasItems : [];
+    if (!items.length) return;
+    const current = Number(state.memoriasViewerIndex) || 0;
+    let next = current + delta;
+    if (next < 0) next = items.length - 1;
+    if (next >= items.length) next = 0;
+    state.memoriasViewerIndex = next;
+    renderMemorias();
+}
+
+function renderMemoriaViewer() {
+    const items = Array.isArray(state.memoriasItems) ? state.memoriasItems : [];
+    const index = Number(state.memoriasViewerIndex) || 0;
+    const item = items[index];
+    if (!item) return '';
+    return `
+        <div class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4" onclick="closeMemoriaViewer()">
+            <div class="w-full max-w-md bg-white rounded-3xl p-5 shadow-2xl" onclick="event.stopPropagation()">
+                <div class="relative">
+                    <img src="${item.fotoUrl}" alt="Memória" class="w-full h-72 object-cover rounded-2xl">
+                    <button onclick="changeMemoriaViewer(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white text-sm">&#10094;</button>
+                    <button onclick="changeMemoriaViewer(1)" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white text-sm">&#10095;</button>
+                </div>
+                <p class="text-sm text-gray-600 mt-4">${item.descricao || ''}</p>
+                <button onclick="closeMemoriaViewer()" class="mt-4 w-full py-2 rounded-full bg-gray-200 text-gray-600 font-semibold">Fechar</button>
+            </div>
+        </div>
+    `;
+}
+
+function renderMemoriasWelcome() {
+    const fotoUsuario = state.usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
+    const fotoParceiro = state.parceiroData?.fotoUrl || '/assets/icons/iconprincipal.png';
+    const podeRelembrar = !!(state.pareado && state.idPareamentoAmigavel);
+    return `
+        <div class="min-h-screen bg-[#f7f5f9] text-gray-900">
+            <section class="px-6 pt-20 pb-10">
+                <div class="flex flex-col items-center text-center">
+                    <h2 class="text-lg tracking-wide text-gray-500">Bem vindos as suas</h2>
+                    <h3 class="text-3xl font-semibold text-gray-900 mt-2">Memórias</h3>
+                </div>
+            </section>
+            <section class="px-5 pb-24">
+                <div class="max-w-md mx-auto bg-white rounded-3xl p-6 shadow-xl">
+                    <div class="flex items-center justify-center gap-4">
+                        <div class="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
+                            <img src="${fotoUsuario}" class="w-full h-full object-cover" alt="Você">
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white text-xl">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
+                            <img src="${fotoParceiro}" class="w-full h-full object-cover" alt="Par">
+                        </div>
+                    </div>
+                    ${podeRelembrar ? '' : '<p class="text-xs text-gray-500 mt-2 text-center">Pareie seu parceiro para começar a guardar memórias.</p>'}
+                    <button onclick="${podeRelembrar ? 'openMemoriasFeed()' : ''}" class="w-full mt-5 py-3 rounded-full text-white font-semibold ${podeRelembrar ? 'bg-gradient-to-r from-pink-500 to-red-500' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}">Relembrar</button>
+                    <button onclick="changeStep('dashboard')" class="w-full mt-3 py-3 rounded-full bg-gray-200 text-gray-600 font-semibold">Fechar</button>
+                </div>
+            </section>
+        </div>
+    `;
+}
+
+function renderMemoriasFeed() {
+    const items = Array.isArray(state.memoriasItems) ? state.memoriasItems : [];
+    const isLoading = !!state.memoriasLoading;
+    const fotoUsuario = state.usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
+    const fotoParceiro = state.parceiroData?.fotoUrl || '/assets/icons/iconprincipal.png';
+    appContainer.innerHTML = `
+        <div class="min-h-screen bg-[#f7f5f9] text-gray-900">
+            <section class="px-6 pt-16 pb-6">
+                <div class="mt-6 flex flex-col items-center text-center">
+                    <div class="flex items-center justify-center gap-3">
+                        <div class="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
+                            <img src="${fotoUsuario}" class="w-full h-full object-cover" alt="Você">
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-pink-500 flex items-center justify-center text-white text-lg">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <div class="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
+                            <img src="${fotoParceiro}" class="w-full h-full object-cover" alt="Par">
+                        </div>
+                    </div>
+                    <h2 class="mt-4 text-4xl font-handwritten bg-gradient-to-r from-pink-500 to-red-500 text-transparent bg-clip-text">Suas Memórias</h2>
+                </div>
+            </section>
+            <section class="px-5 pb-24">
+                <div class="max-w-4xl mx-auto">
+                    <div class="p-[1px] rounded-3xl bg-gradient-to-r from-pink-500 to-red-500">
+                        <div class="rounded-3xl bg-gray-900/20 backdrop-blur-md p-4">
+                            <div class="grid grid-cols-3 gap-2">
+                                ${items.map((item, index) => `
+                                    <button onclick="openMemoriaViewer(${index})" class="aspect-square rounded-2xl overflow-hidden bg-white/80 shadow">
+                                        <img src="${item.fotoUrl}" alt="Memória" class="w-full h-full object-cover">
+                                    </button>
+                                `).join('')}
+                            </div>
+                            ${!isLoading && items.length === 0 ? '<p class="text-center text-white mt-6">Nenhuma memória disponível.</p>' : ''}
+                            ${isLoading ? '<p class="text-center text-gray-500 mt-6">Carregando...</p>' : ''}
+                        </div>
+                    </div>
+                    ${state.memoriasHasMore ? `
+                        <div class="text-center mt-6">
+                            <button onclick="loadMoreMemorias()" class="px-8 py-3 rounded-full bg-white shadow text-gray-600 font-semibold">Ver mais</button>
+                        </div>
+                    ` : ''}
+                </div>
+            </section>
+        </div>
+        ${state.showMemoriasViewer ? renderMemoriaViewer() : ''}
+    `;
+}
+
+function renderMemorias() {
+    if (state.memoriasView === 'feed') {
+        renderMemoriasFeed();
+        return;
+    }
+    appContainer.innerHTML = renderMemoriasWelcome();
 }
 
 function trocarAbaTarefas(aba) {
@@ -4200,7 +4683,7 @@ function renderChallengePopup() {
                     <span class="text-xs text-gray-400">Tempo restante</span>
                     <span id="challengeCountdown" class="text-lg font-bold text-amber-200">${secondsLeft}s</span>
                 </div>
-                <input id="challengeAnswer" type="text" placeholder="Digite sua resposta" ${disabled ? 'disabled' : ''} class="w-full mb-4">
+                <input id="challengeAnswer" type="text" placeholder="Digite sua resposta" ${disabled ? 'disabled' : ''} class="w-full mb-4 uppercase" oninput="this.value = this.value.toUpperCase()">
                 <button onclick="submitWeeklyChallengeAnswer()" class="w-full py-2 rounded-lg ${disabled ? 'bg-gray-700 text-gray-400' : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200'}" ${disabled ? 'disabled' : ''}>
                     Enviar resposta
                 </button>
@@ -4249,8 +4732,20 @@ function renderRealizadoPhotoPrompt() {
 }
 
 function requestRealizadoWithPhoto(tarefaId, momentoNome, custoFoguinhos) {
-    state.pendingRealizadoAction = { tarefaId, momentoNome, custoFoguinhos };
+    const tarefasCache = Array.isArray(state.tarefasCache) ? state.tarefasCache : [];
+    const tarefa = tarefasCache.find((item) => item.id === tarefaId) || {};
+    state.pendingRealizadoAction = {
+        tarefaId,
+        momentoNome,
+        custoFoguinhos,
+        pareamentoId: tarefa.idPareamento || state.idPareamentoAmigavel || null,
+        executadoPorNome: tarefa.executadoPorNome || state.parceiroApelido || state.parceiroNome || 'Parceiro',
+        resgatadoPorNome: tarefa.resgatadoPorNome || state.usuario?.nome || 'Você',
+        executadoPorUid: tarefa.executadoPorUid || state.usuario?.pareadoUid || null,
+        resgatadoPorUid: tarefa.resgatadoPorUid || state.usuario?.uid || null,
+    };
     state.pendingRealizadoPhotoData = null;
+    state.pendingRealizadoPhotoFile = null;
     state.showRealizadoPhotoPrompt = true;
     renderMomentos();
 }
@@ -4259,6 +4754,7 @@ function closeRealizadoPhotoPrompt() {
     state.showRealizadoPhotoPrompt = false;
     state.pendingRealizadoAction = null;
     state.pendingRealizadoPhotoData = null;
+    state.pendingRealizadoPhotoFile = null;
     renderMomentos();
 }
 
@@ -4277,6 +4773,7 @@ function handleRealizadoPhotoChoice(shouldAdd) {
     state.showRealizadoPhotoPrompt = false;
     state.pendingRealizadoAction = null;
     state.pendingRealizadoPhotoData = null;
+    state.pendingRealizadoPhotoFile = null;
     renderMomentos();
     handleDarCheck(pending.tarefaId, pending.momentoNome, pending.custoFoguinhos);
 }
@@ -4288,7 +4785,7 @@ function openRealizadoPhotoPicker() {
     }
 }
 
-function confirmRealizadoWithPhoto() {
+async function confirmRealizadoWithPhoto() {
     const pending = state.pendingRealizadoAction;
     if (!pending) {
         closeRealizadoPhotoPrompt();
@@ -4297,7 +4794,14 @@ function confirmRealizadoWithPhoto() {
 
     state.showRealizadoPhotoPrompt = false;
     state.pendingRealizadoAction = null;
+    const photoFile = state.pendingRealizadoPhotoFile;
+    state.pendingRealizadoPhotoData = null;
+    state.pendingRealizadoPhotoFile = null;
     renderMomentos();
+
+    if (photoFile) {
+        await createMemoriaPostFromPhoto(pending, photoFile);
+    }
     handleDarCheck(pending.tarefaId, pending.momentoNome, pending.custoFoguinhos);
 }
 
@@ -4310,6 +4814,7 @@ function handleRealizadoPhotoSelect(event) {
     }
 
     if (file && file.type.startsWith('image/')) {
+        state.pendingRealizadoPhotoFile = file;
         const reader = new FileReader();
         reader.onload = function(e) {
             state.pendingRealizadoPhotoData = e.target.result;
@@ -4319,11 +4824,61 @@ function handleRealizadoPhotoSelect(event) {
         reader.readAsDataURL(file);
     } else {
         state.pendingRealizadoPhotoData = null;
+        state.pendingRealizadoPhotoFile = null;
         state.showRealizadoPhotoPrompt = true;
         renderMomentos();
     }
 
     event.target.value = '';
+}
+
+function buildMemoriaDescricao(pending) {
+    const executado = pending.executadoPorNome || 'Alguém';
+    const resgatado = pending.resgatadoPorNome || 'seu par';
+    const momentoNome = pending.momentoNome || 'um momento especial';
+    return `${executado} realizou ${momentoNome} para ${resgatado} e esse foi o registro desse momento especial`;
+}
+
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+    });
+}
+
+async function uploadMemoriaPhoto(file, pending) {
+    const dataUrl = await fileToBase64(file);
+    const base64 = typeof dataUrl === 'string' && dataUrl.includes(',')
+        ? dataUrl.split(',')[1]
+        : null;
+
+    if (!base64) {
+        throw new Error('Falha ao ler a imagem.');
+    }
+
+    const safeName = (file.name || 'memoria').replace(/[^a-zA-Z0-9._-]/g, '_');
+    return await safeFetchBackend(CREATE_MEMORIA_URL, {
+        tarefaId: pending.tarefaId,
+        fileName: safeName,
+        contentType: file.type || 'image/jpeg',
+        base64,
+    });
+}
+
+async function createMemoriaPostFromPhoto(pending, file) {
+    try {
+        const pairUidsCheck = [pending.executadoPorUid, pending.resgatadoPorUid]
+            .filter(Boolean);
+        if (!pairUidsCheck.length) {
+            return;
+        }
+        await uploadMemoriaPhoto(file, pending);
+    } catch (err) {
+        console.warn('Falha ao criar memória:', err);
+        showToast('Não foi possível salvar a memória.', 'aviso');
+    }
 }
 
 function setNotificacoesTab(tab) {
@@ -4335,6 +4890,7 @@ function setNotificacoesTab(tab) {
 
 function openChallengePopup() {
     state.showChallengePopup = true;
+    state.challengePopupOpenedAt = Date.now();
     if (!state.challengeSecondsLeft || state.challengeSecondsLeft <= 0) {
         state.challengeSecondsLeft = 60;
     }
@@ -4360,9 +4916,18 @@ function openChallengePopup() {
     }, 1000);
 }
 
-function openWeeklyChallengePopup(desafioId) {
+function openWeeklyChallengePopup(desafioId, evt) {
+    if (evt && typeof evt.stopPropagation === 'function') {
+        evt.preventDefault();
+        evt.stopPropagation();
+    }
+    if (!state.pareado || !state.usuario?.pareadoUid) {
+        showToast('Você precisa estar pareado para responder este desafio.', 'aviso');
+        return;
+    }
     const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
-    const desafio = desafiosSemanais.find((item) => item.id === desafioId) || null;
+    const index = desafiosSemanais.findIndex((item) => item.id === desafioId);
+    const desafio = index >= 0 ? desafiosSemanais[index] : null;
     if (!desafio) {
         return;
     }
@@ -4372,20 +4937,30 @@ function openWeeklyChallengePopup(desafioId) {
         pergunta: desafio.pergunta || 'Pergunta indisponível.',
     };
     state.showChallengePopup = true;
-    if (!desafio.startedAt && !desafio.prazoInicio && !desafio.startedEm) {
-        markWeeklyChallengeStarted(desafio.id);
+    state.challengePopupOpenedAt = Date.now();
+    const now = Date.now();
+    const localStartMs = getLocalChallengeStartMs(desafio.id);
+    let startedMs = getDateFromValue(desafio.startedAt || desafio.prazoInicio || desafio.startedEm)?.getTime();
+    if (!Number.isFinite(startedMs)) {
+        startedMs = Number.isFinite(localStartMs) ? localStartMs : null;
+    }
+    const isFinalizado = !!(desafio.concluido || desafio.completed || desafio.status === 'finalizado' || desafio.status === 'finalizado_sem_recompensa');
+    const hasAnswer = !!(desafio.respostaUsuario || desafio.respostaParceiro);
+    const isStale = startedMs && (now - startedMs >= 60000) && !isFinalizado && !hasAnswer;
+    if (!startedMs || isStale) {
+        startedMs = now;
+        setLocalChallengeStartMs(desafio.id, startedMs);
+        desafiosSemanais[index] = {
+            ...desafio,
+            startedAt: new Date(startedMs),
+        };
+        state.desafiosSemanais = desafiosSemanais;
+        saveLocalWeeklyChallenge(desafiosSemanais[index]);
+    } else {
+        setLocalChallengeStartMs(desafio.id, startedMs);
     }
     state.activeWeeklyChallengeId = desafio.id;
-    const deadlineFromChallenge = getChallengeDeadlineMs(desafio);
-    const localStartMs = getLocalChallengeStartMs(desafio.id);
-    if (deadlineFromChallenge) {
-        state.challengeDeadline = deadlineFromChallenge;
-    } else if (localStartMs) {
-        state.challengeDeadline = localStartMs + 60000;
-    } else if (!state.challengeDeadline) {
-        state.challengeDeadline = Date.now() + 60000;
-        setLocalChallengeStartMs(desafio.id, Date.now());
-    }
+    state.challengeDeadline = startedMs + 60000;
     const remainingMs = Math.max(0, (state.challengeDeadline || Date.now()) - Date.now());
     state.challengeSecondsLeft = Math.ceil(remainingMs / 1000);
     if (state.challengeTimerId) {
@@ -4414,7 +4989,7 @@ function openWeeklyChallengePopup(desafioId) {
 
 function submitWeeklyChallengeAnswer() {
     const input = document.getElementById('challengeAnswer');
-    const answer = (input && input.value ? input.value.trim() : '');
+    const answer = (input && input.value ? input.value.trim().toUpperCase() : '');
     if (!answer) {
         showToast('Digite sua resposta antes de enviar.', 'aviso');
         return;
@@ -4438,8 +5013,8 @@ function submitWeeklyChallengeAnswer() {
 
     if (result.status === 'finalizado') {
         showToast('Respostas iguais! Desafio concluído.', 'sucesso');
-    } else if (result.status === 'respostas_diferentes') {
-        showToast('Respostas diferentes. Tentem novamente.', 'aviso');
+    } else if (result.status === 'finalizado_sem_recompensa') {
+        showToast('Respostas diferentes. Sem sincronia.', 'aviso');
     } else {
         showToast('Resposta enviada! Aguardando seu par.', 'sucesso');
     }
@@ -4450,13 +5025,16 @@ function handlePartnerChallengeAnswer(desafioId, answer, partnerName) {
     const result = applyWeeklyChallengeAnswer(desafioId, answer, state.usuario?.pareadoUid || null, partnerName);
     if (result.status === 'finalizado') {
         showToast('Respostas iguais! Desafio concluído.', 'sucesso');
-    } else if (result.status === 'respostas_diferentes') {
-        showToast('Respostas diferentes. Tentem novamente.', 'aviso');
+    } else if (result.status === 'finalizado_sem_recompensa') {
+        showToast('Respostas diferentes. Sem sincronia.', 'aviso');
     }
     renderAchievementsPopup();
 }
 
 function closeChallengePopup() {
+    if (state.challengePopupOpenedAt && Date.now() - state.challengePopupOpenedAt < 200) {
+        return;
+    }
     state.showChallengePopup = false;
     if (state.challengeTimerId && !state.activeWeeklyChallengeId) {
         clearInterval(state.challengeTimerId);
@@ -4485,7 +5063,7 @@ function handleWeeklyChallengeTimeout(desafioId) {
         type: 'weekly_challenge_timeout',
         challengeId: desafiosSemanais[index].challengeId || 'alma_gemea',
         challengeDocId: desafiosSemanais[index].id || desafioId,
-        timedOutAt: firebase.firestore.FieldValue.serverTimestamp(),
+        timedOutAt: Date.now(),
     }).catch((err) => console.warn('Falha ao enviar timeout do desafio:', err));
     state.showChallengePopup = false;
     state.activeWeeklyChallengeId = null;
@@ -4566,6 +5144,12 @@ if (state.etapa === newStep) {
     state.etapa = newStep;
 }
 
+if (state.etapa === 'memorias') {
+    state.memoriasView = 'welcome';
+    state.showMemoriasViewer = false;
+    state.memoriasViewerIndex = null;
+}
+
 // Reseta o estado de outros elementos da UI ao navegar
 state.showCartSidebar = false;
 state.showFoguinhosPopup = false;
@@ -4635,7 +5219,7 @@ renderApp();
 
     // LÓGICA DE VISIBILIDADE DAS BARRAS (igual)
     if (bottomNavBar && mainHeader) {
-        const telasComBarraVisivel = ['dashboard', 'main', 'momentos', 'parear', 'pareamentos', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes', 'achievementsPopup', 'meuPerfil'];
+        const telasComBarraVisivel = ['dashboard', 'main', 'momentos', 'memorias', 'parear', 'pareamentos', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes', 'achievementsPopup', 'meuPerfil'];
         if (telasComBarraVisivel.includes(state.etapa)) {
             bottomNavBar.style.display = 'flex';
             mainHeader.style.display = 'flex';
@@ -4779,12 +5363,15 @@ try {
         const hasPairUid = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
         const hasPairPhone = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
         state.pareado = hasPairUid || hasPairPhone;
-        if (!wasPareado && state.pareado) {
+        if (!wasPareado && state.pareado && state.usuario?.pareadoUid) {
             ensureFirstPairingChallenge();
         }
-        if (state.pareado) {
+        if (state.pareado && state.usuario?.pareadoUid) {
             setupWeeklyChallengeListener();
             applyLocalWeeklyChallenge();
+        } else {
+            state.desafiosSemanais = [];
+            state.pendingChallenge = null;
         }
 
         if (state.pareado && state.pendingPartnerName && !state.parceiroApelido) {
@@ -4836,6 +5423,17 @@ try {
         if (!state.pareado) {
             state.parceiroData = null;
             state.idPareamentoAmigavel = null;
+            state.desafiosSemanais = [];
+            state.pendingChallenge = null;
+            state.weeklyChallengeFromServer = false;
+            state.activeWeeklyChallengeId = null;
+            state.challengeDeadline = null;
+            state.challengeSecondsLeft = 0;
+            state.showChallengePopup = false;
+            if (state.challengeTimerId) {
+                clearInterval(state.challengeTimerId);
+                state.challengeTimerId = null;
+            }
         }
         
         state.etapa = 'dashboard';
@@ -4872,12 +5470,15 @@ try {
             const hasUidPair = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
             const hasPhonePair = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
             state.pareado = hasUidPair || hasPhonePair;
-            if (!wasPareado && state.pareado) {
+            if (!wasPareado && state.pareado && state.usuario?.pareadoUid) {
                 ensureFirstPairingChallenge();
             }
-            if (state.pareado) {
+            if (state.pareado && state.usuario?.pareadoUid) {
                 setupWeeklyChallengeListener();
                 applyLocalWeeklyChallenge();
+            } else {
+                state.desafiosSemanais = [];
+                state.pendingChallenge = null;
             }
             state.parceiroCodigo = state.usuario.pareadoCom || null;
             if (state.pareado && state.pendingPartnerName && !state.parceiroApelido) {
@@ -4891,6 +5492,17 @@ try {
                 state.idPareamentoAmigavel = null;
                 state.pendingPartnerName = null;
                 state.parceiroApelido = null;
+                state.desafiosSemanais = [];
+                state.pendingChallenge = null;
+                state.weeklyChallengeFromServer = false;
+                state.activeWeeklyChallengeId = null;
+                state.challengeDeadline = null;
+                state.challengeSecondsLeft = 0;
+                state.showChallengePopup = false;
+                if (state.challengeTimerId) {
+                    clearInterval(state.challengeTimerId);
+                    state.challengeTimerId = null;
+                }
             }
 
             if (state.pareado && state.usuario.pareadoUid && (!state.parceiroData || state.parceiroData.uid !== state.usuario.pareadoUid)) {
@@ -5068,6 +5680,11 @@ try {
         window.handleRealizadoPhotoSelect = handleRealizadoPhotoSelect;
         window.openRealizadoPhotoPicker = openRealizadoPhotoPicker;
         window.confirmRealizadoWithPhoto = confirmRealizadoWithPhoto;
+        window.openMemoriasFeed = openMemoriasFeed;
+        window.loadMoreMemorias = loadMoreMemorias;
+        window.openMemoriaViewer = openMemoriaViewer;
+        window.closeMemoriaViewer = closeMemoriaViewer;
+        window.changeMemoriaViewer = changeMemoriaViewer;
 
         console.log("✅ Funções de evento prontas.");
 

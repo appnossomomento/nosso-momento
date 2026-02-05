@@ -18,6 +18,9 @@
   "firestore": {
     "rules": "firestore.rules"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": [
     {
       "site": "nosso-momento-app",
