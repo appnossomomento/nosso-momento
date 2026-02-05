@@ -935,6 +935,17 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     memoriasLoading: false,
     memoriasViewerIndex: null,
     showMemoriasViewer: false,
+    showLegalModal: false,
+    legalModalType: null,
+    showInstagramModal: false,
+    showEditNameModal: false,
+    editNameValue: '',
+    showSystemModal: false,
+    systemModalType: 'alert',
+    systemModalMessage: '',
+    systemModalConfirmText: 'OK',
+    systemModalCancelText: 'Cancelar',
+    systemModalOnConfirm: null,
     tarefasCache: [],
     conquistas: {},
     achievementStats: {},
@@ -1444,7 +1455,7 @@ function triggerAchievementCelebration(notif) {
                         <i class="fas fa-arrow-right-long"></i>
                     </button>
                     <p class="text-center mt-6 text-gray-400 text-sm">
-                        Ao continuar, você concorda com nossos <a href="#" class="text-pink-400 hover:underline">Termos</a> e <a href="#" class="text-pink-400 hover:underline">Política de Privacidade</a>
+                        Ao continuar, você concorda com nossos <button type="button" class="text-pink-400 hover:underline" onclick="openLegalModal('terms')">Termos</button> e <button type="button" class="text-pink-400 hover:underline" onclick="openLegalModal('privacy')">Política de Privacidade</button>
                     </p>
                 </div>
             </div>
@@ -2203,33 +2214,33 @@ try {
 
     // Função para cancelar uma solicitação de pareamento pendente (do lado do sender)
     async function cancelPendingPairingRequest() {
-if (confirm('Tem certeza que deseja cancelar esta solicitação de pareamento?')) {
-    try {
-        const senderUid = state.usuario.uid;
-        const receiverPhone = state.usuario.pareadoCom.replace('pending_', '');
-        await safeAddInput({
-            type: 'pairing_cancel',
-            fromUid: (auth.currentUser && auth.currentUser.uid) || senderUid,
-            partnerPhone: receiverPhone,
-        });
+        openSystemConfirm('Tem certeza que deseja cancelar esta solicitação de pareamento?', async () => {
+            try {
+                const senderUid = state.usuario.uid;
+                const receiverPhone = state.usuario.pareadoCom.replace('pending_', '');
+                await safeAddInput({
+                    type: 'pairing_cancel',
+                    fromUid: (auth.currentUser && auth.currentUser.uid) || senderUid,
+                    partnerPhone: receiverPhone,
+                });
 
-        showToast('Solicitação de pareamento cancelada. Aguardando processamento', 'sucesso');
-        state.usuario.pareadoCom = null;
-    state.usuario.pareadoUid = null;
-    state.parceiroData = null;
-    state.parceiroNome = null;
-    state.parceiroTelefone = null;
-    state.idPareamentoAmigavel = null;
-    state.pareado = false;
-        state.pendingPartnerName = null;
-        state.etapa = 'pareamentos';
-        renderApp();
-    } catch (error) {
-        console.error('Erro ao cancelar solicitação:', error);
-        showToast('Erro ao cancelar solicitação.', 'erro');
+                showToast('Solicitação de pareamento cancelada. Aguardando processamento', 'sucesso');
+                state.usuario.pareadoCom = null;
+                state.usuario.pareadoUid = null;
+                state.parceiroData = null;
+                state.parceiroNome = null;
+                state.parceiroTelefone = null;
+                state.idPareamentoAmigavel = null;
+                state.pareado = false;
+                state.pendingPartnerName = null;
+                state.etapa = 'pareamentos';
+                renderApp();
+            } catch (error) {
+                console.error('Erro ao cancelar solicitação:', error);
+                showToast('Erro ao cancelar solicitação.', 'erro');
+            }
+        });
     }
-}
-}
 
 
     function renderPareamento() {
@@ -2259,7 +2270,7 @@ if (state.pareado && state.parceiroData) {
                     </button>
 
                     <!-- Botão de seguir no Instagram (discreto, com borda em gradiente) -->
-                    <button onclick="window.open('https://instagram.com/nossomomentoapp','_blank')" class="instagram-cta-outline w-full mt-2">
+                    <button onclick="openInstagramModal()" class="instagram-cta-outline w-full mt-2">
                         <span class="instagram-cta-inner w-full justify-center">
                             <i class="fab fa-instagram"></i> Siga-nos no Instagram!
                         </span>
@@ -2946,6 +2957,118 @@ function renderVipPopup() {
     `;
 }
 
+function renderLegalModal() {
+    const type = state.legalModalType || 'terms';
+    const isTerms = type === 'terms';
+    const title = isTerms ? 'Termos de Uso' : 'Política de Privacidade';
+    const content = isTerms
+        ? `Ao utilizar o Nosso Momento, você concorda em usar o app de forma responsável, respeitando seu par e as regras do serviço. Você é responsável pelas informações fornecidas e pelos conteúdos enviados.`
+        : `Nós coletamos apenas os dados necessários para oferecer a melhor experiência no app, como informações de conta, pareamento e interações. Seus dados não são vendidos e ficam protegidos pelos serviços do Firebase.`;
+
+    return `
+        <div class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onclick="closeLegalModal()"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center px-4" onclick="closeLegalModal()">
+            <div class="w-full max-w-md rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7" onclick="event.stopPropagation()">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest text-white/60">Consentimento</p>
+                        <h3 class="text-2xl font-semibold mt-1">${title}</h3>
+                    </div>
+                    <button class="text-white/70 hover:text-white" onclick="closeLegalModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-white/80 leading-relaxed">
+                    ${content}
+                </div>
+                <div class="mt-6">
+                    <button onclick="closeLegalModal()" class="w-full rounded-xl bg-white/10 py-3 text-white/80 font-semibold">Entendi</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderInstagramModal() {
+    return `
+        <div class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onclick="closeInstagramModal()"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center px-4" onclick="closeInstagramModal()">
+            <div class="w-full max-w-md rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7" onclick="event.stopPropagation()">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest text-white/60">Instagram</p>
+                        <h3 class="text-2xl font-semibold mt-1">Siga o Nosso Momento</h3>
+                    </div>
+                    <button class="text-white/70 hover:text-white" onclick="closeInstagramModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-white/80 leading-relaxed">
+                    Você será direcionado para o Instagram em uma nova aba.
+                </div>
+                <div class="mt-6 flex gap-3">
+                    <button onclick="closeInstagramModal()" class="flex-1 rounded-xl bg-white/10 py-3 text-white/80 font-semibold">Agora não</button>
+                    <button onclick="confirmInstagramRedirect()" class="flex-1 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 py-3 text-white font-semibold">Abrir Instagram</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderEditNameModal() {
+    const nomeAtual = state.usuario?.nome || '';
+    return `
+        <div class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onclick="closeEditNameModal()"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center px-4" onclick="closeEditNameModal()">
+            <div class="w-full max-w-md rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7" onclick="event.stopPropagation()">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest text-white/60">Perfil</p>
+                        <h3 class="text-2xl font-semibold mt-1">Editar nome</h3>
+                    </div>
+                    <button class="text-white/70 hover:text-white" onclick="closeEditNameModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <input id="editNameInput" type="text" value="${nomeAtual}" class="w-full" placeholder="Seu nome">
+                </div>
+                <div class="mt-6 flex gap-3">
+                    <button onclick="closeEditNameModal()" class="flex-1 rounded-xl bg-white/10 py-3 text-white/80 font-semibold">Cancelar</button>
+                    <button onclick="submitEditName()" class="flex-1 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 py-3 text-white font-semibold">Salvar</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderSystemModal() {
+    const isConfirm = state.systemModalType === 'confirm';
+    return `
+        <div class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onclick="closeSystemModal()"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center px-4" onclick="closeSystemModal()">
+            <div class="w-full max-w-md rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7" onclick="event.stopPropagation()">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest text-white/60">Atenção</p>
+                        <h3 class="text-2xl font-semibold mt-1">${isConfirm ? 'Confirmação' : 'Aviso'}</h3>
+                    </div>
+                    <button class="text-white/70 hover:text-white" onclick="closeSystemModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-white/80 leading-relaxed">
+                    ${state.systemModalMessage || ''}
+                </div>
+                <div class="mt-6 flex gap-3">
+                    ${isConfirm ? `<button onclick="closeSystemModal()" class="flex-1 rounded-xl bg-white/10 py-3 text-white/80 font-semibold">${state.systemModalCancelText || 'Cancelar'}</button>` : ''}
+                    <button onclick="confirmSystemModal()" class="flex-1 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 py-3 text-white font-semibold">${state.systemModalConfirmText || 'OK'}</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function openVipPopup() {
     state.showVipPopup = true;
     renderPareamentosLista();
@@ -2954,6 +3077,112 @@ function openVipPopup() {
 function closeVipPopup() {
     state.showVipPopup = false;
     renderPareamentosLista();
+}
+
+function openLegalModal(type) {
+    state.legalModalType = type || 'terms';
+    state.showLegalModal = true;
+    renderApp();
+}
+
+function closeLegalModal() {
+    state.showLegalModal = false;
+    state.legalModalType = null;
+    renderApp();
+}
+
+function openInstagramModal() {
+    state.showInstagramModal = true;
+    renderApp();
+}
+
+function closeInstagramModal() {
+    state.showInstagramModal = false;
+    renderApp();
+}
+
+function confirmInstagramRedirect() {
+    closeInstagramModal();
+    window.open('https://instagram.com/nossomomentoapp', '_blank');
+}
+
+function openSystemConfirm(message, onConfirm, options = {}) {
+    state.systemModalType = 'confirm';
+    state.systemModalMessage = message || '';
+    state.systemModalConfirmText = options.confirmText || 'Confirmar';
+    state.systemModalCancelText = options.cancelText || 'Cancelar';
+    state.systemModalOnConfirm = typeof onConfirm === 'function' ? onConfirm : null;
+    state.showSystemModal = true;
+    renderApp();
+}
+
+function openSystemAlert(message, options = {}) {
+    state.systemModalType = 'alert';
+    state.systemModalMessage = message || '';
+    state.systemModalConfirmText = options.confirmText || 'Entendi';
+    state.systemModalCancelText = '';
+    state.systemModalOnConfirm = null;
+    state.showSystemModal = true;
+    renderApp();
+}
+
+function closeSystemModal() {
+    state.showSystemModal = false;
+    state.systemModalMessage = '';
+    state.systemModalOnConfirm = null;
+    renderApp();
+}
+
+function confirmSystemModal() {
+    const action = state.systemModalOnConfirm;
+    closeSystemModal();
+    if (typeof action === 'function') {
+        action();
+    }
+}
+
+function openEditNameModal() {
+    if (!state.usuario) {
+        return;
+    }
+    state.editNameValue = state.usuario.nome || '';
+    state.showEditNameModal = true;
+    renderApp();
+}
+
+function closeEditNameModal() {
+    state.showEditNameModal = false;
+    state.editNameValue = '';
+    renderApp();
+}
+
+async function submitEditName() {
+    if (!state.usuario) {
+        return;
+    }
+
+    const input = document.getElementById('editNameInput');
+    const rawValue = input ? input.value : state.editNameValue;
+    const nomeAtual = state.usuario.nome || '';
+    const nomeFormatado = (rawValue || '').trim();
+
+    if (!nomeFormatado || nomeFormatado === nomeAtual) {
+        closeEditNameModal();
+        return;
+    }
+
+    try {
+        await db.collection('usuarios').doc(state.usuario.uid).update({
+            nome: nomeFormatado
+        });
+        state.usuario.nome = nomeFormatado;
+        closeEditNameModal();
+        renderMeuPerfil();
+        updateFixedUI();
+    } catch (error) {
+        console.error('Erro ao atualizar nome:', error);
+        showToast('Não foi possível atualizar o nome.', 'aviso');
+    }
 }
 
 function requestUnpairFromList(index) {
@@ -3067,7 +3296,7 @@ function abrirCatalogoPareamento(index) {
                         </button>
 
                         <!-- Botão de seguir no Instagram (discreto, com borda em gradiente) -->
-                        <button onclick="window.open('https://instagram.com/nossomomentoapp','_blank')" class="instagram-cta-outline w-full">
+                        <button onclick="openInstagramModal()" class="instagram-cta-outline w-full">
                             <span class="instagram-cta-inner w-full justify-center">
                                 <i class="fab fa-instagram text-xs"></i> Siga-nos no Instagram!
                             </span>
@@ -3621,12 +3850,12 @@ try {
     trackMetaEvent('CustomizeProduct');
 
     // 7. Damos um feedback de sucesso.
-    alert('Seu catálogo foi salvo com sucesso!');
+    showToast('Seu catálogo foi salvo com sucesso!', 'sucesso');
     console.log('Catálogo salvo no Firestore:', novoCatalogo);
 
 } catch (error) {
     console.error("Erro ao salvar o catálogo: ", error);
-    alert('Houve um erro ao salvar seu catálogo. Tente novamente.');
+    openSystemAlert('Houve um erro ao salvar seu catálogo. Tente novamente.');
 }
 }
 
@@ -3715,7 +3944,7 @@ async function handleNotificationToggle() {
 const notificationsActive = state.usuario && state.usuario.notificationsEnabled && Notification.permission === 'granted';
 
 if (Notification.permission === 'denied') {
-    alert("As notificações estão bloqueadas. Você precisa permitir manualmente nas configurações do seu navegador (clicando no ícone de cadeado 🔒 ao lado da URL).");
+    openSystemAlert("As notificações estão bloqueadas. Você precisa permitir manualmente nas configurações do seu navegador (clicando no ícone de cadeado 🔒 ao lado da URL).");
 } else if (notificationsActive) {
     // Se está ativo, a ação é desativar
     await desativarNotificacoes();
@@ -3733,11 +3962,11 @@ if (!file) {
 
 // Validação simples: checa se é uma imagem e se tem menos de 5MB
 if (!file.type.startsWith('image/')){
-    alert('Por favor, selecione um arquivo de imagem (jpg, png, etc.).');
+    openSystemAlert('Por favor, selecione um arquivo de imagem (jpg, png, etc.).');
     return;
 }
 if (file.size > 5 * 1024 * 1024) { // 5 Megabytes
-    alert('A imagem é muito grande. Por favor, escolha uma com menos de 5MB.');
+    openSystemAlert('A imagem é muito grande. Por favor, escolha uma com menos de 5MB.');
     return;
 }
 
@@ -3760,35 +3989,13 @@ async function handleEditarNome() {
         return;
     }
 
-    const nomeAtual = state.usuario.nome || '';
-    const novoNome = prompt('Digite o novo nome:', nomeAtual);
-
-    if (!novoNome || !novoNome.trim()) {
-        return;
-    }
-
-    const nomeFormatado = novoNome.trim();
-    if (nomeFormatado === nomeAtual) {
-        return;
-    }
-
-    try {
-        await db.collection('usuarios').doc(state.usuario.uid).update({
-            nome: nomeFormatado
-        });
-        state.usuario.nome = nomeFormatado;
-        renderMeuPerfil();
-        updateFixedUI();
-    } catch (error) {
-        console.error('Erro ao atualizar nome:', error);
-        alert('Não foi possível atualizar o nome. Tente novamente.');
-    }
+    openEditNameModal();
 }
 
 // Função 2: Faz o upload do arquivo para o Firebase Storage
 async function uploadProfilePic(file) {
 if (!state.usuario) {
-    alert('Você precisa estar logado para enviar uma foto.');
+    openSystemAlert('Você precisa estar logado para enviar uma foto.');
     return;
 }
 
@@ -3816,7 +4023,7 @@ uploadTask.on('state_changed',
     (error) => {
         // Em caso de erro
         console.error("Erro no upload: ", error);
-        alert('Houve um erro ao enviar sua foto.');
+        openSystemAlert('Houve um erro ao enviar sua foto.');
         if(progressContainer) progressContainer.classList.add('hidden');
     }, 
     () => {
@@ -3833,7 +4040,7 @@ uploadTask.on('state_changed',
             state.usuario.fotoUrl = downloadURL;
             updateFixedUI(); // Chama a função para atualizar a header
 
-            alert('Foto de perfil atualizada com sucesso!');
+            showToast('Foto de perfil atualizada com sucesso!', 'sucesso');
             if(progressContainer) progressContainer.classList.add('hidden'); // Esconde a barra
         });
     }
@@ -3847,7 +4054,7 @@ uploadTask.on('state_changed',
         const password = document.getElementById('signInPassword').value;
 
         if (!email || !password) {
-            alert('Por favor, preencha o email e a senha.');
+            openSystemAlert('Por favor, preencha o email e a senha.');
             return;
         }
 
@@ -3873,7 +4080,7 @@ uploadTask.on('state_changed',
             } else if (error.code === 'auth/invalid-credential') { 
                 errorMessage = 'Credenciais inválidas. Verifique seu email e senha.';
             }
-            alert(errorMessage);
+            openSystemAlert(errorMessage);
         }
     }
 
@@ -3886,15 +4093,15 @@ const sexo = document.getElementById('registerSexo').value;
 
 // Validação de Frontend
 if (!nome || !email || !telefone || !senha || !sexo) {
-    alert('Por favor, preencha todos os campos.');
+    openSystemAlert('Por favor, preencha todos os campos.');
     return;
 }
 if (telefone.length !== 11 || !/^\d+$/.test(telefone)) {
-    alert('O telefone deve conter exatamente 11 dígitos numéricos (com DDD).');
+    openSystemAlert('O telefone deve conter exatamente 11 dígitos numéricos (com DDD).');
     return;
 }
 if (senha.length < 6) {
-     alert('A senha deve ter no mínimo 6 caracteres.');
+     openSystemAlert('A senha deve ter no mínimo 6 caracteres.');
      return;
 }
 
@@ -3939,7 +4146,7 @@ try {
     state.achievementStats = {};
     state.etapa = 'parear';
     renderApp();
-    alert('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.');
+    showToast('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.', 'sucesso');
 
 } catch (error) {
     console.error('Erro no cadastro:', error.code, error.message);
@@ -3951,7 +4158,7 @@ try {
     } else if (error.code === 'auth/weak-password') {
         errorMessage = 'A senha é muito fraca (mínimo de 6 caracteres).';
     }
-    alert(errorMessage);
+    openSystemAlert(errorMessage);
 }
 }
 
@@ -4089,7 +4296,7 @@ renderApp();
 }
 
     async function desparearParceiro() {
-        if (confirm('Tem certeza que deseja desfazer o pareamento? Isso irá resetar os foguinhos de ambos os usuários para 0.')) {
+        openSystemConfirm('Tem certeza que deseja desfazer o pareamento? Isso irá resetar os foguinhos de ambos os usuários para 0.', async () => {
             try {
                 // Ao invés de tentar atualizar `usuarios` diretamente (que viola
                 // regras de segurança para campos sensíveis), criaremos um
@@ -4131,14 +4338,14 @@ renderApp();
             } catch (error) {
                 console.error('Erro ao desfazer pareamento (criando input):', error);
                 if (error && error.message && error.message.toLowerCase().includes('autenticado')) {
-                    alert(error.message);
+                    openSystemAlert(error.message);
                 } else if (error && error.code === 'permission-denied') {
-                    alert('Permissão negada: sua sessão expirou ou você não está autenticado. Faça login novamente.');
+                    openSystemAlert('Permissão negada: sua sessão expirou ou você não está autenticado. Faça login novamente.');
                 } else {
-                    alert('Erro ao desfazer pareamento. Tente novamente.');
+                    openSystemAlert('Erro ao desfazer pareamento. Tente novamente.');
                 }
             }
-        }
+        });
     }
 
     async function finalizarPedido() {
@@ -4287,6 +4494,15 @@ renderApp();
                 break;
             default:
                 renderLandingPage(); // Fallback
+        }
+
+        if (appContainer) {
+            appContainer.innerHTML += `
+                ${state.showLegalModal ? renderLegalModal() : ''}
+                ${state.showInstagramModal ? renderInstagramModal() : ''}
+                ${state.showEditNameModal ? renderEditNameModal() : ''}
+                ${state.showSystemModal ? renderSystemModal() : ''}
+            `;
         }
     }
 
@@ -5099,48 +5315,44 @@ async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
         console.error("ID da tarefa não fornecido.");
         return;
     }
+    openSystemConfirm("Tem certeza que deseja marcar este momento como 'Realizado'?", async () => {
+        try {
+            const tarefaRef = db.collection('tarefasMomentos').doc(tarefaId);
+            
+            await tarefaRef.update({
+                status: 'Realizado',
+                dataConclusao: firebase.firestore.FieldValue.serverTimestamp()
+            });
 
-    // Confirmação (opcional, mas recomendado)
-    if (!confirm("Tem certeza que deseja marcar este momento como 'Realizado'?")) {
-        return;
-    }
+            trackGAEvent('complete_moment', {
+                currency: 'FOG',
+                value: custoFoguinhos,
+                items: [{
+                    item_id: (momentoNome || 'unknown').replace(/\s+/g, '_'),
+                    item_name: momentoNome || 'unknown',
+                    price: custoFoguinhos,
+                    quantity: 1
+                }]
+            });
 
-    try {
-        const tarefaRef = db.collection('tarefasMomentos').doc(tarefaId);
-        
-        await tarefaRef.update({
-            status: 'Realizado',
-            dataConclusao: firebase.firestore.FieldValue.serverTimestamp()
-        });
+            trackMetaEvent('CompleteMoment', {
+                currency: 'BRL',
+                value: 0,
+                content_name: momentoNome || 'unknown',
+                content_ids: [(momentoNome || 'unknown').replace(/\s+/g, '_')]
+            });
+            // ==========================================================
 
-        trackGAEvent('complete_moment', {
-            currency: 'FOG',
-            value: custoFoguinhos,
-            items: [{
-                item_id: (momentoNome || 'unknown').replace(/\s+/g, '_'),
-                item_name: momentoNome || 'unknown',
-                price: custoFoguinhos,
-                quantity: 1
-            }]
-        });
+            showToast("Momento confirmado com sucesso!", "sucesso");
+            
+            // Re-renderiza a tela para mostrar a mudança de status
+            renderMomentos();
 
-        trackMetaEvent('CompleteMoment', {
-        currency: 'BRL',
-        value: 0,
-        content_name: momentoNome || 'unknown',
-        content_ids: [(momentoNome || 'unknown').replace(/\s+/g, '_')]
+        } catch (error) {
+            console.error("Erro ao confirmar tarefa:", error);
+            showToast("Erro ao confirmar o momento.", "erro");
+        }
     });
-        // ==========================================================
-
-        showToast("Momento confirmado com sucesso!", "sucesso");
-        
-        // Re-renderiza a tela para mostrar a mudança de status
-        renderMomentos();
-
-    } catch (error) {
-        console.error("Erro ao confirmar tarefa:", error);
-        showToast("Erro ao confirmar o momento.", "erro");
-    }
 }
 
     // Função para mudar a etapa da aplicação
@@ -5592,10 +5804,10 @@ try {
     state.usuario = { uid: uid, email: email, conquistas: {}, achievementStats: {} };
         if (REGISTRATION_ENABLED) {
             state.etapa = 'register';
-            alert('Por favor, complete seu cadastro para acessar todas as funcionalidades.');
+            openSystemAlert('Por favor, complete seu cadastro para acessar todas as funcionalidades.');
         } else {
             state.etapa = 'signIn';
-            alert('Perfil incompleto. Entre em contato com o suporte do MVP.');
+            openSystemAlert('Perfil incompleto. Entre em contato com o suporte do MVP.');
         }
     }
 } catch (error) {
@@ -5684,6 +5896,18 @@ try {
         window.handlePairingCtaClick = handlePairingCtaClick;
         window.openVipPopup = openVipPopup;
         window.closeVipPopup = closeVipPopup;
+        window.openLegalModal = openLegalModal;
+        window.closeLegalModal = closeLegalModal;
+        window.openInstagramModal = openInstagramModal;
+        window.closeInstagramModal = closeInstagramModal;
+        window.confirmInstagramRedirect = confirmInstagramRedirect;
+        window.openEditNameModal = openEditNameModal;
+        window.closeEditNameModal = closeEditNameModal;
+        window.submitEditName = submitEditName;
+        window.openSystemConfirm = openSystemConfirm;
+        window.openSystemAlert = openSystemAlert;
+        window.closeSystemModal = closeSystemModal;
+        window.confirmSystemModal = confirmSystemModal;
         window.requestUnpairFromList = requestUnpairFromList;
         window.setDesafiosTab = setDesafiosTab;
         window.setNotificacoesTab = setNotificacoesTab;
