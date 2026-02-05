@@ -14,6 +14,22 @@
             /* Adicionado padding-bottom para que o conteúdo não fique por baixo do footer fixo */
             overflow-x: hidden; /* Esconder a barra de rolagem horizontal se algo escapar */
         }
+        :root {
+            --footer-h: 48px;
+        }
+        .screen {
+            min-height: calc(100dvh - var(--footer-h) - env(safe-area-inset-bottom));
+        }
+        .screen-pad {
+            padding-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
+        }
+        .memorias-pad {
+            padding-bottom: calc(var(--footer-h) + 24px + env(safe-area-inset-bottom));
+        }
+        .memorias-screen {
+            min-height: 100dvh;
+            padding-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
+        }
         .font-handwritten {
             font-family: 'Pacifico', cursive;
         }
@@ -1251,7 +1267,7 @@ function triggerAchievementCelebration(notif) {
         ` : '';
 
         appContainer.innerHTML = `
-            <div class="min-h-screen flex flex-col justify-center items-center px-4" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+            <div class="screen screen-pad flex flex-col justify-center items-center px-4" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
                 
                 <div class="card p-6 sm:p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
                     
@@ -1284,7 +1300,7 @@ function triggerAchievementCelebration(notif) {
         const hasPendingChallenge = desafiosSemanais.some((desafio) => !(desafio.concluido || desafio.completed || desafio.status === 'finalizado')) || !!state.pendingChallenge;
 
         appContainer.innerHTML = `
-            <div class="min-h-screen bg-black text-white">
+            <div class="screen screen-pad bg-black text-white">
                 <section class="px-0 pt-11 pb-14" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                     <div class="flex flex-col items-center text-center -mt-3">
                         <div class="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-3 -mt-1">
@@ -1297,7 +1313,7 @@ function triggerAchievementCelebration(notif) {
                     </div>
                 </section>
 
-                <section class="px-5 pb-24 -mt-10">
+                <section class="px-5 pb-8 -mt-10">
                     <div class="rounded-[32px] bg-[#0f0b14] p-6 shadow-lg">
                         <div class="grid grid-cols-2 gap-4">
                             <button onclick="changeStep('notificacoes')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20" style="${notificationStyle}">
@@ -1365,7 +1381,7 @@ function triggerAchievementCelebration(notif) {
 
     function renderSignIn() {
         appContainer.innerHTML = `
-            <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+            <div class="screen screen-pad flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
                 <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
                     <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
                         <i class="fas fa-arrow-left mr-2"></i> Voltar
@@ -1393,7 +1409,7 @@ function triggerAchievementCelebration(notif) {
 
     function renderRegister() {
         appContainer.innerHTML = `
-            <div class="min-h-screen flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+            <div class="screen screen-pad flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
                 <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
                     <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
                         <i class="fas fa-arrow-left mr-2"></i> Voltar
@@ -2226,7 +2242,7 @@ if (state.pareado && state.parceiroData) {
     const checkInButtonClasses = canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed';
 
     appContainer.innerHTML = `
-        <div class="container mx-auto px-4 py-8 pb-24 pt-24">
+        <div class="container mx-auto px-4 py-8 pb-8 pt-24">
             <div class="max-w-md mx-auto card text-center p-8">
                 <h2 class="text-2xl font-bold mb-4 text-gray-300">Conectado com</h2>
                 <img src="${fotoParceiroUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-pink-500/50 mx-auto mb-4">
@@ -2262,7 +2278,7 @@ let content = '';
 
 if (state.pendingPairingRequest) {
     content = `
-        <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+        <div class="screen screen-pad flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
             <div class="card p-8 max-w-md w-full text-center">
                 <h2 class="text-3xl font-bold mb-4 text-pink-400">Solicitação Recebida</h2>
                 <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
@@ -2276,7 +2292,7 @@ if (state.pendingPairingRequest) {
 } else if (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
     const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
     content = `
-        <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+        <div class="screen screen-pad flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
             <div class="card p-8 max-w-md w-full text-center">
                 <h2 class="text-3xl font-bold mb-4 text-yellow-400">Solicitação Enviada</h2>
                 <p class="mb-4">Sua solicitação para ${pendingPhone} está pendente.</p>
@@ -2286,7 +2302,7 @@ if (state.pendingPairingRequest) {
         </div>`;
 } else {
     content = `
-        <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+        <div class="screen screen-pad flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
             <div class="card p-8 max-w-md w-full text-center">
                 <h2 class="text-3xl font-bold mb-4 text-pink-400">Parear com seu Amor</h2>
                 ${!state.codigoDigitando ? `
@@ -2398,7 +2414,7 @@ appContainer.innerHTML = content;
         : '';
 
     appContainer.innerHTML = `
-        <div class="min-h-screen bg-black text-white">
+        <div class="screen screen-pad bg-black text-white">
             <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-fire text-3xl mb-3"></i>
@@ -2407,7 +2423,7 @@ appContainer.innerHTML = content;
                 </div>
             </section>
 
-            <section class="px-5 pb-24 -mt-10">
+            <section class="px-5 pb-8 -mt-10">
                 <div class="notif-shell max-w-2xl mx-auto space-y-6">
                     <div class="notif-card-white flex items-center justify-between">
                         <div>
@@ -2651,7 +2667,7 @@ async function renderAchievementsPopup() {
     }).join('');
 
     appContainer.innerHTML = `
-        <div class="min-h-screen bg-black text-white">
+        <div class="screen screen-pad bg-black text-white">
             <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-flag-checkered text-3xl mb-3"></i>
@@ -2660,7 +2676,7 @@ async function renderAchievementsPopup() {
                 </div>
             </section>
 
-            <section class="px-5 pb-24 -mt-10">
+            <section class="px-5 pb-8 -mt-10">
                 <div class="notif-shell max-w-4xl mx-auto space-y-6">
                     <div class="notif-card-white flex items-center justify-between">
                         <div>
@@ -2767,7 +2783,7 @@ function renderPareamentosLista() {
     ` : '';
 
     appContainer.innerHTML = `
-        <div class="min-h-screen bg-black text-white">
+        <div class="screen screen-pad bg-black text-white">
             <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-heart text-3xl mb-3"></i>
@@ -2776,7 +2792,7 @@ function renderPareamentosLista() {
                 </div>
             </section>
 
-            <section class="px-5 pb-24 -mt-10">
+            <section class="px-5 pb-8 -mt-10">
                 <div class="notif-shell max-w-2xl mx-auto space-y-6">
                     <div class="notif-card-white flex items-center justify-between">
                         <div>
@@ -3028,7 +3044,7 @@ function abrirCatalogoPareamento(index) {
         const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
 
         appContainer.innerHTML = `
-            <div class="min-h-screen flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+            <div class="screen screen-pad flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
                 <div class="card p-8 max-w-md w-full relative overflow-hidden">
                     <div class="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-pink-500 opacity-10"></div>
                     <div class="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-red-500 opacity-10"></div>
@@ -3070,7 +3086,7 @@ function abrirCatalogoPareamento(index) {
     function renderMain() {
         if (!state.pareado || !state.parceiroData) {
             appContainer.innerHTML = `
-                <div class="min-h-screen bg-black text-white">
+                <div class="screen screen-pad bg-black text-white">
                     <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                         <div class="flex flex-col items-center text-center -mt-6">
                             <i class="fas fa-store text-3xl mb-3"></i>
@@ -3078,7 +3094,7 @@ function abrirCatalogoPareamento(index) {
                             <p class="text-white/80">Escolha momentos para viver</p>
                         </div>
                     </section>
-                    <section class="px-5 pb-24 -mt-10">
+                    <section class="px-5 pb-8 -mt-10">
                         <div class="notif-shell max-w-2xl mx-auto">
                             <div class="notif-card-white text-center">
                                 <h3 class="text-lg font-semibold text-red-500">Você ainda não está pareado(a)</h3>
@@ -3109,7 +3125,7 @@ function abrirCatalogoPareamento(index) {
         const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/logo-instagram-white.png';
 
         appContainer.innerHTML = `
-            <div class="min-h-screen bg-black text-white">
+            <div class="screen screen-pad bg-black text-white">
                 <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                     <div class="flex flex-col items-center text-center -mt-6">
                         <img src="${fotoParceiroUrl}" class="w-20 h-20 rounded-full object-cover border-2 border-white/40 mb-3">
@@ -3122,7 +3138,7 @@ function abrirCatalogoPareamento(index) {
                     </div>
                 </section>
 
-                <section class="px-5 pb-24 -mt-10">
+                <section class="px-5 pb-8 -mt-10">
                     <div class="notif-shell max-w-5xl mx-auto space-y-6">
                         <div class="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
                             <button onclick="filtrarMomentos(null)" class="notif-tab ${!state.filtro ? 'active' : ''}">
@@ -3363,7 +3379,7 @@ if (window.Notification) {
 }
 
 appContainer.innerHTML = `
-    <div class="min-h-screen bg-black text-white">
+    <div class="screen screen-pad bg-black text-white">
         <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
             <div class="flex flex-col items-center text-center -mt-6">
                 <i class="fas fa-store text-3xl mb-3"></i>
@@ -3372,7 +3388,7 @@ appContainer.innerHTML = `
             </div>
         </section>
 
-        <section class="px-5 pb-24 -mt-10">
+        <section class="px-5 pb-8 -mt-10">
             <div class="notif-shell max-w-5xl mx-auto space-y-6">
                 <div class="space-y-4">
                     ${categorias.map(categoria => `
@@ -3481,7 +3497,7 @@ function renderMeuPerfil() {
     }
 
     appContainer.innerHTML = `
-        <div class="min-h-screen bg-black text-white">
+        <div class="screen screen-pad bg-black text-white">
             <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-user text-3xl mb-3"></i>
@@ -3490,7 +3506,7 @@ function renderMeuPerfil() {
                 </div>
             </section>
 
-            <section class="px-5 pb-24 -mt-10">
+            <section class="px-5 pb-8 -mt-10">
                 <div class="notif-shell max-w-3xl mx-auto space-y-6">
                     <div class="rounded-2xl p-4 bg-[#ff4457] shadow-[0_12px_30px_rgba(255,68,87,0.35)]">
                         <div class="flex flex-col sm:flex-row sm:items-start gap-5">
@@ -4207,6 +4223,11 @@ renderApp();
     // --- Função Central de Renderização (Gerencia as etapas) ---
     function renderApp() {
         console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar, 'state.showFoguinhosPopup:', state.showFoguinhosPopup);
+        if (document && document.body) {
+            document.body.style.backgroundColor = state.etapa === 'memorias'
+                ? '#f7f5f9'
+                : '#000000';
+        }
         // Atualiza os elementos da header e footer que são fixos no DOM
         updateFixedUI();
 
@@ -4350,7 +4371,7 @@ renderApp();
 
         const challengePending = !!state.pendingChallenge;
         appContainer.innerHTML = `
-            <div class="min-h-screen bg-black text-white">
+            <div class="screen screen-pad bg-black text-white">
                 <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                     <div class="flex flex-col items-center text-center -mt-6">
                         <i class="fas fa-bell text-3xl mb-3"></i>
@@ -4359,7 +4380,7 @@ renderApp();
                     </div>
                 </section>
 
-                <section class="px-5 pb-24 -mt-10">
+                <section class="px-5 pb-8 -mt-10">
                     <div class="notif-shell max-w-2xl mx-auto space-y-6">
                         <div class="flex gap-2">
                             <button class="notif-tab ${tab === 'checkin' ? 'active' : ''}" onclick="setNotificacoesTab('checkin')">Check-in</button>
@@ -4381,7 +4402,7 @@ renderApp();
 async function renderMomentos() {
     const abaAtiva = state.abaTarefasAtiva || 'recebidos';
     appContainer.innerHTML = `
-        <div class="min-h-screen bg-black text-white">
+        <div class="screen screen-pad bg-black text-white">
             <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-heart text-3xl mb-3"></i>
@@ -4390,7 +4411,7 @@ async function renderMomentos() {
                 </div>
             </section>
 
-            <section class="px-5 pb-24 -mt-10">
+            <section class="px-5 pb-8 -mt-10">
                 <div class="notif-shell max-w-2xl mx-auto space-y-6">
                     <div class="flex gap-2">
                         <button class="notif-tab ${abaAtiva === 'recebidos' ? 'active' : ''}" onclick="trocarAbaTarefas('recebidos')">Recebidos</button>
@@ -4570,14 +4591,14 @@ function renderMemoriasWelcome() {
     const fotoParceiro = state.parceiroData?.fotoUrl || '/assets/icons/iconprincipal.png';
     const podeRelembrar = !!(state.pareado && state.idPareamentoAmigavel);
     return `
-        <div class="min-h-screen bg-[#f7f5f9] text-gray-900">
+        <div class="memorias-screen bg-[#f7f5f9] text-gray-900">
             <section class="px-6 pt-20 pb-10">
                 <div class="flex flex-col items-center text-center">
                     <h2 class="text-lg tracking-wide text-gray-500">Bem vindos as suas</h2>
                     <h3 class="text-3xl font-semibold text-gray-900 mt-2">Memórias</h3>
                 </div>
             </section>
-            <section class="px-5 pb-24">
+            <section class="px-5 pb-8">
                 <div class="max-w-md mx-auto bg-white rounded-3xl p-6 shadow-xl">
                     <div class="flex items-center justify-center gap-4">
                         <div class="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
@@ -4605,24 +4626,24 @@ function renderMemoriasFeed() {
     const fotoUsuario = state.usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
     const fotoParceiro = state.parceiroData?.fotoUrl || '/assets/icons/iconprincipal.png';
     appContainer.innerHTML = `
-        <div class="min-h-screen bg-[#f7f5f9] text-gray-900">
+        <div class="memorias-screen bg-[#f7f5f9] text-gray-900">
             <section class="px-6 pt-16 pb-6">
                 <div class="mt-6 flex flex-col items-center text-center">
-                    <div class="flex items-center justify-center gap-3">
-                        <div class="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
+                    <div class="flex items-center justify-center gap-4">
+                        <div class="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
                             <img src="${fotoUsuario}" class="w-full h-full object-cover" alt="Você">
                         </div>
-                        <div class="w-10 h-10 rounded-full bg-pink-500 flex items-center justify-center text-white text-lg">
+                        <div class="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white text-xl">
                             <i class="fas fa-heart"></i>
                         </div>
-                        <div class="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
+                        <div class="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
                             <img src="${fotoParceiro}" class="w-full h-full object-cover" alt="Par">
                         </div>
                     </div>
                     <h2 class="mt-4 text-4xl font-handwritten bg-gradient-to-r from-pink-500 to-red-500 text-transparent bg-clip-text">Suas Memórias</h2>
                 </div>
             </section>
-            <section class="px-5 pb-24">
+            <section class="px-5 pb-8">
                 <div class="max-w-4xl mx-auto">
                     <div class="p-[1px] rounded-3xl bg-gradient-to-r from-pink-500 to-red-500">
                         <div class="rounded-3xl bg-gray-900/20 backdrop-blur-md p-4">
