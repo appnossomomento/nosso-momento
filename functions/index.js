@@ -2786,6 +2786,87 @@ exports.createMemoriaFromPhoto = https.onRequest(async (req, res) => {
   }
 });
 
+exports.deleteMemoria = https.onRequest(async (req, res) => {
+  const originHeader = req.get("Origin") || req.get("origin") || "*";
+  const allowOrigin = originHeader === "null" ? "*" : originHeader;
+  const requestedHeaders = req.get("Access-Control-Request-Headers");
+
+  res.set("Access-Control-Allow-Origin", allowOrigin);
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set(
+      "Access-Control-Allow-Headers",
+      requestedHeaders || "Authorization, Content-Type",
+  );
+  res.set("Vary", "Origin");
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+
+  if (req.method !== "POST") {
+    res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  const authHeader = req.get("Authorization") || req.get("authorization") || "";
+  let idToken = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    idToken = authHeader.split("Bearer ")[1];
+  }
+
+  if (!idToken) {
+    res.status(401).send({error: "missing_id_token"});
+    return;
+  }
+
+  const body = req.body || {};
+  const memoriaId = typeof body.memoriaId === "string" ? body.memoriaId : "";
+
+  if (!memoriaId) {
+    res.status(400).send({error: "invalid_payload"});
+    return;
+  }
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+    const db = admin.firestore();
+    const memoriaRef = db.collection("memorias").doc(memoriaId);
+    const memoriaSnap = await memoriaRef.get();
+
+    if (!memoriaSnap.exists) {
+      res.status(404).send({error: "memoria_not_found"});
+      return;
+    }
+
+    const memoria = memoriaSnap.data() || {};
+    const pairUids = Array.isArray(memoria.pairUids) ? memoria.pairUids : [];
+    const isAllowed = pairUids.includes(uid) || memoria.autorUid === uid;
+
+    if (!isAllowed) {
+      res.status(403).send({error: "forbidden"});
+      return;
+    }
+
+    const bucket = admin.storage().bucket();
+    const fotoPath = memoria.fotoPath || null;
+    if (fotoPath) {
+      try {
+        await bucket.file(fotoPath).delete({ignoreNotFound: true});
+      } catch (err) {
+        console.warn("deleteMemoria: falha ao remover arquivo", err);
+      }
+    }
+
+    await memoriaRef.delete();
+    res.send({ok: true});
+  } catch (err) {
+    console.error("deleteMemoria error:", err);
+    res.status(500).send({error: "delete_memoria_failed"});
+  }
+});
+
 // HTTP endpoint seguro para criar um `input` via Admin SDK.
 // O cliente envia um idToken (Authorization: Bearer <token>) e o objeto
 // `input` no body. A função verifica o token, valida fromUid e cria o

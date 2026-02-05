@@ -698,6 +698,7 @@
     const SET_NOTIFICATION_TOKEN_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/setNotificationToken';
     const GET_MEMORIAS_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/getMemorias';
     const CREATE_MEMORIA_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/createMemoriaFromPhoto';
+    const DELETE_MEMORIA_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/deleteMemoria';
     const REGISTRATION_ENABLED = false;
     const NOTIFICATION_HIGHLIGHT = 'rgba(251, 191, 36, 0.2)';
   </script>
@@ -2653,7 +2654,7 @@ async function renderAchievementsPopup() {
         const isAguardandoParceiro = isSemanal && usuarioRespondeu && !parceiroRespondeu && (item.status === 'aguardando_parceiro');
         const isRespostasDiferentes = isSemanal && (item.status === 'respostas_diferentes');
         const isFinalizadoSemRecompensa = isSemanal && (item.status === 'finalizado_sem_recompensa');
-        const cardClickable = isSemanal && !isAguardandoParceiro && !isFinalizadoSemRecompensa && !!item.pergunta;
+        const cardClickable = isSemanal && !isSemanalFinalizadoTab && !isAguardandoParceiro && !isFinalizadoSemRecompensa && !!item.pergunta;
         const cardOnClick = cardClickable ? `onclick="openWeeklyChallengePopup('${item.id}', event)"` : '';
         const prazoTexto = isSemanalEmAberto ? getPrazoRestanteTexto(item) : (item.prazoTexto || '6d 23h 59m');
         const conquista = isConquista ? conquistasUsuario[item.id] : null;
@@ -4823,15 +4824,55 @@ function renderMemoriaViewer() {
         <div class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4" onclick="closeMemoriaViewer()">
             <div class="w-full max-w-md bg-white rounded-3xl p-5 shadow-2xl" onclick="event.stopPropagation()">
                 <div class="relative">
-                    <img src="${item.fotoUrl}" alt="Memória" class="w-full h-72 object-cover rounded-2xl">
+                    <div class="w-full aspect-[3/4] overflow-hidden rounded-2xl">
+                        <img src="${item.fotoUrl}" alt="Memória" class="w-full h-full object-cover">
+                    </div>
                     <button onclick="changeMemoriaViewer(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white text-sm">&#10094;</button>
                     <button onclick="changeMemoriaViewer(1)" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white text-sm">&#10095;</button>
                 </div>
                 <p class="text-sm text-gray-600 mt-4">${item.descricao || ''}</p>
-                <button onclick="closeMemoriaViewer()" class="mt-4 w-full py-2 rounded-full bg-gray-200 text-gray-600 font-semibold">Fechar</button>
+                <div class="mt-4 flex items-center justify-center gap-3">
+                    <button onclick="closeMemoriaViewer()" class="w-11 h-11 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center" aria-label="Fechar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button onclick="requestDeleteMemoriaFromViewer('${item.id}')" class="w-11 h-11 rounded-full bg-red-500 text-white flex items-center justify-center" aria-label="Excluir foto">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         </div>
     `;
+}
+
+function requestDeleteMemoriaFromViewer(memoriaId) {
+    if (!memoriaId) return;
+    openSystemConfirm('Tem certeza que deseja excluir esta foto?', async () => {
+        try {
+            await deleteMemoriaById(memoriaId);
+        } catch (error) {
+            console.error('Erro ao excluir memória:', error);
+            openSystemAlert('Erro ao excluir a foto. Tente novamente.');
+        }
+    }, { confirmText: 'Excluir', cancelText: 'Cancelar' });
+}
+
+async function deleteMemoriaById(memoriaId) {
+    await safeFetchBackend(DELETE_MEMORIA_URL, { memoriaId });
+
+    const items = Array.isArray(state.memoriasItems) ? state.memoriasItems : [];
+    const updated = items.filter((item) => item.id !== memoriaId);
+    state.memoriasItems = updated;
+
+    if (!updated.length) {
+        state.showMemoriasViewer = false;
+        state.memoriasViewerIndex = null;
+    } else {
+        const currentIndex = Number(state.memoriasViewerIndex) || 0;
+        state.memoriasViewerIndex = Math.min(currentIndex, updated.length - 1);
+    }
+
+    renderMemorias();
+    showToast('Foto excluída com sucesso!', 'sucesso');
 }
 
 function renderMemoriasWelcome() {
@@ -4846,7 +4887,7 @@ function renderMemoriasWelcome() {
                     <h3 class="text-3xl font-semibold text-gray-900 mt-2">Memórias</h3>
                 </div>
             </section>
-            <section class="px-5 pb-8">
+            <section class="px-4 pb-8">
                 <div class="max-w-md mx-auto bg-white rounded-3xl p-6 shadow-xl">
                     <div class="flex items-center justify-center gap-4">
                         <div class="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
@@ -4891,21 +4932,17 @@ function renderMemoriasFeed() {
                     <h2 class="mt-4 text-4xl font-handwritten bg-gradient-to-r from-pink-500 to-red-500 text-transparent bg-clip-text">Suas Memórias</h2>
                 </div>
             </section>
-            <section class="px-5 pb-8">
-                <div class="max-w-4xl mx-auto">
-                    <div class="p-[1px] rounded-3xl bg-gradient-to-r from-pink-500 to-red-500">
-                        <div class="rounded-3xl bg-gray-900/20 backdrop-blur-md p-4">
-                            <div class="grid grid-cols-3 gap-2">
-                                ${items.map((item, index) => `
-                                    <button onclick="openMemoriaViewer(${index})" class="aspect-square rounded-2xl overflow-hidden bg-white/80 shadow">
-                                        <img src="${item.fotoUrl}" alt="Memória" class="w-full h-full object-cover">
-                                    </button>
-                                `).join('')}
-                            </div>
-                            ${!isLoading && items.length === 0 ? '<p class="text-center text-white mt-6">Nenhuma memória disponível.</p>' : ''}
-                            ${isLoading ? '<p class="text-center text-gray-500 mt-6">Carregando...</p>' : ''}
-                        </div>
+            <section class="px-4 pb-8">
+                <div class="max-w-5xl mx-auto">
+                    <div class="grid grid-cols-3 gap-1.5">
+                        ${items.map((item, index) => `
+                            <button onclick="openMemoriaViewer(${index})" class="aspect-[3/4] overflow-hidden bg-white shadow-sm border-2 border-pink-400/80">
+                                <img src="${item.fotoUrl}" alt="Memória" class="w-full h-full object-cover">
+                            </button>
+                        `).join('')}
                     </div>
+                    ${!isLoading && items.length === 0 ? '<p class="text-center text-gray-500 mt-6">Nenhuma memória disponível.</p>' : ''}
+                    ${isLoading ? '<p class="text-center text-gray-500 mt-6">Carregando...</p>' : ''}
                     ${state.memoriasHasMore ? `
                         <div class="text-center mt-6">
                             <button onclick="loadMoreMemorias()" class="px-8 py-3 rounded-full bg-white shadow text-gray-600 font-semibold">Ver mais</button>
@@ -4938,22 +4975,22 @@ function renderChallengePopup() {
     const disabled = secondsLeft <= 0;
     const pergunta = state.pendingChallenge?.pergunta || 'Pergunta indisponível.';
     return `
-        <div class="fixed inset-0 bg-black/80 z-40 flex items-center justify-center px-4" onclick="closeChallengePopup()">
-            <div class="card p-6 w-full max-w-md" onclick="event.stopPropagation()">
+        <div class="fixed inset-0 bg-black/60 z-40 flex items-center justify-center px-4" onclick="closeChallengePopup()">
+            <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" onclick="event.stopPropagation()">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold text-amber-200">Desafio da Semana</h3>
-                    <button onclick="closeChallengePopup()" class="text-gray-400 hover:text-white">
+                    <h3 class="text-xl font-semibold bg-gradient-to-r from-pink-500 to-red-500 text-transparent bg-clip-text">Desafio da Semana</h3>
+                    <button onclick="closeChallengePopup()" class="w-9 h-9 rounded-full bg-gray-100 text-gray-500 hover:text-gray-700 flex items-center justify-center">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <p class="text-sm text-gray-300 mb-2">${pergunta}</p>
-                <p class="text-xs text-gray-500 mb-4">Responda igual ao seu par para ganhar o foguinho.</p>
+                <p class="text-base font-semibold text-gray-900 mb-2">${pergunta}</p>
+                <p class="text-sm bg-gradient-to-r from-pink-500 to-red-500 text-transparent bg-clip-text mb-4">Responda igual ao seu par para ganhar o foguinho.</p>
                 <div class="flex items-center justify-between mb-4">
-                    <span class="text-xs text-gray-400">Tempo restante</span>
-                    <span id="challengeCountdown" class="text-lg font-bold text-amber-200">${secondsLeft}s</span>
+                    <span class="text-xs text-pink-500">Tempo restante</span>
+                    <span id="challengeCountdown" class="text-lg font-bold text-pink-500">${secondsLeft}s</span>
                 </div>
-                <input id="challengeAnswer" type="text" placeholder="Digite sua resposta" ${disabled ? 'disabled' : ''} class="w-full mb-4 uppercase" oninput="this.value = this.value.toUpperCase()">
-                <button onclick="submitWeeklyChallengeAnswer()" class="w-full py-2 rounded-lg ${disabled ? 'bg-gray-700 text-gray-400' : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200'}" ${disabled ? 'disabled' : ''}>
+                <input id="challengeAnswer" type="text" placeholder="Digite sua resposta" ${disabled ? 'disabled' : ''} class="w-full mb-4 uppercase border border-pink-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300" oninput="this.value = this.value.toUpperCase()">
+                <button onclick="submitWeeklyChallengeAnswer()" class="w-full py-2 rounded-xl ${disabled ? 'bg-gray-200 text-gray-400' : 'bg-gradient-to-r from-pink-500 to-red-500 text-white'}" ${disabled ? 'disabled' : ''}>
                     Enviar resposta
                 </button>
                 ${disabled ? '<p class="text-xs text-gray-400 mt-3">Tempo esgotado.</p>' : ''}
@@ -4966,7 +5003,7 @@ function renderRealizadoPhotoPrompt() {
     const hasPreview = !!state.pendingRealizadoPhotoData;
     const previewHtml = hasPreview
         ? `
-            <div class="w-full h-44 rounded-2xl bg-white/10 overflow-hidden flex items-center justify-center mb-4">
+            <div class="w-full aspect-[3/4] bg-white/10 overflow-hidden flex items-center justify-center mb-4">
                 <img src="${state.pendingRealizadoPhotoData}" alt="Preview da foto" class="w-full h-full object-cover">
             </div>
         `
@@ -5962,6 +5999,7 @@ try {
         window.openMemoriaViewer = openMemoriaViewer;
         window.closeMemoriaViewer = closeMemoriaViewer;
         window.changeMemoriaViewer = changeMemoriaViewer;
+        window.requestDeleteMemoriaFromViewer = requestDeleteMemoriaFromViewer;
 
         console.log("✅ Funções de evento prontas.");
 
