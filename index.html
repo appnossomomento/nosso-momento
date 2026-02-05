@@ -9,15 +9,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        html, body {
+            height: 100%;
+            min-height: 100%;
+            margin: 0;
+        }
         body {
             font-family: 'Poppins', sans-serif;
             /* Adicionado padding-bottom para que o conteúdo não fique por baixo do footer fixo */
             overflow-x: hidden; /* Esconder a barra de rolagem horizontal se algo escapar */
         }
+        #app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
         :root {
             --footer-h: 48px;
         }
         .screen {
+            min-height: calc(100vh - var(--footer-h) - env(safe-area-inset-bottom));
+            min-height: calc(100svh - var(--footer-h) - env(safe-area-inset-bottom));
             min-height: calc(100dvh - var(--footer-h) - env(safe-area-inset-bottom));
         }
         .screen-pad {
@@ -29,6 +41,26 @@
         .memorias-screen {
             min-height: 100dvh;
             padding-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
+        }
+        .auth-screen {
+            height: 100vh;
+            min-height: 100vh;
+            min-height: 100svh;
+            min-height: 100dvh;
+            min-height: -webkit-fill-available;
+            display: grid;
+            place-items: center;
+            padding: 40px 16px;
+        }
+        .landing-screen {
+            height: 100vh;
+            min-height: 100vh;
+            min-height: 100svh;
+            min-height: 100dvh;
+            min-height: -webkit-fill-available;
+            display: grid;
+            place-items: center;
+            padding: 40px 16px;
         }
         .font-handwritten {
             font-family: 'Pacifico', cursive;
@@ -1278,9 +1310,9 @@ function triggerAchievementCelebration(notif) {
         ` : '';
 
         appContainer.innerHTML = `
-            <div class="screen screen-pad flex flex-col justify-center items-center px-4" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+            <div class="landing-screen flex flex-col justify-center items-center px-4" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
                 
-                <div class="card p-6 sm:p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+                <div class="card p-5 sm:p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
                     
                     <div class="text-center mb-10">
                         <img src="/assets/icons/logo-topdown-white-txt.png" alt="Nosso Momento" class="w-2/3 max-w-[200px] mx-auto mb-6">
@@ -1392,8 +1424,8 @@ function triggerAchievementCelebration(notif) {
 
     function renderSignIn() {
         appContainer.innerHTML = `
-            <div class="screen screen-pad flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
-                <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+            <div class="auth-screen" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                <div class="card relative p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
                     <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
                         <i class="fas fa-arrow-left mr-2"></i> Voltar
                     </button>
@@ -1420,8 +1452,8 @@ function triggerAchievementCelebration(notif) {
 
     function renderRegister() {
         appContainer.innerHTML = `
-            <div class="screen screen-pad flex flex-col justify-center items-center" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
-                <div class="card p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
+            <div class="auth-screen" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
+                <div class="card relative p-10 w-full max-w-md text-white overflow-hidden" style="border-radius: 24px;">
                     <button onclick="changeStep('landing')" class="absolute top-5 left-5 text-gray-400 hover:text-white transition">
                         <i class="fas fa-arrow-left mr-2"></i> Voltar
                     </button>
