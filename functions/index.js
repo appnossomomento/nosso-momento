@@ -2574,22 +2574,45 @@ exports.getMemorias = https.onRequest(async (req, res) => {
   const rawLimit = req.body && req.body.limit;
   const limitNum = Number(rawLimit);
   const limit = Number.isFinite(limitNum) ?
-    Math.min(Math.max(limitNum, 1), 50) :
-    9;
+    Math.min(Math.max(limitNum, 1), 200) :
+    50;
+
+  const rawStartMs = req.body && req.body.startMs;
+  const rawEndMs = req.body && req.body.endMs;
+  const startMs = Number(rawStartMs);
+  const endMs = Number(rawEndMs);
+  const useRange = Number.isFinite(startMs) && Number.isFinite(endMs);
+
+  const pareamentoId = req.body && typeof req.body.pareamentoId === "string" ?
+    req.body.pareamentoId :
+    "";
+  const usePareamento = !!pareamentoId;
 
   try {
     const decoded = await admin.auth().verifyIdToken(idToken);
     const uid = decoded.uid;
 
+    const db = admin.firestore();
+    let query = db
+        .collection("memorias")
+        .where("pairUids", "array-contains", uid);
+
+    if (usePareamento) {
+      query = query.where("pareamentoId", "==", pareamentoId);
+    }
+
+    if (useRange) {
+      query = query
+          .where("createdAtMs", ">=", startMs)
+          .where("createdAtMs", "<=", endMs)
+          .orderBy("createdAtMs", "desc");
+    } else {
+      query = query.orderBy("createdAtMs", "desc");
+    }
+
     let snapshot = null;
     try {
-      snapshot = await admin
-          .firestore()
-          .collection("memorias")
-          .where("pairUids", "array-contains", uid)
-          .orderBy("createdAtMs", "desc")
-          .limit(limit + 1)
-          .get();
+      snapshot = await query.limit(limit + 1).get();
     } catch (err) {
       const msg = String(err && err.message ? err.message : err);
       const code = err && err.code ? err.code : null;
@@ -2601,15 +2624,24 @@ exports.getMemorias = https.onRequest(async (req, res) => {
         throw err;
       }
 
-      snapshot = await admin
-          .firestore()
+      let fallbackQuery = db
           .collection("memorias")
-          .where("pairUids", "array-contains", uid)
-          .limit(limit + 1)
-          .get();
+          .where("pairUids", "array-contains", uid);
+
+      if (usePareamento) {
+        fallbackQuery = fallbackQuery.where("pareamentoId", "==", pareamentoId);
+      }
+
+      snapshot = await fallbackQuery.limit(limit + 1).get();
     }
 
-    const docs = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+    let docs = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+    if (useRange) {
+      docs = docs.filter((doc) =>
+        (doc.createdAtMs || 0) >= startMs && (doc.createdAtMs || 0) <= endMs,
+      );
+    }
+
     docs.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
     const hasMore = docs.length > limit;
     const items = docs.slice(0, limit);
@@ -2764,6 +2796,9 @@ exports.createMemoriaFromPhoto = https.onRequest(async (req, res) => {
     const payload = {
       tarefaId,
       momentoNome: tarefa.momentoNome || null,
+      custoFoguinhos: Number.isFinite(Number(tarefa.custoFoguinhos)) ?
+        Number(tarefa.custoFoguinhos) :
+        0,
       fotoUrl: downloadURL,
       fotoPath: filePath,
       pareamentoId: pareamentoId || null,

@@ -7,6 +7,7 @@
     <link rel="icon" href="/assets/icons/iconprincipal.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         html, body {
@@ -968,6 +969,16 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     memoriasLoading: false,
     memoriasViewerIndex: null,
     showMemoriasViewer: false,
+    memoriasMonth: null,
+    memoriasPairId: null,
+    memoriasPairMenuOpen: false,
+    memoriasShareModalOpen: false,
+    memoriasShareLastPhoto: null,
+    memoriasSharePreviewOpen: false,
+    memoriasSharePreviewUrl: null,
+    memoriasSharePreviewFile: null,
+    memoriasSharePreviewMode: null,
+    memoriasShareGenerating: false,
     showLegalModal: false,
     legalModalType: null,
     showInstagramModal: false,
@@ -4508,7 +4519,7 @@ renderApp();
                 renderMomentos();
                 break;
             case 'memorias':
-                renderMemorias();
+                loadMemoriasPosts().then(() => renderMemorias());
                 break;
             case 'gerenciarCatalogo':
                 renderGerenciarCatalogo();
@@ -4756,17 +4767,185 @@ async function renderMomentos() {
     `;
 }
 
+function ensureMemoriasMonth() {
+    if (state.memoriasMonth) return;
+    const now = new Date();
+    state.memoriasMonth = { year: now.getFullYear(), month: now.getMonth() };
+}
+
+function getMemoriasMonthLabel() {
+    ensureMemoriasMonth();
+    const { year, month } = state.memoriasMonth;
+    const date = new Date(year, month, 1);
+    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+}
+
+function getMemoriasMonthRange() {
+    ensureMemoriasMonth();
+    const { year, month } = state.memoriasMonth;
+    const start = new Date(year, month, 1, 0, 0, 0, 0);
+    const end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+    return { startMs: start.getTime(), endMs: end.getTime() };
+}
+
+function buildMemoriasPairOptions() {
+    const options = buildPareamentosLista();
+    if (options.length) return options;
+    if (state.parceiroData) {
+        return [state.parceiroData];
+    }
+    return [];
+}
+
+function resolveMemoriasPairId(pair) {
+    if (!pair || typeof pair !== 'object') return null;
+    return pair.pareamentoId ||
+        pair.pareamentoAmigavelId ||
+        pair.idPareamento ||
+        pair.idPareamentoAmigavel ||
+        null;
+}
+
+function getMemoriasPairName(pair) {
+    if (!pair || typeof pair !== 'object') return 'Pareamento';
+    return pair.nome ||
+        pair.apelido ||
+        pair.nickname ||
+        pair.partnerNickname ||
+        pair.partnerName ||
+        pair.name ||
+        'Pareamento';
+}
+
+function getMemoriasPairPhoto(pair) {
+    if (!pair || typeof pair !== 'object') return '/assets/icons/iconprincipal.png';
+    return pair.fotoUrl ||
+        pair.photoUrl ||
+        pair.partnerPhotoUrl ||
+        pair.avatarUrl ||
+        '/assets/icons/iconprincipal.png';
+}
+
+function resolveMemoriaCategoria(item) {
+    const momentoNome = item?.momentoNome || '';
+    if (!momentoNome) return '';
+    const momento = state.momentosMestres.find((m) => m.nome === momentoNome);
+    return momento?.categoria || '';
+}
+
+function getMemoriasCategoriaCounts(items) {
+    const counts = {
+        lovezin: 0,
+        sairRotina: 0,
+        quentes: 0,
+    };
+
+    items.forEach((item) => {
+        const categoria = resolveMemoriaCategoria(item);
+        if (categoria === 'Lovezin') {
+            counts.lovezin += 1;
+        } else if (categoria === 'Sair da Rotina') {
+            counts.sairRotina += 1;
+        } else if (categoria === 'Quentes') {
+            counts.quentes += 1;
+        }
+    });
+
+    return counts;
+}
+
+function pickRandomMemoriaPhotoByCategoria(items, categoria) {
+    const filtered = items.filter((item) => resolveMemoriaCategoria(item) === categoria);
+    const photoUrls = filtered.map((item) => item.fotoUrl).filter(Boolean);
+    if (!photoUrls.length) return null;
+
+    let candidate = photoUrls[Math.floor(Math.random() * photoUrls.length)];
+    if (photoUrls.length > 1 && candidate === state.memoriasShareLastPhoto) {
+        candidate = photoUrls.find((url) => url !== state.memoriasShareLastPhoto) || candidate;
+    }
+    state.memoriasShareLastPhoto = candidate;
+    return candidate;
+}
+
+function isLocalShareContext() {
+    return window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+}
+
+function getMemoriasSharePhotoUrl(items, categoria, fallbackUrl) {
+    const candidate = pickRandomMemoriaPhotoByCategoria(items, categoria);
+    let url = candidate || fallbackUrl || '/assets/icons/iconprincipal.png';
+
+    try {
+        const resolved = new URL(url, window.location.href);
+        if (isLocalShareContext() && resolved.origin !== window.location.origin) {
+            url = '/assets/icons/iconprincipal.png';
+        }
+    } catch {
+        url = '/assets/icons/iconprincipal.png';
+    }
+
+    return url;
+}
+
+function ensureMemoriasPairSelection() {
+    const options = buildMemoriasPairOptions();
+    if (!options.length) {
+        state.memoriasPairId = null;
+        return;
+    }
+
+    if (state.memoriasPairId) return;
+
+    const currentId = state.idPareamentoAmigavel || null;
+    if (currentId) {
+        state.memoriasPairId = currentId;
+        return;
+    }
+
+    const fallbackId = resolveMemoriasPairId(options[0]);
+    state.memoriasPairId = fallbackId || null;
+}
+
+function changeMemoriasMonth(delta) {
+    ensureMemoriasMonth();
+    const { year, month } = state.memoriasMonth;
+    const date = new Date(year, month + delta, 1);
+    state.memoriasMonth = { year: date.getFullYear(), month: date.getMonth() };
+    loadMemoriasPosts().then(() => renderMemorias());
+}
+
+function toggleMemoriasPairMenu() {
+    state.memoriasPairMenuOpen = !state.memoriasPairMenuOpen;
+    renderMemorias();
+}
+
+function selectMemoriasPair(pairId) {
+    state.memoriasPairId = pairId || null;
+    state.memoriasPairMenuOpen = false;
+    loadMemoriasPosts().then(() => renderMemorias());
+}
+
 async function loadMemoriasPosts() {
-    if (!state.pareado || !state.idPareamentoAmigavel) {
+    const hasPairs = buildMemoriasPairOptions().length > 0;
+    if (!hasPairs) {
         state.memoriasItems = [];
         state.memoriasHasMore = false;
         return;
     }
 
+    ensureMemoriasMonth();
+    ensureMemoriasPairSelection();
+
     state.memoriasLoading = true;
     try {
-        const limit = state.memoriasLimit || 9;
-        const response = await safeFetchBackend(GET_MEMORIAS_URL, { limit });
+        const limit = state.memoriasLimit || 200;
+        const { startMs, endMs } = getMemoriasMonthRange();
+        const response = await safeFetchBackend(GET_MEMORIAS_URL, {
+            limit,
+            startMs,
+            endMs,
+            pareamentoId: state.memoriasPairId,
+        });
         const items = Array.isArray(response?.items) ? response.items : [];
         state.memoriasHasMore = !!response?.hasMore;
         state.memoriasItems = items;
@@ -4781,7 +4960,7 @@ async function loadMemoriasPosts() {
 
 function openMemoriasFeed() {
     state.memoriasView = 'feed';
-    state.memoriasLimit = 9;
+    state.memoriasLimit = 200;
     state.showMemoriasViewer = false;
     state.memoriasViewerIndex = null;
     loadMemoriasPosts().then(() => renderMemorias());
@@ -4875,6 +5054,281 @@ async function deleteMemoriaById(memoriaId) {
     showToast('Foto excluída com sucesso!', 'sucesso');
 }
 
+function openMemoriasSharePicker() {
+    state.memoriasShareModalOpen = true;
+    renderMemorias();
+}
+
+function closeMemoriasSharePicker() {
+    state.memoriasShareModalOpen = false;
+    renderMemorias();
+}
+
+function renderMemoriasShareModal() {
+    return `
+        <div class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4" onclick="closeMemoriasSharePicker()">
+            <div class="w-full max-w-sm bg-[#111827] border border-gray-700 rounded-3xl p-5 shadow-2xl" onclick="event.stopPropagation()">
+                <h3 class="text-lg font-semibold text-white">Escolha o modelo</h3>
+                <p class="text-sm text-gray-400 mt-1">Selecione o estilo do extrato.</p>
+                <div class="mt-5 grid gap-3">
+                    <button onclick="handleMemoriasShareChoice('simple')" class="w-full py-3 rounded-xl bg-gray-800 text-white font-semibold">Discreto</button>
+                    <button onclick="handleMemoriasShareChoice('detailed')" class="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold">Detalhado</button>
+                </div>
+                <button onclick="closeMemoriasSharePicker()" class="mt-4 w-full py-2 rounded-xl bg-white/10 text-white/70">Cancelar</button>
+            </div>
+        </div>
+    `;
+}
+
+function handleMemoriasShareChoice(mode) {
+    state.memoriasShareModalOpen = false;
+    state.memoriasSharePreviewOpen = true;
+    state.memoriasSharePreviewMode = mode;
+    state.memoriasSharePreviewUrl = null;
+    state.memoriasSharePreviewFile = null;
+    state.memoriasShareGenerating = true;
+    renderMemorias();
+    generateMemoriasSharePreview(mode);
+}
+
+function closeMemoriasSharePreview() {
+    state.memoriasSharePreviewOpen = false;
+    state.memoriasSharePreviewMode = null;
+    state.memoriasSharePreviewUrl = null;
+    state.memoriasSharePreviewFile = null;
+    state.memoriasShareGenerating = false;
+    renderMemorias();
+}
+
+function backToMemoriasSharePicker() {
+    closeMemoriasSharePreview();
+    openMemoriasSharePicker();
+}
+
+function renderMemoriasSharePreview() {
+    const previewUrl = state.memoriasSharePreviewUrl;
+    const isGenerating = state.memoriasShareGenerating;
+    return `
+        <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center px-4" onclick="closeMemoriasSharePreview()">
+            <div class="w-full max-w-sm bg-[#111827] border border-gray-700 rounded-3xl p-5 shadow-2xl" onclick="event.stopPropagation()">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-white">Pré-visualização</h3>
+                    <button onclick="closeMemoriasSharePreview()" class="w-9 h-9 rounded-full bg-white/10 text-white/70 flex items-center justify-center" aria-label="Fechar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mt-4 rounded-2xl overflow-hidden bg-black/30 flex items-center justify-center">
+                    ${isGenerating ? '<div class="py-16 text-sm text-gray-300">Gerando imagem...</div>' : `<img src="${previewUrl}" alt="Pré-visualização" class="w-full">`}
+                </div>
+                <div class="mt-4 grid grid-cols-3 gap-3">
+                    <button onclick="backToMemoriasSharePicker()" class="py-2 rounded-xl bg-white/10 text-white/80">Voltar</button>
+                    <button onclick="shareMemoriasPreview()" class="py-2 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold">Compartilhar</button>
+                    <button onclick="saveMemoriasPreview()" class="py-2 rounded-xl bg-white text-red-600 font-semibold">Salvar</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function generateMemoriasSharePreview(mode) {
+    try {
+        const container = mode === 'simple'
+            ? buildMemoriasShareContainerSimple()
+            : buildMemoriasShareContainerDetailed();
+        const result = await createMemoriasShareImage(container);
+        state.memoriasSharePreviewUrl = result.dataUrl;
+        state.memoriasSharePreviewFile = result.file;
+    } catch (error) {
+        console.error('Erro ao gerar preview:', error);
+        openSystemAlert('Nao foi possivel gerar a pre-visualizacao.');
+        state.memoriasSharePreviewOpen = false;
+    } finally {
+        state.memoriasShareGenerating = false;
+        renderMemorias();
+    }
+}
+
+async function shareMemoriasPreview() {
+    const file = state.memoriasSharePreviewFile;
+    if (!file) {
+        openSystemAlert('Imagem ainda nao pronta.');
+        return;
+    }
+
+    if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+        try {
+            await navigator.share({ files: [file], title: 'Nosso Momento', text: 'Resumo de foguinhos do mes.' });
+            showToast('Extrato pronto para compartilhar!', 'sucesso');
+        } catch (error) {
+            console.error('Erro ao compartilhar:', error);
+        }
+    } else {
+        openSystemAlert('Compartilhamento nao suportado neste dispositivo.');
+    }
+}
+
+function saveMemoriasPreview() {
+    const dataUrl = state.memoriasSharePreviewUrl;
+    if (!dataUrl) {
+        openSystemAlert('Imagem ainda nao pronta.');
+        return;
+    }
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `memorias-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+}
+
+function buildMemoriasShareContainerSimple() {
+    const items = Array.isArray(state.memoriasItems) ? state.memoriasItems : [];
+    const totalFoguinhos = items.reduce((sum, item) => sum + (Number(item.custoFoguinhos) || 0), 0);
+    const monthLabel = getMemoriasMonthLabel();
+    const pairOptions = buildMemoriasPairOptions();
+    const selectedPair = pairOptions.find((pair) => resolveMemoriasPairId(pair) === state.memoriasPairId) || null;
+    const fallbackPhoto = getMemoriasPairPhoto(selectedPair);
+    const photoUrl = getMemoriasSharePhotoUrl(items, 'Sair da Rotina', fallbackPhoto);
+
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '720px';
+    container.style.height = '1280px';
+    container.style.padding = '56px 48px 48px';
+    container.style.borderRadius = '40px';
+    container.style.background = 'linear-gradient(135deg, #ff2d3f 0%, #ff5565 100%)';
+    container.style.color = '#ffffff';
+    container.style.fontFamily = 'Poppins, sans-serif';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.justifyContent = 'space-between';
+    container.innerHTML = `
+        <div style="text-align:center;">
+            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:60px;width:auto;display:inline-block;">
+            <div style="font-size:16px;letter-spacing:3px;text-transform:uppercase;opacity:0.9;margin-top:6px;">Resumo de ${monthLabel.toUpperCase()}</div>
+        </div>
+        <div style="width:100%;display:flex;justify-content:center;">
+            <div style="width:360px;height:360px;border-radius:40px;border:6px solid rgba(255,255,255,0.6);background:rgba(255,255,255,0.1);overflow:hidden;">
+                <img src="${photoUrl}" alt="Momento" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous">
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;text-align:center;width:100%;max-width:640px;align-self:center;justify-items:stretch;">
+        <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:40px 10px;align-items:center;display:flex;flex-direction:column;width:100%;">
+                <div style="font-size:90px;">🔥</div><br></br>
+                <div style="font-size:55px;font-weight:800;margin-top:8px;">${totalFoguinhos}</div><br>
+                <div style="font-size:27px;letter-spacing:1px;opacity:0.9;">INVESTIDOS NO<br>NOSSO AMOR</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:40px 10px;align-items:center;display:flex;flex-direction:column;width:100%;">
+                <div style="font-size:90px;">❤️</div><br></br>
+                <div style="font-size:55px;font-weight:800;margin-top:8px;">${totalFoguinhos}</div><br>
+                <div style="font-size:27px;letter-spacing:1px;opacity:0.9;">MOMENTOS<br>RESGATADOS</div>
+            </div>
+            </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#0b0b0b;padding:14px 18px;border-radius:18px;">
+            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:26px;">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+                <i class="fab fa-instagram"></i>
+                <span>/nossomomentoapp</span>
+            </div>
+        </div>
+    `;
+
+    return container;
+}
+
+function buildMemoriasShareContainerDetailed() {
+    const items = Array.isArray(state.memoriasItems) ? state.memoriasItems : [];
+    const totalFoguinhos = items.reduce((sum, item) => sum + (Number(item.custoFoguinhos) || 0), 0);
+    const monthLabel = getMemoriasMonthLabel();
+    const counts = getMemoriasCategoriaCounts(items);
+    const pairOptions = buildMemoriasPairOptions();
+    const selectedPair = pairOptions.find((pair) => resolveMemoriasPairId(pair) === state.memoriasPairId) || null;
+    const fallbackPhoto = getMemoriasPairPhoto(selectedPair);
+    const photoUrl = getMemoriasSharePhotoUrl(items, 'Sair da Rotina', fallbackPhoto);
+
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '720px';
+    container.style.height = '1280px';
+    container.style.padding = '56px 48px 48px';
+    container.style.borderRadius = '40px';
+    container.style.background = 'linear-gradient(135deg, #ff2d3f 0%, #ff5565 100%)';
+    container.style.color = '#ffffff';
+    container.style.fontFamily = 'Poppins, sans-serif';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.justifyContent = 'space-between';
+    container.innerHTML = `
+        <div style="text-align:center;">
+            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:60px;width:auto;display:inline-block;">
+            <div style="font-size:20px;letter-spacing:3px;text-transform:uppercase;opacity:0.9;margin-top:6px;">Resumo de ${monthLabel.toUpperCase()}</div>
+        </div>
+        <div style="width:100%;display:flex;justify-content:center;">
+            <div style="width:360px;height:360px;border-radius:40px;border:6px solid rgba(255,255,255,0.6);background:rgba(255,255,255,0.1);overflow:hidden;">
+                <img src="${photoUrl}" alt="Momento" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous">
+            </div>
+        </div>
+        <div style="text-align:center;font-size:22px;font-weight:700;width:100%;max-width:560px;align-self:center;">${items.length} Momentos Resgatados em ${monthLabel}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;text-align:center;">
+            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:40px 10px;">
+                <div style="font-size:60px;">🍷</div><br></br>
+                <div style="font-size:30px;font-weight:800;margin-top:8px;">${counts.sairRotina}x</div>
+                <div style="font-size:20px;letter-spacing:1px;opacity:0.9;">SAIR DA ROTINA</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:40px 10px;">
+                <div style="font-size:60px;">❤️</div><br></br>
+                <div style="font-size:30px;font-weight:800;margin-top:8px;">${counts.lovezin}x</div>
+                <div style="font-size:20px;letter-spacing:1px;opacity:0.9;">LOVEZIN</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:40px 10px;">
+                <div style="font-size:60px;">🌶️</div><br></br>
+                <div style="font-size:30px;font-weight:800;margin-top:8px;">${counts.quentes}x</div>
+                <div style="font-size:20px;letter-spacing:1px;opacity:0.9;">QUENTES</div>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:18px;width:100%;max-width:560px;align-self:center;">
+            <div style="font-size:80px;transform:translateY(-30px);">🔥</div>
+            <div style="font-size:90px;font-weight:900;line-height:1;transform:translateY(-30px);">${totalFoguinhos}</div>
+            <div style="font-size:26px;font-weight:700;line-height:1.1;text-align:left;">Foguinhos Investidos<br>No Nosso Amor</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;background:#0b0b0b;padding:14px 18px;border-radius:18px;">
+            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:26px;">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+                <i class="fab fa-instagram"></i>
+                <span>/nossomomentoapp</span>
+            </div>
+        </div>
+    `;
+
+    return container;
+}
+
+async function createMemoriasShareImage(container) {
+    if (typeof html2canvas !== 'function') {
+        throw new Error('html2canvas_missing');
+    }
+
+    document.body.appendChild(container);
+    try {
+        const canvas = await html2canvas(container, {backgroundColor: null, scale: 2, useCORS: true});
+        const dataUrl = canvas.toDataURL('image/png');
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) {
+            throw new Error('share_blob_failed');
+        }
+
+        const file = new File([blob], `memorias-${Date.now()}.png`, { type: 'image/png' });
+        return { dataUrl, file };
+    } finally {
+        container.remove();
+    }
+}
+
+
 function renderMemoriasWelcome() {
     const fotoUsuario = state.usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
     const fotoParceiro = state.parceiroData?.fotoUrl || '/assets/icons/iconprincipal.png';
@@ -4912,55 +5366,109 @@ function renderMemoriasWelcome() {
 function renderMemoriasFeed() {
     const items = Array.isArray(state.memoriasItems) ? state.memoriasItems : [];
     const isLoading = !!state.memoriasLoading;
-    const fotoUsuario = state.usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
-    const fotoParceiro = state.parceiroData?.fotoUrl || '/assets/icons/iconprincipal.png';
+    const pairOptions = buildMemoriasPairOptions();
+    ensureMemoriasMonth();
+    ensureMemoriasPairSelection();
+    const monthLabel = getMemoriasMonthLabel();
+    const selectedPairId = state.memoriasPairId;
+    const selectedPair = pairOptions.find((pair) => resolveMemoriasPairId(pair) === selectedPairId) || null;
+    const pairName = getMemoriasPairName(selectedPair);
+    const pairPhoto = getMemoriasPairPhoto(selectedPair);
+    const totalFoguinhos = items.reduce((sum, item) => sum + (Number(item.custoFoguinhos) || 0), 0);
+
+    if (!pairOptions.length) {
+        appContainer.innerHTML = `
+            <div class="memorias-screen bg-[#111827] text-white min-h-screen">
+                <section class="px-6 pt-24 pb-10 text-center">
+                    <h2 class="text-2xl font-bold">Sua Jornada</h2>
+                    <p class="mt-3 text-sm text-gray-300">Pareie seu parceiro para visualizar suas memórias.</p>
+                    <button onclick="changeStep('pareamentos')" class="mt-6 w-full max-w-xs mx-auto py-3 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold">Parear agora</button>
+                </section>
+            </div>
+        `;
+        return;
+    }
+
     appContainer.innerHTML = `
-        <div class="memorias-screen bg-[#f7f5f9] text-gray-900">
-            <section class="px-6 pt-16 pb-6">
-                <div class="mt-6 flex flex-col items-center text-center">
-                    <div class="flex items-center justify-center gap-4">
-                        <div class="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
-                            <img src="${fotoUsuario}" class="w-full h-full object-cover" alt="Você">
-                        </div>
-                        <div class="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white text-xl">
-                            <i class="fas fa-heart"></i>
-                        </div>
-                        <div class="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
-                            <img src="${fotoParceiro}" class="w-full h-full object-cover" alt="Par">
-                        </div>
+        <div class="memorias-screen bg-[#111827] text-white min-h-screen">
+            <section class="px-6 pt-20 pb-6 text-center">
+                <div class="flex flex-col items-center text-center">
+                    <i class="fas fa-book-open text-3xl mb-2 text-white/80"></i>
+                    <h2 class="text-3xl font-semibold text-white">Memórias</h2>
+                    <p class="text-sm text-white/70">Sua jornada registrada</p>
+                </div>
+                <div class="mt-4 flex items-center justify-center gap-2 w-full max-w-sm mx-auto">
+                    <div class="relative flex-1 min-w-0">
+                        <button onclick="toggleMemoriasPairMenu()" class="flex items-center gap-2 bg-gray-800 rounded-full px-3 py-2 w-full shadow-lg border border-gray-700">
+                            <img src="${pairPhoto}" alt="${pairName}" class="w-7 h-7 rounded-full object-cover">
+                            <span class="text-sm font-semibold text-gray-100 flex-1 text-left truncate">${pairName}</span>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                        </button>
+                        ${state.memoriasPairMenuOpen ? `
+                            <div class="absolute left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-xl overflow-hidden z-20">
+                                ${pairOptions.map((pair) => {
+                                    const optionId = resolveMemoriasPairId(pair);
+                                    const optionName = getMemoriasPairName(pair);
+                                    const optionPhoto = getMemoriasPairPhoto(pair);
+                                    const isActive = optionId === selectedPairId;
+                                    return `
+                                        <button onclick="selectMemoriasPair('${optionId || ''}')" class="w-full flex items-center gap-3 px-4 py-3 text-left ${isActive ? 'bg-gray-800' : 'hover:bg-gray-800/60'}">
+                                            <img src="${optionPhoto}" alt="${optionName}" class="w-7 h-7 rounded-full object-cover">
+                                            <span class="text-sm text-gray-100 truncate">${optionName}</span>
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : ''}
                     </div>
-                    <h2 class="mt-4 text-4xl font-handwritten bg-gradient-to-r from-pink-500 to-red-500 text-transparent bg-clip-text">Suas Memórias</h2>
+                    <div class="flex items-center justify-between bg-gray-800 rounded-full px-3 py-2 flex-1 min-w-0 shadow-lg border border-gray-700">
+                        <button onclick="changeMemoriasMonth(-1)" class="text-gray-400 hover:text-white" aria-label="Mes anterior">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="text-xs font-semibold text-gray-100 truncate">${monthLabel}</span>
+                        <button onclick="changeMemoriasMonth(1)" class="text-gray-400 hover:text-white" aria-label="Proximo mes">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
             </section>
-            <section class="px-4 pb-8">
-                <div class="max-w-5xl mx-auto">
-                    <div class="grid grid-cols-3 gap-1.5">
-                        ${items.map((item, index) => `
-                            <button onclick="openMemoriaViewer(${index})" class="aspect-[3/4] overflow-hidden bg-white shadow-sm border-2 border-pink-400/80">
-                                <img src="${item.fotoUrl}" alt="Memória" class="w-full h-full object-cover">
-                            </button>
-                        `).join('')}
+
+            <section class="px-5 pb-6">
+                <div class="w-full max-w-sm mx-auto rounded-3xl p-6 relative overflow-hidden shadow-2xl bg-gradient-to-br from-pink-500 via-red-500 to-red-600">
+                    <p class="text-xs text-white/80 uppercase tracking-widest">Resumo de ${monthLabel}</p>
+                    <div class="mt-2 text-3xl font-extrabold text-white drop-shadow-md flex items-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-fire text-amber-500"></i>
+                        <span class="flex items-baseline gap-2">
+                            <span>${totalFoguinhos}</span>
+                            <span class="text-2xl font-semibold">Foguinhos investidos</span>
+                        </span>
                     </div>
-                    ${!isLoading && items.length === 0 ? '<p class="text-center text-gray-500 mt-6">Nenhuma memória disponível.</p>' : ''}
-                    ${isLoading ? '<p class="text-center text-gray-500 mt-6">Carregando...</p>' : ''}
-                    ${state.memoriasHasMore ? `
-                        <div class="text-center mt-6">
-                            <button onclick="loadMoreMemorias()" class="px-8 py-3 rounded-full bg-white shadow text-gray-600 font-semibold">Ver mais</button>
-                        </div>
-                    ` : ''}
+                    <p class="mt-2 text-sm text-white/90">Veja suas estatisticas e compartilhe o amor.</p>
+                    <button onclick="openMemoriasSharePicker()" class="mt-4 w-full bg-white text-red-600 font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-gray-50">Ver e Compartilhar</button>
                 </div>
+            </section>
+
+            <section class="px-4 pb-20">
+                <h3 class="text-lg font-bold text-white mb-4 pl-1">Galeria de Fotos</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    ${items.map((item, index) => `
+                        <button onclick="openMemoriaViewer(${index})" class="aspect-[3/4] overflow-hidden bg-gray-900 border border-gray-800">
+                            <img src="${item.fotoUrl}" alt="Memoria" class="w-full h-full object-cover">
+                        </button>
+                    `).join('')}
+                </div>
+                ${!isLoading && items.length === 0 ? '<p class="text-center text-gray-400 mt-6">Nenhuma memoria neste mes.</p>' : ''}
+                ${isLoading ? '<p class="text-center text-gray-400 mt-6">Carregando...</p>' : ''}
             </section>
         </div>
         ${state.showMemoriasViewer ? renderMemoriaViewer() : ''}
+        ${state.memoriasShareModalOpen ? renderMemoriasShareModal() : ''}
+        ${state.memoriasSharePreviewOpen ? renderMemoriasSharePreview() : ''}
     `;
 }
 
 function renderMemorias() {
-    if (state.memoriasView === 'feed') {
-        renderMemoriasFeed();
-        return;
-    }
-    appContainer.innerHTML = renderMemoriasWelcome();
+    renderMemoriasFeed();
 }
 
 function trocarAbaTarefas(aba) {
@@ -6000,6 +6508,16 @@ try {
         window.closeMemoriaViewer = closeMemoriaViewer;
         window.changeMemoriaViewer = changeMemoriaViewer;
         window.requestDeleteMemoriaFromViewer = requestDeleteMemoriaFromViewer;
+        window.changeMemoriasMonth = changeMemoriasMonth;
+        window.toggleMemoriasPairMenu = toggleMemoriasPairMenu;
+        window.selectMemoriasPair = selectMemoriasPair;
+        window.openMemoriasSharePicker = openMemoriasSharePicker;
+        window.closeMemoriasSharePicker = closeMemoriasSharePicker;
+        window.handleMemoriasShareChoice = handleMemoriasShareChoice;
+        window.closeMemoriasSharePreview = closeMemoriasSharePreview;
+        window.backToMemoriasSharePicker = backToMemoriasSharePicker;
+        window.shareMemoriasPreview = shareMemoriasPreview;
+        window.saveMemoriasPreview = saveMemoriasPreview;
 
         console.log("✅ Funções de evento prontas.");
 
