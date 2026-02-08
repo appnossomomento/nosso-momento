@@ -5643,7 +5643,7 @@ async function confirmRealizadoWithPhoto() {
     renderMomentos();
 
     if (photoFile) {
-        await createMemoriaPostFromPhoto(pending, photoFile);
+        await createMemoriaPostPhoto(pending, photoFile);
     }
     handleDarCheck(pending.tarefaId, pending.momentoNome, pending.custoFoguinhos);
 }
@@ -5710,7 +5710,7 @@ async function uploadMemoriaPhoto(file, pending) {
     });
 }
 
-async function createMemoriaPostFromPhoto(pending, file) {
+async function createMemoriaPostPhoto(pending, file) {
     try {
         const pairUidsCheck = [pending.executadoPorUid, pending.resgatadoPorUid]
             .filter(Boolean);
