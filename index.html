@@ -4870,7 +4870,7 @@ function pickRandomMemoriaPhotoByCategoria(items, categoria) {
 }
 
 function isLocalShareContext() {
-    return window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+    return window.location.protocol === 'file:';
 }
 
 function getMemoriasSharePhotoSelection(items, categoria) {
@@ -5217,20 +5217,20 @@ function buildMemoriasShareContainerSimple() {
             <div style="font-size:16px;letter-spacing:3px;text-transform:uppercase;opacity:0.9;margin-top:6px;">Resumo de ${monthLabel.toUpperCase()}</div>
         </div>
         <div style="width:100%;display:flex;justify-content:center;">
-            <div style="width:360px;height:360px;border-radius:40px;border:${photoBorder};background:${photoBackground};overflow:hidden;">
+            <div style="width:420px;height:560px;border-radius:40px;border:${photoBorder};background:${photoBackground};overflow:hidden;">
                 <img src="${photoUrl}" alt="Momento" style="width:100%;height:100%;object-fit:${photoFit};padding:${photoPadding};box-sizing:border-box;" crossorigin="anonymous">
             </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;text-align:center;width:100%;max-width:640px;align-self:center;justify-items:stretch;">
-        <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:40px 10px;align-items:center;display:flex;flex-direction:column;width:100%;">
-                <div style="font-size:90px;">🔥</div><br></br>
-                <div style="font-size:55px;font-weight:800;margin-top:8px;">${totalFoguinhos}</div><br>
-                <div style="font-size:27px;letter-spacing:1px;opacity:0.9;">INVESTIDOS NO<br>NOSSO AMOR</div>
+        <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:28px 10px;align-items:center;display:flex;flex-direction:column;width:100%;">
+                <div style="font-size:72px;">🔥</div><br></br>
+                <div style="font-size:48px;font-weight:800;margin-top:6px;">${totalFoguinhos}</div><br>
+                <div style="font-size:22px;letter-spacing:1px;opacity:0.9;">INVESTIDOS NO<br>NOSSO AMOR</div>
             </div>
-            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:40px 10px;align-items:center;display:flex;flex-direction:column;width:100%;">
-                <div style="font-size:90px;">❤️</div><br></br>
-                <div style="font-size:55px;font-weight:800;margin-top:8px;">${totalFoguinhos}</div><br>
-                <div style="font-size:27px;letter-spacing:1px;opacity:0.9;">MOMENTOS<br>RESGATADOS</div>
+            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:28px 10px;align-items:center;display:flex;flex-direction:column;width:100%;">
+                <div style="font-size:72px;">❤️</div><br></br>
+                <div style="font-size:48px;font-weight:800;margin-top:6px;">${totalFoguinhos}</div><br>
+                <div style="font-size:22px;letter-spacing:1px;opacity:0.9;">MOMENTOS<br>RESGATADOS</div>
             </div>
             </div>
         <div style="display:flex;justify-content:space-between;align-items:center;background:#0b0b0b;padding:14px 18px;border-radius:18px;">
@@ -5277,32 +5277,31 @@ function buildMemoriasShareContainerDetailed() {
             <div style="font-size:20px;letter-spacing:3px;text-transform:uppercase;opacity:0.9;margin-top:6px;">Resumo de ${monthLabel.toUpperCase()}</div>
         </div>
         <div style="width:100%;display:flex;justify-content:center;">
-            <div style="width:360px;height:360px;border-radius:40px;border:${photoBorder};background:${photoBackground};overflow:hidden;">
+            <div style="width:420px;height:560px;border-radius:40px;border:${photoBorder};background:${photoBackground};overflow:hidden;">
                 <img src="${photoUrl}" alt="Momento" style="width:100%;height:100%;object-fit:${photoFit};padding:${photoPadding};box-sizing:border-box;" crossorigin="anonymous">
             </div>
         </div>
-        <div style="text-align:center;font-size:22px;font-weight:700;width:100%;max-width:560px;align-self:center;">${items.length} Momentos Resgatados em ${monthLabel}</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;text-align:center;">
-            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:40px 10px;">
-                <div style="font-size:60px;">🍷</div><br></br>
-                <div style="font-size:30px;font-weight:800;margin-top:8px;">${counts.sairRotina}x</div>
-                <div style="font-size:20px;letter-spacing:1px;opacity:0.9;">SAIR DA ROTINA</div>
+            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:28px 10px;">
+                <div style="font-size:52px;">🍷</div><br></br>
+                <div style="font-size:26px;font-weight:800;margin-top:6px;">${counts.sairRotina}x</div>
+                <div style="font-size:18px;letter-spacing:1px;opacity:0.9;">SAIR DA ROTINA</div>
             </div>
-            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:40px 10px;">
-                <div style="font-size:60px;">❤️</div><br></br>
-                <div style="font-size:30px;font-weight:800;margin-top:8px;">${counts.lovezin}x</div>
-                <div style="font-size:20px;letter-spacing:1px;opacity:0.9;">LOVEZIN</div>
+            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:28px 10px;">
+                <div style="font-size:52px;">❤️</div><br></br>
+                <div style="font-size:26px;font-weight:800;margin-top:6px;">${counts.lovezin}x</div>
+                <div style="font-size:18px;letter-spacing:1px;opacity:0.9;">LOVEZIN</div>
             </div>
-            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:40px 10px;">
-                <div style="font-size:60px;">🌶️</div><br></br>
-                <div style="font-size:30px;font-weight:800;margin-top:8px;">${counts.quentes}x</div>
-                <div style="font-size:20px;letter-spacing:1px;opacity:0.9;">QUENTES</div>
+            <div style="background:rgba(0,0,0,0.12);border-radius:18px;padding:28px 10px;">
+                <div style="font-size:52px;">🌶️</div><br></br>
+                <div style="font-size:26px;font-weight:800;margin-top:6px;">${counts.quentes}x</div>
+                <div style="font-size:18px;letter-spacing:1px;opacity:0.9;">QUENTES</div>
             </div>
         </div>
         <div style="display:flex;align-items:center;justify-content:center;gap:18px;width:100%;max-width:560px;align-self:center;">
-            <div style="font-size:80px;transform:translateY(-30px);">🔥</div>
-            <div style="font-size:90px;font-weight:900;line-height:1;transform:translateY(-30px);">${totalFoguinhos}</div>
-            <div style="font-size:26px;font-weight:700;line-height:1.1;text-align:left;">Foguinhos Investidos<br>No Nosso Amor</div>
+            <div style="font-size:70px;transform:translateY(-10px);">🔥</div>
+            <div style="font-size:80px;font-weight:900;line-height:1;transform:translateY(-10px);">${totalFoguinhos}</div>
+            <div style="font-size:22px;font-weight:700;line-height:1.1;text-align:left;">Foguinhos Investidos<br>No Nosso Amor</div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;background:#0b0b0b;padding:14px 18px;border-radius:18px;">
             <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:26px;">
