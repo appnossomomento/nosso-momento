@@ -2653,7 +2653,7 @@ exports.getMemorias = https.onRequest(async (req, res) => {
   }
 });
 
-exports.createMemoriaFromPhoto = https.onRequest(async (req, res) => {
+exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
   const originHeader = req.get("Origin") || req.get("origin") || "*";
   const allowOrigin = originHeader === "null" ? "*" : originHeader;
   const requestedHeaders = req.get("Access-Control-Request-Headers");
@@ -2823,7 +2823,7 @@ exports.createMemoriaFromPhoto = https.onRequest(async (req, res) => {
     const memoriaRef = await db.collection("memorias").add(payload);
     res.send({item: {id: memoriaRef.id, ...payload}});
   } catch (err) {
-    console.error("createMemoriaFromPhoto error:", err);
+    console.error("createMemoriaPhoto error:", err);
     res.status(500).send({error: "create_memoria_failed"});
   }
 });
