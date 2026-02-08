@@ -2796,11 +2796,13 @@ exports.createMemoriaFromPhoto = https.onRequest(async (req, res) => {
     const momentoCategoria = tarefa.momentoCategoria ||
       tarefa.categoria ||
       null;
+    const memoriaSchemaVersion = 2;
     const payload = {
       tarefaId,
       momentoNome: tarefa.momentoNome || null,
       momentoCategoria,
       categoria: momentoCategoria,
+      memoriaSchemaVersion,
       custoFoguinhos: Number.isFinite(Number(tarefa.custoFoguinhos)) ?
         Number(tarefa.custoFoguinhos) :
         0,
