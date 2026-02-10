@@ -2,6 +2,7 @@
 const firestore = require("firebase-functions/v2/firestore");
 const {onDocumentCreated, onDocumentUpdated} = firestore;
 const {setGlobalOptions} = require("firebase-functions/v2");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 
@@ -47,6 +48,25 @@ function rateLimitHttp(req, res, {keyPrefix, limit, windowMs}) {
 setGlobalOptions({
   region: "southamerica-east1",
 });
+
+const WEEKLY_CHALLENGE_QUESTIONS = [
+  "Qual é a música que representa vocês dois?",
+  "Qual o local que nós demos o primeiro beijo?",
+  "Qual foi o primeiro filme que vimos juntos?",
+  "Qual é a nossa comida favorita para pedir juntos?",
+];
+const WEEKLY_CHALLENGE_CYCLE_MS = (3 * 24 + 23) * 60 * 60 * 1000;
+
+function getChallengeQuestionForCycle(seed, cycleIndex) {
+  const seedStr = `${seed || "alma_gemea"}:${cycleIndex || 0}`;
+  let hash = 0;
+  for (let i = 0; i < seedStr.length; i++) {
+    hash = (hash << 5) - hash + seedStr.charCodeAt(i);
+    hash |= 0;
+  }
+  const index = Math.abs(hash) % WEEKLY_CHALLENGE_QUESTIONS.length;
+  return WEEKLY_CHALLENGE_QUESTIONS[index];
+}
 
 function normalizePhone(value) {
   if (!value) return null;
@@ -3135,6 +3155,135 @@ async function deleteWeeklyChallengeInputs(db, batchSize = 200) {
   }
   return deleted;
 }
+
+async function upsertWeeklyChallengeForPair({
+  db,
+  pairUids,
+  pareamentoId,
+  nowMs,
+}) {
+  const sortedUids = [...pairUids].sort();
+  const pairKey = sortedUids.join("_");
+  const challengeDocId = `alma_gemea_${pairKey}`;
+  const challengeRef = db.collection("weeklyChallenges").doc(challengeDocId);
+  const snap = await challengeRef.get();
+  const nowTs = admin.firestore.Timestamp.fromMillis(nowMs);
+
+  if (!snap.exists) {
+    const pergunta = getChallengeQuestionForCycle(pairKey, 0);
+    await challengeRef.set({
+      id: challengeDocId,
+      challengeId: "alma_gemea",
+      titulo: "Alma Gêmea",
+      descricao: "Respondam a mesma pergunta para ganhar 1 foguinho.",
+      pergunta,
+      reward: 1,
+      status: "pendente",
+      pairUids: sortedUids,
+      pareamentoId: pareamentoId || null,
+      cycleIndex: 0,
+      respostas: {},
+      respondeuEm: {},
+      respondeuNome: {},
+      concluido: false,
+      rewarded: false,
+      createdAtMs: nowMs,
+      criadoEm: nowTs,
+      startedAtMs: nowMs,
+      startedAt: nowTs,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, {merge: true});
+    return "created";
+  }
+
+  const data = snap.data() || {};
+  const startedAtMs = Number(data.startedAtMs || data.createdAtMs || 0) || 0;
+  const cycleIndex = Number.isFinite(Number(data.cycleIndex)) ?
+    Number(data.cycleIndex) :
+    0;
+  const isExpired = !startedAtMs || (nowMs - startedAtMs) >=
+    WEEKLY_CHALLENGE_CYCLE_MS;
+
+  if (!isExpired) {
+    return "skipped";
+  }
+
+  const nextIndex = cycleIndex + 1;
+  const pergunta = getChallengeQuestionForCycle(pairKey, nextIndex);
+  await challengeRef.set({
+    id: challengeDocId,
+    challengeId: data.challengeId || "alma_gemea",
+    titulo: data.titulo || "Alma Gêmea",
+    descricao: data.descricao ||
+      "Respondam a mesma pergunta para ganhar 1 foguinho.",
+    pergunta,
+    reward: Number.isFinite(Number(data.reward)) ? Number(data.reward) : 1,
+    status: "pendente",
+    pairUids: sortedUids,
+    pareamentoId: pareamentoId || data.pareamentoId || null,
+    cycleIndex: nextIndex,
+    respostas: {},
+    respondeuEm: {},
+    respondeuNome: {},
+    respostaUsuario: null,
+    respostaParceiro: null,
+    parceiroNomeResposta: null,
+    concluido: false,
+    rewarded: false,
+    completedAt: null,
+    completedAtMs: null,
+    createdAtMs: nowMs,
+    criadoEm: nowTs,
+    startedAtMs: nowMs,
+    startedAt: nowTs,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, {merge: true});
+
+  return "rotated";
+}
+
+exports.rotateWeeklyChallenges = onSchedule({
+  schedule: "every 6 hours",
+  timeZone: "America/Sao_Paulo",
+}, async () => {
+  const db = admin.firestore();
+  const nowMs = Date.now();
+  const pareamentosSnap = await db.collection("pareamentos").get();
+  let created = 0;
+  let rotated = 0;
+  let skipped = 0;
+
+  for (const doc of pareamentosSnap.docs) {
+    const data = doc.data() || {};
+    const uidA = data.pessoa1Uid || null;
+    const uidB = data.pessoa2Uid || null;
+    if (!uidA || !uidB) {
+      continue;
+    }
+
+    const result = await upsertWeeklyChallengeForPair({
+      db,
+      pairUids: [uidA, uidB],
+      pareamentoId: doc.id,
+      nowMs,
+    });
+
+    if (result === "created") {
+      created += 1;
+    } else if (result === "rotated") {
+      rotated += 1;
+    } else {
+      skipped += 1;
+    }
+  }
+
+  console.log("rotateWeeklyChallenges: done", {
+    total: pareamentosSnap.size,
+    created,
+    rotated,
+    skipped,
+  });
+});
 
 exports.resetWeeklyChallengesAdmin = https.onRequest(async (req, res) => {
   const originHeader = req.get("Origin") || req.get("origin") || "";

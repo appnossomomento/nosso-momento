@@ -1543,7 +1543,7 @@ function ensureFirstPairingChallenge() {
     }
     const desafioId = docId;
 
-    const perguntaSelecionada = getStableChallengeQuestion(desafioId);
+    const perguntaSelecionada = getStableChallengeQuestion(desafioId, 0);
 
     const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
     const existingChallenge = desafiosSemanais.find((desafio) => desafio.id === desafioId || desafio.id?.startsWith('alma_gemea_'));
@@ -1557,7 +1557,7 @@ function ensureFirstPairingChallenge() {
             pergunta: perguntaSelecionada,
             icon: 'fa-heart',
             reward: 1,
-            prazoTexto: '6d 23h 59m',
+            prazoTexto: '3d 23h 59m',
             status: 'pendente',
             criadoEm: new Date(),
         };
@@ -1583,14 +1583,14 @@ function ensureFirstPairingChallenge() {
     setupWeeklyChallengeListener();
 }
 
-function getStableChallengeQuestion(seed) {
+function getStableChallengeQuestion(seed, cycleIndex = 0) {
     const perguntasAlmaGemea = [
         'Qual é a música que representa vocês dois?',
         'Qual o local que nós demos o primeiro beijo?',
         'Qual foi o primeiro filme que vimos juntos?',
         'Qual é a nossa comida favorita para pedir juntos?',
     ];
-    const seedStr = seed || 'alma_gemea';
+    const seedStr = `${seed || 'alma_gemea'}:${cycleIndex}`;
     let hash = 0;
     for (let i = 0; i < seedStr.length; i++) {
         hash = (hash << 5) - hash + seedStr.charCodeAt(i);
@@ -1600,7 +1600,7 @@ function getStableChallengeQuestion(seed) {
     return perguntasAlmaGemea[index];
 }
 
-const PRAZO_DESAFIO_SEMANAL_MS = ((6 * 24 + 23) * 60 + 59) * 60 * 1000;
+const PRAZO_DESAFIO_SEMANAL_MS = ((3 * 24 + 23) * 60 + 59) * 60 * 1000;
 
 function getDateFromValue(value) {
     if (!value) return null;
@@ -1617,15 +1617,18 @@ function getDateFromValue(value) {
 }
 
 function getPrazoRestanteTexto(desafio) {
+    const startValue = desafio?.startedAt || desafio?.prazoInicio || desafio?.startedEm || null;
     const createdValue = desafio?.criadoEm || desafio?.createdAt || desafio?.createdEm || null;
-    const createdAt = getDateFromValue(createdValue) || new Date();
+    const startedAt = getDateFromValue(startValue) || getDateFromValue(createdValue) || new Date();
     const now = Date.now();
-    const deadline = createdAt.getTime() + PRAZO_DESAFIO_SEMANAL_MS;
+    const deadline = startedAt.getTime() + PRAZO_DESAFIO_SEMANAL_MS;
     const remaining = Math.max(0, deadline - now);
+    const dayMs = 24 * 60 * 60 * 1000;
+    const hourMs = 60 * 60 * 1000;
+    const days = Math.floor(remaining / dayMs);
+    const hours = Math.floor((remaining % dayMs) / hourMs);
 
-    const days = Math.ceil(remaining / (24 * 60 * 60 * 1000));
-
-    return `${days}d`;
+    return `${days}d ${hours}h`;
 }
 
 function getChallengeDeadlineMs(desafio) {
@@ -2663,7 +2666,6 @@ async function renderAchievementsPopup() {
         const usuarioRespondeu = isSemanal && !!item.respostaUsuario;
         const parceiroRespondeu = isSemanal && !!item.respostaParceiro;
         const isAguardandoParceiro = isSemanal && usuarioRespondeu && !parceiroRespondeu && (item.status === 'aguardando_parceiro');
-        const isRespostasDiferentes = isSemanal && (item.status === 'respostas_diferentes');
         const isFinalizadoSemRecompensa = isSemanal && (item.status === 'finalizado_sem_recompensa');
         const cardClickable = isSemanal && !isSemanalFinalizadoTab && !isAguardandoParceiro && !isFinalizadoSemRecompensa && !!item.pergunta;
         const cardOnClick = cardClickable ? `onclick="openWeeklyChallengePopup('${item.id}', event)"` : '';
@@ -2701,7 +2703,6 @@ async function renderAchievementsPopup() {
                         ${recompensaTexto ? `<p class="text-xs sm:text-sm font-semibold text-amber-400 mt-2">${recompensaTexto}</p>` : ''}
                         ${isSemanalEmAberto && !isAguardandoParceiro ? `<p id="desafioPrazo-${item.id}" class="text-xs font-semibold text-pink-500 mt-2">Prazo: ${prazoTexto}</p>` : ''}
                         ${isAguardandoParceiro ? `<p class="text-xs font-semibold text-amber-500 mt-2">Aguardando ${state.parceiroApelido || state.parceiroNome || 'parceiro'} responder</p>` : ''}
-                        ${isRespostasDiferentes ? `<p class="text-xs font-semibold text-rose-400 mt-2">Respostas diferentes. Sem sincronia.</p>` : ''}
                         ${desbloqueada ? (isSemanal
                             ? (isFinalizadoSemRecompensa
                                 ? `<div class="mt-1">
@@ -5891,27 +5892,10 @@ function handleWeeklyChallengeTimeout(desafioId) {
     if (index === -1) {
         return;
     }
-    const desafioAtual = desafiosSemanais[index];
-    desafiosSemanais[index] = {
-        ...desafioAtual,
-        status: 'finalizado_sem_recompensa',
-        concluido: true,
-        completedAt: new Date(),
-        rewarded: false,
-    };
-    state.desafiosSemanais = desafiosSemanais;
-    persistWeeklyChallenge(desafiosSemanais[index]);
-    safeAddInput({
-        type: 'weekly_challenge_timeout',
-        challengeId: desafiosSemanais[index].challengeId || 'alma_gemea',
-        challengeDocId: desafiosSemanais[index].id || desafioId,
-        timedOutAt: Date.now(),
-    }).catch((err) => console.warn('Falha ao enviar timeout do desafio:', err));
     state.showChallengePopup = false;
     state.activeWeeklyChallengeId = null;
     state.challengeDeadline = null;
-    state.pendingChallenge = null;
-    showToast('Tempo esgotado. Desafio finalizado sem recompensa.', 'aviso');
+    showToast('Tempo esgotado. Você pode tentar novamente depois.', 'aviso');
     renderAchievementsPopup();
 }
 
