@@ -1,0 +1,28 @@
+{
+  "displayName": "HTTP 5xx rate (Cloud Run)",
+  "combiner": "OR",
+  "conditions": [
+    {
+      "displayName": "5xx responses",
+      "conditionThreshold": {
+        "filter": "metric.type=\"run.googleapis.com/request_count\" resource.type=\"cloud_run_revision\" metric.label.\"response_code_class\"=\"5xx\"",
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 0.01,
+        "duration": "300s",
+        "aggregations": [
+          {
+            "alignmentPeriod": "60s",
+            "perSeriesAligner": "ALIGN_RATE",
+            "crossSeriesReducer": "REDUCE_SUM"
+          }
+        ]
+      }
+    }
+  ],
+  "notificationChannels": [
+    "projects/nosso-momento-app/notificationChannels/5703995438963119542"
+  ],
+  "alertStrategy": {
+    "autoClose": "3600s"
+  }
+}
