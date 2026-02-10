@@ -7,6 +7,43 @@ const crypto = require("crypto");
 
 admin.initializeApp();
 
+const RATE_LIMIT_STORE = new Map();
+
+function getClientIp(req) {
+  const forwarded = req.get("X-Forwarded-For") || req.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.ip || "unknown";
+}
+
+function rateLimitHttp(req, res, {keyPrefix, limit, windowMs}) {
+  const now = Date.now();
+  const ip = getClientIp(req);
+  const key = `${keyPrefix}:${ip}`;
+  const entry = RATE_LIMIT_STORE.get(key);
+
+  if (!entry || (now - entry.start) > windowMs) {
+    RATE_LIMIT_STORE.set(key, {start: now, count: 1});
+  } else {
+    entry.count += 1;
+    if (entry.count > limit) {
+      res.status(429).send({error: "rate_limited"});
+      return true;
+    }
+  }
+
+  if (RATE_LIMIT_STORE.size > 5000) {
+    for (const [storedKey, storedEntry] of RATE_LIMIT_STORE.entries()) {
+      if ((now - storedEntry.start) > windowMs * 2) {
+        RATE_LIMIT_STORE.delete(storedKey);
+      }
+    }
+  }
+
+  return false;
+}
+
 setGlobalOptions({
   region: "southamerica-east1",
 });
@@ -2228,6 +2265,13 @@ exports.processPairingRequest = onDocumentUpdated(
 const https = require("firebase-functions/v2/https");
 
 exports.runPairingTests = https.onRequest(async (req, res) => {
+  if (rateLimitHttp(req, res, {
+    keyPrefix: "runPairingTests",
+    limit: 5,
+    windowMs: 5 * 60 * 1000,
+  })) {
+    return;
+  }
   // Proteção simples: exigir ?key=run-tests-please
   const key = req.query && req.query.key;
   if (key !== "run-tests-please") {
@@ -2414,6 +2458,14 @@ exports.setNotificationToken = https.onRequest(async (req, res) => {
     return;
   }
 
+  if (rateLimitHttp(req, res, {
+    keyPrefix: "setNotificationToken",
+    limit: 30,
+    windowMs: 60 * 1000,
+  })) {
+    return;
+  }
+
   const authHeader = req.get("Authorization") ||
     req.get("authorization") ||
     "";
@@ -2560,6 +2612,14 @@ exports.getMemorias = https.onRequest(async (req, res) => {
     return;
   }
 
+  if (rateLimitHttp(req, res, {
+    keyPrefix: "getMemorias",
+    limit: 120,
+    windowMs: 60 * 1000,
+  })) {
+    return;
+  }
+
   const authHeader = req.get("Authorization") || req.get("authorization") || "";
   let idToken = null;
   if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -2673,6 +2733,14 @@ exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
 
   if (req.method !== "POST") {
     res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (rateLimitHttp(req, res, {
+    keyPrefix: "createMemoriaPhoto",
+    limit: 10,
+    windowMs: 60 * 1000,
+  })) {
     return;
   }
 
@@ -2851,6 +2919,14 @@ exports.deleteMemoria = https.onRequest(async (req, res) => {
     return;
   }
 
+  if (rateLimitHttp(req, res, {
+    keyPrefix: "deleteMemoria",
+    limit: 20,
+    windowMs: 60 * 1000,
+  })) {
+    return;
+  }
+
   const authHeader = req.get("Authorization") || req.get("authorization") || "";
   let idToken = null;
   if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -2937,6 +3013,14 @@ exports.createInput = https.onRequest(async (req, res) => {
 
   if (req.method !== "POST") {
     res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (rateLimitHttp(req, res, {
+    keyPrefix: "createInput",
+    limit: 60,
+    windowMs: 60 * 1000,
+  })) {
     return;
   }
   const authHeader = req.get("Authorization") || req.get("authorization") || "";
@@ -3073,6 +3157,14 @@ exports.resetWeeklyChallengesAdmin = https.onRequest(async (req, res) => {
   }
   if (req.method !== "POST") {
     res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (rateLimitHttp(req, res, {
+    keyPrefix: "resetWeeklyChallengesAdmin",
+    limit: 10,
+    windowMs: 5 * 60 * 1000,
+  })) {
     return;
   }
 
