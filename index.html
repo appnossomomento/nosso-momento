@@ -1078,7 +1078,7 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     climaSemana: [], // array of 7 days with both users' moods
     climaHoje: null, // { humor, registradoEm } or null
     climaPartnerHoje: null,
-    showIncomingPairingPopup: false, // popup de solicitação recebida (VIP pareado)
+    incomingPairingDismissedId: null, // ID da solicitação recebida que foi dispensada
     pairingTransition: false, // loading durante aceite de pareamento
 };
 
@@ -2524,6 +2524,9 @@ if (firebase.messaging.isSupported()) {
             trackMetaEvent('UnlockAchievement', {
                 achievement_id: payload.data?.achievementId || 'unknown',
             });
+        } else if (notificationType === 'pairing' || (title && title.toLowerCase().includes('pareamento'))) {
+            // Não mostra toast genérico para pairing — o popup dedicado cuida disso
+            console.log('Push de pareamento recebida, popup dedicado cuida da exibição.');
         } else {
             showToast(`🔔 ${title}: ${body}`, 'sucesso');
         }
@@ -2710,21 +2713,23 @@ try {
     }
 
     function dismissIncomingPairingPopup() {
-        state.showIncomingPairingPopup = false;
+        if (state.pendingPairingRequest) {
+            state.incomingPairingDismissedId = state.pendingPairingRequest.id;
+        }
         renderApp();
     }
 
     function acceptIncomingPairingPopup() {
         if (!state.pendingPairingRequest) return;
         const req = state.pendingPairingRequest;
-        state.showIncomingPairingPopup = false;
+        state.incomingPairingDismissedId = req.id;
         acceptPairingRequest(req.id, req.senderUid, req.senderPhone);
     }
 
     function rejectIncomingPairingPopup() {
         if (!state.pendingPairingRequest) return;
         const req = state.pendingPairingRequest;
-        state.showIncomingPairingPopup = false;
+        state.incomingPairingDismissedId = req.id;
         rejectPairingRequest(req.id);
     }
 
@@ -5784,7 +5789,7 @@ renderApp();
                 ${state.showInstagramModal ? renderInstagramModal() : ''}
                 ${state.showEditNameModal ? renderEditNameModal() : ''}
                 ${state.showSystemModal ? renderSystemModal() : ''}
-                ${(state.showIncomingPairingPopup && state.pendingPairingRequest && state.pareado) ? renderIncomingPairingPopup() : ''}
+                ${(state.pendingPairingRequest && state.pareado && state.pendingPairingRequest.id !== state.incomingPairingDismissedId) ? renderIncomingPairingPopup() : ''}
                 ${state.pairingTransition ? '<div class="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center"><div class="text-center"><i class="fas fa-heart text-pink-400 text-4xl animate-pulse mb-4"></i><p class="text-white text-lg font-semibold">Conectando...</p></div></div>' : ''}
             `;
         }
@@ -7785,9 +7790,10 @@ try {
                     // (VIPs com conexões ativas não devem ser interrompidos)
                     if (!state.pareado) {
                         state.etapa = 'parear';
-                    } else if (!hadPending) {
-                        // Mostra popup em tempo real para VIP pareado aceitar/rejeitar
-                        state.showIncomingPairingPopup = true;
+                    }
+                    // Se a request mudou, limpa dismiss para o popup reaparecer
+                    if (state.incomingPairingDismissedId && state.incomingPairingDismissedId !== requestDoc.id) {
+                        state.incomingPairingDismissedId = null;
                     }
                 } else {
                     state.pendingPairingRequest = null;
