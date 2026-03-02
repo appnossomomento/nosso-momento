@@ -3178,12 +3178,17 @@ function setupNotificationListener(userId) {
         
         notifs.forEach(n => {
             if (!n.lida) {
-                if (n.icone === 'fa-shopping-bag') { // Notificação de Tarefa
+                if (n.icone === 'fa-shopping-bag' || n.tipo === 'moment_completion' || n.icone === 'fa-fire' || n.tipo === 'catalog_update') {
                     tarefasNaoLidas++;
-                } else if (n.icone === 'fa-gift') { // Notificação de Presente
+                } else if (n.icone === 'fa-gift' || n.tipo === 'checkin' || n.icone === 'fa-thermometer-half' || n.tipo === 'desafio') {
                     presentesNaoLidos++;
                 } else if (n.tipo === 'achievement' || n.icone === 'fa-trophy') {
                     conquistasNaoLidas++;
+                } else if (n.tipo === 'pairing' || n.icone === 'fa-heart') {
+                    presentesNaoLidos++;
+                } else {
+                    // Qualquer outro tipo não lido também conta
+                    tarefasNaoLidas++;
                 }
             }
         });
