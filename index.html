@@ -1751,7 +1751,7 @@ function triggerAchievementCelebration(notif) {
 
     function trocarConexao() {
         state.conexaoAtiva = null;
-        state.etapa = 'selecionarConexao';
+        state.etapa = 'pareamentos';
         renderApp();
     }
 
@@ -5732,7 +5732,7 @@ renderApp();
                 renderSignIn();
                 break;
             case 'selecionarConexao':
-                renderSelecionarConexao();
+                renderPareamentosLista();
                 break;
             case 'dashboard':
                 renderDashboard();
@@ -7401,7 +7401,7 @@ renderApp();
 
     // LÓGICA DE VISIBILIDADE DAS BARRAS (igual)
     if (bottomNavBar && mainHeader) {
-        const telasComBarraVisivel = ['selecionarConexao', 'dashboard', 'main', 'momentos', 'memorias', 'parear', 'pareamentos', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes', 'achievementsPopup', 'meuPerfil'];
+        const telasComBarraVisivel = ['dashboard', 'main', 'momentos', 'memorias', 'parear', 'pareamentos', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes', 'achievementsPopup', 'meuPerfil'];
         if (telasComBarraVisivel.includes(state.etapa)) {
             bottomNavBar.style.display = 'flex';
             mainHeader.style.display = 'flex';
@@ -7644,7 +7644,16 @@ try {
                 }
             } catch (e) { /* localStorage indisponível */ }
             if (!autoSelected) {
-                state.etapa = 'selecionarConexao';
+                // Auto-seleciona primeira conexão e vai para lista de pareamentos
+                state.conexaoAtiva = {
+                    uid: parceirosLista[0].uid,
+                    nome: parceirosLista[0].nome,
+                    fotoUrl: parceirosLista[0].fotoUrl,
+                    pareamentoId: parceirosLista[0].pareamentoId,
+                    idAmigavel: parceirosLista[0].pareamentoId || '',
+                    foguinhos: parceirosLista[0].foguinhos || 0,
+                };
+                state.etapa = 'pareamentos';
             }
         } else if (parceirosLista.length === 1) {
             // Auto-seleciona a única conexão
