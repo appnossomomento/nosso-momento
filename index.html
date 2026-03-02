@@ -1628,12 +1628,12 @@ function triggerAchievementCelebration(notif) {
                                 <p class="text-xs text-white/70">Ver e Editar</p>
                             </button>
 
-                            <button onclick="changeStep('notificacoes')" class="rounded-2xl ${notifBtnClass} p-5 text-left transition hover:bg-white/20">
-                                <div class="w-12 h-12 rounded-xl ${notifIconBg} flex items-center justify-center mb-3">
-                                    <i class="fas fa-bell text-xl ${notifIconClass}"></i>
+                            <button id="dashboardNotifBtn" onclick="changeStep('notificacoes')" class="rounded-2xl ${notifBtnClass} p-5 text-left transition hover:bg-white/20">
+                                <div id="dashboardNotifIconWrap" class="w-12 h-12 rounded-xl ${notifIconBg} flex items-center justify-center mb-3">
+                                    <i id="dashboardNotifIcon" class="fas fa-bell text-xl ${notifIconClass}"></i>
                                 </div>
-                                <h3 class="text-sm font-semibold ${notifTitleClass}">Notificações</h3>
-                                <p class="text-xs ${notifSubClass}">${hasPending ? `${pendingCount} pendentes` : 'Tudo em dia'}</p>
+                                <h3 id="dashboardNotifTitle" class="text-sm font-semibold ${notifTitleClass}">Notificações</h3>
+                                <p id="dashboardNotifSub" class="text-xs ${notifSubClass}">${hasPending ? `${pendingCount} pendentes` : 'Tudo em dia'}</p>
                             </button>
 
                             <button onclick="changeStep('pareamentos')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
@@ -7388,6 +7388,32 @@ renderApp();
             notificationsButton.style.background = '';
             notificationsButton.style.borderRadius = '';
             notificationsButton.style.padding = '';
+        }
+    }
+
+    // Atualiza botão de notificações do Dashboard em tempo real (via DOM)
+    const dashBtn = document.getElementById('dashboardNotifBtn');
+    if (dashBtn) {
+        const pc = (state.notificacoesTarefasNaoLidas || 0) +
+            (state.notificacoesPresentesNaoLidas || 0) +
+            (state.notificacoesConquistasNaoLidas || 0);
+        const hp = pc > 0;
+        // Atualiza classes do botão
+        dashBtn.className = `rounded-2xl ${hp ? 'bg-white text-gray-900 shadow-lg shadow-white/20' : 'bg-white/10'} p-5 text-left transition hover:bg-white/20`;
+        // Atualiza ícone wrapper
+        const iconWrap = document.getElementById('dashboardNotifIconWrap');
+        if (iconWrap) iconWrap.className = `w-12 h-12 rounded-xl ${hp ? 'bg-pink-100' : 'bg-white/10'} flex items-center justify-center mb-3`;
+        // Atualiza ícone
+        const icon = document.getElementById('dashboardNotifIcon');
+        if (icon) icon.className = `fas fa-bell text-xl ${hp ? 'text-pink-500' : 'icon-gradient'}`;
+        // Atualiza título
+        const title = document.getElementById('dashboardNotifTitle');
+        if (title) title.className = `text-sm font-semibold ${hp ? 'text-gray-900' : ''}`;
+        // Atualiza subtítulo
+        const sub = document.getElementById('dashboardNotifSub');
+        if (sub) {
+            sub.className = `text-xs ${hp ? 'text-gray-600' : 'text-white/70'}`;
+            sub.textContent = hp ? `${pc} pendentes` : 'Tudo em dia';
         }
     }
 
