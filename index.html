@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nosso Momento</title>
     <link rel="icon" href="/assets/icons/iconprincipal.png" type="image/png">
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6c5ce7">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nosso Momento">
+    <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon-180x180.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -385,6 +392,66 @@
             color: transparent;
         }
 
+        /* ===== TEMA CLARO (Perfil do Parceiro) ===== */
+        body.theme-light {
+            background: #f5f3f7 !important;
+        }
+        body.theme-light .perfil-parceiro-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+        body.theme-light .termometro-btn {
+            background: #f3f4f6;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 12px 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        body.theme-light .termometro-btn:hover:not(:disabled) {
+            border-color: #d1d5db;
+            background: #e5e7eb;
+        }
+        body.theme-light .termometro-btn.active {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2, #fff1f2);
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+        }
+        body.theme-light .termometro-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        body.theme-light .extrato-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        body.theme-light .extrato-valor-pos { color: #16a34a; font-weight: 600; }
+        body.theme-light .extrato-valor-neg { color: #ef4444; font-weight: 600; }
+        body.theme-light .tracking-day {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        body.theme-light .tracking-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        body.theme-light .tracking-dot.empty {
+            background: #f3f4f6;
+            border: 2px solid #e5e7eb;
+        }
+
         .notification-shell {
             background: rgba(16, 12, 20, 0.92);
             border-radius: 32px;
@@ -470,6 +537,12 @@
             align-items: center;
             gap: 12px;
             color: #374151;
+        }
+        .notif-item .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .notif-item img {
             width: 46px;
@@ -700,6 +773,7 @@
     const GET_MEMORIAS_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/getMemorias';
     const CREATE_MEMORIA_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/createMemoriaPhoto';
     const DELETE_MEMORIA_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/deleteMemoria';
+    const GET_EXTRATO_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/getExtrato';
     const REGISTRATION_ENABLED = false;
     const NOTIFICATION_HIGHLIGHT = 'rgba(251, 191, 36, 0.2)';
   </script>
@@ -957,6 +1031,7 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     desafiosSemanais: [],
     weeklyChallengeFromServer: false,
     hasTriggeredFirstPairingChallenge: false,
+    lastPairKey: null,
     desafiosCountdownId: null,
     showRealizadoPhotoPrompt: false,
     pendingRealizadoAction: null,
@@ -993,13 +1068,182 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     tarefasCache: [],
     conquistas: {},
     achievementStats: {},
+    // --- Multi-conexão (VIP) ---
+    conexaoAtiva: null, // { uid, nome, fotoUrl, pareamentoId, idAmigavel }
+    // --- Perfil do Parceiro ---
+    conexaoAberta: null, // partner data when viewing perfilParceiro
+    extratoItems: [],
+    extratoHasMore: false,
+    extratoLoading: false,
+    climaSemana: [], // array of 7 days with both users' moods
+    climaHoje: null, // { humor, registradoEm } or null
+    climaPartnerHoje: null,
+    showIncomingPairingPopup: false, // popup de solicitação recebida (VIP pareado)
+    pairingTransition: false, // loading durante aceite de pareamento
 };
 
 let unsubscribeNotifications = null;
 let unsubscribeUserDoc = null;
 let unsubscribePendingPairing = null;
 let unsubscribeWeeklyChallenge = null;
+let unsubscribePareamentoListeners = []; // onSnapshot em cada doc de pareamento
+let unsubscribeMomentosListener = null; // onSnapshot em tarefasMomentos
 let hasProcessedInitialConquistas = false;
+
+// --- PWA Install Prompt ---
+let deferredInstallPrompt = null;
+const PWA_INSTALL_DISMISSED_KEY = 'pwa_install_dismissed';
+const PWA_INSTALL_ADDED_KEY = 'pwa_install_added';
+
+function isRunningAsPWA() {
+    return window.navigator.standalone === true ||
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.matchMedia('(display-mode: fullscreen)').matches;
+}
+
+function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
+function isAndroid() {
+    return /android/i.test(navigator.userAgent);
+}
+
+function dismissPwaInstallPopup() {
+    sessionStorage.setItem(PWA_INSTALL_DISMISSED_KEY, '1');
+    const overlay = document.getElementById('pwa-install-overlay');
+    if (overlay) overlay.remove();
+}
+
+function dismissPwaInstallPermanent() {
+    localStorage.setItem(PWA_INSTALL_ADDED_KEY, '1');
+    const overlay = document.getElementById('pwa-install-overlay');
+    if (overlay) overlay.remove();
+}
+
+async function triggerPwaInstall() {
+    if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const result = await deferredInstallPrompt.userChoice;
+        console.log('[PWA] Install prompt result:', result.outcome);
+        deferredInstallPrompt = null;
+        dismissPwaInstallPopup();
+    }
+}
+
+function shouldShowPwaInstallPopup() {
+    if (isRunningAsPWA()) return false;
+    if (localStorage.getItem(PWA_INSTALL_ADDED_KEY)) return false;
+    if (sessionStorage.getItem(PWA_INSTALL_DISMISSED_KEY)) return false;
+    return true;
+}
+
+function maybeShowPwaInstallPopup() {
+    // Já existe no DOM? Não duplicar
+    if (document.getElementById('pwa-install-overlay')) return;
+    if (!shouldShowPwaInstallPopup()) return;
+    const html = getPwaInstallHtml();
+    if (!html) return;
+    // Injeta como overlay global no body
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    while (wrapper.firstChild) {
+        document.body.appendChild(wrapper.firstChild);
+    }
+}
+
+function getPwaInstallHtml() {
+    if (!shouldShowPwaInstallPopup()) return '';
+
+    const hasNativePrompt = !!deferredInstallPrompt;
+
+    // Instruções específicas por plataforma
+    let stepsHtml = '';
+    if (hasNativePrompt) {
+        // Android Chrome — pode instalar direto
+        stepsHtml = `
+            <p class="text-sm text-white/70 mb-4">Instale o app direto no seu celular para a melhor experiência!</p>
+            <button onclick="triggerPwaInstall()" class="w-full py-3 rounded-xl font-semibold text-white transition" style="background: linear-gradient(135deg, #ff2d3f, #ff5565);">
+                <i class="fas fa-download mr-2"></i>Instalar Agora
+            </button>
+        `;
+    } else if (isIOS()) {
+        // iOS Safari
+        stepsHtml = `
+            <p class="text-sm text-white/70 mb-3">Para a melhor experiência, adicione à sua tela inicial:</p>
+            <div class="space-y-2 text-left">
+                <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
+                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">1</span>
+                    <p class="text-sm">Toque em <i class="fas fa-share-from-square text-blue-400"></i> <strong>Compartilhar</strong> (barra inferior do Safari)</p>
+                </div>
+                <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
+                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">2</span>
+                    <p class="text-sm">Toque em <i class="fas fa-plus-square text-white/80"></i> <strong>Adicionar à Tela de Início</strong></p>
+                </div>
+                <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
+                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">3</span>
+                    <p class="text-sm">Toque em <strong>Adicionar</strong> — pronto!</p>
+                </div>
+            </div>
+        `;
+    } else {
+        // Desktop ou outro navegador
+        stepsHtml = `
+            <p class="text-sm text-white/70 mb-3">Para a melhor experiência, adicione à sua tela inicial:</p>
+            <div class="space-y-2 text-left">
+                <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
+                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">1</span>
+                    <p class="text-sm">Toque no menu <i class="fas fa-ellipsis-vertical text-white/80"></i> do navegador</p>
+                </div>
+                <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
+                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">2</span>
+                    <p class="text-sm">Selecione <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong></p>
+                </div>
+            </div>
+        `;
+    }
+
+    return `
+        <div id="pwa-install-overlay" class="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fadeIn" onclick="dismissPwaInstallPopup()">
+            <div class="w-full max-w-md rounded-3xl bg-[#1a1025] text-white shadow-2xl border border-white/10 p-6 pb-8" onclick="event.stopPropagation()" style="animation: slideUp 0.3s ease-out;">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <img src="/assets/icons/icon-192x192.png" class="w-12 h-12 rounded-xl" alt="Nosso Momento">
+                        <div>
+                            <h3 class="text-lg font-bold">Instale o App</h3>
+                            <p class="text-xs text-white/50">Nosso Momento</p>
+                        </div>
+                    </div>
+                    <button onclick="dismissPwaInstallPopup()" class="text-white/50 hover:text-white p-1">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+                ${stepsHtml}
+                <div class="flex gap-3 mt-4">
+                    <button onclick="dismissPwaInstallPermanent()" class="flex-1 py-2.5 rounded-xl font-semibold text-white text-sm transition" style="background: linear-gradient(135deg, #ff2d3f, #ff5565);">
+                        <i class="fas fa-check mr-1.5"></i>Já Adicionei
+                    </button>
+                    <button onclick="dismissPwaInstallPopup()" class="flex-1 py-2.5 rounded-xl bg-white/10 text-white/70 text-sm font-semibold hover:bg-white/20 transition">
+                        Agora não
+                    </button>
+                </div>
+            </div>
+        </div>
+        <style>
+            @keyframes slideUp {
+                from { transform: translateY(40px); opacity: 0; }
+                to   { transform: translateY(0); opacity: 1; }
+            }
+            .animate-fadeIn {
+                animation: fadeIn 0.25s ease-out;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to   { opacity: 1; }
+            }
+        </style>
+    `;
+}
 let activeAchievementCelebration = null;
 let activeAchievementCelebrationTimeout = null;
 let hasProcessedInitialNotifications = false;
@@ -1350,9 +1594,14 @@ function triggerAchievementCelebration(notif) {
         const hasPending = pendingCount > 0;
         const userName = state.usuario && state.usuario.nome ? state.usuario.nome : 'Amor';
         const fotoPerfil = (state.usuario && state.usuario.fotoUrl) || '/assets/icons/iconprincipal.png';
-        const notificationStyle = hasPending ? `background: ${NOTIFICATION_HIGHLIGHT};` : '';
-        const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
-        const hasPendingChallenge = desafiosSemanais.some((desafio) => !(desafio.concluido || desafio.completed || desafio.status === 'finalizado')) || !!state.pendingChallenge;
+        const notifBtnClass = hasPending
+            ? 'bg-white text-gray-900 shadow-lg shadow-white/20'
+            : 'bg-white/10';
+        const notifIconClass = hasPending ? 'text-pink-500' : 'icon-gradient';
+        const notifIconBg = hasPending ? 'bg-pink-100' : 'bg-white/10';
+        const notifSubClass = hasPending ? 'text-gray-600' : 'text-white/70';
+        const notifTitleClass = hasPending ? 'text-gray-900' : 'text-sm font-semibold';
+        const pareamentosCount = buildPareamentosLista().length;
 
         appContainer.innerHTML = `
             <div class="screen screen-pad bg-black text-white">
@@ -1371,28 +1620,28 @@ function triggerAchievementCelebration(notif) {
                 <section class="px-5 pb-8 -mt-10">
                     <div class="rounded-[32px] bg-[#0f0b14] p-6 shadow-lg">
                         <div class="grid grid-cols-2 gap-4">
-                            <button onclick="changeStep('notificacoes')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20" style="${notificationStyle}">
+                            <button onclick="changeStep('meuPerfil')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
                                 <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
-                                    <i class="fas fa-bell text-xl icon-gradient"></i>
+                                    <i class="fas fa-user text-xl icon-gradient"></i>
                                 </div>
-                                <h3 class="text-sm font-semibold">Notificações</h3>
-                                <p class="text-xs text-white/70">${hasPending ? `${pendingCount} pendentes` : 'Tudo em dia'}</p>
+                                <h3 class="text-sm font-semibold">Meu Perfil</h3>
+                                <p class="text-xs text-white/70">Ver e Editar</p>
                             </button>
 
-                            <button onclick="changeStep('gerenciarCatalogo')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
-                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
-                                    <i class="fas fa-store text-xl icon-gradient"></i>
+                            <button onclick="changeStep('notificacoes')" class="rounded-2xl ${notifBtnClass} p-5 text-left transition hover:bg-white/20">
+                                <div class="w-12 h-12 rounded-xl ${notifIconBg} flex items-center justify-center mb-3">
+                                    <i class="fas fa-bell text-xl ${notifIconClass}"></i>
                                 </div>
-                                <h3 class="text-sm font-semibold">Meu Catálogo</h3>
-                                <p class="text-xs text-white/70">Personalize-os</p>
+                                <h3 class="text-sm font-semibold ${notifTitleClass}">Notificações</h3>
+                                <p class="text-xs ${notifSubClass}">${hasPending ? `${pendingCount} pendentes` : 'Tudo em dia'}</p>
                             </button>
 
-                            <button onclick="changeStep('foguinhosPopup')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
+                            <button onclick="changeStep('pareamentos')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
                                 <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
-                                    <i class="fas fa-fire text-xl icon-gradient"></i>
+                                    <i class="fas fa-heart text-xl icon-gradient"></i>
                                 </div>
-                                <h3 class="text-sm font-semibold">Foguinhos</h3>
-                                <p class="text-xs text-white/70">Saldo e histórico</p>
+                                <h3 class="text-sm font-semibold">Pareamentos</h3>
+                                <p class="text-xs text-white/70">${pareamentosCount} conexõ${pareamentosCount === 1 ? '' : 'es'}</p>
                             </button>
 
                             <button onclick="changeStep('memorias')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
@@ -1402,36 +1651,108 @@ function triggerAchievementCelebration(notif) {
                                 <h3 class="text-sm font-semibold">Memórias</h3>
                                 <p class="text-xs text-white/70">Relembre</p>
                             </button>
-
-                            <button onclick="changeStep('momentos')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
-                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
-                                    <i class="fas fa-heart text-xl icon-gradient"></i>
-                                </div>
-                                <h3 class="text-sm font-semibold">Momentos</h3>
-                                <p class="text-xs text-white/70">Veja agora</p>
-                            </button>
-
-                            <button onclick="changeStep('achievementsPopup')" class="relative rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
-                                ${hasPendingChallenge ? `<span class="pending-indicator"><i class="fas fa-clock text-[10px]"></i></span>` : ''}
-                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
-                                    <i class="fas fa-trophy text-xl icon-gradient"></i>
-                                </div>
-                                <h3 class="text-sm font-semibold">Desafios</h3>
-                                <p class="text-xs text-white/70">Seu progresso</p>
-                            </button>
-
-                            <button onclick="changeStep('meuPerfil')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
-                                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
-                                    <i class="fas fa-user text-xl icon-gradient"></i>
-                                </div>
-                                <h3 class="text-sm font-semibold">Meu Perfil</h3>
-                                <p class="text-xs text-white/70">Ver e Editar</p>
-                            </button>
                         </div>
                     </div>
                 </section>
             </div>
         `;
+    }
+
+    // =========================================================
+    // SELETOR DE CONEXÃO — Tela VIP para multi-conexão
+    // =========================================================
+    function renderSelecionarConexao() {
+        const parceiros = buildPareamentosLista();
+        const userName = state.usuario && state.usuario.nome ? state.usuario.nome : 'Amor';
+        const fotoPerfil = (state.usuario && state.usuario.fotoUrl) || '/assets/icons/iconprincipal.png';
+
+        const cardsHtml = parceiros.map((partner, idx) => {
+            const nome = partner.nome || 'Parceiro';
+            const foto = partner.fotoUrl;
+            const foguinhos = partner.foguinhos || 0;
+            return `
+                <button onclick="selectConexao(${idx})" class="rounded-2xl bg-white/10 p-5 text-center transition hover:bg-white/20 hover:scale-[1.02] active:scale-95 flex flex-col items-center gap-3">
+                    <div class="w-20 h-20 rounded-full bg-white/20 overflow-hidden flex items-center justify-center">
+                        ${foto ? `<img src="${foto}" class="w-full h-full object-cover" alt="${nome}">` : `<i class="fas fa-user text-white/60 text-2xl"></i>`}
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold">${nome}</h3>
+                        <p class="text-xs text-white/70"><i class="fas fa-fire text-yellow-400 mr-1"></i>${foguinhos}</p>
+                    </div>
+                </button>
+            `;
+        }).join('');
+
+        appContainer.innerHTML = `
+            <div class="screen screen-pad bg-black text-white">
+                <section class="px-0 pt-11 pb-14" style="background: linear-gradient(180deg, #6c5ce7 0%, #a855f7 100%);">
+                    <div class="flex flex-col items-center text-center -mt-3">
+                        <div class="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-3 -mt-1">
+                            <img src="${fotoPerfil}" class="w-16 h-16 rounded-full object-cover" alt="Foto de perfil">
+                        </div>
+                        <div class="-mt-2">
+                            <h2 class="text-xl font-semibold leading-tight">Olá, ${userName}</h2>
+                            <p class="text-sm text-white/80 leading-snug">Escolha sua conexão</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="px-5 pb-8 -mt-10">
+                    <div class="rounded-[32px] bg-[#0f0b14] p-6 shadow-lg">
+                        <div class="grid grid-cols-2 gap-4">
+                            ${cardsHtml}
+                        </div>
+                    </div>
+                </section>
+            </div>
+        `;
+    }
+
+    function selectConexao(index) {
+        const parceiros = buildPareamentosLista();
+        const partner = parceiros[index];
+        if (!partner) return;
+
+        state.conexaoAtiva = {
+            uid: partner.uid,
+            nome: partner.nome,
+            fotoUrl: partner.fotoUrl,
+            pareamentoId: partner.pareamentoId,
+            idAmigavel: partner.pareamentoId || '',
+            foguinhos: partner.foguinhos || 0,
+        };
+
+        // Sincroniza dados do parceiro selecionado com state.parceiroData
+        state.parceiroData = state.parceiroData || {};
+        state.pareadoUid = partner.uid;
+        state.parceiroNome = partner.nome;
+        state.idPareamentoAmigavel = partner.pareamentoId || state.idPareamentoAmigavel;
+
+        // Persiste última conexão usada
+        try {
+            const uid = state.usuario ? state.usuario.uid : '';
+            if (uid) localStorage.setItem('conexaoAtivaUid:' + uid, partner.uid);
+        } catch (e) { /* localStorage indisponível */ }
+
+        // Carrega dados completos do parceiro selecionado
+        if (partner.uid) {
+            db.collection('usuarios').doc(partner.uid).get().then((snap) => {
+                if (snap.exists) {
+                    state.parceiroData = { uid: snap.id, ...snap.data() };
+                    state.parceiroNome = partner.nome || state.parceiroData.nome;
+                    renderApp();
+                }
+            }).catch((err) => console.warn('Erro carregando parceiro:', err));
+        }
+
+        state.etapa = 'dashboard';
+        renderApp();
+    }
+
+    function trocarConexao() {
+        state.conexaoAtiva = null;
+        state.etapa = 'selecionarConexao';
+        renderApp();
     }
 
     function renderSignIn() {
@@ -1516,7 +1837,8 @@ function ensureFirstPairingChallenge() {
     }
 
     const uid = state.usuario?.uid || null;
-    const firstPairKey = uid ? `firstPairingChallengeTriggered:${uid}` : null;
+    const pairKey = getCurrentPairKey();
+    const firstPairKey = uid && pairKey ? `firstPairingChallengeTriggered:${uid}:${pairKey}` : null;
     const alreadyTriggered = !!(firstPairKey && localStorage.getItem(firstPairKey) === 'true');
 
     const localChallenge = loadLocalWeeklyChallenge();
@@ -1617,8 +1939,10 @@ function getDateFromValue(value) {
 }
 
 function getPrazoRestanteTexto(desafio) {
-    const startValue = desafio?.startedAt || desafio?.prazoInicio || desafio?.startedEm || null;
-    const createdValue = desafio?.criadoEm || desafio?.createdAt || desafio?.createdEm || null;
+    const startValueRaw = desafio?.startedAtMs || desafio?.startedAt || desafio?.prazoInicio || desafio?.startedEm || null;
+    const createdValueRaw = desafio?.createdAtMs || desafio?.criadoEm || desafio?.createdAt || desafio?.createdEm || null;
+    const startValue = (startValueRaw === 0 || startValueRaw === '0') ? null : startValueRaw;
+    const createdValue = (createdValueRaw === 0 || createdValueRaw === '0') ? null : createdValueRaw;
     const startedAt = getDateFromValue(startValue) || getDateFromValue(createdValue) || new Date();
     const now = Date.now();
     const deadline = startedAt.getTime() + PRAZO_DESAFIO_SEMANAL_MS;
@@ -1708,10 +2032,17 @@ function startDesafiosCountdown() {
     }, 60000);
 }
 
+function getPairKeyFromUids(uidA, uidB) {
+    if (!uidA || !uidB) return null;
+    return [uidA, uidB].sort().join('_');
+}
+
+function getCurrentPairKey() {
+    return getPairKeyFromUids(state.usuario?.uid || null, state.usuario?.pareadoUid || null);
+}
+
 function getWeeklyChallengeDocId() {
-    const uid = state.usuario?.uid || null;
-    const partnerUid = state.usuario?.pareadoUid || null;
-    const base = uid && partnerUid ? [uid, partnerUid].sort().join('_') : null;
+    const base = getCurrentPairKey();
     return base ? `alma_gemea_${base}` : null;
 }
 
@@ -1735,6 +2066,45 @@ function clearLocalWeeklyChallenge(challengeId) {
     }
     keys.push('weeklyChallengeStart:alma_gemea_fallback');
     keys.forEach((k) => localStorage.removeItem(k));
+}
+
+function clearLocalWeeklyChallengeByDocId(docId) {
+    if (!docId) return;
+    localStorage.removeItem(`weeklyChallenge:${docId}`);
+    const keys = [
+        `weeklyChallengeStart:${docId}`,
+        'weeklyChallengeStart:alma_gemea_fallback',
+    ];
+    keys.forEach((k) => localStorage.removeItem(k));
+}
+
+function handlePairingKeyChange(nextPairKey) {
+    const prevPairKey = state.lastPairKey || null;
+    if (!prevPairKey) {
+        state.lastPairKey = nextPairKey || null;
+        return;
+    }
+    if (prevPairKey === nextPairKey) {
+        return;
+    }
+    clearLocalWeeklyChallengeByDocId(`alma_gemea_${prevPairKey}`);
+    if (unsubscribeWeeklyChallenge) {
+        unsubscribeWeeklyChallenge();
+        unsubscribeWeeklyChallenge = null;
+    }
+    state.weeklyChallengeFromServer = false;
+    state.hasTriggeredFirstPairingChallenge = false;
+    state.desafiosSemanais = [];
+    state.pendingChallenge = null;
+    state.activeWeeklyChallengeId = null;
+    state.challengeDeadline = null;
+    state.challengeSecondsLeft = 0;
+    state.showChallengePopup = false;
+    if (state.challengeTimerId) {
+        clearInterval(state.challengeTimerId);
+        state.challengeTimerId = null;
+    }
+    state.lastPairKey = nextPairKey || null;
 }
 
 function saveLocalWeeklyChallenge(data) {
@@ -2033,6 +2403,7 @@ function applyWeeklyChallengeAnswer(desafioId, answer, responderUid, responderNa
         answer: normalizedAnswer,
         status: updated.status,
         answeredAt: Date.now(),
+        pareamentoId: (state.conexaoAtiva && state.conexaoAtiva.pareamentoId) || state.idPareamentoAmigavel || '',
     }).catch((err) => console.warn('Falha ao enviar resposta do desafio:', err));
 
     return { status: updated.status, updated };
@@ -2045,7 +2416,7 @@ if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushMan
 }
 
 try {
-    const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+    const registration = await navigator.serviceWorker.register('./sw.js');
     console.log('Service Worker registrado com sucesso:', registration);
 
     const permission = await Notification.requestPermission();
@@ -2163,9 +2534,11 @@ if (firebase.messaging.isSupported()) {
 
     async function sendPairingRequest() {
     const codigoDigitado = document.getElementById('codigoParceiro').value;
-    const apelidoDigitado = document.getElementById('apelidoParceiro').value;
+    const apelidoEl = document.getElementById('apelidoParceiro');
+    const apelidoDigitado = apelidoEl ? apelidoEl.value : '';
+    const isVip = !!(state.usuario && state.usuario.vip);
     const hasPending = !!(state.usuario && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_'));
-    if (hasPending) {
+    if (!isVip && hasPending) {
         showToast('Você já tem uma solicitação pendente.', 'aviso');
         return;
     }
@@ -2174,7 +2547,7 @@ if (!codigoDigitado || codigoDigitado.length !== 11 || !/^(\d+)$/.test(codigoDig
     showToast('Por favor, digite um telefone com 11 dígitos.', 'aviso');
     return;
 }
-if (!apelidoDigitado || !apelidoDigitado.trim()) {
+if (apelidoEl && (!apelidoDigitado || !apelidoDigitado.trim())) {
     showToast('Por favor, informe um apelido carinhoso.', 'aviso');
     return;
 }
@@ -2183,7 +2556,7 @@ if (codigoDigitado === state.usuario.telefone) {
     return;
 }
 try {
-    const apelidoFormatado = apelidoDigitado.trim();
+    const apelidoFormatado = (apelidoDigitado && apelidoDigitado.trim()) ? apelidoDigitado.trim() : '';
     const inputData = {
         type: 'pairing_request',
         fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
@@ -2202,9 +2575,10 @@ try {
     trackGAEvent('initiate_pairing');
     trackMetaEvent('InitiatePairing');
 
-    // Atualiza apenas o estado local/imediato do sender; o backend atualizará
-    // os documentos reais quando processar o input.
-    state.usuario.pareadoCom = `pending_${codigoDigitado}`;
+    // Atualiza estado local do sender; VIPs mantêm pareadoCom existente
+    if (!isVip || !state.usuario.pareadoCom || state.usuario.pareadoCom.startsWith('pending_')) {
+        state.usuario.pareadoCom = `pending_${codigoDigitado}`;
+    }
     state.pendingPartnerName = apelidoFormatado;
     showToast('Solicitação enviada! Aguardando confirmação.', 'sucesso');
     state.etapa = 'pareamentos';
@@ -2219,10 +2593,16 @@ try {
 
     async function acceptPairingRequest(requestId, senderUid, senderPhone) {
 try {
-    if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
-        showToast('Você já está pareado com outra pessoa.', 'aviso');
+    const isVip = !!(state.usuario && state.usuario.vip);
+    if (!isVip && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
+        showToast('Você já está pareado. Atualize para VIP para ter múltiplas conexões!', 'aviso');
         return;
     }
+
+    // Ativa tela de transição para evitar flash do parceiro antigo
+    state.pairingTransition = true;
+    state.pendingPairingRequest = null;
+    renderApp();
 
     // Cria um input indicando que o receiver aceitou a solicitação. O backend
     // processará a aceitação (atualizará `usuarios` e criará `pareamentos`).
@@ -2232,10 +2612,17 @@ try {
         requestId: requestId,
         response: 'accepted',
     });
-    showToast('Solicitação aceita. Aguardando processamento...', 'sucesso');
-    setTimeout(() => loadUserDataAndNavigate(state.usuario.uid, state.usuario.email), 800);
+    showToast('Solicitação aceita! Conectando...', 'sucesso');
+    // Aguarda backend processar e recarrega dados
+    setTimeout(async () => {
+        await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
+        state.pairingTransition = false;
+        renderApp();
+    }, 1200);
 } catch (error) {
     console.error('Erro ao aceitar pareamento:', error);
+    state.pairingTransition = false;
+    renderApp();
     showToast('Erro ao aceitar pareamento. Tente novamente.', 'erro');
 }
 }
@@ -2290,7 +2677,78 @@ try {
     }
 
 
+    function renderIncomingPairingPopup() {
+        if (!state.pendingPairingRequest) return '';
+        const req = state.pendingPairingRequest;
+        const senderName = req.senderName || req.partnerNickname || 'Alguém especial';
+        return `
+            <div class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" onclick="dismissIncomingPairingPopup()"></div>
+            <div class="fixed inset-0 z-[70] flex items-center justify-center px-4" onclick="dismissIncomingPairingPopup()">
+                <div class="w-full max-w-sm rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7 animate-fadeIn" onclick="event.stopPropagation()">
+                    <div class="text-center mb-5">
+                        <div class="w-16 h-16 mx-auto rounded-full bg-pink-500/20 flex items-center justify-center mb-3">
+                            <i class="fas fa-heart text-pink-400 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-pink-400">Nova Solicitação</h3>
+                        <p class="text-white/70 text-sm mt-1">Você recebeu um pedido de pareamento</p>
+                    </div>
+                    <div class="text-center mb-6">
+                        <span class="inline-block text-lg font-bold bg-white/10 py-2 px-5 rounded-xl">${senderName}</span>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="acceptIncomingPairingPopup()" class="flex-1 py-3 rounded-xl font-semibold bg-green-600 hover:bg-green-500 text-white transition">
+                            <i class="fas fa-check mr-2"></i>Aceitar
+                        </button>
+                        <button onclick="rejectIncomingPairingPopup()" class="flex-1 py-3 rounded-xl font-semibold bg-red-600/80 hover:bg-red-600 text-white transition">
+                            <i class="fas fa-times mr-2"></i>Rejeitar
+                        </button>
+                    </div>
+                    <button onclick="dismissIncomingPairingPopup()" class="w-full mt-3 py-2 text-white/50 text-sm hover:text-white/80 transition">Fechar</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function dismissIncomingPairingPopup() {
+        state.showIncomingPairingPopup = false;
+        renderApp();
+    }
+
+    function acceptIncomingPairingPopup() {
+        if (!state.pendingPairingRequest) return;
+        const req = state.pendingPairingRequest;
+        state.showIncomingPairingPopup = false;
+        acceptPairingRequest(req.id, req.senderUid, req.senderPhone);
+    }
+
+    function rejectIncomingPairingPopup() {
+        if (!state.pendingPairingRequest) return;
+        const req = state.pendingPairingRequest;
+        state.showIncomingPairingPopup = false;
+        rejectPairingRequest(req.id);
+    }
+
+
     function renderPareamento() {
+// PRIORIDADE: Se há solicitação pendente recebida, sempre mostrá-la primeiro
+// (mesmo que o usuário já esteja pareado — ex: VIP com múltiplas conexões)
+if (state.pendingPairingRequest) {
+    const req = state.pendingPairingRequest;
+    appContainer.innerHTML = `
+        <div class="screen screen-pad flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
+            <div class="card p-8 max-w-md w-full text-center">
+                <h2 class="text-3xl font-bold mb-4 text-pink-400">Solicitação Recebida</h2>
+                <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
+                <div class="text-2xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block mb-6">${req.senderName || 'Alguém especial'}</div>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button onclick="acceptPairingRequest('${req.id}', '${req.senderUid}', '${req.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">Aceitar</button>
+                    <button onclick="rejectPairingRequest('${req.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">Rejeitar</button>
+                </div>
+            </div>
+        </div>`;
+    return;
+}
+
 if (state.pareado && state.parceiroData) {
     // Mostra o Perfil do Parceiro se estiver pareado
     const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/iconprincipal.png';
@@ -2334,20 +2792,7 @@ if (state.pareado && state.parceiroData) {
 const codigoUsuario = state.usuario.telefone.replace(/\D/g, '');
 let content = '';
 
-if (state.pendingPairingRequest) {
-    content = `
-        <div class="screen screen-pad flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-            <div class="card p-8 max-w-md w-full text-center">
-                <h2 class="text-3xl font-bold mb-4 text-pink-400">Solicitação Recebida</h2>
-                <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
-                <div class="text-2xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block mb-6">${state.pendingPairingRequest.senderName}</div>
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <button onclick="acceptPairingRequest('${state.pendingPairingRequest.id}', '${state.pendingPairingRequest.senderUid}', '${state.pendingPairingRequest.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">Aceitar</button>
-                    <button onclick="rejectPairingRequest('${state.pendingPairingRequest.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">Rejeitar</button>
-                </div>
-            </div>
-        </div>`;
-} else if (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
+if (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_')) {
     const pendingPhone = state.usuario.pareadoCom.replace('pending_', '');
     content = `
         <div class="screen screen-pad flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
@@ -2526,6 +2971,175 @@ appContainer.innerHTML = content;
     `;
 }
 
+// =========================================================
+// LISTENER REAL-TIME: docs de pareamento (foguinhos + clima)
+// =========================================================
+function setupPareamentoListeners() {
+    // Cancela listeners anteriores
+    unsubscribePareamentoListeners.forEach(fn => fn());
+    unsubscribePareamentoListeners = [];
+
+    const uid = state.usuario?.uid || (auth.currentUser && auth.currentUser.uid);
+    if (!uid) return;
+
+    const parceiros = buildPareamentosLista();
+    if (!parceiros.length) return;
+
+    parceiros.forEach((partner) => {
+        const pareamentoId = partner.pareamentoId;
+        if (!pareamentoId) return;
+
+        const unsub = db.collection('pareamentos').doc(pareamentoId).onSnapshot((doc) => {
+            if (!doc.exists) return;
+            const pData = doc.data();
+            const isMePessoa1 = pData.pessoa1Uid === uid;
+            const meuSaldo = isMePessoa1 ? (pData.foguinhos_pessoa1 || 0) : (pData.foguinhos_pessoa2 || 0);
+            const climaHoje = pData.climaHoje || {};
+
+            // Atualiza saldo em parceirosAtivos
+            if (Array.isArray(state.parceirosAtivos)) {
+                state.parceirosAtivos = state.parceirosAtivos.map(p => {
+                    if ((p.pareamentoId || p.idAmigavel) === pareamentoId ||
+                        (p.uid || p.parceiroUid) === partner.uid) {
+                        return { ...p, foguinhos: meuSaldo };
+                    }
+                    return p;
+                });
+            }
+
+            // Atualiza conexaoAtiva e conexaoAberta se corresponderem
+            if (state.conexaoAtiva && state.conexaoAtiva.pareamentoId === pareamentoId) {
+                state.conexaoAtiva.foguinhos = meuSaldo;
+            }
+            if (state.conexaoAberta && state.conexaoAberta.pareamentoId === pareamentoId) {
+                state.conexaoAberta.foguinhos = meuSaldo;
+                // Atualiza clima do parceiro em tempo real
+                state.climaHoje = climaHoje[uid] || state.climaHoje;
+                state.climaPartnerHoje = climaHoje[partner.uid] || state.climaPartnerHoje;
+            }
+
+            // Re-render se estiver em tela que exibe foguinhos
+            const etapasRelevantes = ['pareamentos', 'dashboard', 'perfilParceiro', 'foguinhosPopup'];
+            if (etapasRelevantes.includes(state.etapa)) {
+                renderApp();
+            }
+        }, (err) => console.warn('Erro no listener do pareamento:', err));
+
+        unsubscribePareamentoListeners.push(unsub);
+    });
+}
+
+// =========================================================
+// LISTENER REAL-TIME: tarefasMomentos (tela Momentos)
+// =========================================================
+function setupMomentosListener() {
+    if (unsubscribeMomentosListener) {
+        unsubscribeMomentosListener();
+        unsubscribeMomentosListener = null;
+    }
+
+    const uid = state.usuario?.uid;
+    const pareamentoId = (state.conexaoAberta && state.conexaoAberta.pareamentoId)
+        ? state.conexaoAberta.pareamentoId
+        : state.idPareamentoAmigavel;
+    if (!uid || !pareamentoId) return;
+
+    // Escuta tarefas deste pareamento onde o usuário é executor (recebidos)
+    // Usa a mesma query que renderMomentos para reaproveitar índice existente
+    const unsub1 = db.collection('tarefasMomentos')
+        .where('executadoPorUid', '==', uid)
+        .where('idPareamento', '==', pareamentoId)
+        .orderBy('dataResgate', 'desc')
+        .limit(30)
+        .onSnapshot((snapshot) => {
+            const tarefasRecebidos = [];
+            snapshot.forEach(doc => {
+                tarefasRecebidos.push({ id: doc.id, ...doc.data() });
+            });
+            state._tarefasRecebidos = tarefasRecebidos;
+            mergeAndRenderTarefas(uid);
+        }, (err) => console.warn('Erro no listener de momentos (recebidos):', err));
+
+    const unsub2 = db.collection('tarefasMomentos')
+        .where('resgatadoPorUid', '==', uid)
+        .where('idPareamento', '==', pareamentoId)
+        .orderBy('dataResgate', 'desc')
+        .limit(30)
+        .onSnapshot((snapshot) => {
+            const tarefasEnviados = [];
+            snapshot.forEach(doc => {
+                tarefasEnviados.push({ id: doc.id, ...doc.data() });
+            });
+            state._tarefasEnviados = tarefasEnviados;
+            mergeAndRenderTarefas(uid);
+        }, (err) => console.warn('Erro no listener de momentos (enviados):', err));
+
+    unsubscribeMomentosListener = () => { unsub1(); unsub2(); };
+}
+
+function mergeAndRenderTarefas(uid) {
+    // Merge recebidos e enviados, deduplicando por ID
+    const recebidos = state._tarefasRecebidos || [];
+    const enviados = state._tarefasEnviados || [];
+    const allMap = new Map();
+    recebidos.forEach(t => allMap.set(t.id, t));
+    enviados.forEach(t => allMap.set(t.id, t));
+    const allTarefas = Array.from(allMap.values()).sort((a, b) => {
+        const ta = a.dataResgate?.seconds || 0;
+        const tb = b.dataResgate?.seconds || 0;
+        return tb - ta;
+    });
+    state.tarefasCache = allTarefas;
+
+    // Se estiver na tela de momentos, re-renderiza a lista
+    if (state.etapa === 'momentos') {
+        const container = document.getElementById('tarefas-list-container');
+        if (!container) return;
+        const abaAtiva = state.abaTarefasAtiva || 'recebidos';
+        const queryField = abaAtiva === 'recebidos' ? 'executadoPorUid' : 'resgatadoPorUid';
+        const filteredTarefas = allTarefas.filter(t => t[queryField] === uid);
+        if (filteredTarefas.length === 0) {
+            container.innerHTML = '<p class="text-center text-gray-500 py-8">Nenhum momento encontrado aqui.</p>';
+        } else {
+            container.innerHTML = filteredTarefas.map(tarefa => {
+                const isPendente = tarefa.status === 'Pendente';
+                const statusCor = isPendente ? 'text-yellow-500' : 'text-green-600';
+                const statusIcon = isPendente ? 'fa-clock' : 'fa-check-circle';
+                const dataFormatada = tarefa.dataResgate ? new Date(tarefa.dataResgate.seconds * 1000).toLocaleDateString('pt-BR') : 'Data indispon\u00edvel';
+                const momentoInfo = state.momentosMestres.find(m => m.nome === tarefa.momentoNome);
+                const imagemHtml = momentoInfo
+                    ? `<img src="${momentoInfo.img}" class="w-12 h-12 rounded-lg object-cover">`
+                    : `<span class="text-2xl">${tarefa.momentoEmoji || '\ud83d\udd25'}</span>`;
+                return `
+                    <div class="notif-item ${!isPendente ? 'opacity-70' : ''}">
+                        ${imagemHtml}
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-800">${tarefa.momentoNome}</p>
+                            <p class="text-xs text-gray-500">
+                                ${abaAtiva === 'recebidos' ? 'Resgatado por: ' + tarefa.resgatadoPorNome : 'Aguardando: ' + tarefa.executadoPorNome}
+                            </p>
+                            <p class="text-xs text-gray-400 mt-1">${dataFormatada}</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="flex items-center justify-end gap-1 ${statusCor} text-xs font-semibold mb-2">
+                                <i class="fas ${statusIcon}"></i>
+                                <span>${tarefa.status}</span>
+                            </div>
+                            ${(abaAtiva === 'enviados' && isPendente) ? `
+                                <button onclick="requestRealizadoWithPhoto('${tarefa.id}', '${(tarefa.momentoNome || '').replace(/'/g, "\\\\'").replace(/"/g, '&quot;')}', ${tarefa.custoFoguinhos || 0})"
+                                    class="bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1 px-2 rounded-lg inline-flex items-center gap-1">
+                                    <i class="fas fa-check"></i>
+                                    <span>Realizado</span>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+}
+
 function setupNotificationListener(userId) {
     // Se já existe um ouvinte, desliga ele primeiro
     if (unsubscribeNotifications) {
@@ -2597,7 +3211,10 @@ function setupNotificationListener(userId) {
 
         // Se o usuário estiver na tela de notificações, atualiza a lista
         if (state.etapa === 'notificacoes') {
-            renderNossasTarefas(); // (Já tínhamos mudado isso)
+            renderNossasTarefas();
+        } else if (state.etapa === 'dashboard') {
+            // Re-render dashboard para atualizar contadores de notificações
+            renderApp();
         }
 
         // Atualiza a UI fixa (bolinha do sino e cor do fogo)
@@ -2724,8 +3341,8 @@ async function renderAchievementsPopup() {
 
     appContainer.innerHTML = `
         <div class="screen screen-pad bg-black text-white">
-            <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
-                <div class="flex flex-col items-center text-center -mt-6">
+            <section class="px-6 pt-16 pb-20" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                <div class="flex flex-col items-center text-center -mt-2">
                     <i class="fas fa-flag-checkered text-3xl mb-3"></i>
                     <h2 class="text-3xl font-semibold">Desafios</h2>
                     <p class="text-white/80">Acompanhe seus desafios e conquistas</p>
@@ -2797,6 +3414,10 @@ function getFoguinhosConexao(partnerUid) {
     if (Number.isFinite(saldo)) {
         return saldo;
     }
+    // Fallback: se conexão ativa, tenta o estado dela
+    if (state.conexaoAtiva && state.conexaoAtiva.uid === partnerUid) {
+        return state.conexaoAtiva.foguinhos || 0;
+    }
     return state.usuario ? (state.usuario.foguinhos || 0) : 0;
 }
 
@@ -2807,30 +3428,42 @@ function renderPareamentosLista() {
     const hasPareamentos = total > 0;
     const isVip = !!(state.usuario && state.usuario.vip);
     const hasPending = !!(state.usuario && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_'));
-    const pendingPhone = hasPending ? state.usuario.pareadoCom.replace('pending_', '') : '';
     const pendingName = state.pendingPartnerName || 'Apelido carinhoso';
-    const lastCheckIn = state.usuario?.lastCheckInDate?.toDate
-        ? state.usuario.lastCheckInDate.toDate()
-        : (state.usuario?.lastCheckInDate ? new Date(state.usuario.lastCheckInDate) : null);
-    const canCheckIn = !lastCheckIn || !isSameDay(lastCheckIn, new Date());
+
     const pendingCardHtml = hasPending ? `
         <div class="rounded-2xl p-4 bg-amber-400/90 text-gray-900 shadow-[0_12px_30px_rgba(251,191,36,0.35)]">
             <div class="flex items-center gap-4">
-                <div class="w-20 h-20 rounded-full bg-white/70 flex items-center justify-center">
-                    <i class="fas fa-heart text-amber-600 text-2xl"></i>
+                <div class="w-16 h-16 rounded-full bg-white/70 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-heart text-amber-600 text-xl"></i>
                 </div>
-                <div class="flex-1">
+                <div class="flex-1 min-w-0">
                     <p class="text-lg font-semibold">${pendingName}</p>
                     <p class="text-xs text-gray-800/80">Pareamento Pendente</p>
-                    <div class="mt-3 flex flex-col gap-2">
-                        <button class="px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-500 cursor-not-allowed" disabled>
-                            <i class="fas fa-fire-flame-curved mr-2"></i>Check-in diário
+                    <button onclick="cancelPendingPairingRequest()" class="mt-2 px-4 py-2 rounded-lg font-semibold bg-gray-900 text-white hover:bg-gray-800 text-sm">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    ` : '';
+
+    // Card de solicitação recebida (para VIP que está pareado e recebeu nova solicitação)
+    const incomingReq = state.pendingPairingRequest;
+    const incomingReqCardHtml = incomingReq ? `
+        <div class="rounded-2xl p-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_12px_30px_rgba(236,72,153,0.35)]">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-envelope-open-text text-white text-xl"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-lg font-semibold">${incomingReq.senderName || incomingReq.partnerNickname || 'Alguém especial'}</p>
+                    <p class="text-xs text-white/80">Quer parear com você!</p>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="acceptIncomingPairingPopup()" class="px-4 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-500 text-white text-sm transition">
+                            <i class="fas fa-check mr-1"></i>Aceitar
                         </button>
-                        <button class="px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-500 cursor-not-allowed" disabled>
-                            <i class="fas fa-store mr-2"></i>Ir ao Catálogo
-                        </button>
-                        <button onclick="cancelPendingPairingRequest()" class="px-4 py-2 rounded-lg font-semibold bg-gray-900 text-white hover:bg-gray-800">
-                            <i class="fas fa-times mr-2"></i>Cancelar solicitação
+                        <button onclick="rejectIncomingPairingPopup()" class="px-4 py-2 rounded-lg font-semibold bg-black/30 hover:bg-black/50 text-white text-sm transition">
+                            <i class="fas fa-times mr-1"></i>Rejeitar
                         </button>
                     </div>
                 </div>
@@ -2844,7 +3477,7 @@ function renderPareamentosLista() {
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-heart text-3xl mb-3"></i>
                     <h2 class="text-3xl font-semibold">Pareamentos</h2>
-                    <p class="text-white/80">Escolha sua conexão</p>
+                    <p class="text-white/80">Toque para entrar na conexão</p>
                 </div>
             </section>
 
@@ -2862,36 +3495,36 @@ function renderPareamentosLista() {
                         ${pareamentos.length ? pareamentos.map((partner, index) => {
                             const nome = partner.nome || 'Parceiro';
                             const foto = partner.fotoUrl;
+                            const foguinhos = partner.foguinhos || 0;
                             const pareadoDesde = partner.pareadoDesde
                                 ? new Date(partner.pareadoDesde).toLocaleDateString('pt-BR')
                                 : '—';
                             return `
-                                <div class="relative rounded-2xl p-4 bg-[#ff4457] shadow-[0_12px_30px_rgba(255,68,87,0.35)]">
-                                    <button type="button" class="absolute top-3 right-3 p-1 text-black hover:text-black/70 transition" onclick="requestUnpairFromList(${index})" title="Desparear">
-                                        <i class="fas fa-link-slash text-sm"></i>
+                                <div class="relative rounded-2xl bg-[#ff4457] shadow-[0_12px_30px_rgba(255,68,87,0.35)] overflow-hidden cursor-pointer transition hover:scale-[1.01] active:scale-[0.99]"
+                                     onclick="abrirPerfilParceiro(${index})">
+                                    <button type="button" class="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/20 text-white/80 hover:bg-black/40 hover:text-white transition"
+                                        onclick="event.stopPropagation(); requestUnpairFromList(${index})" title="Desfazer Pareamento">
+                                        <i class="fas fa-link-slash text-xs"></i>
                                     </button>
-                                    <div class="flex items-center gap-4">
-                                        <button class="w-20 h-20 rounded-full bg-white overflow-hidden flex items-center justify-center" onclick="abrirCatalogoPareamento(${index})">
+                                    <div class="flex items-center gap-4 p-4">
+                                        <div class="w-16 h-16 rounded-full bg-white overflow-hidden flex items-center justify-center flex-shrink-0">
                                             ${foto ? `<img src="${foto}" class="w-full h-full object-cover" alt="${nome}">` : `<i class="fas fa-user text-red-400 text-2xl"></i>`}
-                                        </button>
-                                        <div class="flex-1">
-                                            <p class="text-lg font-semibold text-white">${nome}</p>
-                                            <p class="text-xs text-white/80">Pareado desde: ${pareadoDesde}</p>
-                                            <div class="mt-3 flex flex-col gap-2">
-                                                <button onclick="handleCheckInFromList(${index})" class="px-4 py-2 rounded-lg font-semibold ${canCheckIn ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-gray-600 text-gray-300 cursor-not-allowed'}" ${canCheckIn ? '' : 'disabled'}>
-                                                    <i class="fas fa-fire-flame-curved mr-2"></i>Check-in diário
-                                                </button>
-                                                <button onclick="abrirCatalogoPareamento(${index})" class="px-4 py-2 rounded-lg font-semibold bg-amber-500 hover:bg-amber-600 text-white">
-                                                    <i class="fas fa-store mr-2"></i>Ir ao Catálogo
-                                                </button>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-lg font-semibold text-white truncate">${nome}</p>
+                                            <p class="text-xs text-white/70">Desde ${pareadoDesde}</p>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="text-sm font-bold text-white"><i class="fas fa-fire text-yellow-300 mr-1"></i>${foguinhos}</span>
                                             </div>
                                         </div>
+                                        <i class="fas fa-chevron-right text-white/50 text-lg mt-8"></i>
                                     </div>
                                 </div>
                             `;
                         }).join('') : ''}
                         ${pendingCardHtml}
-                        ${!pareamentos.length && !hasPending ? `
+                        ${incomingReqCardHtml}
+                        ${!pareamentos.length && !hasPending && !incomingReq ? `
                             <div class="notif-card-white text-center">
                                 <p class="text-sm text-gray-500">Nenhum pareamento ativo no momento.</p>
                             </div>
@@ -2903,6 +3536,9 @@ function renderPareamentosLista() {
                             <i class="fas ${(hasPareamentos || hasPending) ? 'fa-gem text-blue-500' : 'fa-heart text-red-500'}"></i>
                             Adicionar Conexão
                         </button>
+                        ${(!isVip && hasPareamentos) ? `
+                            <p class="text-xs text-white/50 mt-3"><i class="fas fa-lock mr-1"></i>Seja VIP para adicionar mais conexões</p>
+                        ` : ''}
                     </div>
                 </div>
             </section>
@@ -2968,6 +3604,15 @@ function closePairingModal() {
 function handlePairingCtaClick() {
     const hasPending = !!(state.usuario && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_'));
     const hasPareamentos = buildPareamentosLista().length > 0;
+    const isVip = !!(state.usuario && state.usuario.vip);
+
+    // VIPs podem adicionar múltiplas conexões livremente
+    if (isVip) {
+        openPairingModal();
+        return;
+    }
+
+    // Free users: bloqueados se já têm conexão ou pending
     if (hasPareamentos || hasPending) {
         openVipPopup();
         return;
@@ -3312,6 +3957,495 @@ function abrirCatalogoPareamento(index) {
     renderApp();
 }
 
+// =========================================================
+// ABRIR PERFIL DO PARCEIRO — Nova tela contextual
+// =========================================================
+function abrirPerfilParceiro(index) {
+    const pareamentos = buildPareamentosLista();
+    const partner = pareamentos[index];
+    if (!partner) return;
+
+    // Configura contexto do parceiro selecionado
+    state.conexaoAberta = {
+        uid: partner.uid,
+        nome: partner.nome,
+        fotoUrl: partner.fotoUrl,
+        pareamentoId: partner.pareamentoId,
+        idAmigavel: partner.pareamentoId || '',
+        foguinhos: partner.foguinhos || 0,
+        pareadoDesde: partner.pareadoDesde || null,
+    };
+
+    // Sincroniza state legado para catálogo/desafios
+    if (partner.uid) {
+        state.usuario.pareadoUid = partner.uid;
+        state.parceiroNome = partner.nome || state.parceiroNome;
+        state.idPareamentoAmigavel = partner.pareamentoId || state.idPareamentoAmigavel;
+        state.conexaoAtiva = {
+            uid: partner.uid,
+            nome: partner.nome,
+            fotoUrl: partner.fotoUrl,
+            pareamentoId: partner.pareamentoId,
+            idAmigavel: partner.pareamentoId || '',
+            foguinhos: partner.foguinhos || 0,
+        };
+        state.parceiroData = {
+            ...(state.parceiroData || {}),
+            uid: partner.uid,
+            nome: partner.nome,
+            fotoUrl: partner.fotoUrl,
+            sexo: partner.sexo || null,
+            catalogoPersonalizado: partner.catalogoPersonalizado || {},
+        };
+    }
+
+    // Reseta dados do perfil
+    state.extratoItems = [];
+    state.extratoHasMore = false;
+    state.extratoLoading = false;
+    state.climaSemana = [];
+    state.climaHoje = null;
+    state.climaPartnerHoje = null;
+
+    state.etapa = 'perfilParceiro';
+    renderApp();
+
+    // Carrega dados async
+    loadPerfilParceiroDados();
+    // Inicia listener de momentos para esta conexão
+    setupMomentosListener();
+}
+
+async function loadPerfilParceiroDados() {
+    const conex = state.conexaoAberta;
+    if (!conex || !conex.pareamentoId) return;
+    const uid = state.usuario?.uid || (auth.currentUser && auth.currentUser.uid);
+    if (!uid) return;
+
+    try {
+        // 1. Carrega climaHoje do doc de pareamento
+        const pareamentoDoc = await db.collection('pareamentos').doc(conex.pareamentoId).get();
+        if (pareamentoDoc.exists) {
+            const pData = pareamentoDoc.data();
+            const climaHoje = pData.climaHoje || {};
+            state.climaHoje = climaHoje[uid] || null;
+            state.climaPartnerHoje = climaHoje[conex.uid] || null;
+            // Atualiza foguinhos do parceiro aberto
+            const isMePessoa1 = pData.pessoa1Uid === uid;
+            state.conexaoAberta.foguinhos = isMePessoa1
+                ? (pData.foguinhos_pessoa1 || 0)
+                : (pData.foguinhos_pessoa2 || 0);
+        }
+
+        // 2. Carrega tracking semanal (últimos 7 dias)
+        // Usa UTC para ser consistente com backend (que grava doc IDs em UTC)
+        const hojeUTC = new Date();
+        const diasSemana = [];
+        // Encontra a segunda-feira desta semana em UTC
+        const dayOfWeekUTC = hojeUTC.getUTCDay(); // 0=Dom .. 6=Sab
+        const diffToMonday = dayOfWeekUTC === 0 ? -6 : 1 - dayOfWeekUTC;
+        const mondayMs = Date.UTC(hojeUTC.getUTCFullYear(), hojeUTC.getUTCMonth(), hojeUTC.getUTCDate() + diffToMonday);
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(mondayMs + i * 86400000);
+            diasSemana.push(d.toISOString().slice(0, 10));
+        }
+
+        const climaDocs = await Promise.all(
+            diasSemana.map(dia =>
+                db.collection('pareamentos').doc(conex.pareamentoId)
+                    .collection('climaDiario').doc(dia).get()
+            )
+        );
+
+        state.climaSemana = diasSemana.map((dia, i) => {
+            const data = climaDocs[i].exists ? climaDocs[i].data() : {};
+            return {
+                dia,
+                label: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][i],
+                meu: data[uid] ? data[uid].humor : null,
+                parceiro: data[conex.uid] ? data[conex.uid].humor : null,
+            };
+        });
+
+        // 3. Carrega extrato
+        await loadExtrato(false);
+
+        // Re-render com dados carregados
+        if (state.etapa === 'perfilParceiro') renderApp();
+    } catch (err) {
+        console.error('loadPerfilParceiroDados error:', err);
+    }
+}
+
+async function loadExtrato(append = false) {
+    const conex = state.conexaoAberta;
+    if (!conex || !conex.pareamentoId) return;
+    if (state.extratoLoading) return;
+
+    state.extratoLoading = true;
+
+    try {
+        const payload = {
+            pareamentoId: conex.pareamentoId,
+            limit: 20,
+        };
+        if (append && state.extratoItems.length) {
+            const last = state.extratoItems[state.extratoItems.length - 1];
+            payload.startAfterMs = last.createdAtMs;
+        }
+
+        const result = await safeFetchBackend(GET_EXTRATO_URL, payload);
+        if (append) {
+            state.extratoItems = [...state.extratoItems, ...(result.items || [])];
+        } else {
+            state.extratoItems = result.items || [];
+        }
+        state.extratoHasMore = !!result.hasMore;
+    } catch (err) {
+        console.error('loadExtrato error:', err);
+    } finally {
+        state.extratoLoading = false;
+    }
+}
+
+async function submitClima(humor) {
+    const conex = state.conexaoAberta;
+    if (!conex || !conex.pareamentoId) return;
+
+    try {
+        await safeAddInput({
+            type: 'clima_update',
+            fromUid: state.usuario.uid || auth.currentUser.uid,
+            partnerUid: conex.uid,
+            pareamentoId: conex.pareamentoId,
+            humor: humor,
+        });
+        showToast('Clima registrado! 🔥', 'sucesso');
+        // Atualiza localmente para feedback imediato
+        state.climaHoje = { humor, registradoEm: new Date() };
+        // Atualiza a grade semanal do dia de hoje
+        const hojeStr = new Date().toISOString().slice(0, 10);
+        if (Array.isArray(state.climaSemana)) {
+            state.climaSemana = state.climaSemana.map(d => {
+                if (d.dia === hojeStr) {
+                    return { ...d, meu: humor };
+                }
+                return d;
+            });
+        }
+        if (state.etapa === 'perfilParceiro') renderApp();
+    } catch (err) {
+        console.error('submitClima error:', err);
+        showToast('Erro ao registrar clima.', 'erro');
+    }
+}
+
+// =========================================================
+// RENDER PERFIL DO PARCEIRO — Tela contextual tema claro
+// =========================================================
+function renderPerfilParceiro() {
+    const conex = state.conexaoAberta;
+    if (!conex) {
+        state.etapa = 'pareamentos';
+        renderApp();
+        return;
+    }
+
+    const nome = conex.nome || 'Parceiro';
+    const foto = conex.fotoUrl;
+    const foguinhos = conex.foguinhos || 0;
+    const uid = state.usuario?.uid || (auth.currentUser && auth.currentUser.uid);
+
+    // --- Termômetro de Clima ---
+    const jaFezClima = !!state.climaHoje;
+    const humorAtual = jaFezClima ? state.climaHoje.humor : null;
+    const climaPartner = state.climaPartnerHoje;
+
+    const humores = [
+        { key: 'muito_feliz', emoji: '😍', label: 'Muito Feliz', delta: '+2' },
+        { key: 'feliz', emoji: '🥰', label: 'Feliz', delta: '+1' },
+        { key: 'normal', emoji: '😐', label: 'Normal', delta: '0' },
+        { key: 'triste', emoji: '😢', label: 'Triste', delta: '-1' },
+    ];
+
+    const termometroHtml = humores.map(h => {
+        const isActive = humorAtual === h.key;
+        return `
+            <button class="termometro-btn flex-1 flex flex-col items-center gap-1 ${isActive ? 'active' : ''}"
+                    onclick="submitClima('${h.key}')"
+                    ${jaFezClima ? 'disabled' : ''}>
+                <span class="text-2xl">${h.emoji}</span>
+                <span class="text-xs font-medium text-gray-600">${h.label}</span>
+            </button>
+        `;
+    }).join('');
+
+    // --- Alerta visual "Chateado" do parceiro ---
+    const partnerTriste = climaPartner && climaPartner.humor === 'triste';
+    const partnerAlertHtml = partnerTriste ? `
+        <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm mb-4">
+            <i class="fas fa-heart-crack"></i>
+            <span>${nome} marcou <strong>"Triste"</strong> hoje. Que tal um carinho?</span>
+        </div>
+    ` : '';
+
+    // --- Tracking Semanal ---
+    const HUMOR_EMOJI = { muito_feliz: '😍', feliz: '🥰', normal: '😐', triste: '😢' };
+    const HUMOR_BG = { muito_feliz: '#fecaca', feliz: '#fde68a', normal: '#e5e7eb', triste: '#bfdbfe' };
+    const meuFoto = state.usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
+    const partnerFoto = conex.fotoUrl || '/assets/icons/iconprincipal.png';
+
+    function buildEmojiCircle(humor, size = 32) {
+        if (!humor) {
+            return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:#f3f4f6;border:2px solid #e5e7eb" class="flex-shrink-0"></div>`;
+        }
+        const emoji = HUMOR_EMOJI[humor] || '❓';
+        const bg = HUMOR_BG[humor] || '#f3f4f6';
+        return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size * 0.5)}px;border:2px solid rgba(0,0,0,0.06)" class="flex-shrink-0">${emoji}</div>`;
+    }
+
+    // Gera dia de hoje em UTC para comparação
+    const hojeUTC = new Date().toISOString().slice(0, 10);
+    const diasSemana = state.climaSemana || [];
+    const trackingLabelsHtml = diasSemana.map(dia => {
+        const isHoje = dia.dia === hojeUTC;
+        return `<div class="flex flex-col items-center flex-1"><span class="text-[10px] font-semibold uppercase ${isHoje ? 'text-red-500' : 'text-gray-400'}">${dia.label}</span></div>`;
+    }).join('');
+
+    const trackingMeuHtml = diasSemana.map(dia => {
+        return `<div class="flex flex-col items-center flex-1">${buildEmojiCircle(dia.meu, 32)}</div>`;
+    }).join('');
+
+    const trackingPartnerHtml = diasSemana.map(dia => {
+        return `<div class="flex flex-col items-center flex-1">${buildEmojiCircle(dia.parceiro, 32)}</div>`;
+    }).join('');
+
+    // --- Extrato de Foguinhos ---
+    const EXTRATO_ICONS = {
+        clima: 'fa-thermometer-half',
+        resgate: 'fa-shopping-bag',
+        bonus: 'fa-star',
+        gift: 'fa-gift',
+        desafio: 'fa-trophy',
+        pareamento: 'fa-heart',
+    };
+
+    const extratoListHtml = (state.extratoItems || []).map(item => {
+        const icon = EXTRATO_ICONS[item.tipo] || 'fa-fire';
+        const isPos = item.valor > 0;
+        const valorStr = isPos ? `+${item.valor}` : `${item.valor}`;
+        const valorClass = isPos ? 'extrato-valor-pos' : 'extrato-valor-neg';
+        const dateStr = item.timestampMs
+            ? new Date(item.timestampMs).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+            : '';
+        return `
+            <div class="extrato-item">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas ${icon} text-sm text-gray-500"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-800">${item.descricao || ''}</p>
+                        <p class="text-[10px] text-gray-400">${item.autorNome || ''} · ${dateStr}</p>
+                    </div>
+                </div>
+                <span class="${valorClass} text-sm">${valorStr}</span>
+            </div>
+        `;
+    }).join('');
+
+    const loadMoreBtn = state.extratoHasMore ? `
+        <button onclick="loadExtrato(true).then(() => { if(state.etapa === 'perfilParceiro') renderApp(); })"
+                class="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition ${state.extratoLoading ? 'opacity-50' : ''}">
+            ${state.extratoLoading ? 'Carregando...' : 'Carregar mais'}
+        </button>
+    ` : '';
+
+    appContainer.innerHTML = `
+        <div class="screen screen-pad" style="background: #f5f3f7; min-height: 100vh;">
+            <!-- Header -->
+            <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center gap-3">
+                <button onclick="changeStep('pareamentos')" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
+                    <i class="fas fa-arrow-left text-gray-600 text-sm"></i>
+                </button>
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center flex-shrink-0">
+                        ${foto ? `<img src="${foto}" class="w-full h-full object-cover">` : `<i class="fas fa-user text-gray-400"></i>`}
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-gray-800 truncate">${nome}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                    <i class="fas fa-fire text-orange-400 text-lg"></i>
+                    <span class="text-lg font-bold text-gray-700">${foguinhos}</span>
+                </div>
+            </div>
+
+            <div class="px-4 py-4 space-y-4 pb-24">
+                ${partnerAlertHtml}
+
+                <!-- Termômetro de Clima -->
+                <div class="perfil-parceiro-card p-4">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-1">
+                        <i class="fas fa-thermometer-half text-red-400 mr-1"></i>
+                        Como você está hoje?
+                    </h3>
+                    ${jaFezClima ? `<p class="text-xs text-gray-400 mb-3">Você já registrou seu clima hoje.</p>` : `<p class="text-xs text-gray-400 mb-3">Marque e seu parceiro ganha foguinhos!</p>`}
+                    <div class="flex gap-2">
+                        ${termometroHtml}
+                    </div>
+                </div>
+
+                <!-- Tracking Semanal -->
+                <div class="perfil-parceiro-card p-4">
+                    ${diasSemana.length ? `
+                        <!-- Labels dos dias -->
+                        <div class="flex items-center gap-1 mb-2">
+                            <div class="w-8 flex-shrink-0"></div>
+                            <div class="flex flex-1">${trackingLabelsHtml}</div>
+                        </div>
+                        <!-- Minha linha -->
+                        <div class="flex items-center gap-1 mb-2">
+                            <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border-2 border-gray-200">
+                                <img src="${meuFoto}" class="w-full h-full object-cover" alt="Eu">
+                            </div>
+                            <div class="flex flex-1">${trackingMeuHtml}</div>
+                        </div>
+                        <!-- Linha do parceiro -->
+                        <div class="flex items-center gap-1">
+                            <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border-2 border-gray-200">
+                                <img src="${partnerFoto}" class="w-full h-full object-cover" alt="${nome}">
+                            </div>
+                            <div class="flex flex-1">${trackingPartnerHtml}</div>
+                        </div>
+                    ` : `
+                        <p class="text-xs text-gray-400">Carregando...</p>
+                    `}
+                </div>
+
+                <!-- Ações rápidas -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="abrirCatalogoPareamento(findPareamentoIndex('${conex.uid}'))" class="perfil-parceiro-card p-4 text-center hover:shadow-md transition">
+                        <span class="text-2xl mb-1 block">🛒</span>
+                        <p class="text-xs font-semibold text-gray-700">Catálogo</p>
+                    </button>
+                    <button onclick="openMomentosFromPerfil()" class="perfil-parceiro-card p-4 text-center hover:shadow-md transition">
+                        <span class="text-2xl mb-1 block">💕</span>
+                        <p class="text-xs font-semibold text-gray-700">Momentos</p>
+                    </button>
+                    <button onclick="openExtratoFromPerfil()" class="perfil-parceiro-card p-4 text-center hover:shadow-md transition">
+                        <span class="text-2xl mb-1 block">🔥</span>
+                        <p class="text-xs font-semibold text-gray-700">Extrato</p>
+                    </button>
+                    <button onclick="openDesafioFromPerfil()" class="perfil-parceiro-card p-4 text-center hover:shadow-md transition">
+                        <span class="text-2xl mb-1 block">🏆</span>
+                        <p class="text-xs font-semibold text-gray-700">Desafios</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function findPareamentoIndex(uid) {
+    const pareamentos = buildPareamentosLista();
+    return pareamentos.findIndex(p => p.uid === uid);
+}
+
+function openDesafioFromPerfil() {
+    state.etapa = 'achievementsPopup';
+    renderApp();
+}
+
+function openMomentosFromPerfil() {
+    state.etapa = 'momentos';
+    renderApp();
+}
+
+function openExtratoFromPerfil() {
+    state.etapa = 'extratoPopup';
+    renderApp();
+}
+
+function voltarDoCatalogo() {
+    state.etapa = 'perfilParceiro';
+    renderApp();
+}
+
+// =========================================================
+// RENDER EXTRATO POPUP — Tela dedicada de extrato
+// =========================================================
+function renderExtratoPopup() {
+    const conex = state.conexaoAberta;
+    if (!conex) {
+        state.etapa = 'perfilParceiro';
+        renderApp();
+        return;
+    }
+
+    const EXTRATO_ICONS = {
+        clima: 'fa-thermometer-half',
+        resgate: 'fa-shopping-bag',
+        bonus: 'fa-star',
+        gift: 'fa-gift',
+        desafio: 'fa-trophy',
+        pareamento: 'fa-heart',
+    };
+
+    const extratoListHtml = (state.extratoItems || []).map(item => {
+        const icon = EXTRATO_ICONS[item.tipo] || 'fa-fire';
+        const isPos = item.valor > 0;
+        const valorStr = isPos ? `+${item.valor}` : `${item.valor}`;
+        const valorClass = isPos ? 'extrato-valor-pos' : 'extrato-valor-neg';
+        const dateStr = item.timestampMs
+            ? new Date(item.timestampMs).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+            : '';
+        return `
+            <div class="extrato-item">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas ${icon} text-sm text-gray-500"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-800">${item.descricao || ''}</p>
+                        <p class="text-[10px] text-gray-400">${item.autorNome || ''} · ${dateStr}</p>
+                    </div>
+                </div>
+                <span class="${valorClass} text-sm">${valorStr}</span>
+            </div>
+        `;
+    }).join('');
+
+    const loadMoreBtn = state.extratoHasMore ? `
+        <button onclick="loadExtrato(true).then(() => { if(state.etapa === 'extratoPopup') renderApp(); })"
+                class="w-full py-3 text-sm text-gray-500 hover:text-gray-700 transition ${state.extratoLoading ? 'opacity-50' : ''}">
+            ${state.extratoLoading ? 'Carregando...' : 'Carregar mais'}
+        </button>
+    ` : '';
+
+    appContainer.innerHTML = `
+        <div class="screen screen-pad" style="background: #f5f3f7; min-height: 100vh;">
+            <!-- Header -->
+            <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center gap-3">
+                <button onclick="voltarDoCatalogo()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
+                    <i class="fas fa-arrow-left text-gray-600 text-sm"></i>
+                </button>
+                <h2 class="text-sm font-semibold text-gray-800 flex-1">
+                    <i class="fas fa-fire text-orange-400 mr-1"></i>
+                    Extrato
+                </h2>
+            </div>
+
+            <div class="px-4 py-4 pb-24">
+                ${extratoListHtml || '<p class="text-xs text-gray-400 text-center py-8">Nenhuma movimentação ainda.</p>'}
+                ${loadMoreBtn}
+            </div>
+        </div>
+    `;
+}
+
     // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
     function renderPartnerInfoPopup() {
         const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
@@ -3472,7 +4606,10 @@ function renderCartSidebar() {
         const valor = Number(item?.custoFoguinhos ?? 0);
         return total + (Number.isFinite(valor) ? valor : 0);
     }, 0);
-    const saldoAtual = Number(state.usuario?.foguinhos ?? 0) || 0;
+    // Multi-conexão: usa saldo per-conexão se disponível
+    const saldoAtual = (state.conexaoAberta && Number.isFinite(state.conexaoAberta.foguinhos))
+        ? state.conexaoAberta.foguinhos
+        : (Number(state.usuario?.foguinhos ?? 0) || 0);
     const saldoFinal = saldoAtual - totalFoguinhos;
 
     const itemsHtml = state.carrinho.length === 0
@@ -3891,12 +5028,35 @@ try {
     // 6. Atualizamos o estado local para manter tudo sincronizado.
     state.usuario.catalogoPersonalizado = novoCatalogo;
 
+    // 6.5 Notifica parceiros sobre atualização do catálogo
+    try {
+        const parceiros = Array.isArray(state.parceirosAtivos) ? state.parceirosAtivos : [];
+        const meuNome = state.usuario?.nome || 'Seu parceiro';
+        for (const parceiro of parceiros) {
+            if (parceiro.uid) {
+                await db.collection('notificacoes').add({
+                    userId: parceiro.uid,
+                    titulo: 'Catálogo atualizado! 🛍️',
+                    mensagem: `${meuNome} atualizou o catálogo de momentos.`,
+                    icone: 'fa-store',
+                    tipo: 'catalog_update',
+                    lida: false,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                });
+            }
+        }
+    } catch (notifErr) {
+        console.warn('Erro ao enviar notificação de catálogo:', notifErr);
+    }
+
     trackGAEvent('customize_catalog');
     trackMetaEvent('CustomizeProduct');
 
     // 7. Damos um feedback de sucesso.
     showToast('Seu catálogo foi salvo com sucesso!', 'sucesso');
     console.log('Catálogo salvo no Firestore:', novoCatalogo);
+    // Re-renderiza para refletir mudanças
+    renderApp();
 
 } catch (error) {
     console.error("Erro ao salvar o catálogo: ", error);
@@ -4214,6 +5374,14 @@ try {
         unsubscribeNotifications();
         unsubscribeNotifications = null;
     }
+    // Desliga listeners de pareamento
+    unsubscribePareamentoListeners.forEach(fn => fn());
+    unsubscribePareamentoListeners = [];
+    // Desliga listener de momentos
+    if (unsubscribeMomentosListener) {
+        unsubscribeMomentosListener();
+        unsubscribeMomentosListener = null;
+    }
 
     await auth.signOut();
     console.log('Usuário deslogado com sucesso!');
@@ -4243,6 +5411,12 @@ try {
     state.showPairingModal = false;
         state.showVipPopup = false;
     state.pendingPartnerName = null;
+    state.conexaoAtiva = null;
+
+    // Limpa localStorage da conexão ativa
+    if (auth.currentUser) {
+        localStorage.removeItem('conexaoAtivaUid:' + auth.currentUser.uid);
+    }
 
     renderApp(); // Volta para a tela inicial
 } catch (error) {
@@ -4262,6 +5436,7 @@ try {
         type: 'daily_check_in',
         fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
         partnerUid: state.usuario.pareadoUid,
+        pareamentoId: (state.conexaoAtiva && state.conexaoAtiva.pareamentoId) || state.idPareamentoAmigavel || '',
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -4301,7 +5476,11 @@ if (!state.pareado) {
 
 const custo = momento.custoFoguinhos;
 const foguinhosEmUso = state.carrinho.reduce((total, item) => total + item.custoFoguinhos, 0);
-const saldoDisponivel = (state.usuario.foguinhos || 0) - foguinhosEmUso;
+// Multi-conexão: usa saldo per-conexão se disponível
+const saldoBase = (state.conexaoAberta && Number.isFinite(state.conexaoAberta.foguinhos))
+    ? state.conexaoAberta.foguinhos
+    : (state.usuario.foguinhos || 0);
+const saldoDisponivel = saldoBase - foguinhosEmUso;
 // Validação 3: Checa se o usuário tem "foguinhos" suficientes
 if (saldoDisponivel < custo) {
     showToast(`Você precisa de ${custo} foguinhos para este momento.`, 'aviso');
@@ -4404,8 +5583,26 @@ renderApp();
         return;
     }
 
-    if (!state.usuario || !state.usuario.pareadoUid) {
+    // Multi-conexão: prioriza dados da conexão aberta
+    const partnerUid = (state.conexaoAberta && state.conexaoAberta.uid)
+        ? state.conexaoAberta.uid
+        : (state.usuario && state.usuario.pareadoUid);
+    const pareamentoId = (state.conexaoAberta && state.conexaoAberta.pareamentoId)
+        ? state.conexaoAberta.pareamentoId
+        : (state.idPareamentoAmigavel || '');
+
+    if (!state.usuario || !partnerUid) {
         showToast('Erro: parceiro pareado não encontrado.', 'erro');
+        return;
+    }
+
+    // Validação de saldo local (per-conexão)
+    const totalCost = state.carrinho.reduce((sum, item) => sum + item.custoFoguinhos, 0);
+    const saldoLocal = (state.conexaoAberta && Number.isFinite(state.conexaoAberta.foguinhos))
+        ? state.conexaoAberta.foguinhos
+        : (state.usuario.foguinhos || 0);
+    if (totalCost > saldoLocal) {
+        showToast('Saldo de foguinhos insuficiente para este pedido.', 'aviso');
         return;
     }
 
@@ -4413,8 +5610,8 @@ renderApp();
         const payload = {
             type: 'moment_redeem',
             fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
-            partnerUid: state.usuario.pareadoUid,
-            pareamentoId: state.idPareamentoAmigavel || '',
+            partnerUid: partnerUid,
+            pareamentoId: pareamentoId,
             items: state.carrinho.map(item => ({
                 nome: item.nome,
                 emoji: item.emoji || '',
@@ -4422,14 +5619,12 @@ renderApp();
                 custoFoguinhos: item.custoFoguinhos,
                 img: item.img || '',
             })),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         };
 
         await safeAddInput(payload);
 
-        const totalCost = state.carrinho.reduce((sum, item) => sum + item.custoFoguinhos, 0);
     trackGAEvent('purchase', {
-        currency: 'FOG', // Moeda customizada "Foguinhos"
+        currency: 'FOG',
         value: totalCost,
         items: state.carrinho.map(item => ({
             item_id: item.nome.replace(/\s+/g, '_'),
@@ -4441,8 +5636,8 @@ renderApp();
     });
 
     trackMetaEvent('Purchase', {
-        currency: 'BRL', // A Meta prefere moedas reais
-        value: 0, // O valor monetário é 0, pois é moeda virtual
+        currency: 'BRL',
+        value: 0,
         content_ids: state.carrinho.map(item => item.nome.replace(/\s+/g, '_')),
         content_name: state.carrinho.map(item => item.nome).join(', '),
         content_type: 'product',
@@ -4453,10 +5648,34 @@ renderApp();
         const plural = totalItens > 1 ? 's' : '';
         showToast(`Pedido enviado! ${totalItens} momento${plural} aguardando confirmação.`, 'sucesso');
 
-        // 7. Limpa o carrinho e atualiza a interface
+        // Atualiza saldo local imediatamente (per-conexão e global)
+        if (state.conexaoAberta && Number.isFinite(state.conexaoAberta.foguinhos)) {
+            state.conexaoAberta.foguinhos = Math.max(0, state.conexaoAberta.foguinhos - totalCost);
+        }
+        if (state.conexaoAtiva && Number.isFinite(state.conexaoAtiva.foguinhos)) {
+            state.conexaoAtiva.foguinhos = Math.max(0, state.conexaoAtiva.foguinhos - totalCost);
+        }
+        if (state.usuario && Number.isFinite(state.usuario.foguinhos)) {
+            state.usuario.foguinhos = Math.max(0, state.usuario.foguinhos - totalCost);
+        }
+        // Atualiza parceirosAtivos local
+        if (state.parceirosAtivos && partnerUid) {
+            state.parceirosAtivos = state.parceirosAtivos.map(p => {
+                if ((p.uid || p.parceiroUid) === partnerUid && Number.isFinite(p.foguinhos)) {
+                    return { ...p, foguinhos: Math.max(0, p.foguinhos - totalCost) };
+                }
+                return p;
+            });
+        }
+
+        // Limpa o carrinho e atualiza a interface
         state.carrinho = [];
         state.showCartSidebar = false;
         renderApp();
+
+        // Recarrega extrato e listener de momentos para refletir compra
+        try { loadExtrato(false); } catch(e) { console.warn('Erro ao recarregar extrato:', e); }
+        setupMomentosListener();
 
     } catch (error) {
         console.error("Erro ao finalizar pedido e criar tarefas:", error);
@@ -4476,12 +5695,21 @@ renderApp();
     function renderApp() {
         console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar, 'state.showFoguinhosPopup:', state.showFoguinhosPopup);
         if (document && document.body) {
-            document.body.style.backgroundColor = state.etapa === 'memorias'
-                ? '#f7f5f9'
+            const isLightTheme = state.etapa === 'memorias' || state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup';
+            document.body.style.backgroundColor = isLightTheme
+                ? '#f5f3f7'
                 : '#000000';
+            if (state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup') {
+                document.body.classList.add('theme-light');
+            } else {
+                document.body.classList.remove('theme-light');
+            }
         }
         // Atualiza os elementos da header e footer que são fixos no DOM
         updateFixedUI();
+
+        // --- PWA Install Popup (global, qualquer tela) ---
+        maybeShowPwaInstallPopup();
 
         if (state.etapa !== 'achievementsPopup' && state.desafiosCountdownId) {
             clearInterval(state.desafiosCountdownId);
@@ -4495,6 +5723,9 @@ renderApp();
                 break;
             case 'signIn':
                 renderSignIn();
+                break;
+            case 'selecionarConexao':
+                renderSelecionarConexao();
                 break;
             case 'dashboard':
                 renderDashboard();
@@ -4537,6 +5768,12 @@ renderApp();
             case 'meuPerfil':
                 renderMeuPerfil();
                 break;
+            case 'perfilParceiro':
+                renderPerfilParceiro();
+                break;
+            case 'extratoPopup':
+                renderExtratoPopup();
+                break;
             default:
                 renderLandingPage(); // Fallback
         }
@@ -4547,6 +5784,8 @@ renderApp();
                 ${state.showInstagramModal ? renderInstagramModal() : ''}
                 ${state.showEditNameModal ? renderEditNameModal() : ''}
                 ${state.showSystemModal ? renderSystemModal() : ''}
+                ${(state.showIncomingPairingPopup && state.pendingPairingRequest && state.pareado) ? renderIncomingPairingPopup() : ''}
+                ${state.pairingTransition ? '<div class="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center"><div class="text-center"><i class="fas fa-heart text-pink-400 text-4xl animate-pulse mb-4"></i><p class="text-white text-lg font-semibold">Conectando...</p></div></div>' : ''}
             `;
         }
     }
@@ -4590,12 +5829,13 @@ renderApp();
         const tab = state.notificacoesTab || 'checkin';
         const filteredNotifications = notifications.filter((notif) => {
             if (tab === 'momentos') {
-                return notif.icone === 'fa-shopping-bag';
+                return notif.icone === 'fa-shopping-bag' || notif.tipo === 'moment_completion' || notif.icone === 'fa-fire' || notif.tipo === 'catalog_update';
             }
             if (tab === 'pareamento') {
                 return notif.tipo === 'pairing' || notif.icone === 'fa-heart';
             }
-            return notif.icone === 'fa-gift' || notif.tipo === 'checkin';
+            // checkin: presentes, check-in, clima, desafios
+            return notif.icone === 'fa-gift' || notif.tipo === 'checkin' || notif.icone === 'fa-thermometer-half' || notif.tipo === 'desafio';
         });
 
         const notificationsHtml = filteredNotifications.length
@@ -4605,26 +5845,115 @@ renderApp();
                 const timestamp = notif.timestamp && notif.timestamp.seconds
                     ? new Date(notif.timestamp.seconds * 1000).toLocaleString('pt-BR')
                     : '';
-                let tabIcon = 'fa-fire';
-                let tabIconColor = 'text-red-500';
-                if (tab === 'momentos') {
-                    tabIcon = 'fa-gift';
-                    tabIconColor = 'text-amber-500';
-                } else if (tab === 'pareamento') {
-                    tabIcon = 'fa-heart';
-                    tabIconColor = 'text-red-500';
+
+                // === CORES POR TIPO DE ÍCONE ===
+                let iconColor = 'text-gray-500';
+                let iconBg = 'bg-gray-100';
+                let navTarget = 'dashboard'; // tela destino ao clicar
+
+                if (iconClass === 'fa-fire') {
+                    // Missão concluída (momento realizado) — foguinho dourado
+                    iconColor = 'text-amber-500';
+                    iconBg = 'bg-amber-50';
+                    navTarget = 'momentos';
+                } else if (iconClass === 'fa-gift') {
+                    // Presente / check-in — rosa vibrante
+                    iconColor = 'text-pink-500';
+                    iconBg = 'bg-pink-50';
+                    navTarget = 'perfilParceiro';
+                } else if (iconClass === 'fa-shopping-bag') {
+                    // Momento resgatado — laranja
+                    iconColor = 'text-orange-500';
+                    iconBg = 'bg-orange-50';
+                    navTarget = 'momentos';
+                } else if (iconClass === 'fa-thermometer-half') {
+                    // Clima / termômetro — rosa (rose)
+                    iconColor = 'text-rose-500';
+                    iconBg = 'bg-rose-50';
+                    navTarget = 'perfilParceiro';
+                } else if (iconClass === 'fa-trophy') {
+                    if (notif.tipo === 'desafio') {
+                        // Desafio semanal — roxo
+                        iconColor = 'text-purple-500';
+                        iconBg = 'bg-purple-50';
+                        navTarget = 'achievementsPopup';
+                    } else {
+                        // Conquista — amarelo ouro
+                        iconColor = 'text-yellow-500';
+                        iconBg = 'bg-yellow-50';
+                        navTarget = 'achievementsPopup';
+                    }
                 }
+
+                // === TEXTO OTIMIZADO ===
+                let titulo = notif.titulo || 'Atualização';
+                let mensagem = notif.mensagem || '';
+
+                // Simplifica textos longos por tipo
+                if (iconClass === 'fa-gift') {
+                    titulo = '🎁 Presente recebido';
+                    // Extrai nome do parceiro da mensagem original se possível
+                    const matchP = (notif.mensagem || '').match(/^(.+?) te presenteou/);
+                    mensagem = matchP ? `${matchP[1]} te enviou foguinhos!` : 'Você ganhou foguinhos!';
+                } else if (iconClass === 'fa-thermometer-half') {
+                    titulo = '🌡️ Clima do Dia';
+                    // Extrai nome + sentimento + delta da mensagem original
+                    const matchC = (notif.mensagem || '').match(/^(.+?) marcou \"(.+?)\"/);
+                    if (matchC) {
+                        const nome = matchC[1];
+                        const sentimento = matchC[2]; // já vem com emoji ex: "Feliz 🔥"
+                        const deltaMatch = (notif.mensagem || '').match(/ganhou (\d+)/);
+                        const removedMatch = (notif.mensagem || '').match(/(\d+) foguinho.*removidos/);
+                        if (deltaMatch) {
+                            mensagem = `${nome} está ${sentimento} hoje, por isso você recebe ${deltaMatch[1]} foguinho(s)!`;
+                        } else if (removedMatch) {
+                            mensagem = `${nome} está ${sentimento} hoje. ${removedMatch[1]} foguinho(s) removido(s).`;
+                        } else {
+                            mensagem = `${nome} está ${sentimento} hoje.`;
+                        }
+                    }
+                } else if (iconClass === 'fa-shopping-bag') {
+                    titulo = '🛍️ Momento resgatado!';
+                    // Já é OK, só encurta se muito longo
+                    if (mensagem.length > 80) mensagem = mensagem.slice(0, 77) + '...';
+                } else if (iconClass === 'fa-fire' && notif.tipo === 'moment_completion') {
+                    titulo = '🔥 Missão concluída!';
+                } else if (iconClass === 'fa-trophy' && notif.tipo === 'desafio') {
+                    if ((notif.titulo || '').includes('semana')) {
+                        titulo = '🧩 Sua vez no desafio!';
+                    } else if ((notif.titulo || '').includes('concluído')) {
+                        titulo = '🏆 Desafio concluído!';
+                    } else {
+                        titulo = '🏆 Desafio finalizado';
+                    }
+                } else if (notif.tipo === 'achievement') {
+                    titulo = '🏅 Nova conquista!';
+                }
+
+                // Formata tempo relativo
+                let timeStr = '';
+                if (notif.timestamp && notif.timestamp.seconds) {
+                    const diffMs = Date.now() - (notif.timestamp.seconds * 1000);
+                    const diffMin = Math.floor(diffMs / 60000);
+                    if (diffMin < 1) timeStr = 'Agora';
+                    else if (diffMin < 60) timeStr = `${diffMin}min`;
+                    else if (diffMin < 1440) timeStr = `${Math.floor(diffMin / 60)}h`;
+                    else timeStr = `${Math.floor(diffMin / 1440)}d`;
+                }
+
                 return `
-                    <div class="notif-item ${notif.lida ? 'opacity-70' : ''}">
-                        ${avatarUrl
-                            ? `<img src="${avatarUrl}" alt="Parceiro">`
-                            : `<div class="notification-avatar"><i class="fas ${iconClass} text-lg text-white/80"></i></div>`}
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold">${notif.titulo || 'Atualização'}</p>
-                            <p class="text-sm text-gray-600">${notif.mensagem || 'Você recebeu uma atualização.'}</p>
-                            ${timestamp ? `<p class="text-xs text-gray-500 mt-1">${timestamp}</p>` : ''}
+                    <div class="notif-item cursor-pointer hover:bg-gray-100 transition-colors ${notif.lida ? 'opacity-60' : ''}" onclick="handleNotifClick('${navTarget}')">
+                        <div class="flex-shrink-0 w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center">
+                            <i class="fas ${iconClass} text-lg ${iconColor}"></i>
                         </div>
-                        <i class="fas ${tabIcon} ${tabIconColor}"></i>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-800 truncate">${titulo}</p>
+                            <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">${mensagem}</p>
+                        </div>
+                        <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                            ${timeStr ? `<span class="text-[10px] text-gray-400">${timeStr}</span>` : ''}
+                            ${!notif.lida ? '<div class="w-2 h-2 rounded-full bg-red-500"></div>' : ''}
+                        </div>
                     </div>
                 `;
             }).join('')
@@ -4633,7 +5962,7 @@ renderApp();
         const challengePending = !!state.pendingChallenge;
         appContainer.innerHTML = `
             <div class="screen screen-pad bg-black text-white">
-                <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                <section class="px-6 pt-20 pb-16" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                     <div class="flex flex-col items-center text-center -mt-6">
                         <i class="fas fa-bell text-3xl mb-3"></i>
                         <h2 class="text-3xl font-semibold">Notificações</h2>
@@ -4664,7 +5993,7 @@ async function renderMomentos() {
     const abaAtiva = state.abaTarefasAtiva || 'recebidos';
     appContainer.innerHTML = `
         <div class="screen screen-pad bg-black text-white">
-            <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+            <section class="px-6 pt-20 pb-16" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-heart text-3xl mb-3"></i>
                     <h2 class="text-3xl font-semibold">Momentos</h2>
@@ -5526,7 +6855,7 @@ function renderChallengePopup() {
                     <span class="text-xs text-pink-500">Tempo restante</span>
                     <span id="challengeCountdown" class="text-lg font-bold text-pink-500">${secondsLeft}s</span>
                 </div>
-                <input id="challengeAnswer" type="text" placeholder="Digite sua resposta" ${disabled ? 'disabled' : ''} class="w-full mb-4 uppercase border border-pink-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300" oninput="this.value = this.value.toUpperCase()">
+                <input id="challengeAnswer" type="text" placeholder="Digite sua resposta" ${disabled ? 'disabled' : ''} class="w-full mb-4 uppercase border border-pink-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-pink-300" oninput="this.value = this.value.toUpperCase()">
                 <button onclick="submitWeeklyChallengeAnswer()" class="w-full py-2 rounded-xl ${disabled ? 'bg-gray-200 text-gray-400' : 'bg-gradient-to-r from-pink-500 to-red-500 text-white'}" ${disabled ? 'disabled' : ''}>
                     Enviar resposta
                 </button>
@@ -5731,6 +7060,36 @@ function setNotificacoesTab(tab) {
     }
 }
 
+// Navega para a tela relevante ao clicar em uma notificação
+function handleNotifClick(target) {
+    // Telas que precisam de conexão aberta (perfil/momentos/desafios)
+    const needsConexao = ['perfilParceiro', 'momentos', 'achievementsPopup', 'extratoPopup'];
+    if (needsConexao.includes(target)) {
+        // Se não tem conexão aberta, tenta selecionar a primeira
+        if (!state.conexaoAberta || !state.conexaoAberta.uid) {
+            const pareamentos = buildPareamentosLista();
+            if (pareamentos.length > 0) {
+                abrirPerfilParceiro(0);
+                // Se o target não é perfilParceiro, navega para a tela destino depois
+                if (target !== 'perfilParceiro') {
+                    setTimeout(() => {
+                        state.etapa = target;
+                        renderApp();
+                    }, 100);
+                }
+                return;
+            } else {
+                // Sem parceiros, vai pro dashboard
+                state.etapa = 'dashboard';
+                renderApp();
+                return;
+            }
+        }
+    }
+    state.etapa = target;
+    renderApp();
+}
+
 function openChallengePopup() {
     state.showChallengePopup = true;
     state.challengePopupOpenedAt = Date.now();
@@ -5783,25 +7142,14 @@ function openWeeklyChallengePopup(desafioId, evt) {
     state.challengePopupOpenedAt = Date.now();
     const now = Date.now();
     const localStartMs = getLocalChallengeStartMs(desafio.id);
-    let startedMs = getDateFromValue(desafio.startedAt || desafio.prazoInicio || desafio.startedEm)?.getTime();
-    if (!Number.isFinite(startedMs)) {
-        startedMs = Number.isFinite(localStartMs) ? localStartMs : null;
-    }
+    let startedMs = Number.isFinite(localStartMs) ? localStartMs : null;
     const isFinalizado = !!(desafio.concluido || desafio.completed || desafio.status === 'finalizado' || desafio.status === 'finalizado_sem_recompensa');
     const hasAnswer = !!(desafio.respostaUsuario || desafio.respostaParceiro);
     const isStale = startedMs && (now - startedMs >= 60000) && !isFinalizado && !hasAnswer;
     if (!startedMs || isStale) {
         startedMs = now;
-        setLocalChallengeStartMs(desafio.id, startedMs);
-        desafiosSemanais[index] = {
-            ...desafio,
-            startedAt: new Date(startedMs),
-        };
-        state.desafiosSemanais = desafiosSemanais;
-        saveLocalWeeklyChallenge(desafiosSemanais[index]);
-    } else {
-        setLocalChallengeStartMs(desafio.id, startedMs);
     }
+    setLocalChallengeStartMs(desafio.id, startedMs);
     state.activeWeeklyChallengeId = desafio.id;
     state.challengeDeadline = startedMs + 60000;
     const remainingMs = Math.max(0, (state.challengeDeadline || Date.now()) - Date.now());
@@ -6033,7 +7381,12 @@ renderApp();
 
     // ATUALIZA OS BADGES DA BARRA DE NAVEGAÇÃO (igual)
     if (foguinhosBadge) {
-        foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
+        // Se tem conexão ativa, mostra foguinhos daquela conexão
+        if (state.conexaoAtiva && state.conexaoAtiva.uid) {
+            foguinhosBadge.textContent = getFoguinhosConexao(state.conexaoAtiva.uid);
+        } else {
+            foguinhosBadge.textContent = state.usuario ? state.usuario.foguinhos : 0;
+        }
     }
     if (carrinhoBadge) {
         carrinhoBadge.textContent = state.carrinho.length;
@@ -6041,7 +7394,7 @@ renderApp();
 
     // LÓGICA DE VISIBILIDADE DAS BARRAS (igual)
     if (bottomNavBar && mainHeader) {
-        const telasComBarraVisivel = ['dashboard', 'main', 'momentos', 'memorias', 'parear', 'pareamentos', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes', 'achievementsPopup', 'meuPerfil'];
+        const telasComBarraVisivel = ['selecionarConexao', 'dashboard', 'main', 'momentos', 'memorias', 'parear', 'pareamentos', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes', 'achievementsPopup', 'meuPerfil'];
         if (telasComBarraVisivel.includes(state.etapa)) {
             bottomNavBar.style.display = 'flex';
             mainHeader.style.display = 'flex';
@@ -6052,11 +7405,19 @@ renderApp();
     }
 
     const catalogActions = document.getElementById('catalogActions');
+    const backFromCatalog = document.getElementById('backFromCatalog');
     if (catalogActions) {
         if (state.etapa === 'main') {
             catalogActions.classList.remove('hidden');
         } else {
             catalogActions.classList.add('hidden');
+        }
+    }
+    if (backFromCatalog) {
+        if (state.etapa === 'main' || ((state.etapa === 'momentos' || state.etapa === 'achievementsPopup') && state.conexaoAberta)) {
+            backFromCatalog.classList.remove('hidden');
+        } else {
+            backFromCatalog.classList.add('hidden');
         }
     }
 
@@ -6185,6 +7546,7 @@ try {
         const hasPairUid = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
         const hasPairPhone = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
         state.pareado = hasPairUid || hasPairPhone;
+        handlePairingKeyChange(getCurrentPairKey());
         if (!wasPareado && state.pareado && state.usuario?.pareadoUid) {
             ensureFirstPairingChallenge();
         }
@@ -6258,7 +7620,39 @@ try {
             }
         }
         
-        state.etapa = 'dashboard';
+        // --- Multi-conexão: roteia para seletor ou auto-seleciona ---
+        const isVipUser = !!(state.usuario && state.usuario.vip);
+        const parceirosLista = buildPareamentosLista();
+        if (isVipUser && parceirosLista.length > 1) {
+            // Tenta restaurar última conexão usada do localStorage
+            let autoSelected = false;
+            try {
+                const savedConexaoUid = localStorage.getItem('conexaoAtivaUid:' + uid);
+                if (savedConexaoUid) {
+                    const savedIdx = parceirosLista.findIndex((p) => p.uid === savedConexaoUid);
+                    if (savedIdx >= 0) {
+                        selectConexao(savedIdx);
+                        autoSelected = true;
+                    }
+                }
+            } catch (e) { /* localStorage indisponível */ }
+            if (!autoSelected) {
+                state.etapa = 'selecionarConexao';
+            }
+        } else if (parceirosLista.length === 1) {
+            // Auto-seleciona a única conexão
+            state.conexaoAtiva = {
+                uid: parceirosLista[0].uid,
+                nome: parceirosLista[0].nome,
+                fotoUrl: parceirosLista[0].fotoUrl,
+                pareamentoId: parceirosLista[0].pareamentoId,
+                idAmigavel: parceirosLista[0].pareamentoId || '',
+                foguinhos: parceirosLista[0].foguinhos || 0,
+            };
+            state.etapa = 'dashboard';
+        } else {
+            state.etapa = 'dashboard';
+        }
 
         // Ouvinte em tempo real: documento do usuário (para refletir mudanças
         // feitas pelo backend, como remoção de pending quando rejeitado)
@@ -6285,6 +7679,12 @@ try {
             };
             state.usuario.notificationsEnabled = !!state.usuario.notificationsEnabled;
             state.usuario.pareadoUid = state.usuario.pareadoUid || null;
+            // Sincroniza parceirosAtivos com os dados mais recentes do Firestore
+            state.parceirosAtivos = Array.isArray(docData.pareamentosAtivos)
+                ? docData.pareamentosAtivos
+                : [];
+            // Ativa listeners real-time nos docs de pareamento para foguinhos/clima
+            setupPareamentoListeners();
             state.conquistas = nextConquistas;
             state.achievementStats = state.usuario.achievementStats;
             state.pendingPartnerName = docData.pendingPartnerName || state.pendingPartnerName;
@@ -6292,6 +7692,7 @@ try {
             const hasUidPair = !!(state.usuario.pareadoUid && typeof state.usuario.pareadoUid === 'string');
             const hasPhonePair = !!(state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_'));
             state.pareado = hasUidPair || hasPhonePair;
+            handlePairingKeyChange(getCurrentPairKey());
             if (!wasPareado && state.pareado && state.usuario?.pareadoUid) {
                 ensureFirstPairingChallenge();
             }
@@ -6378,13 +7779,23 @@ try {
             .onSnapshot((snap) => {
                 if (!snap.empty) {
                     const requestDoc = snap.docs[0];
+                    const hadPending = !!state.pendingPairingRequest;
                     state.pendingPairingRequest = { id: requestDoc.id, ...requestDoc.data() };
-                    state.etapa = 'parear';
-                } else if (state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
-                    state.etapa = 'parear';
-                    state.pendingPairingRequest = null;
+                    // Só força navegação para 'parear' se o usuário NÃO estiver pareado
+                    // (VIPs com conexões ativas não devem ser interrompidos)
+                    if (!state.pareado) {
+                        state.etapa = 'parear';
+                    } else if (!hadPending) {
+                        // Mostra popup em tempo real para VIP pareado aceitar/rejeitar
+                        state.showIncomingPairingPopup = true;
+                    }
                 } else {
-                    state.etapa = 'dashboard';
+                    state.pendingPairingRequest = null;
+                    // Se sender está em "pending_" e não está pareado, mantém em parear
+                    if (!state.pareado && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
+                        state.etapa = 'parear';
+                    }
+                    // Não forçar etapa = 'dashboard' — respeitar navegação atual
                 }
                 renderApp();
             });
@@ -6435,6 +7846,7 @@ try {
                 state.showPairingModal = false;
                     state.showVipPopup = false;
                 state.pendingPartnerName = null;
+                state.conexaoAtiva = null;
                 renderApp();
             }
         });
@@ -6473,6 +7885,16 @@ try {
         window.toggleFoguinhosPopup = toggleFoguinhosPopup;
         window.togglePartnerInfoPopup = togglePartnerInfoPopup;
         window.abrirCatalogoPareamento = abrirCatalogoPareamento;
+        window.abrirPerfilParceiro = abrirPerfilParceiro;
+        window.submitClima = submitClima;
+        window.loadExtrato = loadExtrato;
+        window.findPareamentoIndex = findPareamentoIndex;
+        window.openDesafioFromPerfil = openDesafioFromPerfil;
+        window.openMomentosFromPerfil = openMomentosFromPerfil;
+        window.openExtratoFromPerfil = openExtratoFromPerfil;
+        window.voltarDoCatalogo = voltarDoCatalogo;
+        window.renderPerfilParceiro = renderPerfilParceiro;
+        window.renderExtratoPopup = renderExtratoPopup;
     window.toggleAchievementsPopup = toggleAchievementsPopup;
         window.openChallengePopup = openChallengePopup;
         window.closeChallengePopup = closeChallengePopup;
@@ -6483,6 +7905,11 @@ try {
         window.openPairingModal = openPairingModal;
         window.closePairingModal = closePairingModal;
         window.handlePairingCtaClick = handlePairingCtaClick;
+        window.dismissPwaInstallPopup = dismissPwaInstallPopup;
+        window.dismissPwaInstallPermanent = dismissPwaInstallPermanent;
+        window.triggerPwaInstall = triggerPwaInstall;
+        window.selectConexao = selectConexao;
+        window.trocarConexao = trocarConexao;
         window.openVipPopup = openVipPopup;
         window.closeVipPopup = closeVipPopup;
         window.openLegalModal = openLegalModal;
@@ -6500,6 +7927,7 @@ try {
         window.requestUnpairFromList = requestUnpairFromList;
         window.setDesafiosTab = setDesafiosTab;
         window.setNotificacoesTab = setNotificacoesTab;
+        window.handleNotifClick = handleNotifClick;
         window.solicitarPermissaoDeNotificacao = solicitarPermissaoDeNotificacao;
         window.desativarNotificacoes = desativarNotificacoes;
         window.handleNotificationToggle = handleNotificationToggle;
@@ -6539,9 +7967,31 @@ try {
 
     // Ouve pelo evento que indica que o HTML está pronto
     document.addEventListener('DOMContentLoaded', initializeApp);
+
+    // Captura o evento beforeinstallprompt (Android/Desktop Chrome)
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        console.log('[PWA] beforeinstallprompt capturado — install prompt disponível');
+    });
+
+    // Registro do Service Worker (PWA + cache)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').then((reg) => {
+            console.log('[PWA] Service Worker registrado, scope:', reg.scope);
+        }).catch((err) => {
+            console.warn('[PWA] Falha ao registrar Service Worker:', err);
+        });
+    }
 </script>
 
 <nav class="bottom-nav-bar" id="bottom-nav-bar" style="display: none;">
+    <div id="backFromCatalog" class="absolute left-6 top-1/2 -translate-y-1/2 hidden">
+        <button class="bottom-nav-item" onclick="voltarDoCatalogo()">
+            <i class="fas fa-arrow-left"></i>
+            <span class="text-[10px] leading-none mt-0.5">Voltar</span>
+        </button>
+    </div>
     <button class="bottom-nav-item-center" onclick="changeStep('pareamentos');">
         <i class="fas fa-heart"></i>
     </button>

@@ -100,7 +100,7 @@ async function buildHTMLFiles() {
 }
 
 async function copyAuxiliaryFiles() {
-    const candidates = ['firebase-messaging-sw.js'];
+    const candidates = ['sw.js', 'manifest.json', 'firebase-messaging-sw.js'];
 
     for (const file of candidates) {
         const src = path.join(rootDir, file);

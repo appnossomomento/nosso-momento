@@ -30,14 +30,15 @@ service cloud.firestore {
     }
 
     match /usuarios/{userId} {
-      allow get: if isOwner(userId) || (resource.data != null && isPartner(resource.data));
+      allow get: if isAuthenticated();
       allow list: if false;
 
       allow create: if isOwner(userId)
         && request.resource.data.keys().hasOnly([
           'achievementStats', 'catalogoPersonalizado', 'conquistas', 'createdAt',
           'email', 'fcmToken', 'foguinhos', 'fotoUrl', 'lastCheckInDate', 'nome',
-          'notificationsEnabled', 'pareadoCom', 'pareadoUid', 'sexo', 'telefone'
+          'notificationsEnabled', 'pareadoCom', 'pareadoUid', 'pareamentosAtivos',
+          'sexo', 'telefone', 'vip'
         ])
         && request.resource.data.foguinhos is int
         && request.resource.data.foguinhos == 10
@@ -118,7 +119,18 @@ service cloud.firestore {
         resource.data.pessoa1Uid == authUid() ||
         resource.data.pessoa2Uid == authUid()
       );
-      allow list, write: if false;
+      allow list: if isAuthenticated();
+      allow write: if false;
+
+      match /climaDiario/{dia} {
+        allow read: if isAuthenticated();
+        allow write: if false;
+      }
+
+      match /extrato/{eid} {
+        allow read: if isAuthenticated();
+        allow write: if false;
+      }
     }
 
     match /tarefasMomentos/{tid} {
@@ -158,6 +170,10 @@ service cloud.firestore {
         cid.matches('.*' + authUid() + '.*')
       );
       allow create, update, delete: if false;
+    }
+
+    match /lista-de-espera/{leadId} {
+      allow read, write: if false;
     }
 
     match /memorias/{mid} {

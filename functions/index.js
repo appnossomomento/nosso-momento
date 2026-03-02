@@ -73,6 +73,27 @@ function normalizePhone(value) {
   return String(value).replace(/\D/g, "");
 }
 
+function normalizeLeadText(value, maxLen = 160) {
+  if (value === null || value === undefined) return "";
+  const cleaned = String(value).replace(/\s+/g, " ").trim();
+  if (!cleaned) return "";
+  return cleaned.slice(0, maxLen);
+}
+
+function normalizeLeadEmail(value) {
+  const raw = normalizeLeadText(value, 180).toLowerCase();
+  if (!raw) return "";
+  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
+  return isValid ? raw : "";
+}
+
+function normalizeLeadPhone(value) {
+  const digits = normalizePhone(value) || "";
+  if (!digits) return "";
+  if (digits.length < 10 || digits.length > 13) return "";
+  return digits;
+}
+
 function timestampToDate(ts) {
   return ts && typeof ts.toDate === "function" ? ts.toDate() : null;
 }
@@ -89,6 +110,18 @@ function isSameCalendarDay(tsA, tsB) {
 function areUsersPaired(senderData, partnerData, senderUid, partnerUid) {
   if (!senderData || !partnerData) return false;
 
+  // --- Multi-conexão: verifica via pareamentosAtivos (VIP) ---
+  const senderAtivos = Array.isArray(senderData.pareamentosAtivos) ?
+      senderData.pareamentosAtivos : [];
+  const partnerAtivos = Array.isArray(partnerData.pareamentosAtivos) ?
+      partnerData.pareamentosAtivos : [];
+  const senderHasPartnerInList = senderAtivos.some(
+      (p) => p.uid === partnerUid);
+  const partnerHasSenderInList = partnerAtivos.some(
+      (p) => p.uid === senderUid);
+  if (senderHasPartnerInList && partnerHasSenderInList) return true;
+
+  // --- Fallback monogâmico (backward compat) ---
   const senderMatchesUid = senderData.pareadoUid &&
     senderData.pareadoUid === partnerUid;
   const partnerMatchesUid = partnerData.pareadoUid &&
@@ -687,6 +720,24 @@ exports.processInput = onDocumentCreated(
               foguinhos: admin.firestore.FieldValue.increment(amount),
             });
 
+            // --- Extrato: gift ---
+            const giftPareamentoId = input.pareamentoId || null;
+            if (giftPareamentoId) {
+              const extratoRef = admin.firestore()
+                  .collection("pareamentos").doc(giftPareamentoId)
+                  .collection("extrato").doc();
+              tx.set(extratoRef, {
+                tipo: "gift",
+                descricao: `Presente de ${input.fromName || "parceiro"}`,
+                valor: amount,
+                beneficiarioUid: toUid,
+                autorUid: fromUid,
+                autorNome: input.fromName || "Parceiro",
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                createdAtMs: Date.now(),
+              });
+            }
+
             const notifRef = admin.firestore().collection("notificacoes").doc();
             const fromName = input.fromName || "Seu Parceiro";
             tx.set(notifRef, {
@@ -762,10 +813,36 @@ exports.processInput = onDocumentCreated(
           }
 
           const senderData = senderDoc.data();
-          if (senderData.pareadoUid && senderData.pareadoUid !== toUid) {
+          // VIP-gated: free users só podem ter 1 conexão
+          const senderIsVip = !!senderData.vip;
+          if (!senderIsVip && senderData.pareadoUid &&
+              senderData.pareadoUid !== toUid) {
+            // Limpa pending do sender se foi setado pelo frontend
+            try {
+              if (toPhone) {
+                const pendingVal = `pending_${toPhone}`;
+                if (senderData.pareadoCom === pendingVal) {
+                  const sRef = admin.firestore()
+                      .collection("usuarios")
+                      .doc(fromUid);
+                  const restoreVal =
+                    senderData.pareadoUid ?
+                      senderData.pareadoCom :
+                      admin.firestore.FieldValue.delete();
+                  await sRef.update(
+                      {pareadoCom: restoreVal},
+                  );
+                }
+              }
+            } catch (cleanErr) {
+              console.error(
+                  "Erro limpando sender pending:",
+                  cleanErr,
+              );
+            }
             await inputRef.update({
               error: "sender_already_paired",
-              processed: false,
+              processed: true,
             });
             return;
           }
@@ -788,10 +865,37 @@ exports.processInput = onDocumentCreated(
             toName = receiverData.nome || toName;
           }
 
-          if (receiverData.pareadoUid && receiverData.pareadoUid !== fromUid) {
+          // VIP-gated: free receivers só podem ter 1 conexão
+          const receiverIsVip = !!receiverData.vip;
+          if (!receiverIsVip && receiverData.pareadoUid &&
+              receiverData.pareadoUid !== fromUid) {
+            // Limpa o pending do sender para não ficar preso em estado fantasma
+            try {
+              if (toPhone) {
+                const pendingVal = `pending_${toPhone}`;
+                const senderRef = admin.firestore()
+                    .collection("usuarios")
+                    .doc(fromUid);
+                const freshSender = await senderRef.get();
+                if (freshSender.exists) {
+                  const sd = freshSender.data() || {};
+                  if (sd.pareadoCom === pendingVal) {
+                    await senderRef.update({
+                      pareadoCom:
+                        admin.firestore.FieldValue.delete(),
+                    });
+                  }
+                }
+              }
+            } catch (cleanErr) {
+              console.error(
+                  "Erro limpando sender pending:",
+                  cleanErr,
+              );
+            }
             await inputRef.update({
               error: "receiver_already_paired",
-              processed: false,
+              processed: true,
             });
             return;
           }
@@ -829,6 +933,7 @@ exports.processInput = onDocumentCreated(
               receiverUid: toUid || null,
               receiverPhone: toPhone || null,
               receiverName: toName || null,
+              partnerNickname: input.partnerNickname || null,
               status: "pending",
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
             };
@@ -878,6 +983,7 @@ exports.processInput = onDocumentCreated(
           const requestId = input.requestId;
           const response = input.response; // 'accepted' | 'rejected'
           const fromUid = input.fromUid;
+          let acceptedPairUids = null;
 
           if (!requestId || !response || !fromUid) {
             await inputRef.update({
@@ -961,14 +1067,28 @@ exports.processInput = onDocumentCreated(
                 senderData.telefone ||
                 null;
 
-              tx.update(senderRef, {
+              // Atualiza campos legados (pareadoCom/pareadoUid) — sempre
+              // apontam para o parceiro mais recente
+              const MIN_FOGUINHOS = 10;
+              const senderLegacy = {
                 pareadoCom: resolvedReceiverPhone,
                 pareadoUid: fromUid,
-              });
-              tx.update(receiverRef, {
+              };
+              const receiverLegacy = {
                 pareadoCom: resolvedSenderPhone,
                 pareadoUid: senderUid,
-              });
+              };
+              // Top-up global foguinhos se abaixo do mínimo
+              const sFog = Number(senderData.foguinhos);
+              if (!Number.isFinite(sFog) || sFog < MIN_FOGUINHOS) {
+                senderLegacy.foguinhos = MIN_FOGUINHOS;
+              }
+              const rFog = Number(receiverData.foguinhos);
+              if (!Number.isFinite(rFog) || rFog < MIN_FOGUINHOS) {
+                receiverLegacy.foguinhos = MIN_FOGUINHOS;
+              }
+              tx.update(senderRef, senderLegacy);
+              tx.update(receiverRef, receiverLegacy);
 
               const telefones = [resolvedSenderPhone, resolvedReceiverPhone]
                   .map((t) => (t || "").replace(/\D/g, ""));
@@ -982,6 +1102,13 @@ exports.processInput = onDocumentCreated(
                   .collection("pareamentos")
                   .doc(idPareamento);
 
+              const nowAccepted = admin.firestore.FieldValue.serverTimestamp();
+              const emptyStreak = {
+                currentDailyStreak: 0,
+                bestDailyStreak: 0,
+                lastCheckInDate: null,
+              };
+
               tx.set(
                   pareamentoRef,
                   {
@@ -989,12 +1116,82 @@ exports.processInput = onDocumentCreated(
                     pessoa2: telefones[1],
                     pessoa1Uid: senderUid,
                     pessoa2Uid: fromUid,
-                    dataPareamento:
-                      admin.firestore.FieldValue.serverTimestamp(),
+                    dataPareamento: nowAccepted,
                     idAmigavel: idAmigavel,
+                    // Campos isolados por conexão (multi-conexão)
+                    foguinhos_pessoa1: 10,
+                    foguinhos_pessoa2: 10,
+                    streak_pessoa1: emptyStreak,
+                    streak_pessoa2: emptyStreak,
+                    desafiosConcluidos: 0,
                   },
                   {merge: true},
               );
+
+              // Adiciona à lista pareamentosAtivos de ambos (multi-conexão)
+              const nowISO = new Date().toISOString();
+              const senderNickname = req.partnerNickname || "";
+              // Entry que vai no array do SENDER (dados do parceiro)
+              // O sender escolheu o apelido, então "apelido" é o nome carinhoso
+              // que o sender deu ao receiver
+              const entryForSender = {
+                uid: fromUid,
+                nome: receiverData.nome || req.receiverName || "",
+                apelido: senderNickname,
+                telefone: resolvedReceiverPhone,
+                fotoUrl: receiverData.fotoUrl || "",
+                pareamentoId: idPareamento,
+                idAmigavel: idAmigavel,
+                foguinhos: 10,
+                pareadoDesde: nowISO,
+              };
+              // Entry que vai no array do RECEIVER (dados do sender)
+              const entryForReceiver = {
+                uid: senderUid,
+                nome: senderData.nome || req.senderName || "",
+                telefone: resolvedSenderPhone,
+                fotoUrl: senderData.fotoUrl || "",
+                pareamentoId: idPareamento,
+                idAmigavel: idAmigavel,
+                foguinhos: 10,
+                pareadoDesde: nowISO,
+              };
+              tx.update(senderRef, {
+                pareamentosAtivos: admin.firestore.FieldValue.arrayUnion(
+                    entryForSender),
+              });
+              tx.update(receiverRef, {
+                pareamentosAtivos: admin.firestore.FieldValue.arrayUnion(
+                    entryForReceiver),
+              });
+
+              // --- Extrato: pareamento inicial ---
+              const pareamentoRefExtrato = admin.firestore()
+                  .collection("pareamentos").doc(idPareamento);
+              const extRef1 = pareamentoRefExtrato
+                  .collection("extrato").doc();
+              tx.set(extRef1, {
+                tipo: "pareamento",
+                descricao: "Saldo inicial do pareamento",
+                valor: 10,
+                beneficiarioUid: senderUid,
+                autorUid: "system",
+                autorNome: "Sistema",
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                createdAtMs: Date.now(),
+              });
+              const extRef2 = pareamentoRefExtrato
+                  .collection("extrato").doc();
+              tx.set(extRef2, {
+                tipo: "pareamento",
+                descricao: "Saldo inicial do pareamento",
+                valor: 10,
+                beneficiarioUid: fromUid,
+                autorUid: "system",
+                autorNome: "Sistema",
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                createdAtMs: Date.now() + 1,
+              });
 
               tx.update(reqRef, {status: "accepted"});
               tx.update(reqRef, {
@@ -1011,6 +1208,7 @@ exports.processInput = onDocumentCreated(
                     processedBy: "functions.processInput",
                   },
               );
+              acceptedPairUids = [senderUid, fromUid];
               return;
             }
 
@@ -1048,6 +1246,22 @@ exports.processInput = onDocumentCreated(
           const pairingRespMsg =
             "processInput: pairing_response processado";
           console.log(pairingRespMsg, inputId);
+          if (response === "accepted" && Array.isArray(acceptedPairUids)) {
+            try {
+              await upsertWeeklyChallengeForPair({
+                db: admin.firestore(),
+                pairUids: acceptedPairUids,
+                pareamentoId: null,
+                nowMs: Date.now(),
+                forceReset: true,
+              });
+            } catch (err) {
+              console.error(
+                  "pairing_response: falha ao resetar desafio semanal",
+                  err,
+              );
+            }
+          }
         } else if (input.type === "pairing_cancel") {
           const requestId = input.requestId;
           const fromUid = input.fromUid;
@@ -1235,6 +1449,25 @@ exports.processInput = onDocumentCreated(
               foguinhos: admin.firestore.FieldValue.increment(1),
             });
 
+            // --- Multi-conexão: atualiza foguinhos no doc de pareamento ---
+            const pareamentoIdInput = input.pareamentoId || null;
+            if (pareamentoIdInput) {
+              const pareamentoRef = admin.firestore()
+                  .collection("pareamentos").doc(pareamentoIdInput);
+              const pareamentoSnap = await tx.get(pareamentoRef);
+              if (pareamentoSnap.exists) {
+                const pData = pareamentoSnap.data();
+                const isSenderPessoa1 = pData.pessoa1Uid === fromUid;
+                // Parceiro ganha 1 foguinho nesta conexão
+                const foguinhosField = isSenderPessoa1 ?
+                    "foguinhos_pessoa2" : "foguinhos_pessoa1";
+                tx.update(pareamentoRef, {
+                  [foguinhosField]:
+                    admin.firestore.FieldValue.increment(1),
+                });
+              }
+            }
+
             const notifRef = admin.firestore().collection("notificacoes").doc();
             const giverName = senderData.nome || "Seu parceiro";
             tx.set(notifRef, {
@@ -1326,7 +1559,29 @@ exports.processInput = onDocumentCreated(
 
             const totalCost = sanitizedItems.reduce(
                 (sum, item) => sum + item.custoFoguinhos, 0);
-            const saldoAtual = senderData.foguinhos || 0;
+
+            // --- Multi-conexão: lê pareamento para saldo per-conexão ---
+            let pareamentoRef = null;
+            let pareamentoSnap = null;
+            let pData = null;
+            let isSenderPessoa1 = false;
+            let foguinhosField = "";
+            let saldoAtual = senderData.foguinhos || 0;
+
+            if (pareamentoId) {
+              pareamentoRef = admin.firestore()
+                  .collection("pareamentos").doc(pareamentoId);
+              pareamentoSnap = await tx.get(pareamentoRef);
+              if (pareamentoSnap.exists) {
+                pData = pareamentoSnap.data();
+                isSenderPessoa1 = pData.pessoa1Uid === fromUid;
+                foguinhosField = isSenderPessoa1 ?
+                    "foguinhos_pessoa1" : "foguinhos_pessoa2";
+                // Usa saldo per-conexão como fonte de verdade
+                saldoAtual = pData[foguinhosField] || 0;
+              }
+            }
+
             if (totalCost <= 0 || totalCost > saldoAtual) {
               tx.update(inputRef, {
                 error: "saldo_insuficiente",
@@ -1367,6 +1622,30 @@ exports.processInput = onDocumentCreated(
               foguinhos: admin.firestore.FieldValue.increment(-totalCost),
               achievementStats: updatedStats,
             });
+
+            // --- Multi-conexão: deduz foguinhos do doc de pareamento ---
+            if (pareamentoRef && pareamentoSnap && pareamentoSnap.exists) {
+              tx.update(pareamentoRef, {
+                [foguinhosField]:
+                  admin.firestore.FieldValue.increment(-totalCost),
+              });
+
+              // --- Extrato: resgate de momento ---
+              const itensNomes = sanitizedItems
+                  .map((i) => i.nome).slice(0, 2).join(", ");
+              const extratoRef = pareamentoRef
+                  .collection("extrato").doc();
+              tx.set(extratoRef, {
+                tipo: "resgate",
+                descricao: `Resgatou: ${itensNomes}`,
+                valor: -totalCost,
+                beneficiarioUid: fromUid,
+                autorUid: fromUid,
+                autorNome: senderData.nome || "Parceiro",
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                createdAtMs: Date.now(),
+              });
+            }
 
             let effectivePareamentoId = pareamentoId;
             if (!effectivePareamentoId) {
@@ -1776,6 +2055,59 @@ exports.processInput = onDocumentCreated(
                     tx.update(partnerRef, {
                       foguinhos: admin.firestore.FieldValue.increment(reward),
                     });
+
+                    // --- Multi-conexão: credita no doc de pareamento ---
+                    const challengePareamentoId =
+                      input.pareamentoId || null;
+                    if (challengePareamentoId) {
+                      const cpRef = admin.firestore()
+                          .collection("pareamentos")
+                          .doc(challengePareamentoId);
+                      const cpSnap = await tx.get(cpRef);
+                      if (cpSnap.exists) {
+                        const cpData = cpSnap.data();
+                        const field1 = cpData.pessoa1Uid === responderUid ?
+                            "foguinhos_pessoa1" : "foguinhos_pessoa2";
+                        const field2 = cpData.pessoa1Uid === partnerUid ?
+                            "foguinhos_pessoa1" : "foguinhos_pessoa2";
+                        tx.update(cpRef, {
+                          [field1]: admin.firestore.FieldValue.increment(
+                              reward),
+                          [field2]: admin.firestore.FieldValue.increment(
+                              reward),
+                          desafiosConcluidos:
+                            admin.firestore.FieldValue.increment(1),
+                        });
+
+                        // --- Extrato: desafio semanal ---
+                        const extratoRef1 = cpRef
+                            .collection("extrato").doc();
+                        tx.set(extratoRef1, {
+                          tipo: "desafio",
+                          descricao: "Desafio semanal: respostas iguais!",
+                          valor: reward,
+                          beneficiarioUid: responderUid,
+                          autorUid: responderUid,
+                          autorNome: input.responderName || "Parceiro",
+                          timestamp:
+                            admin.firestore.FieldValue.serverTimestamp(),
+                          createdAtMs: Date.now(),
+                        });
+                        const extratoRef2 = cpRef
+                            .collection("extrato").doc();
+                        tx.set(extratoRef2, {
+                          tipo: "desafio",
+                          descricao: "Desafio semanal: respostas iguais!",
+                          valor: reward,
+                          beneficiarioUid: partnerUid,
+                          autorUid: partnerUid,
+                          autorNome: "",
+                          timestamp:
+                            admin.firestore.FieldValue.serverTimestamp(),
+                          createdAtMs: Date.now(),
+                        });
+                      }
+                    }
                   }
                   rewarded = true;
                 }
@@ -1784,6 +2116,81 @@ exports.processInput = onDocumentCreated(
                 rewarded = false;
               }
               completedAt = nowTs;
+            }
+
+            // --- Notificações do desafio ---
+            const responderName = input.responderName || "Seu parceiro";
+            if (concluido) {
+              if (status === "finalizado") {
+                const rewardN = Number(challengeData.reward || 1);
+                const notifR = admin.firestore()
+                    .collection("notificacoes").doc();
+                tx.set(notifR, {
+                  userId: responderUid,
+                  titulo: "Desafio concluído! 🎉",
+                  mensagem: `Vocês responderam igual no desafio` +
+                    ` — ganharam ${rewardN} foguinho(s) cada!`,
+                  icone: "fa-trophy",
+                  tipo: "desafio",
+                  lida: false,
+                  timestamp:
+                    admin.firestore.FieldValue.serverTimestamp(),
+                });
+                const notifP = admin.firestore()
+                    .collection("notificacoes").doc();
+                tx.set(notifP, {
+                  userId: partnerUid,
+                  titulo: "Desafio concluído! 🎉",
+                  mensagem: `Vocês responderam igual no desafio` +
+                    ` — ganharam ${rewardN} foguinho(s) cada!`,
+                  icone: "fa-trophy",
+                  tipo: "desafio",
+                  lida: false,
+                  timestamp:
+                    admin.firestore.FieldValue.serverTimestamp(),
+                });
+              } else {
+                const notifR2 = admin.firestore()
+                    .collection("notificacoes").doc();
+                tx.set(notifR2, {
+                  userId: responderUid,
+                  titulo: "Desafio finalizado",
+                  mensagem: "As respostas foram diferentes" +
+                    " desta vez. Na próxima vocês acertam!",
+                  icone: "fa-trophy",
+                  tipo: "desafio",
+                  lida: false,
+                  timestamp:
+                    admin.firestore.FieldValue.serverTimestamp(),
+                });
+                const notifP2 = admin.firestore()
+                    .collection("notificacoes").doc();
+                tx.set(notifP2, {
+                  userId: partnerUid,
+                  titulo: "Desafio finalizado",
+                  mensagem: "As respostas foram diferentes" +
+                    " desta vez. Na próxima vocês acertam!",
+                  icone: "fa-trophy",
+                  tipo: "desafio",
+                  lida: false,
+                  timestamp:
+                    admin.firestore.FieldValue.serverTimestamp(),
+                });
+              }
+            } else {
+              const notifWait = admin.firestore()
+                  .collection("notificacoes").doc();
+              tx.set(notifWait, {
+                userId: partnerUid,
+                titulo: "Desafio da semana 🧩",
+                mensagem: `${responderName} já respondeu` +
+                  ` o desafio. Agora é a sua vez!`,
+                icone: "fa-trophy",
+                tipo: "desafio",
+                lida: false,
+                timestamp:
+                  admin.firestore.FieldValue.serverTimestamp(),
+              });
             }
 
             const base = {
@@ -1863,41 +2270,82 @@ exports.processInput = onDocumentCreated(
                 return;
               }
 
+              const senderData = senderSnap.data();
               let partnerRef = null;
               let partnerSnap = null;
+              let partnerData = null;
               if (partnerUid) {
                 partnerRef = admin
                     .firestore()
                     .collection("usuarios")
                     .doc(partnerUid);
                 partnerSnap = await tx.get(partnerRef);
+                partnerData = partnerSnap && partnerSnap.exists ?
+                    partnerSnap.data() : null;
               }
 
-              // Reset sender
-              tx.update(senderRef, {
-                pareadoCom: admin.firestore.FieldValue.delete(),
-                pareadoUid: admin.firestore.FieldValue.delete(),
-                foguinhos: 0,
-                lastCheckInDate: admin.firestore.FieldValue.delete(),
-              });
+              // --- Multi-conexão: remove da lista pareamentosAtivos ---
+              const senderAtivos = Array.isArray(senderData.pareamentosAtivos) ?
+                  senderData.pareamentosAtivos : [];
+              const senderUpdatedAtivos = senderAtivos.filter(
+                  (p) => p.uid !== partnerUid);
+              const hasOtherConnections = senderUpdatedAtivos.length > 0;
 
-              // Reset partner if exists
-              if (partnerRef && partnerSnap && partnerSnap.exists) {
-                tx.update(partnerRef, {
-                  pareadoCom: admin.firestore.FieldValue.delete(),
-                  pareadoUid: admin.firestore.FieldValue.delete(),
-                  foguinhos: 0,
-                  lastCheckInDate: admin.firestore.FieldValue.delete(),
-                });
+              // Sender update
+              const senderUpdate = {
+                pareamentosAtivos: senderUpdatedAtivos,
+              };
+              if (!hasOtherConnections) {
+                // Última conexão removida — limpa campos legados
+                senderUpdate.pareadoCom =
+                  admin.firestore.FieldValue.delete();
+                senderUpdate.pareadoUid =
+                  admin.firestore.FieldValue.delete();
+                senderUpdate.foguinhos = 0;
+                senderUpdate.lastCheckInDate =
+                  admin.firestore.FieldValue.delete();
+              } else {
+                // Ainda tem conexões — atualiza legados para o primeiro
+                const first = senderUpdatedAtivos[0];
+                senderUpdate.pareadoCom = first.telefone || null;
+                senderUpdate.pareadoUid = first.uid || null;
+              }
+              tx.update(senderRef, senderUpdate);
+
+              // Partner update
+              if (partnerRef && partnerData) {
+                const partnerAtivos = Array.isArray(
+                    partnerData.pareamentosAtivos) ?
+                    partnerData.pareamentosAtivos : [];
+                const partnerUpdatedAtivos = partnerAtivos.filter(
+                    (p) => p.uid !== fromUid);
+                const partnerHasOther = partnerUpdatedAtivos.length > 0;
+
+                const partnerUpdate = {
+                  pareamentosAtivos: partnerUpdatedAtivos,
+                };
+                if (!partnerHasOther) {
+                  partnerUpdate.pareadoCom =
+                    admin.firestore.FieldValue.delete();
+                  partnerUpdate.pareadoUid =
+                    admin.firestore.FieldValue.delete();
+                  partnerUpdate.foguinhos = 0;
+                  partnerUpdate.lastCheckInDate =
+                    admin.firestore.FieldValue.delete();
+                } else {
+                  const first = partnerUpdatedAtivos[0];
+                  partnerUpdate.pareadoCom = first.telefone || null;
+                  partnerUpdate.pareadoUid = first.uid || null;
+                }
+                tx.update(partnerRef, partnerUpdate);
               }
 
               // Remove pareamentos doc if we can determine phones
-              const senderPhone = senderSnap.data().telefone || null;
+              const senderPhone = senderData.telefone || null;
               const phoneA = (senderPhone || "").replace(/\D/g, "");
               let partnerPhoneFromSnap = "";
-              if (partnerSnap && partnerSnap.data() &&
-                  partnerSnap.data().telefone) {
-                partnerPhoneFromSnap = partnerSnap.data().telefone;
+              if (partnerData && partnerData.telefone) {
+                partnerPhoneFromSnap = partnerData.telefone;
               }
               const phoneB = (partnerPhone ||
                   partnerPhoneFromSnap).replace(/\D/g, "");
@@ -1933,6 +2381,21 @@ exports.processInput = onDocumentCreated(
                 "processInput: pairing_unpair processed",
                 inputId,
             );
+            if (partnerUid) {
+              const pairKey = [fromUid, partnerUid].sort().join("_");
+              const challengeDocId = `alma_gemea_${pairKey}`;
+              try {
+                await admin.firestore()
+                    .collection("weeklyChallenges")
+                    .doc(challengeDocId)
+                    .delete();
+              } catch (err) {
+                console.error(
+                    "pairing_unpair: falha ao apagar desafio semanal",
+                    err,
+                );
+              }
+            }
           } catch (err) {
             console.error(
                 "processInput: erro processando pairing_unpair",
@@ -1948,6 +2411,223 @@ exports.processInput = onDocumentCreated(
               );
             }
           }
+        } else if (input.type === "clima_update") {
+          // ===== TERMÔMETRO DE CLIMA =====
+          const fromUid = input.fromUid;
+          const partnerUid = input.partnerUid;
+          const pareamentoId = input.pareamentoId || null;
+          const humor = input.humor; // muito_feliz | feliz | normal | triste
+
+          const HUMOR_DELTA = {
+            muito_feliz: 2,
+            feliz: 1,
+            normal: 0,
+            triste: -1,
+          };
+
+          if (!fromUid || !partnerUid || !pareamentoId ||
+              !humor || !(humor in HUMOR_DELTA)) {
+            await inputRef.update({
+              error: "missing_clima_info",
+              processed: false,
+            });
+            return;
+          }
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const senderRef = admin.firestore()
+                .collection("usuarios").doc(fromUid);
+            const partnerRef = admin.firestore()
+                .collection("usuarios").doc(partnerUid);
+            const pareamentoRef = admin.firestore()
+                .collection("pareamentos").doc(pareamentoId);
+
+            const [senderSnap, partnerSnap, pareamentoSnap] =
+              await Promise.all([
+                tx.get(senderRef),
+                tx.get(partnerRef),
+                tx.get(pareamentoRef),
+              ]);
+
+            if (!senderSnap.exists || !partnerSnap.exists) {
+              tx.update(inputRef, {
+                error: "usuario_nao_encontrado", processed: false,
+              });
+              return;
+            }
+            if (!pareamentoSnap.exists) {
+              tx.update(inputRef, {
+                error: "pareamento_nao_encontrado", processed: false,
+              });
+              return;
+            }
+
+            const senderData = senderSnap.data();
+            const partnerData = partnerSnap.data();
+            if (!areUsersPaired(senderData, partnerData, fromUid, partnerUid)) {
+              tx.update(inputRef, {
+                error: "usuarios_nao_pareados", processed: false,
+              });
+              return;
+            }
+
+            // --- Verifica se já registrou clima hoje ---
+            const pData = pareamentoSnap.data();
+            const climaHoje = pData.climaHoje || {};
+            const meuClima = climaHoje[fromUid] || null;
+            const nowTs = admin.firestore.Timestamp.now();
+
+            if (meuClima && meuClima.registradoEm &&
+                isSameCalendarDay(meuClima.registradoEm, nowTs)) {
+              tx.update(inputRef, {
+                processed: true,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                processedBy: "functions.processInput",
+                error: "clima_duplicate",
+              });
+              return;
+            }
+
+            const delta = HUMOR_DELTA[humor];
+            const isSenderPessoa1 = pData.pessoa1Uid === fromUid;
+
+            // --- Atualiza foguinhos do PARCEIRO se delta != 0 ---
+            if (delta !== 0) {
+              tx.update(partnerRef, {
+                foguinhos: admin.firestore.FieldValue.increment(delta),
+              });
+              const foguinhosField = isSenderPessoa1 ?
+                  "foguinhos_pessoa2" : "foguinhos_pessoa1";
+              tx.update(pareamentoRef, {
+                [foguinhosField]:
+                  admin.firestore.FieldValue.increment(delta),
+              });
+            }
+
+            // --- Salva climaHoje denormalizado no pareamento ---
+            tx.update(pareamentoRef, {
+              [`climaHoje.${fromUid}`]: {
+                humor: humor,
+                registradoEm: nowTs,
+              },
+            });
+
+            // --- Salva no subcol climaDiario ---
+            const todayStr = nowTs.toDate().toISOString().slice(0, 10);
+            const climaDiarioRef = pareamentoRef
+                .collection("climaDiario").doc(todayStr);
+            tx.set(climaDiarioRef, {
+              [fromUid]: {humor: humor, registradoEm: nowTs},
+            }, {merge: true});
+
+            // --- Cria entrada no extrato ---
+            const HUMOR_LABELS = {
+              muito_feliz: "Muito Feliz ❤️‍🔥",
+              feliz: "Feliz 🔥",
+              normal: "Normal 😊",
+              triste: "Triste 😢",
+            };
+            if (delta !== 0) {
+              const extratoRef = pareamentoRef
+                  .collection("extrato").doc();
+              tx.set(extratoRef, {
+                tipo: "clima",
+                descricao: `Termômetro: ${HUMOR_LABELS[humor]}`,
+                valor: delta,
+                beneficiarioUid: partnerUid,
+                autorUid: fromUid,
+                autorNome: senderData.nome || "Parceiro",
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                createdAtMs: Date.now(),
+              });
+            }
+
+            // --- Atualiza streaks e achievementStats ---
+            const existingStats = senderData.achievementStats || {};
+            const totalCheckinsBefore = existingStats.totalCheckins || 0;
+            const previousStreak = existingStats.currentDailyStreak || 0;
+            const bestStreakBefore = existingStats.bestDailyStreak || 0;
+
+            let currentStreak = 1;
+            if (senderData.lastCheckInDate &&
+              isPreviousCalendarDay(senderData.lastCheckInDate, nowTs)) {
+              currentStreak = previousStreak + 1;
+            }
+            const bestStreak = Math.max(bestStreakBefore, currentStreak);
+
+            const updatedStats = {
+              ...existingStats,
+              totalCheckins: totalCheckinsBefore + 1,
+              currentDailyStreak: currentStreak,
+              bestDailyStreak: bestStreak,
+              lastCheckInAt: nowTs,
+            };
+
+            tx.update(senderRef, {
+              lastCheckInDate: nowTs,
+              achievementStats: updatedStats,
+            });
+
+            // --- Notificação para o parceiro ---
+            const notifRef = admin.firestore()
+                .collection("notificacoes").doc();
+            const giverName = senderData.nome || "Seu parceiro";
+            let notifMsg;
+            if (delta > 0) {
+              notifMsg = `${giverName} marcou "` +
+                `${HUMOR_LABELS[humor]}" — ` +
+                `você ganhou ${delta} foguinho(s)! 🔥`;
+            } else if (delta < 0) {
+              notifMsg = `${giverName} marcou "` +
+                `${HUMOR_LABELS[humor]}" — ` +
+                `${Math.abs(delta)} foguinho(s) removidos.`;
+            } else {
+              notifMsg = `${giverName} marcou "` +
+                `${HUMOR_LABELS[humor]}" hoje.`;
+            }
+
+            tx.set(notifRef, {
+              userId: partnerUid,
+              titulo: "Termômetro do Dia",
+              mensagem: notifMsg,
+              icone: "fa-thermometer-half",
+              lida: false,
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            });
+
+            // --- Achievements ---
+            const granted = await grantAchievementsInTransaction({
+              tx,
+              userRef: senderRef,
+              userId: fromUid,
+              trigger: "daily_check_in",
+              currentAchievements: senderData.conquistas || {},
+              statsBefore: existingStats,
+              statsAfter: updatedStats,
+              eventContext: {
+                streak: currentStreak,
+                totalCheckins: updatedStats.totalCheckins,
+              },
+            });
+            if (granted.length) {
+              console.log(
+                  "processInput: conquistas concedidas (clima_update)",
+                  granted.map((ach) => ach.id),
+              );
+            }
+
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: clima_update processado", inputId);
         } else {
           console.log("processInput: tipo não suportado", input.type);
           await inputRef.update({error: "unsupported_type", processed: false});
@@ -2040,6 +2720,25 @@ exports.handleMomentTaskUpdate = onDocumentUpdated(
           tx.update(executeRef, {
             foguinhos: admin.firestore.FieldValue.increment(rewardAmount),
           });
+
+          // --- Extrato: bônus de tarefa concluída ---
+          const taskPareamentoId = taskData.idPareamento || null;
+          if (taskPareamentoId) {
+            const extratoRef = admin.firestore()
+                .collection("pareamentos").doc(taskPareamentoId)
+                .collection("extrato").doc();
+            tx.set(extratoRef, {
+              tipo: "bonus",
+              descricao: `Bônus: realizou "` +
+                `${taskData.momentoNome || "momento"}"`,
+              valor: rewardAmount,
+              beneficiarioUid: executeUid,
+              autorUid: executeUid,
+              autorNome: taskData.executadoPorNome || "Parceiro",
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              createdAtMs: Date.now(),
+            });
+          }
 
           const momentName = taskData.momentoNome || "momento";
           const messageParts = [
@@ -2164,9 +2863,6 @@ exports.processPairingRequest = onDocumentUpdated(
               receiverUpdate.foguinhos = MIN_FOGUINHOS;
             }
 
-            tx.update(senderRef, senderUpdate);
-            tx.update(receiverRef, receiverUpdate);
-
             // Cria documento em `pareamentos` com id consistente
             const telefones = [senderPhone, receiverPhone]
                 .map((t) => (t || "").replace(/\D/g, ""));
@@ -2186,6 +2882,20 @@ exports.processPairingRequest = onDocumentUpdated(
               pessoa2Uid: receiverUid,
               dataPareamento: admin.firestore.FieldValue.serverTimestamp(),
               idAmigavel: idAmigavel,
+              // Campos isolados por conexão (multi-conexão)
+              foguinhos_pessoa1: 10,
+              foguinhos_pessoa2: 10,
+              streak_pessoa1: {
+                currentDailyStreak: 0,
+                bestDailyStreak: 0,
+                lastCheckInDate: null,
+              },
+              streak_pessoa2: {
+                currentDailyStreak: 0,
+                bestDailyStreak: 0,
+                lastCheckInDate: null,
+              },
+              desafiosConcluidos: 0,
             };
 
             tx.set(
@@ -2193,6 +2903,13 @@ exports.processPairingRequest = onDocumentUpdated(
                 pareamentoData,
                 {merge: true},
             );
+
+            // pareamentosAtivos é gerenciado exclusivamente pelo
+            // handler pairing_response em processInput para evitar
+            // duplicatas (ambos os triggers rodam na mesma transição).
+
+            tx.update(senderRef, senderUpdate);
+            tx.update(receiverRef, receiverUpdate);
 
             // Marca pairingRequests como processed pelo backend
             const requestRef = admin
@@ -2733,6 +3450,111 @@ exports.getMemorias = https.onRequest(async (req, res) => {
   }
 });
 
+// ============================================================
+// getExtrato — Busca extrato de foguinhos de um pareamento
+// ============================================================
+exports.getExtrato = https.onRequest(async (req, res) => {
+  const originHeader = req.get("Origin") || req.get("origin") || "*";
+  const allowOrigin = originHeader === "null" ? "*" : originHeader;
+  const requestedHeaders = req.get("Access-Control-Request-Headers");
+
+  res.set("Access-Control-Allow-Origin", allowOrigin);
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set(
+      "Access-Control-Allow-Headers",
+      requestedHeaders || "Authorization, Content-Type",
+  );
+  res.set("Vary", "Origin");
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+  if (req.method !== "POST") {
+    res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (rateLimitHttp(req, res, {
+    keyPrefix: "getExtrato",
+    limit: 120,
+    windowMs: 60 * 1000,
+  })) {
+    return;
+  }
+
+  const authHeader = req.get("Authorization") || req.get("authorization") || "";
+  let idToken = null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    idToken = authHeader.split("Bearer ")[1];
+  }
+  if (!idToken) {
+    res.status(401).send({error: "missing_id_token"});
+    return;
+  }
+
+  const pareamentoId = req.body && typeof req.body.pareamentoId === "string" ?
+    req.body.pareamentoId : "";
+  if (!pareamentoId) {
+    res.status(400).send({error: "missing_pareamento_id"});
+    return;
+  }
+
+  const rawLimit = req.body && req.body.limit;
+  const limitNum = Number(rawLimit);
+  const limit = Number.isFinite(limitNum) ?
+    Math.min(Math.max(limitNum, 1), 100) : 20;
+
+  const rawStartAfter = req.body && req.body.startAfterMs;
+  const startAfterMs = Number(rawStartAfter);
+  const useStartAfter = Number.isFinite(startAfterMs);
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+
+    // Verifica que o user pertence ao pareamento
+    const pareamentoSnap = await admin.firestore()
+        .collection("pareamentos").doc(pareamentoId).get();
+    if (!pareamentoSnap.exists) {
+      res.status(404).send({error: "pareamento_not_found"});
+      return;
+    }
+    const pData = pareamentoSnap.data();
+    if (pData.pessoa1Uid !== uid && pData.pessoa2Uid !== uid) {
+      res.status(403).send({error: "not_authorized"});
+      return;
+    }
+
+    let query = admin.firestore()
+        .collection("pareamentos").doc(pareamentoId)
+        .collection("extrato")
+        .orderBy("createdAtMs", "desc");
+
+    if (useStartAfter) {
+      query = query.where("createdAtMs", "<", startAfterMs);
+    }
+
+    const snapshot = await query.limit(limit + 1).get();
+    const docs = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+    const hasMore = docs.length > limit;
+    const items = docs.slice(0, limit);
+
+    // Converte timestamps do Firestore para millis para o frontend
+    items.forEach((item) => {
+      if (item.timestamp && typeof item.timestamp.toMillis === "function") {
+        item.timestampMs = item.timestamp.toMillis();
+      }
+      delete item.timestamp;
+    });
+
+    res.send({items, hasMore});
+  } catch (err) {
+    console.error("getExtrato error:", err);
+    res.status(500).send({error: "get_extrato_failed"});
+  }
+});
+
 exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
   const originHeader = req.get("Origin") || req.get("origin") || "*";
   const allowOrigin = originHeader === "null" ? "*" : originHeader;
@@ -3009,6 +3831,116 @@ exports.deleteMemoria = https.onRequest(async (req, res) => {
 // O cliente envia um idToken (Authorization: Bearer <token>) e o objeto
 // `input` no body. A função verifica o token, valida fromUid e cria o
 // documento em `inputs` com privilégios admin.
+exports.joinWaitlist = https.onRequest(async (req, res) => {
+  const originHeader = req.get("Origin") || req.get("origin") || "";
+  const allowOrigin = (originHeader === "null" || !originHeader) ?
+    "*" :
+    originHeader;
+  const requestedHeaders = req.get("Access-Control-Request-Headers");
+
+  res.set("Access-Control-Allow-Origin", allowOrigin);
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set(
+      "Access-Control-Allow-Headers",
+      requestedHeaders || "Content-Type",
+  );
+  res.set("Vary", "Origin");
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+
+  if (req.method !== "POST") {
+    res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (rateLimitHttp(req, res, {
+    keyPrefix: "joinWaitlist",
+    limit: 30,
+    windowMs: 60 * 1000,
+  })) {
+    return;
+  }
+
+  try {
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+
+    const nome = normalizeLeadText(body.nome, 120);
+    const email = normalizeLeadEmail(body.email);
+    const telefoneWhatsapp = normalizeLeadPhone(body.telefoneWhatsapp);
+    const nomeParceiro = normalizeLeadText(body.nomeParceiro, 120);
+    const telefoneWhatsappParceiro = normalizeLeadPhone(
+        body.telefoneWhatsappParceiro,
+    );
+    const cidade = normalizeLeadText(body.cidade, 80);
+    const estado = normalizeLeadText(body.estado, 32).toUpperCase();
+    const source = normalizeLeadText(body.source || "cadastrovip", 80);
+    const utmSource = normalizeLeadText(body.utm_source, 120);
+    const utmMedium = normalizeLeadText(body.utm_medium, 120);
+    const utmCampaign = normalizeLeadText(body.utm_campaign, 160);
+
+    if (!nome) {
+      res.status(400).send({error: "missing_nome"});
+      return;
+    }
+    if (!email) {
+      res.status(400).send({error: "invalid_email"});
+      return;
+    }
+    if (!telefoneWhatsapp) {
+      res.status(400).send({error: "invalid_telefone_whatsapp"});
+      return;
+    }
+    if (!nomeParceiro) {
+      res.status(400).send({error: "missing_nome_parceiro"});
+      return;
+    }
+    if (!telefoneWhatsappParceiro) {
+      res.status(400).send({error: "invalid_telefone_whatsapp_parceiro"});
+      return;
+    }
+
+    const db = admin.firestore();
+    const dedupKey = `${email}|${telefoneWhatsapp}`;
+    const leadHash = crypto.createHash("sha256")
+        .update(dedupKey)
+        .digest("hex")
+        .slice(0, 32);
+    const docId = `lead_${leadHash}`;
+    const ref = db.collection("lista-de-espera").doc(docId);
+    const snap = await ref.get();
+
+    const payload = {
+      nome,
+      email,
+      telefoneWhatsapp,
+      nomeParceiro,
+      telefoneWhatsappParceiro,
+      cidade: cidade || null,
+      estado: estado || null,
+      source,
+      utm_source: utmSource || null,
+      utm_medium: utmMedium || null,
+      utm_campaign: utmCampaign || null,
+      status: "novo",
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      submissions: admin.firestore.FieldValue.increment(1),
+    };
+
+    if (!snap.exists) {
+      payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+    }
+
+    await ref.set(payload, {merge: true});
+    res.send({ok: true, id: docId, created: !snap.exists});
+  } catch (err) {
+    console.error("joinWaitlist: error", err);
+    res.status(500).send({error: "join_waitlist_failed"});
+  }
+});
+
 exports.createInput = https.onRequest(async (req, res) => {
   // CORS: permitir chamadas do browser (preflight OPTIONS + POST)
   const originHeader = req.get("Origin") || req.get("origin") || "";
@@ -3079,6 +4011,7 @@ exports.createInput = https.onRequest(async (req, res) => {
       "gift",
       "daily_check_in",
       "moment_redeem",
+      "clima_update",
       "weekly_challenge_seed",
       "weekly_challenge_start",
       "weekly_challenge_upsert",
@@ -3161,6 +4094,7 @@ async function upsertWeeklyChallengeForPair({
   pairUids,
   pareamentoId,
   nowMs,
+  forceReset = false,
 }) {
   const sortedUids = [...pairUids].sort();
   const pairKey = sortedUids.join("_");
@@ -3203,8 +4137,9 @@ async function upsertWeeklyChallengeForPair({
     0;
   const isExpired = !startedAtMs || (nowMs - startedAtMs) >=
     WEEKLY_CHALLENGE_CYCLE_MS;
+  const shouldReset = forceReset || isExpired;
 
-  if (!isExpired) {
+  if (!shouldReset) {
     return "skipped";
   }
 
@@ -3239,7 +4174,7 @@ async function upsertWeeklyChallengeForPair({
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   }, {merge: true});
 
-  return "rotated";
+  return forceReset ? "reset" : "rotated";
 }
 
 exports.rotateWeeklyChallenges = onSchedule({
