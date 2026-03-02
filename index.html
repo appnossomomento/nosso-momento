@@ -6867,7 +6867,7 @@ function renderChallengePopup() {
                     <span class="text-xs text-pink-500">Tempo restante</span>
                     <span id="challengeCountdown" class="text-lg font-bold text-pink-500">${secondsLeft}s</span>
                 </div>
-                <input id="challengeAnswer" type="text" placeholder="Digite sua resposta" ${disabled ? 'disabled' : ''} class="w-full mb-4 uppercase border border-pink-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-pink-300" oninput="this.value = this.value.toUpperCase()">
+                <input id="challengeAnswer" type="text" placeholder="Digite sua resposta" ${disabled ? 'disabled' : ''} class="w-full mb-4 uppercase border border-pink-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-300" style="color: #111 !important; background: #fff !important; border-color: #f9a8d4 !important;" oninput="this.value = this.value.toUpperCase()">
                 <button onclick="submitWeeklyChallengeAnswer()" class="w-full py-2 rounded-xl ${disabled ? 'bg-gray-200 text-gray-400' : 'bg-gradient-to-r from-pink-500 to-red-500 text-white'}" ${disabled ? 'disabled' : ''}>
                     Enviar resposta
                 </button>
