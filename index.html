@@ -7644,7 +7644,7 @@ try {
                 }
             } catch (e) { /* localStorage indisponível */ }
             if (!autoSelected) {
-                // Auto-seleciona primeira conexão e vai para lista de pareamentos
+                // Auto-seleciona primeira conexão e vai para dashboard
                 state.conexaoAtiva = {
                     uid: parceirosLista[0].uid,
                     nome: parceirosLista[0].nome,
@@ -7653,7 +7653,7 @@ try {
                     idAmigavel: parceirosLista[0].pareamentoId || '',
                     foguinhos: parceirosLista[0].foguinhos || 0,
                 };
-                state.etapa = 'pareamentos';
+                state.etapa = 'dashboard';
             }
         } else if (parceirosLista.length === 1) {
             // Auto-seleciona a única conexão
