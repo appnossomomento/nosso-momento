@@ -2620,6 +2620,8 @@ try {
     setTimeout(async () => {
         await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
         state.pairingTransition = false;
+        // VIP: vai direto para lista de pareamentos após aceitar
+        state.etapa = 'pareamentos';
         renderApp();
     }, 1200);
 } catch (error) {
