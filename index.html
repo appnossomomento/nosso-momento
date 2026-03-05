@@ -2541,6 +2541,31 @@ if (firebase.messaging && firebase.messaging.isSupported && firebase.messaging.i
 }
 }
 
+async function autoSyncFcmToken() {
+    try {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        if (!state.usuario || !state.usuario.notificationsEnabled) return;
+        if (!firebase.messaging || !firebase.messaging.isSupported || !firebase.messaging.isSupported()) return;
+
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (!registration) return;
+
+        const messaging = firebase.messaging();
+        const fcmToken = await messaging.getToken({
+            vapidKey: 'BDTOlIk3SKC6BV_MD0Eu2DZfm7rPOnGbz6hvYL1K_3lYnR1YXvO6qbOMuHHzBqzHhtyKw8YJMetHIas4V8wrWpI',
+            serviceWorkerRegistration: registration,
+        });
+
+        if (fcmToken) {
+            state.fcmToken = fcmToken;
+            await syncNotificationToken({ token: fcmToken });
+            console.log('FCM token auto-sincronizado no login:', fcmToken.slice(0, 12) + '...');
+        }
+    } catch (err) {
+        console.warn('autoSyncFcmToken falhou:', err);
+    }
+}
+
     async function sendPairingRequest() {
     const codigoDigitado = document.getElementById('codigoParceiro').value;
     const apelidoEl = document.getElementById('apelidoParceiro');
@@ -5400,10 +5425,22 @@ try {
 
     async function handleLogout() {
 try {
-    // >>> DESLIGA O OUVINTE DE NOTIFICAÇÕES AQUI <<<
+    // >>> DESLIGA TODOS OS OUVINTES FIRESTORE <<<
     if (unsubscribeNotifications) {
         unsubscribeNotifications();
         unsubscribeNotifications = null;
+    }
+    if (unsubscribeWeeklyChallenge) {
+        unsubscribeWeeklyChallenge();
+        unsubscribeWeeklyChallenge = null;
+    }
+    if (unsubscribeUserDoc) {
+        unsubscribeUserDoc();
+        unsubscribeUserDoc = null;
+    }
+    if (unsubscribePendingPairing) {
+        unsubscribePendingPairing();
+        unsubscribePendingPairing = null;
     }
     // Desliga listeners de pareamento
     unsubscribePareamentoListeners.forEach(fn => fn());
@@ -7630,6 +7667,9 @@ try {
 
         // LIGA O OUVINTE DE NOTIFICAÇÕES PUSH EM PRIMEIRO PLANO
         setupForegroundMessageHandler();
+
+        // AUTO-SYNC FCM TOKEN NO LOGIN (garante token atualizado)
+        autoSyncFcmToken();
 
         if (state.pareado && state.usuario.pareadoUid) {
             const parceiroSnap = await db.collection('usuarios').doc(state.usuario.pareadoUid).get();
