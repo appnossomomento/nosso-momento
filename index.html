@@ -3021,8 +3021,10 @@ function setupPareamentoListeners() {
             if (state.conexaoAberta && state.conexaoAberta.pareamentoId === pareamentoId) {
                 state.conexaoAberta.foguinhos = meuSaldo;
                 // Atualiza clima do parceiro em tempo real
-                state.climaHoje = climaHoje[uid] || state.climaHoje;
-                state.climaPartnerHoje = climaHoje[partner.uid] || state.climaPartnerHoje;
+                const meuClimaSnap = climaHoje[uid] || null;
+                const partnerClimaSnap = climaHoje[partner.uid] || null;
+                state.climaHoje = isClimaFromToday(meuClimaSnap) ? meuClimaSnap : null;
+                state.climaPartnerHoje = isClimaFromToday(partnerClimaSnap) ? partnerClimaSnap : null;
             }
 
             // Re-render se estiver em tela que exibe foguinhos
@@ -3392,6 +3394,15 @@ async function renderAchievementsPopup() {
         </div>
         ${state.showChallengePopup ? renderChallengePopup() : ''}
     `;
+}
+
+function isClimaFromToday(clima) {
+    if (!clima || !clima.registradoEm) return false;
+    const reg = clima.registradoEm.toDate ? clima.registradoEm.toDate() : new Date(clima.registradoEm.seconds ? clima.registradoEm.seconds * 1000 : clima.registradoEm);
+    const now = new Date();
+    return reg.getUTCFullYear() === now.getUTCFullYear() &&
+           reg.getUTCMonth() === now.getUTCMonth() &&
+           reg.getUTCDate() === now.getUTCDate();
 }
 
 function buildPareamentosLista() {
@@ -4040,8 +4051,10 @@ async function loadPerfilParceiroDados() {
         if (pareamentoDoc.exists) {
             const pData = pareamentoDoc.data();
             const climaHoje = pData.climaHoje || {};
-            state.climaHoje = climaHoje[uid] || null;
-            state.climaPartnerHoje = climaHoje[conex.uid] || null;
+            const meuClimaRaw = climaHoje[uid] || null;
+            const partnerClimaRaw = climaHoje[conex.uid] || null;
+            state.climaHoje = isClimaFromToday(meuClimaRaw) ? meuClimaRaw : null;
+            state.climaPartnerHoje = isClimaFromToday(partnerClimaRaw) ? partnerClimaRaw : null;
             // Atualiza foguinhos do parceiro aberto
             const isMePessoa1 = pData.pessoa1Uid === uid;
             state.conexaoAberta.foguinhos = isMePessoa1
