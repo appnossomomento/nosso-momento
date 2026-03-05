@@ -470,6 +470,19 @@
             padding: 12px 16px;
             border-bottom: 1px solid #2b2d33;
         }
+        body.theme-light .extrato-item:last-child { border-bottom: none; }
+        body.theme-light .extrato-icon-circle {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: rgba(255,45,63,0.10);
+            box-shadow: 0 0 8px rgba(255,73,106,0.22), inset 0 0 4px rgba(255,73,106,0.08);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        body.theme-light .extrato-icon-circle i {
+            color: #ff6a78;
+            font-size: 12px;
+            filter: drop-shadow(0 0 3px rgba(255,73,106,0.70));
+        }
         body.theme-light .extrato-valor-pos { color: #4ade80; font-weight: 600; }
         body.theme-light .extrato-valor-neg { color: #fb7185; font-weight: 600; }
         body.theme-light .tracking-day {
@@ -4362,8 +4375,8 @@ function renderPerfilParceiro() {
         return `
             <div class="extrato-item">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <i class="fas ${icon} text-sm text-gray-500"></i>
+                    <div class="extrato-icon-circle">
+                        <i class="fas ${icon}"></i>
                     </div>
                     <div>
                         <p class="text-sm text-gray-800">${item.descricao || ''}</p>
@@ -4554,8 +4567,8 @@ function renderExtratoPopup() {
         return `
             <div class="extrato-item">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <i class="fas ${icon} text-sm text-gray-500"></i>
+                    <div class="extrato-icon-circle">
+                        <i class="fas ${icon}"></i>
                     </div>
                     <div>
                         <p class="text-sm text-gray-800">${item.descricao || ''}</p>
@@ -4575,21 +4588,23 @@ function renderExtratoPopup() {
     ` : '';
 
     appContainer.innerHTML = `
-        <div class="screen screen-pad" style="background: #f5f3f7; min-height: 100vh;">
+        <div class="screen screen-pad" style="background: #050507; min-height: 100vh;">
             <!-- Header -->
-            <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-                <button onclick="voltarDoCatalogo()" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
-                    <i class="fas fa-arrow-left text-gray-600 text-sm"></i>
+            <div class="sticky top-0 z-20 bg-black/75 backdrop-blur-md border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+                <button onclick="voltarDoCatalogo()" class="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center hover:bg-gray-800 transition">
+                    <i class="fas fa-arrow-left text-gray-200 text-sm"></i>
                 </button>
-                <h2 class="text-sm font-semibold text-gray-800 flex-1">
+                <h2 class="text-sm font-semibold flex-1" style="color:#f5f5f5">
                     <i class="fas fa-fire text-orange-400 mr-1"></i>
-                    Extrato
+                    Extrato de Foguinhos
                 </h2>
             </div>
 
             <div class="px-4 py-4 pb-24">
-                ${extratoListHtml || '<p class="text-xs text-gray-400 text-center py-8">Nenhuma movimentação ainda.</p>'}
-                ${loadMoreBtn}
+                <div class="perfil-parceiro-card overflow-hidden">
+                    ${extratoListHtml || `<p class="text-xs text-center py-8" style="color:#8b8d96">Nenhuma movimentação ainda.</p>`}
+                    ${loadMoreBtn}
+                </div>
             </div>
         </div>
     `;
@@ -5857,9 +5872,9 @@ renderApp();
         console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar, 'state.showFoguinhosPopup:', state.showFoguinhosPopup);
         if (document && document.body) {
             const isLightTheme = state.etapa === 'memorias' || state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup';
-            document.body.style.backgroundColor = isLightTheme
-                ? '#f5f3f7'
-                : '#000000';
+            document.body.style.backgroundColor = (state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup')
+                ? '#050507'
+                : isLightTheme ? '#f5f3f7' : '#000000';
             if (state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup') {
                 document.body.classList.add('theme-light');
             } else {
