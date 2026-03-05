@@ -4329,18 +4329,20 @@ exports.checkMonthlyMilestones = onSchedule({
     }
     if (isNaN(startDate.getTime())) continue;
 
-    // Calcula meses completos: considera o dia do mês para não adiantar
-    const yearsDiff = nowDate.getFullYear() - startDate.getFullYear();
-    const rawMonths = yearsDiff * 12 + (nowDate.getMonth() - startDate.getMonth());
-    const totalMonths = nowDate.getDate() >= startDate.getDate()
-      ? rawMonths
-      : rawMonths - 1;
+    // Calcula meses completos considerando o dia do mês
+    const yearsDiff =
+      nowDate.getFullYear() - startDate.getFullYear();
+    const rawMonths =
+      yearsDiff * 12 + (nowDate.getMonth() - startDate.getMonth());
+    const totalMonths = nowDate.getDate() >= startDate.getDate() ?
+      rawMonths :
+      rawMonths - 1;
 
     if (totalMonths < 1) continue;
 
     // Milestones já premiados neste pareamento
-    const awardedMonths = Array.isArray(data.milestonesMeses)
-      ? data.milestonesMeses : [];
+    const awardedMonths = Array.isArray(data.milestonesMeses) ?
+      data.milestonesMeses : [];
 
     const newMonths = [];
     for (let m = 1; m <= totalMonths; m++) {
@@ -4349,9 +4351,9 @@ exports.checkMonthlyMilestones = onSchedule({
     if (newMonths.length === 0) continue;
 
     for (const mes of newMonths) {
-      const mesLabel = mes === 1
-        ? "1 mês juntos"
-        : `${mes} meses juntos`;
+      const mesLabel = mes === 1 ?
+        "1 mês juntos" :
+        `${mes} meses juntos`;
       const nowMsLocal = Date.now();
 
       const extA = doc.ref.collection("extrato").doc();
@@ -4365,9 +4367,10 @@ exports.checkMonthlyMilestones = onSchedule({
           // Idempotência: relê o doc dentro da transação
           const pairSnap = await tx.get(doc.ref);
           if (!pairSnap.exists) return;
-          const latestAwarded = Array.isArray(pairSnap.data().milestonesMeses)
-            ? pairSnap.data().milestonesMeses : [];
-          if (latestAwarded.includes(mes)) return; // já premiado em corrida
+          const latestAwarded =
+            Array.isArray(pairSnap.data().milestonesMeses) ?
+              pairSnap.data().milestonesMeses : [];
+          if (latestAwarded.includes(mes)) return;
 
           // ++ Foguinhos nos docs de usuário
           tx.update(db.collection("usuarios").doc(uidA), {
@@ -4379,15 +4382,20 @@ exports.checkMonthlyMilestones = onSchedule({
 
           // ++ Foguinhos no doc de pareamento (saldo por conexão)
           tx.update(doc.ref, {
-            foguinhos_pessoa1: admin.firestore.FieldValue.increment(5),
-            foguinhos_pessoa2: admin.firestore.FieldValue.increment(5),
-            milestonesMeses: admin.firestore.FieldValue.arrayUnion(mes),
+            foguinhos_pessoa1:
+              admin.firestore.FieldValue.increment(5),
+            foguinhos_pessoa2:
+              admin.firestore.FieldValue.increment(5),
+            milestonesMeses:
+              admin.firestore.FieldValue.arrayUnion(mes),
           });
 
           // Extrato para cada um
+          const descricao =
+            `🎉 ${mesLabel} juntos! Bônus comemorativo`;
           tx.set(extA, {
             tipo: "bonus",
-            descricao: `🎉 ${mesLabel} juntos! Bônus comemorativo`,
+            descricao,
             valor: 5,
             beneficiarioUid: uidA,
             autorUid: "system",
@@ -4397,7 +4405,7 @@ exports.checkMonthlyMilestones = onSchedule({
           });
           tx.set(extB, {
             tipo: "bonus",
-            descricao: `🎉 ${mesLabel} juntos! Bônus comemorativo`,
+            descricao,
             valor: 5,
             beneficiarioUid: uidB,
             autorUid: "system",
@@ -4408,7 +4416,9 @@ exports.checkMonthlyMilestones = onSchedule({
 
           // Notificações — disparam push via enviarNotificacaoPush
           const titulo = `💕 ${mesLabel} juntos!`;
-          const mensagem = `Parabéns! Mais um mês de união. Os dois ganharam 5 🔥 como presente.`;
+          const mensagem =
+            "Parabéns! Mais um mês de união. " +
+            "Os dois ganharam 5 🔥 como presente.";
           tx.set(notifA, {
             userId: uidA,
             titulo,
@@ -4430,12 +4440,21 @@ exports.checkMonthlyMilestones = onSchedule({
         });
 
         awarded++;
-        console.log(`checkMonthlyMilestones: premiado ${mes} mês(es) — pareamento ${doc.id}`);
+        console.log(
+            "checkMonthlyMilestones: premiado",
+            mes, "mês(es) — pareamento", doc.id,
+        );
       } catch (err) {
-        console.error(`checkMonthlyMilestones: erro no pareamento ${doc.id} mês ${mes}`, err);
+        console.error(
+            "checkMonthlyMilestones: erro no pareamento",
+            doc.id, "mês", mes, err,
+        );
       }
     }
   }
 
-  console.log(`checkMonthlyMilestones: concluído — ${awarded} milestone(s) premiado(s)`);
+  console.log(
+      "checkMonthlyMilestones: concluído —",
+      awarded, "milestone(s) premiado(s)",
+  );
 });
