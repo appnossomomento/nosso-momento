@@ -2429,6 +2429,12 @@ try {
 
     console.log("Permissão de notificação concedida.");
 
+    if (!firebase.messaging || !firebase.messaging.isSupported || !firebase.messaging.isSupported()) {
+        console.warn('Firebase Messaging não suportado neste navegador.');
+        showToast('Notificações push não são suportadas neste dispositivo.', 'aviso');
+        return;
+    }
+
     const messaging = firebase.messaging();
     const fcmToken = await messaging.getToken({
         vapidKey: "BDTOlIk3SKC6BV_MD0Eu2DZfm7rPOnGbz6hvYL1K_3lYnR1YXvO6qbOMuHHzBqzHhtyKw8YJMetHIas4V8wrWpI",
@@ -2507,7 +2513,7 @@ try {
 
 function setupForegroundMessageHandler() {
 // Certifique-se de que 'firebase.messaging' está disponível
-if (firebase.messaging.isSupported()) {
+if (firebase.messaging && firebase.messaging.isSupported && firebase.messaging.isSupported()) {
     const messaging = firebase.messaging();
     messaging.onMessage((payload) => {
         console.log("Notificação Push recebida em primeiro plano: ", payload);
