@@ -10,6 +10,31 @@ admin.initializeApp();
 
 const RATE_LIMIT_STORE = new Map();
 
+// --- CORS: whitelist de origens permitidas ---
+const ALLOWED_ORIGINS = [
+  "https://nossomomento.app",
+  "https://www.nossomomento.app",
+  "https://nosso-momento-app.web.app",
+  "https://nosso-momento-app.firebaseapp.com",
+  "http://localhost:5500",
+  "http://localhost:5501",
+  "http://127.0.0.1:5500",
+  "http://127.0.0.1:5501",
+];
+
+function setCorsHeaders(req, res) {
+  const origin = req.get("Origin") || req.get("origin") || "";
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.set("Access-Control-Allow-Origin", origin);
+  }
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set(
+      "Access-Control-Allow-Headers",
+      "Authorization, Content-Type",
+  );
+  res.set("Vary", "Origin");
+}
+
 function getClientIp(req) {
   const forwarded = req.get("X-Forwarded-For") || req.get("x-forwarded-for");
   if (forwarded) {
@@ -2998,10 +3023,17 @@ exports.processPairingRequest = onDocumentUpdated(
     },
 );
 
-// ------- Função HTTP temporária para executar testes E2E de pareamento -------
+// ------- Função HTTP de testes E2E — DESABILITADA em produção -------
 const https = require("firebase-functions/v2/https");
 
 exports.runPairingTests = https.onRequest(async (req, res) => {
+  // SECURITY: endpoint desabilitado em produção para evitar criação
+  // de dados de teste no Firestore. Para reabilitar localmente,
+  // comente o bloco abaixo e descomente o código original.
+  res.status(403).send({error: "endpoint_disabled_in_production"});
+  return;
+
+  /* eslint-disable no-unreachable */
   if (rateLimitHttp(req, res, {
     keyPrefix: "runPairingTests",
     limit: 5,
@@ -3173,17 +3205,7 @@ exports.runPairingTests = https.onRequest(async (req, res) => {
 });
 
 exports.setNotificationToken = https.onRequest(async (req, res) => {
-  const originHeader = req.get("Origin") || req.get("origin") || "*";
-  const allowOrigin = originHeader === "null" ? "*" : originHeader;
-  const requestedHeaders = req.get("Access-Control-Request-Headers");
-
-  res.set("Access-Control-Allow-Origin", allowOrigin);
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.set(
-      "Access-Control-Allow-Headers",
-      requestedHeaders || "Authorization, Content-Type",
-  );
-  res.set("Vary", "Origin");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     res.status(204).send("");
@@ -3327,17 +3349,7 @@ exports.setNotificationToken = https.onRequest(async (req, res) => {
 });
 
 exports.getMemorias = https.onRequest(async (req, res) => {
-  const originHeader = req.get("Origin") || req.get("origin") || "*";
-  const allowOrigin = originHeader === "null" ? "*" : originHeader;
-  const requestedHeaders = req.get("Access-Control-Request-Headers");
-
-  res.set("Access-Control-Allow-Origin", allowOrigin);
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.set(
-      "Access-Control-Allow-Headers",
-      requestedHeaders || "Authorization, Content-Type",
-  );
-  res.set("Vary", "Origin");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     res.status(204).send("");
@@ -3454,17 +3466,7 @@ exports.getMemorias = https.onRequest(async (req, res) => {
 // getExtrato — Busca extrato de foguinhos de um pareamento
 // ============================================================
 exports.getExtrato = https.onRequest(async (req, res) => {
-  const originHeader = req.get("Origin") || req.get("origin") || "*";
-  const allowOrigin = originHeader === "null" ? "*" : originHeader;
-  const requestedHeaders = req.get("Access-Control-Request-Headers");
-
-  res.set("Access-Control-Allow-Origin", allowOrigin);
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.set(
-      "Access-Control-Allow-Headers",
-      requestedHeaders || "Authorization, Content-Type",
-  );
-  res.set("Vary", "Origin");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     res.status(204).send("");
@@ -3556,17 +3558,7 @@ exports.getExtrato = https.onRequest(async (req, res) => {
 });
 
 exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
-  const originHeader = req.get("Origin") || req.get("origin") || "*";
-  const allowOrigin = originHeader === "null" ? "*" : originHeader;
-  const requestedHeaders = req.get("Access-Control-Request-Headers");
-
-  res.set("Access-Control-Allow-Origin", allowOrigin);
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.set(
-      "Access-Control-Allow-Headers",
-      requestedHeaders || "Authorization, Content-Type",
-  );
-  res.set("Vary", "Origin");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     res.status(204).send("");
@@ -3739,17 +3731,7 @@ exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
 });
 
 exports.deleteMemoria = https.onRequest(async (req, res) => {
-  const originHeader = req.get("Origin") || req.get("origin") || "*";
-  const allowOrigin = originHeader === "null" ? "*" : originHeader;
-  const requestedHeaders = req.get("Access-Control-Request-Headers");
-
-  res.set("Access-Control-Allow-Origin", allowOrigin);
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.set(
-      "Access-Control-Allow-Headers",
-      requestedHeaders || "Authorization, Content-Type",
-  );
-  res.set("Vary", "Origin");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     res.status(204).send("");
@@ -3832,19 +3814,7 @@ exports.deleteMemoria = https.onRequest(async (req, res) => {
 // `input` no body. A função verifica o token, valida fromUid e cria o
 // documento em `inputs` com privilégios admin.
 exports.joinWaitlist = https.onRequest(async (req, res) => {
-  const originHeader = req.get("Origin") || req.get("origin") || "";
-  const allowOrigin = (originHeader === "null" || !originHeader) ?
-    "*" :
-    originHeader;
-  const requestedHeaders = req.get("Access-Control-Request-Headers");
-
-  res.set("Access-Control-Allow-Origin", allowOrigin);
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.set(
-      "Access-Control-Allow-Headers",
-      requestedHeaders || "Content-Type",
-  );
-  res.set("Vary", "Origin");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     res.status(204).send("");
@@ -3942,20 +3912,7 @@ exports.joinWaitlist = https.onRequest(async (req, res) => {
 });
 
 exports.createInput = https.onRequest(async (req, res) => {
-  // CORS: permitir chamadas do browser (preflight OPTIONS + POST)
-  const originHeader = req.get("Origin") || req.get("origin") || "";
-  const allowOrigin = (
-      originHeader === "null" || !originHeader ? "*" : originHeader
-  );
-  const requestedHeaders = req.get("Access-Control-Request-Headers");
-
-  res.set("Access-Control-Allow-Origin", allowOrigin);
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.set(
-      "Access-Control-Allow-Headers",
-      requestedHeaders || "Authorization, Content-Type",
-  );
-  res.set("Vary", "Origin");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     // Preflight request
@@ -3979,8 +3936,6 @@ exports.createInput = https.onRequest(async (req, res) => {
   let idToken = null;
   if (authHeader && authHeader.startsWith("Bearer ")) {
     idToken = authHeader.split("Bearer ")[1];
-  } else if (req.body && req.body.idToken) {
-    idToken = req.body.idToken;
   }
 
   if (!idToken) {
@@ -4023,8 +3978,61 @@ exports.createInput = https.onRequest(async (req, res) => {
       return;
     }
 
-    // Normalize/ensure minimal fields
-    const toWrite = Object.assign({}, input);
+    // --- SECURITY: Schema validation por tipo ---
+    // Só copia campos permitidos para cada tipo de input
+    const ALLOWED_FIELDS_BY_TYPE = {
+      pairing_request: [
+        "type", "fromUid", "fromName", "fromPhone",
+        "toUid", "toPhone", "toName",
+      ],
+      pairing_response: [
+        "type", "fromUid", "requestId", "response",
+      ],
+      pairing_cancel: [
+        "type", "fromUid", "requestId",
+      ],
+      pairing_unpair: [
+        "type", "fromUid", "partnerUid", "partnerPhone", "pareamentoId",
+      ],
+      gift: [
+        "type", "fromUid", "partnerUid", "amount", "pareamentoId",
+      ],
+      daily_check_in: [
+        "type", "fromUid", "partnerUid", "pareamentoId",
+      ],
+      moment_redeem: [
+        "type", "fromUid", "partnerUid", "pareamentoId", "items",
+      ],
+      clima_update: [
+        "type", "fromUid", "partnerUid", "pareamentoId", "humor",
+      ],
+      weekly_challenge_seed: [
+        "type", "fromUid", "partnerUid", "pareamentoId",
+      ],
+      weekly_challenge_start: [
+        "type", "fromUid", "partnerUid", "pareamentoId", "payloadJson",
+      ],
+      weekly_challenge_upsert: [
+        "type", "fromUid", "partnerUid", "pareamentoId", "payloadJson",
+      ],
+      weekly_challenge_answer: [
+        "type", "fromUid", "partnerUid", "pareamentoId",
+        "challengeId", "answer", "payloadJson",
+      ],
+      weekly_challenge_timeout: [
+        "type", "fromUid", "partnerUid", "pareamentoId",
+        "challengeId", "payloadJson",
+      ],
+    };
+
+    const allowed =
+      ALLOWED_FIELDS_BY_TYPE[input.type] || ["type", "fromUid"];
+    const toWrite = {};
+    for (const field of allowed) {
+      if (input[field] !== undefined) {
+        toWrite[field] = input[field];
+      }
+    }
     toWrite.processed = false;
     toWrite.timestamp = admin.firestore.FieldValue.serverTimestamp();
 
@@ -4036,7 +4044,7 @@ exports.createInput = https.onRequest(async (req, res) => {
     if (err && err.code === "auth/argument-error") {
       res.status(401).send({error: "invalid_token"});
     } else {
-      res.status(500).send({error: String(err)});
+      res.status(500).send({error: "internal_error"});
     }
   }
 });
@@ -4221,19 +4229,7 @@ exports.rotateWeeklyChallenges = onSchedule({
 });
 
 exports.resetWeeklyChallengesAdmin = https.onRequest(async (req, res) => {
-  const originHeader = req.get("Origin") || req.get("origin") || "";
-  const allowOrigin = (originHeader === "null" || !originHeader) ?
-    "*" :
-    originHeader;
-  const requestedHeaders = req.get("Access-Control-Request-Headers");
-
-  res.set("Access-Control-Allow-Origin", allowOrigin);
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.set(
-      "Access-Control-Allow-Headers",
-      requestedHeaders || "Authorization, Content-Type",
-  );
-  res.set("Vary", "Origin");
+  setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {
     res.status(204).send("");
@@ -4257,8 +4253,6 @@ exports.resetWeeklyChallengesAdmin = https.onRequest(async (req, res) => {
   let idToken = null;
   if (authHeader && authHeader.startsWith("Bearer ")) {
     idToken = authHeader.split("Bearer ")[1];
-  } else if (req.body && req.body.idToken) {
-    idToken = req.body.idToken;
   }
   if (!idToken) {
     res.status(401).send({error: "missing_id_token"});

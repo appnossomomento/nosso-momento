@@ -119,16 +119,22 @@ service cloud.firestore {
         resource.data.pessoa1Uid == authUid() ||
         resource.data.pessoa2Uid == authUid()
       );
-      allow list: if isAuthenticated();
+      allow list: if isAuthenticated() && (
+        resource.data.pessoa1Uid == authUid() ||
+        resource.data.pessoa2Uid == authUid()
+      );
       allow write: if false;
 
       match /climaDiario/{dia} {
-        allow read: if isAuthenticated();
+        allow read: if isAuthenticated() && (
+          get(/databases/$(database)/documents/pareamentos/$(pid)).data.pessoa1Uid == authUid() ||
+          get(/databases/$(database)/documents/pareamentos/$(pid)).data.pessoa2Uid == authUid()
+        );
         allow write: if false;
       }
 
       match /extrato/{eid} {
-        allow read: if isAuthenticated();
+        allow read: if false;
         allow write: if false;
       }
     }
