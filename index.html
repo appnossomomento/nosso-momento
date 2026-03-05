@@ -394,33 +394,49 @@
 
         /* ===== TEMA CLARO (Perfil do Parceiro) ===== */
         body.theme-light {
-            background: #f5f3f7 !important;
+            background: #050507 !important;
         }
         body.theme-light .perfil-parceiro-card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
+            background:
+                linear-gradient(#1a1b20, #1a1b20) padding-box,
+                linear-gradient(135deg, rgba(255,45,63,0.50), rgba(255,106,120,0.34), rgba(255,45,63,0.20)) border-box;
+            border: 1px solid transparent;
             border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.48), 0 0 0 1px rgba(255,85,101,0.10), 0 0 20px rgba(255,73,106,0.16);
+            transition: box-shadow 0.25s ease, transform 0.25s ease;
+        }
+        body.theme-light .perfil-parceiro-card:hover {
+            box-shadow: 0 12px 34px rgba(0,0,0,0.54), 0 0 0 1px rgba(255,85,101,0.16), 0 0 26px rgba(255,73,106,0.22);
+        }
+        body.theme-light .perfil-parceiro-card.action-premium {
+            background:
+                linear-gradient(#1e1f25, #1e1f25) padding-box,
+                linear-gradient(135deg, rgba(255,45,63,0.58), rgba(255,106,120,0.40), rgba(255,45,63,0.23)) border-box;
+            box-shadow: 0 11px 30px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,85,101,0.14), 0 0 24px rgba(255,73,106,0.21);
+        }
+        body.theme-light .perfil-parceiro-card.action-premium:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 38px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,85,101,0.24), 0 0 36px rgba(255,73,106,0.32);
         }
         body.theme-light .termometro-btn {
-            background: #f3f4f6;
-            border: 2px solid #e5e7eb;
+            background: #1f2024;
+            border: 2px solid #31333a;
             border-radius: 16px;
             padding: 12px 8px;
             transition: all 0.2s ease;
             cursor: pointer;
         }
         body.theme-light .termometro-btn:hover:not(:disabled) {
-            border-color: #d1d5db;
-            background: #e5e7eb;
+            border-color: #474a55;
+            background: #282a31;
         }
         body.theme-light .termometro-btn.active {
-            border-color: #ef4444;
-            background: linear-gradient(135deg, #fef2f2, #fff1f2);
-            box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+            border-color: #ff6b81;
+            background: linear-gradient(135deg, #3b1f28, #2b1f24);
+            box-shadow: 0 0 0 3px rgba(255,107,129,0.28);
         }
         body.theme-light .termometro-btn:disabled {
-            opacity: 0.5;
+            opacity: 0.65;
             cursor: not-allowed;
         }
         body.theme-light .extrato-item {
@@ -428,10 +444,10 @@
             align-items: center;
             justify-content: space-between;
             padding: 12px 16px;
-            border-bottom: 1px solid #f3f4f6;
+            border-bottom: 1px solid #2b2d33;
         }
-        body.theme-light .extrato-valor-pos { color: #16a34a; font-weight: 600; }
-        body.theme-light .extrato-valor-neg { color: #ef4444; font-weight: 600; }
+        body.theme-light .extrato-valor-pos { color: #4ade80; font-weight: 600; }
+        body.theme-light .extrato-valor-neg { color: #fb7185; font-weight: 600; }
         body.theme-light .tracking-day {
             display: flex;
             flex-direction: column;
@@ -448,9 +464,18 @@
             font-size: 14px;
         }
         body.theme-light .tracking-dot.empty {
-            background: #f3f4f6;
-            border: 2px solid #e5e7eb;
+            background: #1f2024;
+            border: 2px solid #31333a;
         }
+        body.theme-light .text-gray-800 { color: #f5f5f5 !important; }
+        body.theme-light .text-gray-700 { color: #dedee3 !important; }
+        body.theme-light .text-gray-600 { color: #c7c8ce !important; }
+        body.theme-light .text-gray-500 { color: #a9abb4 !important; }
+        body.theme-light .text-gray-400 { color: #8b8d96 !important; }
+        body.theme-light .bg-gray-100 { background-color: #1f2024 !important; }
+        body.theme-light .bg-gray-200 { background-color: #2a2c33 !important; }
+        body.theme-light .border-gray-200 { border-color: #3a3c44 !important; }
+        body.theme-light .border-gray-100 { border-color: #2b2d33 !important; }
 
         .notification-shell {
             background: rgba(16, 12, 20, 0.92);
@@ -2541,31 +2566,6 @@ if (firebase.messaging && firebase.messaging.isSupported && firebase.messaging.i
 }
 }
 
-async function autoSyncFcmToken() {
-    try {
-        if (!('Notification' in window) || Notification.permission !== 'granted') return;
-        if (!state.usuario || !state.usuario.notificationsEnabled) return;
-        if (!firebase.messaging || !firebase.messaging.isSupported || !firebase.messaging.isSupported()) return;
-
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (!registration) return;
-
-        const messaging = firebase.messaging();
-        const fcmToken = await messaging.getToken({
-            vapidKey: 'BDTOlIk3SKC6BV_MD0Eu2DZfm7rPOnGbz6hvYL1K_3lYnR1YXvO6qbOMuHHzBqzHhtyKw8YJMetHIas4V8wrWpI',
-            serviceWorkerRegistration: registration,
-        });
-
-        if (fcmToken) {
-            state.fcmToken = fcmToken;
-            await syncNotificationToken({ token: fcmToken });
-            console.log('FCM token auto-sincronizado no login:', fcmToken.slice(0, 12) + '...');
-        }
-    } catch (err) {
-        console.warn('autoSyncFcmToken falhou:', err);
-    }
-}
-
     async function sendPairingRequest() {
     const codigoDigitado = document.getElementById('codigoParceiro').value;
     const apelidoEl = document.getElementById('apelidoParceiro');
@@ -4012,6 +4012,46 @@ function abrirCatalogoPareamento(index) {
 }
 
 // =========================================================
+// HELPER — Calcula tempo de relacionamento
+// =========================================================
+function calcTempoJunto(pareadoDesde) {
+    if (!pareadoDesde) return null;
+    let inicio;
+    if (typeof pareadoDesde === 'object' && typeof pareadoDesde.toMillis === 'function') {
+        inicio = new Date(pareadoDesde.toMillis());
+    } else if (typeof pareadoDesde === 'object' && pareadoDesde.seconds) {
+        inicio = new Date(pareadoDesde.seconds * 1000);
+    } else {
+        inicio = new Date(pareadoDesde);
+    }
+    if (isNaN(inicio.getTime())) return null;
+
+    const agora = new Date();
+    const diffMs = agora - inicio;
+    const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDias < 0) return null;
+
+    const anos = Math.floor(diffDias / 365);
+    const mesesRest = Math.floor((diffDias % 365) / 30);
+    const diasRest = diffDias % 30;
+
+    const partes = [];
+    if (anos > 0) partes.push(`${anos} ${anos === 1 ? 'ano' : 'anos'}`);
+    if (mesesRest > 0) partes.push(`${mesesRest} ${mesesRest === 1 ? 'mês' : 'meses'}`);
+    if (diasRest > 0 || partes.length === 0) partes.push(`${diasRest} ${diasRest === 1 ? 'dia' : 'dias'}`);
+
+    const texto = partes.length > 1
+        ? partes.slice(0, -1).join(', ') + ' e ' + partes[partes.length - 1]
+        : partes[0];
+
+    return {
+        texto,
+        dias: diffDias,
+        dataFormatada: inicio.toLocaleDateString('pt-BR'),
+    };
+}
+
+// =========================================================
 // ABRIR PERFIL DO PARCEIRO — Nova tela contextual
 // =========================================================
 function abrirPerfilParceiro(index) {
@@ -4240,7 +4280,7 @@ function renderPerfilParceiro() {
     // --- Alerta visual "Chateado" do parceiro ---
     const partnerTriste = climaPartner && climaPartner.humor === 'triste';
     const partnerAlertHtml = partnerTriste ? `
-        <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm mb-4">
+        <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-900/30 border border-red-700/40 text-red-200 text-sm mb-4">
             <i class="fas fa-heart-crack"></i>
             <span>${nome} marcou <strong>"Triste"</strong> hoje. Que tal um carinho?</span>
         </div>
@@ -4319,14 +4359,14 @@ function renderPerfilParceiro() {
     ` : '';
 
     appContainer.innerHTML = `
-        <div class="screen screen-pad" style="background: #f5f3f7; min-height: 100vh;">
+        <div class="screen screen-pad" style="background: #050507; min-height: 100vh;">
             <!-- Header -->
-            <div class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-                <button onclick="changeStep('pareamentos')" class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
-                    <i class="fas fa-arrow-left text-gray-600 text-sm"></i>
+            <div class="sticky top-0 z-20 bg-black/75 backdrop-blur-md border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+                <button onclick="changeStep('pareamentos')" class="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center hover:bg-gray-800 transition">
+                    <i class="fas fa-arrow-left text-gray-200 text-sm"></i>
                 </button>
                 <div class="flex items-center gap-3 flex-1 min-w-0">
-                    <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center flex-shrink-0">
+                    <div class="w-10 h-10 rounded-full bg-gray-800 overflow-hidden flex items-center justify-center flex-shrink-0">
                         ${foto ? `<img src="${foto}" class="w-full h-full object-cover">` : `<i class="fas fa-user text-gray-400"></i>`}
                     </div>
                     <div class="min-w-0">
@@ -4335,12 +4375,41 @@ function renderPerfilParceiro() {
                 </div>
                 <div class="flex items-center gap-1 flex-shrink-0">
                     <i class="fas fa-fire text-orange-400 text-lg"></i>
-                    <span class="text-lg font-bold text-gray-700">${foguinhos}</span>
+                    <span class="text-lg font-bold text-gray-100">${foguinhos}</span>
                 </div>
             </div>
 
             <div class="px-4 py-4 space-y-4 pb-24">
                 ${partnerAlertHtml}
+
+                <!-- Tempo Juntos -->
+                ${(function(){
+                    const tc = calcTempoJunto(conex.pareadoDesde);
+                    if (!tc) return '';
+                    const METAS = [30, 100, 180, 365, 500, 730, 1000, 1500, 2000];
+                    const proximaMeta = METAS.find(m => m > tc.dias);
+                    const diasParaMeta = proximaMeta ? proximaMeta - tc.dias : null;
+                    const progressoPct = proximaMeta ? Math.min(100, Math.round((tc.dias / proximaMeta) * 100)) : 100;
+                    const barraHtml = proximaMeta ? `
+                        <div class="mt-3 px-1">
+                            <div class="flex justify-between text-[10px] text-gray-500 mb-1.5">
+                                <span>${tc.dias} dias juntos</span>
+                                <span>Meta: ${proximaMeta} dias · faltam ${diasParaMeta}</span>
+                            </div>
+                            <div class="h-1.5 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.08)">
+                                <div class="h-full rounded-full transition-all" style="width:${progressoPct}%;background:linear-gradient(90deg,#ff2d3f,#ff6a78)"></div>
+                            </div>
+                        </div>
+                    ` : `<p class="text-xs font-semibold mt-2" style="color:#ff6a78">🏆 Mais de 2000 dias juntos!</p>`;
+                    return `
+                    <div class="perfil-parceiro-card p-5 text-center">
+                        <div class="text-3xl mb-2">💑</div>
+                        <p class="text-2xl font-bold leading-tight" style="color:#fff">${tc.texto}</p>
+                        <p class="text-xs mt-1" style="color:#9a9ba4">juntos desde ${tc.dataFormatada}</p>
+                        ${barraHtml}
+                    </div>
+                    `;
+                })()}
 
                 <!-- Termômetro de Clima -->
                 <div class="perfil-parceiro-card p-4">
@@ -4383,19 +4452,19 @@ function renderPerfilParceiro() {
 
                 <!-- Ações rápidas -->
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="abrirCatalogoPareamento(findPareamentoIndex('${conex.uid}'))" class="perfil-parceiro-card p-4 text-center hover:shadow-md transition">
+                    <button onclick="abrirCatalogoPareamento(findPareamentoIndex('${conex.uid}'))" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
                         <span class="text-2xl mb-1 block">🛒</span>
                         <p class="text-xs font-semibold text-gray-700">Catálogo</p>
                     </button>
-                    <button onclick="openMomentosFromPerfil()" class="perfil-parceiro-card p-4 text-center hover:shadow-md transition">
+                    <button onclick="openMomentosFromPerfil()" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
                         <span class="text-2xl mb-1 block">💕</span>
                         <p class="text-xs font-semibold text-gray-700">Momentos</p>
                     </button>
-                    <button onclick="openExtratoFromPerfil()" class="perfil-parceiro-card p-4 text-center hover:shadow-md transition">
+                    <button onclick="openExtratoFromPerfil()" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
                         <span class="text-2xl mb-1 block">🔥</span>
                         <p class="text-xs font-semibold text-gray-700">Extrato</p>
                     </button>
-                    <button onclick="openDesafioFromPerfil()" class="perfil-parceiro-card p-4 text-center hover:shadow-md transition">
+                    <button onclick="openDesafioFromPerfil()" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
                         <span class="text-2xl mb-1 block">🏆</span>
                         <p class="text-xs font-semibold text-gray-700">Desafios</p>
                     </button>
@@ -7667,9 +7736,6 @@ try {
 
         // LIGA O OUVINTE DE NOTIFICAÇÕES PUSH EM PRIMEIRO PLANO
         setupForegroundMessageHandler();
-
-        // AUTO-SYNC FCM TOKEN NO LOGIN (garante token atualizado)
-        autoSyncFcmToken();
 
         if (state.pareado && state.usuario.pareadoUid) {
             const parceiroSnap = await db.collection('usuarios').doc(state.usuario.pareadoUid).get();
