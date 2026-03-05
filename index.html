@@ -622,7 +622,25 @@
             align-items: center;
             gap: 12px;
             color: #374151;
+            transition: opacity 0.2s ease, background 0.2s ease;
         }
+        .notif-item-unread {
+            background: #fff7f8;
+            border-left: 3px solid #ff4d6a;
+            box-shadow: 0 0 0 1px rgba(255,77,106,0.12), 0 2px 8px rgba(255,77,106,0.08);
+        }
+        .notif-item-unread .notif-unread-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #ff2d3f;
+            box-shadow: 0 0 6px rgba(255,45,63,0.70);
+            flex-shrink: 0;
+        }
+        .notif-item-read {
+            opacity: 0.55;
+        }
+        .notif-item-read .notif-unread-dot { display: none; }
         .notif-item .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -5990,35 +6008,6 @@ renderApp();
     }
 
     async function renderNossasTarefas() {
-    
-        // (Bloco de limpeza de notificações - marca todas como lidas ao abrir)
-    try {
-            const hasUnread = state.notificacoes && state.notificacoes.some((notif) => !notif.lida);
-            if (hasUnread) {
-            const batch = db.batch();
-                let notificacoesLidas = 0;
-
-            state.notificacoes.forEach(notif => {
-                    if (!notif.lida) {
-                    const notifRef = db.collection('notificacoes').doc(notif.id);
-                    batch.update(notifRef, { lida: true });
-                        notificacoesLidas++;
-                }
-            });
-
-                if (notificacoesLidas > 0) {
-                await batch.commit();
-                    console.log(`Marcou ${notificacoesLidas} notificações como lidas.`);
-                state.notificacoesTarefasNaoLidas = 0;
-                    state.notificacoesPresentesNaoLidas = 0;
-                    state.notificacoesConquistasNaoLidas = 0;
-                updateFixedUI(); 
-            }
-        }
-    } catch (err) {
-            console.error("Erro ao marcar notificações como lidas:", err);
-    }
-    // (Fim do bloco de limpeza)
 
         const pendingCount = (state.notificacoesTarefasNaoLidas || 0) +
             (state.notificacoesPresentesNaoLidas || 0) +
@@ -6140,8 +6129,9 @@ renderApp();
                     else timeStr = `${Math.floor(diffMin / 1440)}d`;
                 }
 
+                const unreadClass = notif.lida ? 'notif-item-read' : 'notif-item-unread';
                 return `
-                    <div class="notif-item cursor-pointer hover:bg-gray-100 transition-colors ${notif.lida ? 'opacity-60' : ''}" onclick="handleNotifClick('${navTarget}')">
+                    <div class="notif-item ${unreadClass} cursor-pointer" onclick="handleNotifClick('${navTarget}', '${notif.id}')">
                         <div class="flex-shrink-0 w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center">
                             <i class="fas ${iconClass} text-lg ${iconColor}"></i>
                         </div>
@@ -6151,7 +6141,7 @@ renderApp();
                         </div>
                         <div class="flex flex-col items-end gap-1 flex-shrink-0">
                             ${timeStr ? `<span class="text-[10px] text-gray-400">${timeStr}</span>` : ''}
-                            ${!notif.lida ? '<div class="w-2 h-2 rounded-full bg-red-500"></div>' : ''}
+                            <div class="notif-unread-dot"></div>
                         </div>
                     </div>
                 `;
@@ -7260,7 +7250,26 @@ function setNotificacoesTab(tab) {
 }
 
 // Navega para a tela relevante ao clicar em uma notificação
-function handleNotifClick(target) {
+function handleNotifClick(target, notifId) {
+    // Marca a notificação individual como lida
+    if (notifId) {
+        const notif = (state.notificacoes || []).find(n => n.id === notifId);
+        if (notif && !notif.lida) {
+            notif.lida = true; // atualiza local imediatamente
+            db.collection('notificacoes').doc(notifId)
+                .update({ lida: true })
+                .catch(e => console.error('Erro ao marcar notif como lida:', e));
+            // Decrementa o contador correto
+            if (notif.icone === 'fa-gift') {
+                state.notificacoesPresentesNaoLidas = Math.max(0, (state.notificacoesPresentesNaoLidas || 0) - 1);
+            } else if (notif.tipo === 'achievement') {
+                state.notificacoesConquistasNaoLidas = Math.max(0, (state.notificacoesConquistasNaoLidas || 0) - 1);
+            } else {
+                state.notificacoesTarefasNaoLidas = Math.max(0, (state.notificacoesTarefasNaoLidas || 0) - 1);
+            }
+            updateFixedUI();
+        }
+    }
     // Telas que precisam de conexão aberta (perfil/momentos/desafios)
     const needsConexao = ['perfilParceiro', 'momentos', 'achievementsPopup', 'extratoPopup'];
     if (needsConexao.includes(target)) {
