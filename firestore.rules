@@ -115,7 +115,10 @@ service cloud.firestore {
     }
 
     match /pareamentos/{pid} {
-      allow get: if isAuthenticated() && resource != null && (
+      // resource == null significa doc não existe: retorna doc.exists=false (sem permission-denied)
+      // Isso é seguro pois um doc inexistente não expõe dados.
+      allow get: if isAuthenticated() && (
+        resource == null ||
         resource.data.pessoa1Uid == authUid() ||
         resource.data.pessoa2Uid == authUid()
       );
@@ -126,10 +129,11 @@ service cloud.firestore {
       allow write: if false;
 
       match /climaDiario/{dia} {
-        allow read: if isAuthenticated() && (
-          get(/databases/$(database)/documents/pareamentos/$(pid)).data.pessoa1Uid == authUid() ||
-          get(/databases/$(database)/documents/pareamentos/$(pid)).data.pessoa2Uid == authUid()
-        );
+        allow read: if isAuthenticated() &&
+          exists(/databases/$(database)/documents/pareamentos/$(pid)) && (
+            get(/databases/$(database)/documents/pareamentos/$(pid)).data.pessoa1Uid == authUid() ||
+            get(/databases/$(database)/documents/pareamentos/$(pid)).data.pessoa2Uid == authUid()
+          );
         allow write: if false;
       }
 

@@ -4197,6 +4197,17 @@ async function loadPerfilParceiroDados() {
     try {
         // 1. Carrega climaHoje do doc de pareamento
         const pareamentoDoc = await db.collection('pareamentos').doc(conex.pareamentoId).get();
+        if (!pareamentoDoc.exists) {
+            // Pareamento foi removido — volta ao dashboard
+            console.warn('loadPerfilParceiroDados: pareamento n\u00e3o encontrado, redirecionando.');
+            state.conexaoAberta = null;
+            state.pareado = false;
+            state.usuario.pareadoUid = null;
+            state.parceiroData = null;
+            state.etapa = 'dashboard';
+            renderApp();
+            return;
+        }
         if (pareamentoDoc.exists) {
             const pData = pareamentoDoc.data();
             const climaHoje = pData.climaHoje || {};
@@ -7995,14 +8006,28 @@ try {
                         if (telefoneUsuario && telefoneParceiro) {
                             const telefonesOrdenados = [telefoneUsuario, telefoneParceiro].sort();
                             const idPareamentoDoc = telefonesOrdenados.join('_');
-                            const pareamentoDoc = await db.collection('pareamentos').doc(idPareamentoDoc).get();
-                            if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
-                                state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
+                            try {
+                                const pareamentoDoc = await db.collection('pareamentos').doc(idPareamentoDoc).get();
+                                if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
+                                    state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
+                                } else if (!pareamentoDoc.exists) {
+                                    // Doc de pareamento deletado — trata como despareado
+                                    state.idPareamentoAmigavel = null;
+                                    state.pareado = false;
+                                    state.usuario.pareadoUid = null;
+                                    state.parceiroData = null;
+                                }
+                            } catch (pErr) {
+                                console.warn('Erro ao carregar doc de pareamento (snapshot):', pErr.code || pErr.message);
+                                state.idPareamentoAmigavel = null;
+                                state.pareado = false;
+                                state.usuario.pareadoUid = null;
+                                state.parceiroData = null;
                             }
                         }
                     }
                     renderApp();
-                }).catch((err) => console.error('Erro ao carregar parceiro pareado:', err));
+                }).catch((err) => console.warn('Erro ao carregar parceiro pareado:', err.code || err.message));
             }
             if (hasProcessedInitialConquistas && newlyUnlockedIds.length) {
                 console.log('Conquistas novas detectadas via snapshot:', newlyUnlockedIds);
