@@ -115,11 +115,11 @@ service cloud.firestore {
     }
 
     match /pareamentos/{pid} {
-      allow get: if isAuthenticated() && (
+      allow get: if isAuthenticated() && resource != null && (
         resource.data.pessoa1Uid == authUid() ||
         resource.data.pessoa2Uid == authUid()
       );
-      allow list: if isAuthenticated() && (
+      allow list: if isAuthenticated() && resource != null && (
         resource.data.pessoa1Uid == authUid() ||
         resource.data.pessoa2Uid == authUid()
       );

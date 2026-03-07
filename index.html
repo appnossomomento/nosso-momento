@@ -7824,11 +7824,21 @@ try {
                 if (telefoneUsuario && telefoneParceiro) {
                     const telefonesOrdenados = [telefoneUsuario, telefoneParceiro].sort();
                     const idPareamentoDoc = telefonesOrdenados.join('_');
-                    const pareamentoDoc = await db.collection('pareamentos').doc(idPareamentoDoc).get();
-                    if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
-                        state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
-                        console.log('ID Amigável carregado:', state.idPareamentoAmigavel);
-                        setupWeeklyChallengeListener();
+                    try {
+                        const pareamentoDoc = await db.collection('pareamentos').doc(idPareamentoDoc).get();
+                        if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
+                            state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
+                            console.log('ID Amigável carregado:', state.idPareamentoAmigavel);
+                            setupWeeklyChallengeListener();
+                        }
+                    } catch (pareamentoErr) {
+                        // Documento pode ter sido deletado (ex: após desparamento) ou
+                        // regra de segurança nega acesso a docs inexistentes.
+                        // Continua sem idAmigavel — não deve impedir o login.
+                        console.warn('Não foi possível carregar doc de pareamento:', pareamentoErr.code || pareamentoErr.message);
+                        state.idPareamentoAmigavel = null;
+                        state.pareado = false;
+                        state.usuario.pareadoUid = null;
                     }
                 }
             } else {
