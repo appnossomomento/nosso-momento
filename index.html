@@ -2727,14 +2727,19 @@ try {
     showToast('Solicitação aceita! Conectando...', 'sucesso');
     // Aguarda backend processar e recarrega dados
     setTimeout(async () => {
-        await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
-        state.pairingTransition = false;
-        state.incomingPairingDismissedId = null;
-        // Navega para pareamentos (VIP com múltiplas conexões) ou dashboard
-        const isVipNow = !!(state.usuario && state.usuario.vip);
-        const numParceiros = Array.isArray(state.parceirosAtivos) ? state.parceirosAtivos.length : 0;
-        state.etapa = (isVipNow && numParceiros > 1) ? 'pareamentos' : 'dashboard';
-        renderApp();
+        try {
+            await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
+            state.incomingPairingDismissedId = null;
+            // Navega para pareamentos (VIP com múltiplas conexões) ou dashboard
+            const isVipNow = !!(state.usuario && state.usuario.vip);
+            const numParceiros = Array.isArray(state.parceirosAtivos) ? state.parceirosAtivos.length : 0;
+            state.etapa = (isVipNow && numParceiros > 1) ? 'pareamentos' : 'dashboard';
+        } catch (innerErr) {
+            console.error('Erro ao carregar dados pós-pareamento:', innerErr);
+        } finally {
+            state.pairingTransition = false;
+            renderApp();
+        }
     }, 1200);
 } catch (error) {
     console.error('Erro ao aceitar pareamento:', error);
@@ -5964,15 +5969,12 @@ renderApp();
 
     // Função para alternar a visibilidade do carrinho
     function toggleCartSidebar() {
-        console.log('toggleCartSidebar chamada. state.showCartSidebar ANTES:', state.showCartSidebar);
         state.showCartSidebar = !state.showCartSidebar;
-        console.log('state.showCartSidebar DEPOIS:', state.showCartSidebar);
         renderApp(); // Re-renderiza para exibir/esconder a sidebar
     }
 
     // --- Função Central de Renderização (Gerencia as etapas) ---
     function renderApp() {
-        console.log('renderApp chamada. Etapa atual:', state.etapa, 'state.codigoDigitando:', state.codigoDigitando, 'state.showCartSidebar:', state.showCartSidebar, 'state.showFoguinhosPopup:', state.showFoguinhosPopup);
         if (document && document.body) {
             const isLightTheme = state.etapa === 'memorias' || state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup';
             document.body.style.backgroundColor = (state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup')
@@ -6063,7 +6065,7 @@ renderApp();
                 ${state.showInstagramModal ? renderInstagramModal() : ''}
                 ${state.showEditNameModal ? renderEditNameModal() : ''}
                 ${state.showSystemModal ? renderSystemModal() : ''}
-                ${(state.pendingPairingRequest && state.pareado && state.pendingPairingRequest.id !== state.incomingPairingDismissedId) ? renderIncomingPairingPopup() : ''}
+                ${(state.pendingPairingRequest && state.etapa !== 'parear' && state.pendingPairingRequest.id !== state.incomingPairingDismissedId) ? renderIncomingPairingPopup() : ''}
                 ${state.pairingTransition ? '<div class="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center"><div class="text-center"><i class="fas fa-heart text-pink-400 text-4xl animate-pulse mb-4"></i><p class="text-white text-lg font-semibold">Conectando...</p></div></div>' : ''}
             `;
         }
@@ -8122,15 +8124,11 @@ try {
                             })
                             .catch(() => {});
                     }
-                    // Só força navegação para 'parear' se o usuário NÃO estiver pareado
-                    // (VIPs com conexões ativas não devem ser interrompidos)
-                    if (!state.pareado) {
-                        state.etapa = 'parear';
-                    }
                     // Se a request mudou, limpa dismiss para o popup reaparecer
                     if (state.incomingPairingDismissedId && state.incomingPairingDismissedId !== requestDoc.id) {
                         state.incomingPairingDismissedId = null;
                     }
+                    // Não força navegação — o popup flutuante aparece na tela atual via renderApp()
                 } else {
                     state.pendingPairingRequest = null;
                     // Se sender está em "pending_" e não está pareado, mantém em parear
