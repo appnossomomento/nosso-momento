@@ -2794,30 +2794,59 @@ try {
     function renderIncomingPairingPopup() {
         if (!state.pendingPairingRequest) return '';
         const req = state.pendingPairingRequest;
-        const senderName = req.senderName || req.partnerNickname || 'Alguém especial';
+        const senderName = req.senderName || req.partnerNickname || 'Algu\u00e9m especial';
+        const senderFoto = req.senderFotoUrl || null;
+        const avatarHtml = senderFoto
+            ? `<img src="${senderFoto}" class="w-20 h-20 rounded-full object-cover border-4 border-pink-500/60 shadow-lg shadow-pink-500/30" alt="${senderName}">`
+            : `<div class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500/30 to-red-500/30 border-4 border-pink-500/40 flex items-center justify-center">
+                <i class="fas fa-user text-pink-400 text-3xl"></i>
+               </div>`;
         return `
-            <div class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm" onclick="dismissIncomingPairingPopup()"></div>
-            <div class="fixed inset-0 z-[70] flex items-center justify-center px-4" onclick="dismissIncomingPairingPopup()">
-                <div class="w-full max-w-sm rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7 animate-fadeIn" onclick="event.stopPropagation()">
-                    <div class="text-center mb-5">
-                        <div class="w-16 h-16 mx-auto rounded-full bg-pink-500/20 flex items-center justify-center mb-3">
-                            <i class="fas fa-heart text-pink-400 text-2xl"></i>
+            <div class="fixed inset-0 z-[60] bg-black/75 backdrop-blur-sm" onclick="dismissIncomingPairingPopup()"></div>
+            <div class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0" onclick="dismissIncomingPairingPopup()">
+                <div class="w-full max-w-sm rounded-3xl overflow-hidden text-white shadow-2xl animate-fadeIn" onclick="event.stopPropagation()"
+                     style="background: linear-gradient(160deg, #1a0a1e 0%, #0d0a0f 100%); border: 1px solid rgba(255,60,100,0.25);">
+
+                    <!-- Cabeçalho com logo e barra de gradiente -->
+                    <div style="background: linear-gradient(90deg, rgba(255,45,80,0.18) 0%, rgba(255,100,130,0.10) 100%); border-bottom: 1px solid rgba(255,60,100,0.18);" class="px-6 py-4 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <img src="/assets/icons/iconprincipal.png" style="width:28px;height:28px;filter:drop-shadow(0 0 6px rgba(255,73,106,0.7));" alt="Nosso Momento">
+                            <span class="text-sm font-bold tracking-widest uppercase" style="color:rgba(255,100,130,0.9);">Nosso Momento</span>
                         </div>
-                        <h3 class="text-xl font-bold text-pink-400">Nova Solicitação</h3>
-                        <p class="text-white/70 text-sm mt-1">Você recebeu um pedido de pareamento</p>
+                        <button onclick="dismissIncomingPairingPopup()" class="text-white/30 hover:text-white/70 transition text-lg leading-none">&times;</button>
                     </div>
-                    <div class="text-center mb-6">
-                        <span class="inline-block text-lg font-bold bg-white/10 py-2 px-5 rounded-xl">${senderName}</span>
+
+                    <!-- Corpo -->
+                    <div class="px-6 pt-6 pb-7 text-center">
+                        <!-- Avatar do solicitante -->
+                        <div class="flex justify-center mb-4">
+                            <div class="relative">
+                                ${avatarHtml}
+                                <div class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center" style="background:linear-gradient(135deg,#ff2d50,#ff6680);box-shadow:0 0 10px rgba(255,45,80,0.6);">
+                                    <i class="fas fa-heart text-white text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Texto -->
+                        <p class="text-white/50 text-xs uppercase tracking-widest mb-1">Convite de pareamento</p>
+                        <h3 class="text-xl font-bold text-white mb-1">${senderName}</h3>
+                        <p class="text-white/50 text-sm mb-6">quer se conectar com voc\u00ea&nbsp;💞</p>
+
+                        <!-- Bot\u00f5es -->
+                        <div class="flex gap-3">
+                            <button onclick="acceptIncomingPairingPopup()" class="flex-1 py-3 rounded-2xl font-bold text-white transition-all active:scale-95"
+                                    style="background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 16px rgba(34,197,94,0.35);">
+                                <i class="fas fa-heart mr-2"></i>Aceitar
+                            </button>
+                            <button onclick="rejectIncomingPairingPopup()" class="flex-1 py-3 rounded-2xl font-bold text-white/80 transition-all active:scale-95"
+                                    style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);">
+                                <i class="fas fa-times mr-2"></i>Recusar
+                            </button>
+                        </div>
+
+                        <button onclick="dismissIncomingPairingPopup()" class="mt-4 text-white/30 text-xs hover:text-white/60 transition">Ver depois</button>
                     </div>
-                    <div class="flex gap-3">
-                        <button onclick="acceptIncomingPairingPopup()" class="flex-1 py-3 rounded-xl font-semibold bg-green-600 hover:bg-green-500 text-white transition">
-                            <i class="fas fa-check mr-2"></i>Aceitar
-                        </button>
-                        <button onclick="rejectIncomingPairingPopup()" class="flex-1 py-3 rounded-xl font-semibold bg-red-600/80 hover:bg-red-600 text-white transition">
-                            <i class="fas fa-times mr-2"></i>Rejeitar
-                        </button>
-                    </div>
-                    <button onclick="dismissIncomingPairingPopup()" class="w-full mt-3 py-2 text-white/50 text-sm hover:text-white/80 transition">Fechar</button>
                 </div>
             </div>
         `;
@@ -2850,15 +2879,54 @@ try {
 // (mesmo que o usuário já esteja pareado — ex: VIP com múltiplas conexões)
 if (state.pendingPairingRequest) {
     const req = state.pendingPairingRequest;
+    const sNome = req.senderName || req.partnerNickname || 'Algu\u00e9m especial';
+    const sFoto = req.senderFotoUrl || null;
+    const sAvatarHtml = sFoto
+        ? `<img src="${sFoto}" class="w-28 h-28 rounded-full object-cover mx-auto border-4" style="border-color:rgba(255,60,100,0.5);box-shadow:0 0 30px rgba(255,45,80,0.4);" alt="${sNome}">`
+        : `<div class="w-28 h-28 rounded-full mx-auto flex items-center justify-center" style="background:linear-gradient(135deg,rgba(255,45,80,0.25),rgba(255,100,130,0.15));border:4px solid rgba(255,60,100,0.4);box-shadow:0 0 30px rgba(255,45,80,0.3);"><i class="fas fa-user text-pink-400 text-5xl"></i></div>`;
     appContainer.innerHTML = `
-        <div class="screen screen-pad flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
-            <div class="card p-8 max-w-md w-full text-center">
-                <h2 class="text-3xl font-bold mb-4 text-pink-400">Solicitação Recebida</h2>
-                <p class="mb-4">Você recebeu uma solicitação de pareamento de:</p>
-                <div class="text-2xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block mb-6">${req.senderName || 'Alguém especial'}</div>
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <button onclick="acceptPairingRequest('${req.id}', '${req.senderUid}', '${req.senderPhone}')" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded text-white font-semibold transition flex-1">Aceitar</button>
-                    <button onclick="rejectPairingRequest('${req.id}')" class="btn-red px-6 py-3 rounded text-white font-semibold transition flex-1">Rejeitar</button>
+        <div class="min-h-screen flex flex-col items-center justify-center px-5 py-10" style="background:linear-gradient(180deg,#0a0008 0%,#0d0010 100%);">
+
+            <!-- Logo -->
+            <div class="flex items-center gap-2 mb-10 opacity-80">
+                <img src="/assets/icons/iconprincipal.png" style="width:32px;height:32px;filter:drop-shadow(0 0 8px rgba(255,73,106,0.8));" alt="">
+                <span class="text-sm font-bold tracking-widest uppercase" style="color:rgba(255,100,130,0.8);">Nosso Momento</span>
+            </div>
+
+            <!-- Card principal -->
+            <div class="w-full max-w-sm rounded-3xl overflow-hidden" style="background:linear-gradient(160deg,#1a0a1e 0%,#0d0a0f 100%);border:1px solid rgba(255,60,100,0.25);box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 40px rgba(255,45,80,0.08);">
+
+                <!-- Faixa topo -->
+                <div style="background:linear-gradient(90deg,rgba(255,45,80,0.20),rgba(255,100,130,0.08));border-bottom:1px solid rgba(255,60,100,0.18);" class="px-6 py-3 text-center">
+                    <span class="text-xs uppercase tracking-widest font-bold" style="color:rgba(255,100,130,0.7);">Convite de Pareamento</span>
+                </div>
+
+                <!-- Corpo -->
+                <div class="px-6 pt-8 pb-8 text-center">
+                    <!-- Foto com badge de cora\u00e7\u00e3o -->
+                    <div class="relative inline-block mb-5">
+                        ${sAvatarHtml}
+                        <div class="absolute bottom-0 right-0 w-9 h-9 rounded-full flex items-center justify-center" style="background:linear-gradient(135deg,#ff2d50,#ff6680);box-shadow:0 0 14px rgba(255,45,80,0.7);">
+                            <i class="fas fa-heart text-white text-sm"></i>
+                        </div>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-white mb-1">${sNome}</h2>
+                    <p class="text-white/50 text-sm mb-8">quer se conectar com voc\u00ea&nbsp;\u{1F49E}</p>
+
+                    <!-- Bot\u00f5es -->
+                    <div class="flex gap-3 mb-3">
+                        <button onclick="acceptPairingRequest('${req.id}', '${req.senderUid}', '${req.senderPhone}')" class="flex-1 py-4 rounded-2xl font-bold text-white text-base transition-all active:scale-95"
+                                style="background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 4px 20px rgba(34,197,94,0.4);">
+                            <i class="fas fa-heart mr-2"></i>Aceitar
+                        </button>
+                        <button onclick="rejectPairingRequest('${req.id}')" class="flex-1 py-4 rounded-2xl font-bold text-white/70 text-base transition-all active:scale-95"
+                                style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);">
+                            <i class="fas fa-times mr-2"></i>Recusar
+                        </button>
+                    </div>
+
+                    <p class="text-white/25 text-xs">Ao aceitar, voc\u00eas ser\u00e3o conectados no app</p>
                 </div>
             </div>
         </div>`;
@@ -8066,7 +8134,19 @@ try {
                 if (!snap.empty) {
                     const requestDoc = snap.docs[0];
                     const hadPending = !!state.pendingPairingRequest;
-                    state.pendingPairingRequest = { id: requestDoc.id, ...requestDoc.data() };
+                    const reqData = { id: requestDoc.id, ...requestDoc.data() };
+                    state.pendingPairingRequest = reqData;
+                    // Busca a foto do solicitante se ainda não tiver
+                    if (reqData.senderUid && !reqData.senderFotoUrl) {
+                        db.collection('usuarios').doc(reqData.senderUid).get()
+                            .then((sSnap) => {
+                                if (sSnap.exists && state.pendingPairingRequest && state.pendingPairingRequest.id === reqData.id) {
+                                    state.pendingPairingRequest.senderFotoUrl = sSnap.data().fotoUrl || null;
+                                    renderApp();
+                                }
+                            })
+                            .catch(() => {});
+                    }
                     // Só força navegação para 'parear' se o usuário NÃO estiver pareado
                     // (VIPs com conexões ativas não devem ser interrompidos)
                     if (!state.pareado) {
