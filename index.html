@@ -4224,15 +4224,20 @@ async function loadPerfilParceiroDados() {
 
         // 2. Carrega tracking semanal (últimos 7 dias)
         // Usa UTC para ser consistente com backend (que grava doc IDs em UTC)
-        const hojeUTC = new Date();
+        // Usa fuso de São Paulo (UTC-3) para calcular os dias da semana corretamente
+        const _now = new Date();
+        const _spNow = new Date(_now.getTime() - 3 * 60 * 60 * 1000);
         const diasSemana = [];
-        // Encontra a segunda-feira desta semana em UTC
-        const dayOfWeekUTC = hojeUTC.getUTCDay(); // 0=Dom .. 6=Sab
-        const diffToMonday = dayOfWeekUTC === 0 ? -6 : 1 - dayOfWeekUTC;
-        const mondayMs = Date.UTC(hojeUTC.getUTCFullYear(), hojeUTC.getUTCMonth(), hojeUTC.getUTCDate() + diffToMonday);
+        // Encontra a segunda-feira desta semana no horário de SP
+        const dayOfWeekSP = _spNow.getUTCDay(); // 0=Dom .. 6=Sab (já deslocado para SP)
+        const diffToMonday = dayOfWeekSP === 0 ? -6 : 1 - dayOfWeekSP;
+        const mondayMs = _spNow.getTime() + diffToMonday * 86400000;
+        // Normaliza para meia-noite em SP
+        const mondaySpDate = new Date(mondayMs);
+        const mondayNorm = Date.UTC(mondaySpDate.getUTCFullYear(), mondaySpDate.getUTCMonth(), mondaySpDate.getUTCDate());
 
         for (let i = 0; i < 7; i++) {
-            const d = new Date(mondayMs + i * 86400000);
+            const d = new Date(mondayNorm + i * 86400000);
             diasSemana.push(d.toISOString().slice(0, 10));
         }
 
@@ -4309,8 +4314,10 @@ async function submitClima(humor) {
         showToast('Clima registrado! 🔥', 'sucesso');
         // Atualiza localmente para feedback imediato
         state.climaHoje = { humor, registradoEm: new Date() };
-        // Atualiza a grade semanal do dia de hoje
-        const hojeStr = new Date().toISOString().slice(0, 10);
+        // Usa fuso de São Paulo (UTC-3) para determinar o dia correto
+        const _agora = new Date();
+        const _spDate = new Date(_agora.getTime() - 3 * 60 * 60 * 1000);
+        const hojeStr = _spDate.toISOString().slice(0, 10);
         if (Array.isArray(state.climaSemana)) {
             state.climaSemana = state.climaSemana.map(d => {
                 if (d.dia === hojeStr) {

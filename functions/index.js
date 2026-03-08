@@ -123,13 +123,19 @@ function timestampToDate(ts) {
   return ts && typeof ts.toDate === "function" ? ts.toDate() : null;
 }
 
+// Retorna a data no fuso de São Paulo (UTC-3) no formato YYYY-MM-DD
+function toSaoPauloDateStr(date) {
+  // UTC-3: subtrai 3 horas
+  const sp = new Date(date.getTime() - 3 * 60 * 60 * 1000);
+  return sp.toISOString().slice(0, 10);
+}
+
 function isSameCalendarDay(tsA, tsB) {
   const dateA = timestampToDate(tsA);
   const dateB = timestampToDate(tsB);
   if (!dateA || !dateB) return false;
-  return dateA.getUTCFullYear() === dateB.getUTCFullYear() &&
-    dateA.getUTCMonth() === dateB.getUTCMonth() &&
-    dateA.getUTCDate() === dateB.getUTCDate();
+  // Compara no fuso de São Paulo (UTC-3) para evitar virada de dia às 21h
+  return toSaoPauloDateStr(dateA) === toSaoPauloDateStr(dateB);
 }
 
 function areUsersPaired(senderData, partnerData, senderUid, partnerUid) {
@@ -2542,7 +2548,8 @@ exports.processInput = onDocumentCreated(
             });
 
             // --- Salva no subcol climaDiario ---
-            const todayStr = nowTs.toDate().toISOString().slice(0, 10);
+            // Usa fuso de São Paulo (UTC-3) para evitar gravar no dia seguinte após 21h
+            const todayStr = toSaoPauloDateStr(nowTs.toDate());
             const climaDiarioRef = pareamentoRef
                 .collection("climaDiario").doc(todayStr);
             tx.set(climaDiarioRef, {
