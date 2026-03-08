@@ -2548,7 +2548,7 @@ exports.processInput = onDocumentCreated(
             });
 
             // --- Salva no subcol climaDiario ---
-            // Usa fuso de São Paulo (UTC-3) para evitar gravar no dia seguinte após 21h
+            // Fuso SP (UTC-3): evita gravar no dia seguinte após 21h
             const todayStr = toSaoPauloDateStr(nowTs.toDate());
             const climaDiarioRef = pareamentoRef
                 .collection("climaDiario").doc(todayStr);
