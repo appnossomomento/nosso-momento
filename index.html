@@ -2729,8 +2729,11 @@ try {
     setTimeout(async () => {
         await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
         state.pairingTransition = false;
-        // VIP: vai direto para lista de pareamentos após aceitar
-        state.etapa = 'pareamentos';
+        state.incomingPairingDismissedId = null;
+        // Navega para pareamentos (VIP com múltiplas conexões) ou dashboard
+        const isVipNow = !!(state.usuario && state.usuario.vip);
+        const numParceiros = Array.isArray(state.parceirosAtivos) ? state.parceirosAtivos.length : 0;
+        state.etapa = (isVipNow && numParceiros > 1) ? 'pareamentos' : 'dashboard';
         renderApp();
     }, 1200);
 } catch (error) {
@@ -2753,6 +2756,10 @@ try {
     });
     showToast('Solicitação de pareamento rejeitada.', 'sucesso');
     state.pendingPairingRequest = null;
+    state.incomingPairingDismissedId = null;
+    // Navega para a tela correta após rejeitar
+    const isVip = !!(state.usuario && state.usuario.vip);
+    state.etapa = (isVip && state.pareado) ? 'pareamentos' : (state.pareado ? 'dashboard' : 'parear');
     renderApp();
 } catch (error) {
     console.error('Erro ao rejeitar pareamento:', error);
@@ -2934,41 +2941,9 @@ if (state.pendingPairingRequest) {
 }
 
 if (state.pareado && state.parceiroData) {
-    // Mostra o Perfil do Parceiro se estiver pareado
-    const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/iconprincipal.png';
-    const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
-    const canCheckIn = !lastCheckIn || !isSameDay(lastCheckIn, new Date());
-    const checkInButtonText = canCheckIn ? 'Presentear com 1 🔥' : 'Presenteado Hoje';
-    const checkInButtonClasses = canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed';
-
-    appContainer.innerHTML = `
-        <div class="container mx-auto px-4 py-8 pb-8 pt-24">
-            <div class="max-w-md mx-auto card text-center p-8">
-                <h2 class="text-2xl font-bold mb-4 text-gray-300">Conectado com</h2>
-                <img src="${fotoParceiroUrl}" class="w-32 h-32 rounded-full object-cover border-4 border-pink-500/50 mx-auto mb-4">
-                <h3 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500">${state.parceiroData.nome}</h3>
-                
-                <p class="text-gray-500 text-sm mt-2">ID do Casal: ${state.idPareamentoAmigavel || 'Indisponível'}</p>
-
-                <div class="mt-8 space-y-4">
-                    <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''} class="w-full py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${checkInButtonClasses}">
-                        <i class="fas fa-gift"></i> ${checkInButtonText}
-                    </button>
-                    <button onclick="desparearParceiro()" class="w-full py-3 bg-red-800/60 hover:bg-red-700 text-white rounded-lg font-semibold transition">
-                        Desfazer Pareamento
-                    </button>
-
-                    <!-- Botão de seguir no Instagram (discreto, com borda em gradiente) -->
-                    <button onclick="openInstagramModal()" class="instagram-cta-outline w-full mt-2">
-                        <span class="instagram-cta-inner w-full justify-center">
-                            <i class="fab fa-instagram"></i> Siga-nos no Instagram!
-                        </span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        ${state.showCartSidebar ? renderCartSidebar() : ''}
-    `;
+    // Usuário já está pareado — redireciona para o dashboard em vez de exibir tela legada
+    state.etapa = 'dashboard';
+    renderApp();
     return;
 }
 
