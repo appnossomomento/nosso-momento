@@ -4397,8 +4397,9 @@ function renderPerfilParceiro() {
         return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size * 0.5)}px;border:2px solid rgba(0,0,0,0.06)" class="flex-shrink-0">${emoji}</div>`;
     }
 
-    // Gera dia de hoje em UTC para comparação
-    const hojeUTC = new Date().toISOString().slice(0, 10);
+    // Gera dia de hoje no fuso de São Paulo (UTC-3) para comparação
+    const _nowSP = new Date(new Date().getTime() - 3 * 60 * 60 * 1000);
+    const hojeUTC = _nowSP.toISOString().slice(0, 10);
     const diasSemana = state.climaSemana || [];
     const trackingLabelsHtml = diasSemana.map(dia => {
         const isHoje = dia.dia === hojeUTC;
