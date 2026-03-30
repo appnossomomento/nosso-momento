@@ -6815,56 +6815,43 @@ function buildMemoriasShareContainerSimple() {
     const photoFit = photoSelection.isFallback ? 'contain' : 'cover';
 
     const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '720px';
-    container.style.height = '1280px';
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;width:720px;height:1280px;';
 
-    container.innerHTML = `
-    <div style="position:relative;width:720px;height:1280px;overflow:hidden;background:linear-gradient(160deg,#08000e 0%,#16000e 45%,#0a0008 100%);color:#fff;font-family:Poppins,Arial,sans-serif;">
-        <div style="position:absolute;top:-160px;left:-160px;width:580px;height:580px;border-radius:50%;background:radial-gradient(circle,rgba(255,40,75,0.14) 0%,transparent 65%);pointer-events:none;"></div>
-        <div style="position:absolute;bottom:100px;right:-100px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(255,70,100,0.09) 0%,transparent 65%);pointer-events:none;"></div>
-
-        <div style="position:relative;z-index:2;padding:52px 52px 0;display:flex;justify-content:space-between;align-items:center;">
-            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:28px;width:auto;" crossorigin="anonymous">
-            <div style="font-size:12px;letter-spacing:3px;font-weight:700;color:rgba(255,255,255,0.35);">${monthLabel}</div>
-        </div>
-
-        <div style="position:relative;z-index:2;margin:24px 52px;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,45,80,0.5),rgba(255,255,255,0));"></div>
-
-        <div style="position:relative;z-index:2;margin:0 52px;height:730px;border-radius:32px;overflow:hidden;border:1.5px solid rgba(255,255,255,0.10);box-shadow:0 32px 80px rgba(0,0,0,0.8);">
-            <img src="${photoUrl}" alt="" style="width:100%;height:100%;object-fit:${photoFit};display:block;" crossorigin="anonymous">
-            <div style="position:absolute;bottom:0;left:0;right:0;height:60%;background:linear-gradient(to top,rgba(8,0,14,0.96) 0%,rgba(8,0,14,0.55) 55%,transparent 100%);"></div>
-            <div style="position:absolute;bottom:40px;left:0;right:0;text-align:center;">
-                <div style="font-size:52px;line-height:1;">🔥</div>
-                <div style="font-size:108px;font-weight:900;line-height:0.85;letter-spacing:-4px;margin-top:8px;">${totalFoguinhos}</div>
-                <div style="font-size:13px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-top:12px;font-weight:700;">FOGUINHOS INVESTIDOS</div>
-                <div style="font-size:13px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,0.55);font-weight:700;">NO NOSSO AMOR</div>
-            </div>
-        </div>
-
-        <div style="position:relative;z-index:2;margin:28px 52px 0;text-align:center;">
-            <div style="display:inline-flex;align-items:center;gap:28px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:100px;padding:18px 48px;">
-                <div style="text-align:center;">
-                    <div style="font-size:28px;font-weight:900;line-height:1;">${totalMomentos}</div>
-                    <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.40);text-transform:uppercase;margin-top:2px;">MOMENTOS</div>
-                </div>
-                <div style="width:1px;height:40px;background:rgba(255,255,255,0.12);"></div>
-                <div style="text-align:center;">
-                    <div style="font-size:28px;font-weight:900;line-height:1;">${totalFoguinhos}</div>
-                    <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.40);text-transform:uppercase;margin-top:2px;">FOGUINHOS</div>
-                </div>
-            </div>
-        </div>
-
-        <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:0 52px 44px;display:flex;justify-content:space-between;align-items:center;">
-            <div style="font-size:11px;color:rgba(255,255,255,0.20);letter-spacing:1.5px;">nossomomento.app</div>
-            <div style="width:32px;height:1px;background:rgba(255,45,80,0.3);"></div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.20);letter-spacing:1.5px;">@nossomomentoapp</div>
-        </div>
+    container.innerHTML = `<div style="position:relative;width:720px;height:1280px;overflow:hidden;background:#07000c;color:#fff;font-family:Arial,sans-serif;display:flex;flex-direction:column;box-sizing:border-box;padding:52px 52px 44px;">
+  <div style="position:absolute;inset:0;background:radial-gradient(circle at 82% 8%,rgba(255,40,80,0.16) 0%,transparent 38%),radial-gradient(circle at 18% 88%,rgba(180,10,40,0.09) 0%,transparent 32%);pointer-events:none;z-index:0;"></div>
+  <div style="position:relative;z-index:1;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;">
+    <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:24px;width:auto;" crossorigin="anonymous">
+    <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.28);letter-spacing:2px;">${monthLabel}</span>
+  </div>
+  <div style="position:relative;z-index:1;flex-shrink:0;height:1px;background:linear-gradient(90deg,rgba(255,45,80,0)0%,rgba(255,45,80,0.55)50%,rgba(255,45,80,0)100%);margin:22px 0;"></div>
+  <div style="position:relative;z-index:1;flex:1;min-height:0;border-radius:28px;overflow:hidden;border:1.5px solid rgba(255,255,255,0.07);box-shadow:0 20px 56px rgba(0,0,0,0.8);">
+    <img src="${photoUrl}" alt="" style="width:100%;height:100%;object-fit:${photoFit};display:block;" crossorigin="anonymous">
+    <div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,rgba(7,0,12,0.97)0%,rgba(7,0,12,0.50)55%,transparent 100%);"></div>
+    <div style="position:absolute;bottom:32px;left:0;right:0;text-align:center;">
+      <div style="font-size:48px;line-height:1;">🔥</div>
+      <div style="font-size:96px;font-weight:900;line-height:0.9;letter-spacing:-2px;">${totalFoguinhos}</div>
+      <div style="font-size:15px;font-weight:800;color:rgba(255,255,255,0.60);margin-top:14px;">FOGUINHOS INVESTIDOS NO NOSSO AMOR</div>
     </div>
-    `;
+  </div>
+  <div style="position:relative;z-index:1;flex-shrink:0;display:flex;justify-content:center;margin-top:22px;">
+    <div style="display:inline-flex;align-items:stretch;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.09);border-radius:60px;overflow:hidden;">
+      <div style="text-align:center;padding:13px 44px;">
+        <div style="font-size:28px;font-weight:900;line-height:1;">${totalMomentos}</div>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.36);margin-top:4px;">MOMENTOS</div>
+      </div>
+      <div style="width:1px;background:rgba(255,255,255,0.11);"></div>
+      <div style="text-align:center;padding:13px 44px;">
+        <div style="font-size:28px;font-weight:900;line-height:1;">${totalFoguinhos}</div>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.36);margin-top:4px;">FOGUINHOS</div>
+      </div>
+    </div>
+  </div>
+  <div style="position:relative;z-index:1;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;margin-top:18px;">
+    <span style="font-size:10px;color:rgba(255,255,255,0.16);letter-spacing:1px;font-weight:600;">nossomomento.app</span>
+    <div style="width:24px;height:1px;background:rgba(255,45,80,0.28);"></div>
+    <span style="font-size:10px;color:rgba(255,255,255,0.16);letter-spacing:1px;font-weight:600;">@nossomomentoapp</span>
+  </div>
+</div>`;
 
     return container;
 }
@@ -6881,76 +6868,76 @@ function buildMemoriasShareContainerDetailed() {
     const parcName = (state.parceiroData && state.parceiroData.nome) || 'Parceiro(a)';
     const trunc = (n) => n.length > 11 ? n.slice(0, 10) + '…' : n;
 
-    const statCard = (emoji, count, label) => `
-        <div style="flex:1;background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.20);border-radius:22px;padding:26px 8px;text-align:center;box-shadow:inset 0 1px 0 rgba(255,255,255,0.10);">
-            <div style="font-size:42px;line-height:1;">${emoji}</div>
-            <div style="font-size:34px;font-weight:900;margin-top:10px;line-height:1;">${count}x</div>
-            <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.60);margin-top:8px;font-weight:700;">${label}</div>
-        </div>
-    `;
+    // Busca foto de momento: tenta categorias em ordem de prioridade
+    const tryCategories = ['Sair da Rotina', 'Lovezin', 'Quentes'];
+    let momentPhoto = null;
+    for (const cat of tryCategories) {
+        const sel = getMemoriasSharePhotoSelection(items, cat);
+        if (!sel.isFallback) { momentPhoto = sel; break; }
+    }
+    const hasMomentPhoto = !!momentPhoto;
+    const momentPhotoUrl = hasMomentPhoto ? momentPhoto.url : null;
+
+    const statCard = (emoji, count, label) =>
+        `<div style="flex:1;background:rgba(0,0,0,0.26);border:1px solid rgba(255,255,255,0.17);border-radius:18px;padding:18px 4px;text-align:center;">
+            <div style="font-size:36px;line-height:1;">${emoji}</div>
+            <div style="font-size:32px;font-weight:900;line-height:1;margin-top:8px;">${count}x</div>
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.52);margin-top:6px;text-transform:uppercase;">${label}</div>
+        </div>`;
 
     const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '720px';
-    container.style.height = '1280px';
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;width:720px;height:1280px;';
 
-    container.innerHTML = `
-    <div style="position:relative;width:720px;height:1280px;overflow:hidden;background:linear-gradient(150deg,#23000f 0%,#6e001e 35%,#b81a38 65%,#e8294e 85%,#ff4566 100%);color:#fff;font-family:Poppins,Arial,sans-serif;">
-        <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 50% -10%,rgba(255,130,155,0.15) 0%,transparent 55%);pointer-events:none;"></div>
-
-        <div style="position:relative;z-index:2;padding:52px 52px 0;display:flex;flex-direction:column;align-items:center;text-align:center;">
-            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:34px;width:auto;" crossorigin="anonymous">
-            <div style="font-size:12px;letter-spacing:4px;font-weight:700;color:rgba(255,255,255,0.50);margin-top:10px;">${monthLabel}</div>
-        </div>
-
-        <div style="position:relative;z-index:2;margin:44px 52px 0;display:flex;align-items:center;justify-content:center;gap:32px;">
-            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
-                <div style="width:158px;height:158px;border-radius:50%;overflow:hidden;border:4px solid rgba(255,255,255,0.40);box-shadow:0 0 0 2px rgba(255,255,255,0.12),0 20px 48px rgba(0,0,0,0.45);">
-                    <img src="${userFoto}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous">
-                </div>
-                <div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.90);">${trunc(userName)}</div>
-            </div>
-            <div style="font-size:44px;margin-top:-24px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.4));">♥</div>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
-                <div style="width:158px;height:158px;border-radius:50%;overflow:hidden;border:4px solid rgba(255,255,255,0.40);box-shadow:0 0 0 2px rgba(255,255,255,0.12),0 20px 48px rgba(0,0,0,0.45);">
-                    <img src="${parcFoto}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous">
-                </div>
-                <div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.90);">${trunc(parcName)}</div>
-            </div>
-        </div>
-
-        <div style="position:relative;z-index:2;margin:36px 52px;height:1px;background:rgba(255,255,255,0.18);"></div>
-
-        <div style="position:relative;z-index:2;margin:0 52px;display:flex;gap:14px;">
-            ${statCard('🍷', counts.sairRotina, 'Sair da Rotina')}
-            ${statCard('❤️', counts.lovezin, 'Lovezin')}
-            ${statCard('🌶️', counts.quentes, 'Quentes')}
-        </div>
-
-        <div style="position:relative;z-index:2;margin:20px 52px 0;background:rgba(0,0,0,0.24);border:1px solid rgba(255,255,255,0.20);border-radius:26px;padding:32px 44px;display:flex;align-items:center;justify-content:center;gap:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.10);">
-            <div style="font-size:68px;line-height:1;">🔥</div>
-            <div>
-                <div style="font-size:82px;font-weight:900;line-height:0.85;letter-spacing:-3px;">${totalFoguinhos}</div>
-                <div style="font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.65);margin-top:10px;font-weight:700;">FOGUINHOS INVESTIDOS</div>
-                <div style="font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.65);font-weight:700;">NO NOSSO AMOR</div>
-            </div>
-        </div>
-
-        <div style="position:relative;z-index:2;margin:16px 52px 0;text-align:center;">
-            <div style="display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);border-radius:100px;padding:13px 36px;">
-                <div style="font-size:20px;font-weight:900;">${totalMomentos}</div>
-                <div style="font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.60);text-transform:uppercase;font-weight:700;">MOMENTOS REALIZADOS</div>
-            </div>
-        </div>
-
-        <div style="position:absolute;bottom:0;left:0;right:0;z-index:2;padding:0 52px 44px;display:flex;justify-content:space-between;align-items:center;">
-            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:22px;width:auto;opacity:0.45;" crossorigin="anonymous">
-            <div style="font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:1.5px;">@nossomomentoapp</div>
-        </div>
+    container.innerHTML = `<div style="position:relative;width:720px;height:1280px;overflow:hidden;background:linear-gradient(155deg,#1e0008 0%,#5a0018 38%,#b81a38 68%,#f03050 88%,#ff4566 100%);color:#fff;font-family:Arial,sans-serif;display:flex;flex-direction:column;box-sizing:border-box;padding:52px 48px 44px;">
+  <div style="position:absolute;top:0;left:0;right:0;height:360px;background:radial-gradient(ellipse at 50% 0%,rgba(255,120,145,0.13) 0%,transparent 60%);pointer-events:none;z-index:0;"></div>
+  <div style="position:relative;z-index:1;flex-shrink:0;text-align:center;">
+    <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:30px;width:auto;" crossorigin="anonymous">
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.42);letter-spacing:3px;margin-top:8px;">${monthLabel}</div>
+  </div>
+  <div style="position:relative;z-index:1;flex-shrink:0;display:flex;align-items:flex-end;justify-content:center;gap:24px;margin-top:28px;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+      <div style="width:130px;height:130px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,0.42);box-shadow:0 10px 32px rgba(0,0,0,0.4);">
+        <img src="${userFoto}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous">
+      </div>
+      <span style="font-size:16px;font-weight:700;color:rgba(255,255,255,0.88);">${trunc(userName)}</span>
     </div>
-    `;
+    <div style="font-size:34px;color:rgba(255,255,255,0.82);padding-bottom:34px;">♥</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+      <div style="width:130px;height:130px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,0.42);box-shadow:0 10px 32px rgba(0,0,0,0.4);">
+        <img src="${parcFoto}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous">
+      </div>
+      <span style="font-size:16px;font-weight:700;color:rgba(255,255,255,0.88);">${trunc(parcName)}</span>
+    </div>
+  </div>
+  ${hasMomentPhoto ? `<div style="position:relative;z-index:1;flex:1;min-height:0;border-radius:20px;overflow:hidden;margin-top:22px;border:1.5px solid rgba(255,255,255,0.18);box-shadow:0 14px 36px rgba(0,0,0,0.4);">
+    <img src="${momentPhotoUrl}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous">
+  </div>` : `<div style="position:relative;z-index:1;flex-shrink:0;height:1px;background:rgba(255,255,255,0.16);margin-top:28px;"></div><div style="flex:1;"></div>`}
+  <div style="position:relative;z-index:1;flex-shrink:0;display:flex;gap:12px;margin-top:18px;">
+    ${statCard('🍷', counts.sairRotina, 'Sair da Rotina')}
+    ${statCard('❤️', counts.lovezin, 'Lovezin')}
+    ${statCard('🌶️', counts.quentes, 'Quentes')}
+  </div>
+  <div style="position:relative;z-index:1;flex-shrink:0;background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.17);border-radius:22px;padding:22px 36px;margin-top:14px;">
+    <div style="display:flex;align-items:flex-start;justify-content:center;gap:14px;">
+      <span style="font-size:54px;line-height:1;padding-top:5px;flex-shrink:0;">🔥</span>
+      <div>
+        <div style="font-size:74px;font-weight:900;line-height:1;letter-spacing:-2px;">${totalFoguinhos}</div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.60);margin-top:6px;">FOGUINHOS INVESTIDOS</div>
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.60);">NO NOSSO AMOR</div>
+      </div>
+    </div>
+  </div>
+  <div style="position:relative;z-index:1;flex-shrink:0;text-align:center;margin-top:12px;">
+    <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.19);border-radius:100px;padding:10px 30px;">
+      <span style="font-size:18px;font-weight:900;">${totalMomentos}</span>
+      <span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.58);text-transform:uppercase;letter-spacing:1.5px;">MOMENTOS REALIZADOS</span>
+    </div>
+  </div>
+  <div style="position:relative;z-index:1;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;margin-top:14px;">
+    <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" style="height:20px;width:auto;opacity:0.38;" crossorigin="anonymous">
+    <span style="font-size:10px;color:rgba(255,255,255,0.22);letter-spacing:1px;font-weight:600;">@nossomomentoapp</span>
+  </div>
+</div>`;
 
     return container;
 }
