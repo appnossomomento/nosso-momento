@@ -6072,6 +6072,8 @@ renderApp();
     }
 
     async function renderNossasTarefas() {
+        // Guarda etapa para detectar se o usuário navegou para outra tela durante ops async
+        const etapaNoInicio = state.etapa;
 
         const pendingCount = (state.notificacoesTarefasNaoLidas || 0) +
             (state.notificacoesPresentesNaoLidas || 0) +
@@ -6213,6 +6215,8 @@ renderApp();
             : `<p class="text-center text-gray-500 py-8">Nenhuma notificação disponível.</p>`;
 
         const challengePending = !!state.pendingChallenge;
+        // Aborta se o usuário navegou para outra tela durante operações async (race condition)
+        if (state.etapa !== etapaNoInicio) return;
         appContainer.innerHTML = `
             <div class="screen screen-pad bg-black text-white">
                 <section class="px-6 pt-20 pb-16" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
@@ -6739,7 +6743,7 @@ async function generateMemoriasSharePreview(mode) {
 async function shareMemoriasPreview() {
     const file = state.memoriasSharePreviewFile;
     if (!file) {
-        openSystemAlert('Imagem ainda nao pronta.');
+        openSystemAlert('A imagem ainda não foi gerada. Aguarde alguns segundos e tente novamente.');
         return;
     }
 
@@ -6748,10 +6752,16 @@ async function shareMemoriasPreview() {
             await navigator.share({ files: [file], title: 'Nosso Momento', text: 'Resumo de foguinhos do mes.' });
             showToast('Extrato pronto para compartilhar!', 'sucesso');
         } catch (error) {
-            console.error('Erro ao compartilhar:', error);
+            // AbortError = usuário fechou o seletor — não é erro real
+            if (error && error.name !== 'AbortError') {
+                console.error('Erro ao compartilhar:', error);
+                showToast('Não foi possível compartilhar. Tente usar o botão Salvar.', 'erro');
+            }
         }
     } else {
-        openSystemAlert('Compartilhamento nao suportado neste dispositivo.');
+        // Fallback: salva a imagem diretamente quando Share API não é suportada
+        saveMemoriasPreview();
+        showToast('Compartilhamento não suportado. Imagem salva no dispositivo.', 'aviso');
     }
 }
 
