@@ -4055,14 +4055,6 @@ async function submitEditName() {
             nome: nomeFormatado
         });
         state.usuario.nome = nomeFormatado;
-        // Atualiza nome local nos parceirosAtivos (para a tela Pareamentos refletir imediatamente)
-        if (Array.isArray(state.parceirosAtivos)) {
-            state.parceirosAtivos.forEach(p => {
-                if (p.uid === state.usuario.uid && (!p.apelido || !p.apelido.trim())) {
-                    p.nome = nomeFormatado;
-                }
-            });
-        }
         closeEditNameModal();
         renderMeuPerfil();
         updateFixedUI();
@@ -8061,6 +8053,26 @@ try {
             state.parceirosAtivos = Array.isArray(docData.pareamentosAtivos)
                 ? docData.pareamentosAtivos
                 : [];
+            // Propaga nome/foto do parceiro para state.parceiroData e conexaoAberta/conexaoAtiva
+            if (state.parceiroData && state.parceiroData.uid) {
+                const matchEntry = state.parceirosAtivos.find(p => p.uid === state.parceiroData.uid);
+                if (matchEntry) {
+                    if (matchEntry.fotoUrl) {
+                        state.parceiroData.fotoUrl = matchEntry.fotoUrl;
+                    }
+                    if (matchEntry.nome) {
+                        state.parceiroNome = matchEntry.apelido || matchEntry.nome;
+                    }
+                    if (state.conexaoAtiva && state.conexaoAtiva.uid === matchEntry.uid) {
+                        if (matchEntry.fotoUrl) state.conexaoAtiva.fotoUrl = matchEntry.fotoUrl;
+                        if (matchEntry.nome) state.conexaoAtiva.nome = matchEntry.apelido || matchEntry.nome;
+                    }
+                    if (state.conexaoAberta && state.conexaoAberta.uid === matchEntry.uid) {
+                        if (matchEntry.fotoUrl) state.conexaoAberta.fotoUrl = matchEntry.fotoUrl;
+                        if (matchEntry.nome) state.conexaoAberta.nome = matchEntry.apelido || matchEntry.nome;
+                    }
+                }
+            }
             // Ativa listeners real-time nos docs de pareamento para foguinhos/clima
             setupPareamentoListeners();
             state.conquistas = nextConquistas;

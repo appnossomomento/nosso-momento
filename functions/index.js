@@ -4467,22 +4467,27 @@ exports.checkMonthlyMilestones = onSchedule({
 });
 
 // =========================================================
-// Propaga alteração de nome do usuário para pareamentosAtivos
-// dos parceiros (caso não tenham apelido definido)
+// Propaga alteração de nome/foto do usuário para
+// pareamentosAtivos dos parceiros
+// Nome: só atualiza se o parceiro NÃO definiu apelido
+// Foto: atualiza sempre
 // =========================================================
-exports.propagateNameChange = onDocumentUpdated(
+exports.propagateProfileChange = onDocumentUpdated(
     "usuarios/{userId}",
     async (event) => {
       const before = event.data.before.data();
       const after = event.data.after.data();
       if (!before || !after) return;
-      if (before.nome === after.nome) return;
+
+      const nameChanged = before.nome !== after.nome;
+      const photoChanged = (before.fotoUrl || "") !== (after.fotoUrl || "");
+      if (!nameChanged && !photoChanged) return;
 
       const userId = event.params.userId;
       const newName = after.nome || "";
+      const newPhoto = after.fotoUrl || "";
       const db = admin.firestore();
 
-      // Busca parceiros ativos do usuário
       const ativos = Array.isArray(after.pareamentosAtivos) ?
         after.pareamentosAtivos : [];
       if (!ativos.length) return;
@@ -4505,11 +4510,20 @@ exports.propagateNameChange = onDocumentUpdated(
           let changed = false;
           const updatedAtivos = partnerAtivos.map((entry) => {
             if (entry.uid !== userId) return entry;
-            // Só atualiza se não tiver apelido definido
-            if (entry.apelido && entry.apelido.trim()) return entry;
-            if (entry.nome === newName) return entry;
+            const updates = {};
+            // Foto: atualiza sempre
+            if (photoChanged && (entry.fotoUrl || "") !== newPhoto) {
+              updates.fotoUrl = newPhoto;
+            }
+            // Nome: só se não tiver apelido
+            if (nameChanged &&
+                !(entry.apelido && entry.apelido.trim()) &&
+                entry.nome !== newName) {
+              updates.nome = newName;
+            }
+            if (!Object.keys(updates).length) return entry;
             changed = true;
-            return {...entry, nome: newName};
+            return {...entry, ...updates};
           });
 
           if (changed) {
@@ -4518,16 +4532,19 @@ exports.propagateNameChange = onDocumentUpdated(
           }
         } catch (err) {
           console.error(
-              "propagateNameChange: erro ao atualizar parceiro",
+              "propagateProfileChange: erro ao atualizar parceiro",
               partnerUid, err,
           );
         }
       }
 
-      console.log(
-          "propagateNameChange:", userId,
-          "nome alterado para", JSON.stringify(newName),
-          "—", updated, "parceiro(s) atualizado(s)",
-      );
+      if (updated) {
+        console.log(
+            "propagateProfileChange:", userId,
+            nameChanged ? "nome=" + JSON.stringify(newName) : "",
+            photoChanged ? "foto alterada" : "",
+            "—", updated, "parceiro(s) atualizado(s)",
+        );
+      }
     },
 );
