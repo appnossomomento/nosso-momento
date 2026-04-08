@@ -4465,3 +4465,69 @@ exports.checkMonthlyMilestones = onSchedule({
       awarded, "milestone(s) premiado(s)",
   );
 });
+
+// =========================================================
+// Propaga alteração de nome do usuário para pareamentosAtivos
+// dos parceiros (caso não tenham apelido definido)
+// =========================================================
+exports.propagateNameChange = onDocumentUpdated(
+    "usuarios/{userId}",
+    async (event) => {
+      const before = event.data.before.data();
+      const after = event.data.after.data();
+      if (!before || !after) return;
+      if (before.nome === after.nome) return;
+
+      const userId = event.params.userId;
+      const newName = after.nome || "";
+      const db = admin.firestore();
+
+      // Busca parceiros ativos do usuário
+      const ativos = Array.isArray(after.pareamentosAtivos) ?
+        after.pareamentosAtivos : [];
+      if (!ativos.length) return;
+
+      const partnerUids = ativos
+          .map((p) => p.uid)
+          .filter((uid) => uid && uid !== userId);
+
+      let updated = 0;
+      for (const partnerUid of partnerUids) {
+        try {
+          const partnerRef = db.collection("usuarios").doc(partnerUid);
+          const partnerDoc = await partnerRef.get();
+          if (!partnerDoc.exists) continue;
+
+          const partnerData = partnerDoc.data();
+          const partnerAtivos = Array.isArray(partnerData.pareamentosAtivos) ?
+            partnerData.pareamentosAtivos : [];
+
+          let changed = false;
+          const updatedAtivos = partnerAtivos.map((entry) => {
+            if (entry.uid !== userId) return entry;
+            // Só atualiza se não tiver apelido definido
+            if (entry.apelido && entry.apelido.trim()) return entry;
+            if (entry.nome === newName) return entry;
+            changed = true;
+            return {...entry, nome: newName};
+          });
+
+          if (changed) {
+            await partnerRef.update({pareamentosAtivos: updatedAtivos});
+            updated++;
+          }
+        } catch (err) {
+          console.error(
+              "propagateNameChange: erro ao atualizar parceiro",
+              partnerUid, err,
+          );
+        }
+      }
+
+      console.log(
+          "propagateNameChange:", userId,
+          "nome alterado para", JSON.stringify(newName),
+          "—", updated, "parceiro(s) atualizado(s)",
+      );
+    },
+);

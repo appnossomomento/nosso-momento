@@ -4055,6 +4055,14 @@ async function submitEditName() {
             nome: nomeFormatado
         });
         state.usuario.nome = nomeFormatado;
+        // Atualiza nome local nos parceirosAtivos (para a tela Pareamentos refletir imediatamente)
+        if (Array.isArray(state.parceirosAtivos)) {
+            state.parceirosAtivos.forEach(p => {
+                if (p.uid === state.usuario.uid && (!p.apelido || !p.apelido.trim())) {
+                    p.nome = nomeFormatado;
+                }
+            });
+        }
         closeEditNameModal();
         renderMeuPerfil();
         updateFixedUI();
