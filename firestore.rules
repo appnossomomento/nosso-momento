@@ -53,7 +53,7 @@ service cloud.firestore {
         && fieldUnchanged('createdAt')
         && fieldUnchanged('email')
         && fieldUnchanged('foguinhos')
-        && fieldUnchanged('nome')
+        && (!hasField(request.resource.data, 'nome') || request.resource.data.nome is string)
         && fieldUnchanged('notificationsEnabled')
         && fieldUnchanged('pareadoCom')
         && fieldUnchanged('pareadoUid')
