@@ -4610,6 +4610,10 @@ function renderPerfilParceiro() {
                         <span class="action-icon-circle"><i class="fas fa-store"></i></span>
                         <p class="text-xs font-semibold text-gray-700">Catálogo</p>
                     </button>
+                    <button onclick="openPersonalizarFromPerfil()" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
+                        <span class="action-icon-circle"><i class="fas fa-tags"></i></span>
+                        <p class="text-xs font-semibold text-gray-700">Personalizar</p>
+                    </button>
                     <button onclick="openMomentosFromPerfil()" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
                         <span class="action-icon-circle"><i class="fas fa-heart"></i></span>
                         <p class="text-xs font-semibold text-gray-700">Momentos</p>
@@ -4645,6 +4649,11 @@ function openMomentosFromPerfil() {
 
 function openExtratoFromPerfil() {
     state.etapa = 'extratoPopup';
+    renderApp();
+}
+
+function openPersonalizarFromPerfil() {
+    state.etapa = 'gerenciarCatalogo';
     renderApp();
 }
 
