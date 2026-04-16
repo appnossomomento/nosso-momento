@@ -102,12 +102,9 @@ service cloud.firestore {
         && request.resource.data.receiverUid is string
         && request.resource.data.status == 'pending';
 
-      allow update: if isAuthenticated()
-        && resource.data.receiverUid == authUid()
-        && (request.resource.data.status == 'accepted' || request.resource.data.status == 'rejected')
-        && request.resource.data.keys().hasOnly([
-          'processedAt', 'processedBy', 'receiverPhone', 'status'
-        ]);
+      // Updates are handled exclusively by Admin SDK (processInput Cloud Function).
+      // Client-side update is no longer needed.
+      allow update: if false;
 
       allow delete: if isAuthenticated()
         && resource.data.senderUid == authUid()

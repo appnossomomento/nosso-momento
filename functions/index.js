@@ -3,6 +3,7 @@ const firestore = require("firebase-functions/v2/firestore");
 const {onDocumentCreated, onDocumentUpdated} = firestore;
 const {setGlobalOptions} = require("firebase-functions/v2");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
+const https = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 
@@ -152,7 +153,7 @@ function areUsersPaired(senderData, partnerData, senderUid, partnerUid) {
       (p) => p.uid === senderUid);
   if (senderHasPartnerInList && partnerHasSenderInList) return true;
 
-  // --- Fallback monogâmico (backward compat) ---
+  // --- Fallback monogÃ¢mico (backward compat) ---
   const senderMatchesUid = senderData.pareadoUid &&
     senderData.pareadoUid === partnerUid;
   const partnerMatchesUid = partnerData.pareadoUid &&
@@ -257,7 +258,8 @@ function isPreviousCalendarDay(tsA, tsB) {
   return diff === 1;
 }
 
-// TODO: mover para uma coleção de configurações se quisermos editar sem deploy.
+// TODO: mover para uma coleção de configurações
+// se quisermos editar sem deploy.
 const ACHIEVEMENTS = [
   {
     id: "first_check_in",
@@ -268,7 +270,7 @@ const ACHIEVEMENTS = [
     icon: "fa-person-rays",
     accentColor: "#fbbf24",
     notificationIcon: "fa-trophy",
-    notificationTitle: "🏆 Nova conquista!",
+    notificationTitle: "ðŸ† Nova conquista!",
     notificationMessage: "Você desbloqueou: Primeiro Passo",
     check: ({stats}) => (stats.totalCheckins || 0) >= 1,
     snapshot: ({stats}) => ({
@@ -285,7 +287,7 @@ const ACHIEVEMENTS = [
     icon: "fa-calendar-week",
     accentColor: "#34d399",
     notificationIcon: "fa-trophy",
-    notificationTitle: "🏆 Conquista de Foguinho!",
+    notificationTitle: "ðŸ† Conquista de Foguinho!",
     notificationMessage: "Streak de 7 dias concluída!",
     check: ({stats}) => (stats.bestDailyStreak || 0) >= 7,
     snapshot: ({stats}) => ({
@@ -302,7 +304,7 @@ const ACHIEVEMENTS = [
     icon: "fa-stopwatch",
     accentColor: "#60a5fa",
     notificationIcon: "fa-trophy",
-    notificationTitle: "🏆 Mestre do Check-in!",
+    notificationTitle: "ðŸ† Mestre do Check-in!",
     notificationMessage: "30 check-ins completados!",
     check: ({stats}) => (stats.totalCheckins || 0) >= 30,
     snapshot: ({stats}) => ({
@@ -319,8 +321,8 @@ const ACHIEVEMENTS = [
     icon: "fa-hand-holding-heart",
     accentColor: "#38bdf8",
     notificationIcon: "fa-trophy",
-    notificationTitle: "🏆 Você é pura constância!",
-    notificationMessage: "60 check-ins completos — fidelidade em alta!",
+    notificationTitle: "ðŸ† Você é pura constÃ¢ncia!",
+    notificationMessage: "60 check-ins completos â€” fidelidade em alta!",
     check: ({stats}) => (stats.totalCheckins || 0) >= 60,
     snapshot: ({stats}) => ({
       totalCheckins: stats.totalCheckins || 0,
@@ -336,7 +338,7 @@ const ACHIEVEMENTS = [
     icon: "fa-heart",
     accentColor: "#f472b6",
     notificationIcon: "fa-trophy",
-    notificationTitle: "🏆 Momento especial desbloqueado!",
+    notificationTitle: "ðŸ† Momento especial desbloqueado!",
     notificationMessage: "Você resgatou o primeiro momento.",
     check: ({stats}) => getMomentsRedeemedTotal(stats) >= 1,
     snapshot: ({stats}) => ({
@@ -353,7 +355,7 @@ const ACHIEVEMENTS = [
     icon: "fa-gift",
     accentColor: "#c084fc",
     notificationIcon: "fa-trophy",
-    notificationTitle: "🏆 Colecionador de Momentos!",
+    notificationTitle: "ðŸ† Colecionador de Momentos!",
     notificationMessage: "Você resgatou 5 momentos!",
     check: ({stats}) => getMomentsRedeemedTotal(stats) >= 5,
     snapshot: ({stats}) => ({
@@ -366,11 +368,11 @@ const ACHIEVEMENTS = [
     trigger: "moment_redeem",
     title: "Investidor de Foguinhos",
     description: "Gaste 50 foguinhos em momentos.",
-    hint: "Momentos incríveis custam foguinhos – continue investindo!",
+    hint: "Momentos incríveis custam foguinhos â€“ continue investindo!",
     icon: "fa-coins",
     accentColor: "#facc15",
     notificationIcon: "fa-trophy",
-    notificationTitle: "🏆 Investidor de Foguinhos!",
+    notificationTitle: "ðŸ† Investidor de Foguinhos!",
     notificationMessage: "Mais de 50 foguinhos investidos em momentos.",
     check: ({stats}) => (stats.totalFoguinhosGastos || 0) >= 50,
     snapshot: ({stats}) => ({
@@ -387,7 +389,7 @@ const ACHIEVEMENTS = [
     icon: "fa-fire-flame-curved",
     accentColor: "#fb923c",
     notificationIcon: "fa-trophy",
-    notificationTitle: "🔥 Modo Caliente ativado!",
+    notificationTitle: "ðŸ”¥ Modo Caliente ativado!",
     notificationMessage: "Você já investiu 100 foguinhos em momentos!",
     check: ({stats}) => (stats.totalFoguinhosGastos || 0) >= 100,
     snapshot: ({stats}) => ({
@@ -900,7 +902,7 @@ exports.processInput = onDocumentCreated(
           const receiverIsVip = !!receiverData.vip;
           if (!receiverIsVip && receiverData.pareadoUid &&
               receiverData.pareadoUid !== fromUid) {
-            // Limpa o pending do sender para não ficar preso em estado fantasma
+            // Limpa pending do sender p/ não ficar preso
             try {
               if (toPhone) {
                 const pendingVal = `pending_${toPhone}`;
@@ -972,7 +974,7 @@ exports.processInput = onDocumentCreated(
             tx.set(reqRef, reqData, {merge: true});
 
             // Atualiza o documento do sender para marcar o estado como
-            // pending_<telefone> — isso ajuda a manter o cliente e o banco
+            // pending_<telefone> â€” isso ajuda a manter o cliente e o banco
             // consistentes e permite que cancelamentos / rejeições limpem
             // corretamente o campo pareadoCom.
             try {
@@ -991,7 +993,7 @@ exports.processInput = onDocumentCreated(
               }
             } catch (e) {
               // Não queremos que uma falha aqui quebre toda a transação
-              // — logamos e seguimos (a consistência eventual pode ser
+              // â€” logamos e seguimos (a consistência eventual pode ser
               // resolvida pelo processPairingRequest depois).
               console.error("processInput: erro atualizando senderRef:", e);
             }
@@ -1098,7 +1100,7 @@ exports.processInput = onDocumentCreated(
                 senderData.telefone ||
                 null;
 
-              // Atualiza campos legados (pareadoCom/pareadoUid) — sempre
+              // Atualiza campos legados (pareadoCom/pareadoUid) â€” sempre
               // apontam para o parceiro mais recente
               const MIN_FOGUINHOS = 10;
               const senderLegacy = {
@@ -1163,8 +1165,8 @@ exports.processInput = onDocumentCreated(
               const nowISO = new Date().toISOString();
               const senderNickname = req.partnerNickname || "";
               // Entry que vai no array do SENDER (dados do parceiro)
-              // O sender escolheu o apelido, então "apelido" é o nome carinhoso
-              // que o sender deu ao receiver
+              // O sender escolheu o apelido, então
+              // "apelido" é o nome carinhoso que deu ao receiver
               const entryForSender = {
                 uid: fromUid,
                 nome: receiverData.nome || req.receiverName || "",
@@ -1504,7 +1506,7 @@ exports.processInput = onDocumentCreated(
             tx.set(notifRef, {
               userId: partnerUid,
               titulo: "Você ganhou um presente!",
-              mensagem: `${giverName} te presenteou com 1 foguinho 🔥.`,
+              mensagem: `${giverName} te presenteou com 1 foguinho ðŸ”¥.`,
               icone: "fa-gift",
               lida: false,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
@@ -1693,7 +1695,7 @@ exports.processInput = onDocumentCreated(
                   .doc();
               tx.set(tarefaRef, {
                 momentoNome: item.nome,
-                momentoEmoji: item.emoji || "🛍️",
+                momentoEmoji: item.emoji || "ðŸ›ï¸",
                 momentoCategoria: item.categoria || "Geral",
                 custoFoguinhos: item.custoFoguinhos,
                 status: "Pendente",
@@ -2158,9 +2160,9 @@ exports.processInput = onDocumentCreated(
                     .collection("notificacoes").doc();
                 tx.set(notifR, {
                   userId: responderUid,
-                  titulo: "Desafio concluído! 🎉",
+                  titulo: "Desafio concluído! ðŸŽ‰",
                   mensagem: `Vocês responderam igual no desafio` +
-                    ` — ganharam ${rewardN} foguinho(s) cada!`,
+                    ` â€” ganharam ${rewardN} foguinho(s) cada!`,
                   icone: "fa-trophy",
                   tipo: "desafio",
                   lida: false,
@@ -2171,9 +2173,9 @@ exports.processInput = onDocumentCreated(
                     .collection("notificacoes").doc();
                 tx.set(notifP, {
                   userId: partnerUid,
-                  titulo: "Desafio concluído! 🎉",
+                  titulo: "Desafio concluído! ðŸŽ‰",
                   mensagem: `Vocês responderam igual no desafio` +
-                    ` — ganharam ${rewardN} foguinho(s) cada!`,
+                    ` â€” ganharam ${rewardN} foguinho(s) cada!`,
                   icone: "fa-trophy",
                   tipo: "desafio",
                   lida: false,
@@ -2213,7 +2215,7 @@ exports.processInput = onDocumentCreated(
                   .collection("notificacoes").doc();
               tx.set(notifWait, {
                 userId: partnerUid,
-                titulo: "Desafio da semana 🧩",
+                titulo: "Desafio da semana ðŸ§©",
                 mensagem: `${responderName} já respondeu` +
                   ` o desafio. Agora é a sua vez!`,
                 icone: "fa-trophy",
@@ -2327,7 +2329,7 @@ exports.processInput = onDocumentCreated(
                 pareamentosAtivos: senderUpdatedAtivos,
               };
               if (!hasOtherConnections) {
-                // Última conexão removida — limpa campos legados
+                // Ãšltima conexão removida â€” limpa campos legados
                 senderUpdate.pareadoCom =
                   admin.firestore.FieldValue.delete();
                 senderUpdate.pareadoUid =
@@ -2336,7 +2338,7 @@ exports.processInput = onDocumentCreated(
                 senderUpdate.lastCheckInDate =
                   admin.firestore.FieldValue.delete();
               } else {
-                // Ainda tem conexões — atualiza legados para o primeiro
+                // Ainda tem conexões â€” atualiza legados para o primeiro
                 const first = senderUpdatedAtivos[0];
                 senderUpdate.pareadoCom = first.telefone || null;
                 senderUpdate.pareadoUid = first.uid || null;
@@ -2443,7 +2445,7 @@ exports.processInput = onDocumentCreated(
             }
           }
         } else if (input.type === "clima_update") {
-          // ===== TERMÔMETRO DE CLIMA =====
+          // ===== TERMÃ”METRO DE CLIMA =====
           const fromUid = input.fromUid;
           const partnerUid = input.partnerUid;
           const pareamentoId = input.pareamentoId || null;
@@ -2558,17 +2560,17 @@ exports.processInput = onDocumentCreated(
 
             // --- Cria entrada no extrato ---
             const HUMOR_LABELS = {
-              muito_feliz: "Muito Feliz ❤️‍🔥",
-              feliz: "Feliz 🔥",
-              normal: "Normal 😊",
-              triste: "Triste 😢",
+              muito_feliz: "Muito Feliz â¤ï¸â€ðŸ”¥",
+              feliz: "Feliz ðŸ”¥",
+              normal: "Normal ðŸ˜Š",
+              triste: "Triste ðŸ˜¢",
             };
             if (delta !== 0) {
               const extratoRef = pareamentoRef
                   .collection("extrato").doc();
               tx.set(extratoRef, {
                 tipo: "clima",
-                descricao: `Termômetro: ${HUMOR_LABELS[humor]}`,
+                descricao: `TermÃ´metro: ${HUMOR_LABELS[humor]}`,
                 valor: delta,
                 beneficiarioUid: partnerUid,
                 autorUid: fromUid,
@@ -2611,11 +2613,11 @@ exports.processInput = onDocumentCreated(
             let notifMsg;
             if (delta > 0) {
               notifMsg = `${giverName} marcou "` +
-                `${HUMOR_LABELS[humor]}" — ` +
-                `você ganhou ${delta} foguinho(s)! 🔥`;
+                `${HUMOR_LABELS[humor]}" â€” ` +
+                `você ganhou ${delta} foguinho(s)! ðŸ”¥`;
             } else if (delta < 0) {
               notifMsg = `${giverName} marcou "` +
-                `${HUMOR_LABELS[humor]}" — ` +
+                `${HUMOR_LABELS[humor]}" â€” ` +
                 `${Math.abs(delta)} foguinho(s) removidos.`;
             } else {
               notifMsg = `${giverName} marcou "` +
@@ -2624,7 +2626,7 @@ exports.processInput = onDocumentCreated(
 
             tx.set(notifRef, {
               userId: partnerUid,
-              titulo: "Termômetro do Dia",
+              titulo: "TermÃ´metro do Dia",
               mensagem: notifMsg,
               icone: "fa-thermometer-half",
               lida: false,
@@ -2753,7 +2755,7 @@ exports.handleMomentTaskUpdate = onDocumentUpdated(
             foguinhos: admin.firestore.FieldValue.increment(rewardAmount),
           });
 
-          // --- Extrato: bônus de tarefa concluída ---
+          // --- Extrato: bÃ´nus de tarefa concluída ---
           const taskPareamentoId = taskData.idPareamento || null;
           if (taskPareamentoId) {
             const extratoRef = admin.firestore()
@@ -2761,7 +2763,7 @@ exports.handleMomentTaskUpdate = onDocumentUpdated(
                 .collection("extrato").doc();
             tx.set(extratoRef, {
               tipo: "bonus",
-              descricao: `Bônus: realizou "` +
+              descricao: `BÃ´nus: realizou "` +
                 `${taskData.momentoNome || "momento"}"`,
               valor: rewardAmount,
               beneficiarioUid: executeUid,
@@ -2796,420 +2798,13 @@ exports.handleMomentTaskUpdate = onDocumentUpdated(
           });
         });
       } catch (error) {
-        console.error("handleMomentTaskUpdate: erro ao conceder bônus", {
+        console.error("handleMomentTaskUpdate: erro ao conceder bÃ´nus", {
           taskId,
           error,
         });
       }
     },
 );
-
-// Processa atualizações em pairingRequests — quando o receiver aceita,
-// o backend realiza as atualizações necessárias nos documentos
-// `usuarios` e cria o documento em `pareamentos`.
-exports.processPairingRequest = onDocumentUpdated(
-    "pairingRequests/{requestId}",
-    async (event) => {
-      let before = null;
-      if (event.data && event.data.before) {
-        before = event.data.before;
-      }
-      let after = null;
-      if (event.data && event.data.after) {
-        after = event.data.after;
-      }
-      if (!after) {
-        console.log("processPairingRequest: sem snapshot after");
-        return;
-      }
-
-      const beforeData = before ? before.data() : null;
-      const afterData = after.data();
-      const requestId = event.params && event.params.requestId;
-
-      try {
-        // Processa transição para 'accepted'
-        if (afterData.status === "accepted") {
-          if (beforeData && beforeData.status === "accepted") {
-            // já processado anteriormente
-            console.log(
-                "processPairingRequest: já aceito anteriormente",
-                requestId,
-            );
-            return;
-          }
-
-          const senderUid = afterData.senderUid;
-          const receiverUid = afterData.receiverUid;
-          const senderPhone = afterData.senderPhone;
-          const receiverPhone = afterData.receiverPhone;
-
-          if (!senderUid || !receiverUid) {
-            console.error("processPairingRequest: UIDs ausentes", requestId);
-            return;
-          }
-
-          await admin.firestore().runTransaction(async (tx) => {
-            const senderRef = admin
-                .firestore()
-                .collection("usuarios")
-                .doc(senderUid);
-            const receiverRef = admin
-                .firestore()
-                .collection("usuarios")
-                .doc(receiverUid);
-
-            const senderSnap = await tx.get(senderRef);
-            const receiverSnap = await tx.get(receiverRef);
-
-            if (!senderSnap.exists || !receiverSnap.exists) {
-              throw new Error("Usuário(s) do pareamento não encontrado(s)");
-            }
-
-            const senderData = senderSnap.data() || {};
-            const receiverData = receiverSnap.data() || {};
-            const MIN_FOGUINHOS = 10;
-
-            // Atualiza campo pareadoCom para ambos — feita com privilégios
-            // do Admin
-            const senderUpdate = {
-              pareadoCom: receiverPhone,
-              pareadoUid: receiverUid,
-            };
-            const receiverUpdate = {
-              pareadoCom: senderPhone,
-              pareadoUid: senderUid,
-            };
-
-            const senderFoguinhos = Number(senderData.foguinhos);
-            const senderNeedsTopUp = !Number.isFinite(senderFoguinhos) ||
-              senderFoguinhos < MIN_FOGUINHOS;
-            if (senderNeedsTopUp) {
-              senderUpdate.foguinhos = MIN_FOGUINHOS;
-            }
-
-            const receiverFoguinhos = Number(receiverData.foguinhos);
-            const receiverNeedsTopUp = !Number.isFinite(receiverFoguinhos) ||
-              receiverFoguinhos < MIN_FOGUINHOS;
-            if (receiverNeedsTopUp) {
-              receiverUpdate.foguinhos = MIN_FOGUINHOS;
-            }
-
-            // Cria documento em `pareamentos` com id consistente
-            const telefones = [senderPhone, receiverPhone]
-                .map((t) => (t || "").replace(/\D/g, ""));
-            telefones.sort();
-            const idPareamento = telefones.join("_");
-            const idAmigavel = (senderPhone || "").slice(-4) +
-                (receiverPhone || "").slice(-4);
-            const pareamentoRef = admin
-                .firestore()
-                .collection("pareamentos")
-                .doc(idPareamento);
-
-            const pareamentoData = {
-              pessoa1: telefones[0],
-              pessoa2: telefones[1],
-              pessoa1Uid: senderUid,
-              pessoa2Uid: receiverUid,
-              dataPareamento: admin.firestore.FieldValue.serverTimestamp(),
-              idAmigavel: idAmigavel,
-              // Campos isolados por conexão (multi-conexão)
-              foguinhos_pessoa1: 10,
-              foguinhos_pessoa2: 10,
-              streak_pessoa1: {
-                currentDailyStreak: 0,
-                bestDailyStreak: 0,
-                lastCheckInDate: null,
-              },
-              streak_pessoa2: {
-                currentDailyStreak: 0,
-                bestDailyStreak: 0,
-                lastCheckInDate: null,
-              },
-              desafiosConcluidos: 0,
-            };
-
-            tx.set(
-                pareamentoRef,
-                pareamentoData,
-                {merge: true},
-            );
-
-            // pareamentosAtivos é gerenciado exclusivamente pelo
-            // handler pairing_response em processInput para evitar
-            // duplicatas (ambos os triggers rodam na mesma transição).
-
-            tx.update(senderRef, senderUpdate);
-            tx.update(receiverRef, receiverUpdate);
-
-            // Marca pairingRequests como processed pelo backend
-            const requestRef = admin
-                .firestore()
-                .collection("pairingRequests")
-                .doc(requestId);
-            tx.update(requestRef, {
-              processedBy: "functions.processPairingRequest",
-              processedAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
-          });
-
-          console.log(
-              "processPairingRequest: pareamento processado",
-              requestId,
-          );
-          return;
-        }
-
-        // Processa transição para 'rejected' — limpa pending no sender
-        if (afterData.status === "rejected") {
-          if (beforeData && beforeData.status === "rejected") {
-            // já processado anteriormente
-            console.log(
-                "processPairingRequest: já rejeitado anteriormente",
-                requestId,
-            );
-            return;
-          }
-
-          const senderUid = afterData.senderUid;
-          const receiverPhone = afterData.receiverPhone;
-          if (!senderUid) {
-            console.error(
-                "processPairingRequest: senderUid ausente",
-                requestId,
-            );
-            return;
-          }
-
-          await admin.firestore().runTransaction(async (tx) => {
-            const senderRef = admin
-                .firestore()
-                .collection("usuarios")
-                .doc(senderUid);
-            const senderSnap = await tx.get(senderRef);
-            if (!senderSnap.exists) {
-              throw new Error("Usuário sender não encontrado: " + senderUid);
-            }
-
-            const pendingValue = `pending_${receiverPhone || ""}`;
-            const senderData = senderSnap.data() || {};
-            if (
-              senderData.pareadoCom &&
-                senderData.pareadoCom === pendingValue
-            ) {
-              tx.update(
-                  senderRef,
-                  {
-                    pareadoCom: admin.firestore.FieldValue.delete(),
-                    pareadoUid: admin.firestore.FieldValue.delete(),
-                  },
-              );
-            }
-
-            // Marca pairingRequests como processed pelo backend
-            const requestRef = admin
-                .firestore()
-                .collection("pairingRequests")
-                .doc(requestId);
-            tx.update(requestRef, {
-              processedBy: "functions.processPairingRequest",
-              processedAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
-          });
-
-          console.log(
-              "processPairingRequest: rejeição processada",
-              requestId,
-          );
-          return;
-        }
-      } catch (err) {
-        console.error("processPairingRequest: erro", err);
-      }
-    },
-);
-
-// ------- Função HTTP de testes E2E — DESABILITADA em produção -------
-const https = require("firebase-functions/v2/https");
-
-exports.runPairingTests = https.onRequest(async (req, res) => {
-  // SECURITY: endpoint desabilitado em produção para evitar criação
-  // de dados de teste no Firestore. Para reabilitar localmente,
-  // comente o bloco abaixo e descomente o código original.
-  res.status(403).send({error: "endpoint_disabled_in_production"});
-  return;
-
-  /* eslint-disable no-unreachable */
-  if (rateLimitHttp(req, res, {
-    keyPrefix: "runPairingTests",
-    limit: 5,
-    windowMs: 5 * 60 * 1000,
-  })) {
-    return;
-  }
-  // Proteção simples: exigir ?key=run-tests-please
-  const key = req.query && req.query.key;
-  if (key !== "run-tests-please") {
-    res.status(403).send({error: "forbidden"});
-    return;
-  }
-
-  const db = admin.firestore();
-  const now = Date.now();
-  const uidA = `httpTestA_${now}`;
-  const uidB = `httpTestB_${now}`;
-  const phoneA = "11990000001";
-  const phoneB = "11990000002";
-
-  try {
-    await db.collection("usuarios").doc(uidA).set({
-      nome: "HTTP Tester A",
-      telefone: phoneA,
-      email: `httpA+${now}@example.com`,
-      sexo: "Masculino",
-      foguinhos: 5,
-      pareadoCom: null,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    await db.collection("usuarios").doc(uidB).set({
-      nome: "HTTP Tester B",
-      telefone: phoneB,
-      email: `httpB+${now}@example.com`,
-      sexo: "Feminino",
-      foguinhos: 5,
-      pareadoCom: null,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    // 1) criar pairing_request
-    const inputReq = await db.collection("inputs").add({
-      type: "pairing_request",
-      fromUid: uidA,
-      fromName: "HTTP Tester A",
-      fromPhone: phoneA,
-      toUid: uidB,
-      toPhone: phoneB,
-      toName: "HTTP Tester B",
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      processed: false,
-    });
-
-    const requestId = [uidA, uidB].sort().join("_");
-    const reqRef = db.collection("pairingRequests").doc(requestId);
-
-    // Espera curta para processamento (função processInput deve reagir)
-    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-    let processed = false;
-    for (let i = 0; i < 20; i++) {
-      const reqSnap = await reqRef.get();
-      if (reqSnap.exists && reqSnap.data().status === "pending") {
-        processed = true;
-        break;
-      }
-      const inSnap = await db.collection("inputs").doc(inputReq.id).get();
-      if (inSnap.exists && inSnap.data().processed) {
-        processed = true;
-        break;
-      }
-      await wait(1000);
-    }
-
-    if (!processed) {
-      throw new Error("pairing_request not processed in time");
-    }
-
-    // 2) enviar pairing_response rejected (B rejeita)
-    await db.collection("inputs").add({
-      type: "pairing_response",
-      fromUid: uidB,
-      requestId: requestId,
-      response: "rejected",
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      processed: false,
-    });
-
-    // aguardar status rejected
-    for (let i = 0; i < 20; i++) {
-      const reqSnap = await reqRef.get();
-      if (reqSnap.exists && reqSnap.data().status === "rejected") break;
-      await wait(1000);
-    }
-
-    // 3) reenviar request e aceitar
-    await db.collection("inputs").add({
-      type: "pairing_request",
-      fromUid: uidA,
-      fromName: "HTTP Tester A",
-      fromPhone: phoneA,
-      toUid: uidB,
-      toPhone: phoneB,
-      toName: "HTTP Tester B",
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      processed: false,
-    });
-
-    // aguardar pending
-    for (let i = 0; i < 20; i++) {
-      const reqSnap = await reqRef.get();
-      if (reqSnap.exists && reqSnap.data().status === "pending") break;
-      await wait(1000);
-    }
-
-    await db.collection("inputs").add({
-      type: "pairing_response",
-      fromUid: uidB,
-      requestId: requestId,
-      response: "accepted",
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      processed: false,
-    });
-
-    // aguardar accepted
-    for (let i = 0; i < 20; i++) {
-      const reqSnap = await reqRef.get();
-      if (reqSnap.exists && reqSnap.data().status === "accepted") break;
-      await wait(1000);
-    }
-
-    // 4) enviar pairing_unpair
-    await db.collection("inputs").add({
-      type: "pairing_unpair",
-      fromUid: uidA,
-      partnerUid: uidB,
-      partnerPhone: phoneB,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      processed: false,
-    });
-
-    // aguardar remoção de pareadoCom e reset de foguinhos
-    for (let i = 0; i < 30; i++) {
-      const aSnap = await db.collection("usuarios").doc(uidA).get();
-      const bSnap = await db.collection("usuarios").doc(uidB).get();
-      const ad = aSnap.data();
-      const bd = bSnap.data();
-      if (
-        (!ad.pareadoCom) &&
-        (!bd.pareadoCom) &&
-        ad.foguinhos === 0 &&
-        bd.foguinhos === 0
-      ) {
-        // sucesso
-        await reqRef.delete().catch(() => {});
-        await db.collection("usuarios").doc(uidA).delete().catch(() => {});
-        await db.collection("usuarios").doc(uidB).delete().catch(() => {});
-        res.send({ok: true, message: "E2E pairing tests completed"});
-        return;
-      }
-      await wait(1000);
-    }
-
-    throw new Error("pairing_unpair did not complete in time");
-  } catch (err) {
-    console.error("runPairingTests error:", err);
-    res.status(500).send({error: String(err)});
-  }
-});
 
 exports.setNotificationToken = https.onRequest(async (req, res) => {
   setCorsHeaders(req, res);
@@ -3470,7 +3065,7 @@ exports.getMemorias = https.onRequest(async (req, res) => {
 });
 
 // ============================================================
-// getExtrato — Busca extrato de foguinhos de um pareamento
+// getExtrato â€” Busca extrato de foguinhos de um pareamento
 // ============================================================
 exports.getExtrato = https.onRequest(async (req, res) => {
   setCorsHeaders(req, res);
@@ -4305,7 +3900,7 @@ exports.resetWeeklyChallengesAdmin = https.onRequest(async (req, res) => {
 });
 
 // =========================================================
-// MILESTONE MENSAL — a cada mês completo juntos:
+// MILESTONE MENSAL â€” a cada mês completo juntos:
 //   +5 foguinhos para cada um + notificação comemorativa
 // Roda diariamente às 10h (horário de Brasília)
 // =========================================================
@@ -4399,7 +3994,7 @@ exports.checkMonthlyMilestones = onSchedule({
 
           // Extrato para cada um
           const descricao =
-            `🎉 ${mesLabel} juntos! Bônus comemorativo`;
+            `ðŸŽ‰ ${mesLabel} juntos! BÃ´nus comemorativo`;
           tx.set(extA, {
             tipo: "bonus",
             descricao,
@@ -4421,11 +4016,11 @@ exports.checkMonthlyMilestones = onSchedule({
             createdAtMs: nowMsLocal + 1,
           });
 
-          // Notificações — disparam push via enviarNotificacaoPush
-          const titulo = `💕 ${mesLabel} juntos!`;
+          // Notificações â€” disparam push via enviarNotificacaoPush
+          const titulo = `ðŸ’• ${mesLabel} juntos!`;
           const mensagem =
             "Parabéns! Mais um mês de união. " +
-            "Os dois ganharam 5 🔥 como presente.";
+            "Os dois ganharam 5 ðŸ”¥ como presente.";
           tx.set(notifA, {
             userId: uidA,
             titulo,
@@ -4449,7 +4044,7 @@ exports.checkMonthlyMilestones = onSchedule({
         awarded++;
         console.log(
             "checkMonthlyMilestones: premiado",
-            mes, "mês(es) — pareamento", doc.id,
+            mes, "mês(es) â€” pareamento", doc.id,
         );
       } catch (err) {
         console.error(
@@ -4461,7 +4056,7 @@ exports.checkMonthlyMilestones = onSchedule({
   }
 
   console.log(
-      "checkMonthlyMilestones: concluído —",
+      "checkMonthlyMilestones: concluído â€”",
       awarded, "milestone(s) premiado(s)",
   );
 });
@@ -4469,7 +4064,7 @@ exports.checkMonthlyMilestones = onSchedule({
 // =========================================================
 // Propaga alteração de nome/foto do usuário para
 // pareamentosAtivos dos parceiros
-// Nome: só atualiza se o parceiro NÃO definiu apelido
+// Nome: só atualiza se o parceiro NÃƒO definiu apelido
 // Foto: atualiza sempre
 // =========================================================
 exports.propagateProfileChange = onDocumentUpdated(
@@ -4543,7 +4138,7 @@ exports.propagateProfileChange = onDocumentUpdated(
             "propagateProfileChange:", userId,
             nameChanged ? "nome=" + JSON.stringify(newName) : "",
             photoChanged ? "foto alterada" : "",
-            "—", updated, "parceiro(s) atualizado(s)",
+            "â€”", updated, "parceiro(s) atualizado(s)",
         );
       }
     },
