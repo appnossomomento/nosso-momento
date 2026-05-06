@@ -1046,6 +1046,151 @@
         }
     }
 
+    // ============================================================
+    // TRANSLATIONS - i18n (pt-BR, en, es, zh, ja)
+    // ============================================================
+    const TRANSLATIONS = {
+      'pt-BR': {
+        lang: { pt_BR: '\U0001f1e7\U0001f1f7 Portugu\u00eas', en: '\U0001f1fa\U0001f1f8 Ingl\u00eas', es: '\U0001f1ea\U0001f1f8 Espanhol', zh: '\U0001f1e8\U0001f1f3 Chin\u00eas', ja: '\U0001f1ef\U0001f1f5 Japon\u00eas' },
+        common: { save: 'Salvar', cancel: 'Cancelar', close: 'Fechar', back: 'Voltar', confirm: 'Confirmar', ok: 'OK', edit: 'Editar', del: 'Excluir', loading: 'Carregando...', error: 'Erro', success: 'Sucesso!', attention: 'Aten\u00e7\u00e3o', yes: 'Sim', no: 'N\u00e3o', send: 'Enviar', add: 'Adicionar', view: 'Ver', and: 'e', change: 'Alterar' },
+        idioma_modal: { title: 'Selecionar Idioma', cancel: 'Cancelar', save: 'Salvar' },
+        landing: { headline: 'Apimente a rela\u00e7\u00e3o', subheadline: 'Deixe tudo mais gostoso!', btn_enter: 'Entrar', btn_register: 'Criar Conta' },
+        signin: { title: 'Entrar', email: 'Email', password: 'Senha', btn_login: 'LOGIN', forgot: 'Esqueceu sua senha?', no_account: 'N\u00e3o tem conta?', create_account: 'Crie uma agora' },
+        register: { title: 'Criar Conta', subtitle: 'Junte-se ao Nosso Momento', nome: 'Seu nome', email: 'Email', telefone: 'Telefone (apenas n\u00fameros, ex: 11999991111)', senha: 'Crie uma senha', sexo_placeholder: 'Selecione seu sexo', sexo_m: 'Masculino', sexo_f: 'Feminino', idioma_placeholder: 'Selecione o idioma', btn: 'CADASTRAR', terms_pre: 'Ao continuar, voc\u00ea concorda com nossos', terms: 'Termos', and: 'e', privacy: 'Pol\u00edtica de Privacidade', has_account: 'J\u00e1 tem conta?', signin_link: 'Fa\u00e7a login' },
+        profile: { title: 'Meu Perfil', subtitle: 'Seus dados e prefer\u00eancias', name: 'Nome:', age: 'Idade:', change_photo: 'Trocar foto', phone: 'Telefone', gender: 'Sexo', language: 'Idioma', email: 'Email', change: 'Alterar', notif_title: 'Notifica\u00e7\u00f5es', notif_desc: 'Ao ativar, voc\u00ea receber\u00e1 mensagens de push com as movimenta\u00e7\u00f5es dentro do app.', notif_enable: 'Ativar Notifica\u00e7\u00f5es', notif_disable: 'Desativar Notifica\u00e7\u00f5es', notif_blocked: 'Notifica\u00e7\u00f5es Bloqueadas', edit_name: 'Editar nome' },
+        dashboard: { greeting: 'Ol\u00e1, {nome}!', tab_home: 'In\u00edcio' },
+        pairing: { title: 'Parear com seu Amor', your_code: 'Seu c\u00f3digo de pareamento \u00e9:', enter_code: 'Digitar C\u00f3digo', partner_code: 'C\u00f3digo do parceiro(a)', connect: 'Conectar', title_list: 'Pareamentos', add_connection: 'Adicionar Conex\u00e3o', unlink: 'Desfazer Pareamento' },
+        pairing_popup: { title: 'Convite de Pareamento', accept: 'Aceitar', decline: 'Recusar', later: 'Ver depois', invited_by: 'quer se parejar com voc\u00ea' },
+        moments: { title: 'Momentos', received_sent: 'Recebidos e enviados', redeem: 'Resgatar', redeemed: 'Realizado', add_to_cart: 'Adicionar ao Carrinho', cart: 'Carrinho', checkout: 'Finalizar', empty_cart: 'Carrinho vazio' },
+        memories: { title: 'Mem\u00f3rias', remember: 'Relembrar', view_share: 'Ver e Compartilhar', prev: 'Foto anterior', next: 'Pr\u00f3xima foto', del_photo: 'Excluir foto', add: 'Adicionar Mem\u00f3ria' },
+        achievements: { tab_open: 'Em Aberto', tab_done: 'Finalizados', tab_conquistas: 'Conquistas', weekly_challenge: 'Desafio da Semana', time_left: 'Tempo restante', your_answer: 'Digite sua resposta' },
+        foguinhos: { title: 'Foguinhos', balance: 'Saldo total', history: 'Hist\u00f3rico de Presentes', extract: 'Extrato' },
+        notif: { title: 'Notifica\u00e7\u00f5es', tab_checkin: 'Check-in', tab_moments: 'Momentos', tab_pairing: 'Pareamento', empty: 'Nenhuma notifica\u00e7\u00e3o' },
+        catalog: { title: 'Meu Cat\u00e1logo', save: 'Salvar Altera\u00e7\u00f5es', price: 'Pre\u00e7o', blocked: 'Bloqueado' },
+        partner: { how_feeling: 'Como voc\u00ea est\u00e1 hoje?', climate: 'Clima da Semana' },
+        legal: { terms: 'Termos de Uso', privacy: 'Pol\u00edtica de Privacidade' },
+        toast: { register_success: 'Cadastro realizado com sucesso! Voc\u00ea ser\u00e1 redirecionado para o pareamento.', login_error: 'Email ou senha incorretos.', error_generic: 'Ocorreu um erro. Tente novamente.', save_success: 'Salvo com sucesso!', pairing_success: 'Pareamento realizado com sucesso!', photo_success: 'Foto atualizada com sucesso!', copy_success: 'C\u00f3digo copiado!', checkin_success: 'Check-in enviado! \U0001f525', language_saved: 'Idioma atualizado!' },
+        validate: { fill_all: 'Por favor, preencha todos os campos.', phone_format: 'O telefone deve conter exatamente 11 d\u00edgitos num\u00e9ricos (com DDD).', password_min: 'A senha deve ter no m\u00ednimo 6 caracteres.' },
+        auth: { email_in_use: 'Este email j\u00e1 est\u00e1 em uso. Tente fazer login ou use outro email.', invalid_email: 'O formato do email \u00e9 inv\u00e1lido.', weak_password: 'A senha \u00e9 muito fraca (m\u00ednimo de 6 caracteres).', error_generic: 'Erro ao cadastrar. Tente novamente.', login_error: 'Erro ao fazer login.' },
+      },
+      'en': {
+        lang: { pt_BR: '\U0001f1e7\U0001f1f7 Portuguese', en: '\U0001f1fa\U0001f1f8 English', es: '\U0001f1ea\U0001f1f8 Spanish', zh: '\U0001f1e8\U0001f1f3 Chinese', ja: '\U0001f1ef\U0001f1f5 Japanese' },
+        common: { save: 'Save', cancel: 'Cancel', close: 'Close', back: 'Back', confirm: 'Confirm', ok: 'OK', edit: 'Edit', del: 'Delete', loading: 'Loading...', error: 'Error', success: 'Success!', attention: 'Attention', yes: 'Yes', no: 'No', send: 'Send', add: 'Add', view: 'View', and: 'and', change: 'Change' },
+        idioma_modal: { title: 'Select Language', cancel: 'Cancel', save: 'Save' },
+        landing: { headline: 'Spice up your relationship', subheadline: 'Make everything better!', btn_enter: 'Log In', btn_register: 'Create Account' },
+        signin: { title: 'Log In', email: 'Email', password: 'Password', btn_login: 'LOGIN', forgot: 'Forgot your password?', no_account: "Don't have an account?", create_account: 'Create one now' },
+        register: { title: 'Create Account', subtitle: 'Join Nosso Momento', nome: 'Your name', email: 'Email', telefone: 'Phone (numbers only, e.g. 11999991111)', senha: 'Create a password', sexo_placeholder: 'Select your gender', sexo_m: 'Male', sexo_f: 'Female', idioma_placeholder: 'Select language', btn: 'REGISTER', terms_pre: 'By continuing, you agree to our', terms: 'Terms', and: 'and', privacy: 'Privacy Policy', has_account: 'Already have an account?', signin_link: 'Log in' },
+        profile: { title: 'My Profile', subtitle: 'Your data and preferences', name: 'Name:', age: 'Age:', change_photo: 'Change photo', phone: 'Phone', gender: 'Gender', language: 'Language', email: 'Email', change: 'Change', notif_title: 'Notifications', notif_desc: "When enabled, you'll receive push notifications about app activity.", notif_enable: 'Enable Notifications', notif_disable: 'Disable Notifications', notif_blocked: 'Notifications Blocked', edit_name: 'Edit name' },
+        dashboard: { greeting: 'Hello, {nome}!', tab_home: 'Home' },
+        pairing: { title: 'Pair with your Love', your_code: 'Your pairing code is:', enter_code: 'Enter Code', partner_code: "Partner's code", connect: 'Connect', title_list: 'Pairings', add_connection: 'Add Connection', unlink: 'Unlink' },
+        pairing_popup: { title: 'Pairing Invitation', accept: 'Accept', decline: 'Decline', later: 'Later', invited_by: 'wants to pair with you' },
+        moments: { title: 'Moments', received_sent: 'Received and sent', redeem: 'Redeem', redeemed: 'Redeemed', add_to_cart: 'Add to Cart', cart: 'Cart', checkout: 'Checkout', empty_cart: 'Empty cart' },
+        memories: { title: 'Memories', remember: 'Remember', view_share: 'View and Share', prev: 'Previous photo', next: 'Next photo', del_photo: 'Delete photo', add: 'Add Memory' },
+        achievements: { tab_open: 'In Progress', tab_done: 'Completed', tab_conquistas: 'Achievements', weekly_challenge: 'Weekly Challenge', time_left: 'Time remaining', your_answer: 'Type your answer' },
+        foguinhos: { title: 'Foguinhos', balance: 'Total balance', history: 'Gift History', extract: 'Extract' },
+        notif: { title: 'Notifications', tab_checkin: 'Check-in', tab_moments: 'Moments', tab_pairing: 'Pairing', empty: 'No notifications' },
+        catalog: { title: 'My Catalog', save: 'Save Changes', price: 'Price', blocked: 'Blocked' },
+        partner: { how_feeling: 'How are you feeling today?', climate: "Week's Mood" },
+        legal: { terms: 'Terms of Use', privacy: 'Privacy Policy' },
+        toast: { register_success: 'Registration successful! You will be redirected to pairing.', login_error: 'Incorrect email or password.', error_generic: 'An error occurred. Please try again.', save_success: 'Saved successfully!', pairing_success: 'Pairing successful!', photo_success: 'Photo updated successfully!', copy_success: 'Code copied!', checkin_success: 'Check-in sent! \U0001f525', language_saved: 'Language updated!' },
+        validate: { fill_all: 'Please fill in all fields.', phone_format: 'Phone must contain exactly 11 numeric digits (with area code).', password_min: 'Password must be at least 6 characters.' },
+        auth: { email_in_use: 'This email is already in use. Try logging in or use another email.', invalid_email: 'The email format is invalid.', weak_password: 'The password is too weak (minimum 6 characters).', error_generic: 'Error registering. Please try again.', login_error: 'Error logging in.' },
+      },
+      'es': {
+        lang: { pt_BR: '\U0001f1e7\U0001f1f7 Portugu\u00e9s', en: '\U0001f1fa\U0001f1f8 Ingl\u00e9s', es: '\U0001f1ea\U0001f1f8 Espa\u00f1ol', zh: '\U0001f1e8\U0001f1f3 Chino', ja: '\U0001f1ef\U0001f1f5 Japon\u00e9s' },
+        common: { save: 'Guardar', cancel: 'Cancelar', close: 'Cerrar', back: 'Volver', confirm: 'Confirmar', ok: 'OK', edit: 'Editar', del: 'Eliminar', loading: 'Cargando...', error: 'Error', success: '\u00a1\u00c9xito!', attention: 'Atenci\u00f3n', yes: 'S\u00ed', no: 'No', send: 'Enviar', add: 'Agregar', view: 'Ver', and: 'y', change: 'Cambiar' },
+        idioma_modal: { title: 'Seleccionar Idioma', cancel: 'Cancelar', save: 'Guardar' },
+        landing: { headline: 'Dale sabor a tu relaci\u00f3n', subheadline: '\u00a1H\u00e1zlo m\u00e1s emocionante!', btn_enter: 'Iniciar Sesi\u00f3n', btn_register: 'Crear Cuenta' },
+        signin: { title: 'Iniciar Sesi\u00f3n', email: 'Correo', password: 'Contrase\u00f1a', btn_login: 'ENTRAR', forgot: '\u00bfOlvidaste tu contrase\u00f1a?', no_account: '\u00bfNo tienes cuenta?', create_account: 'Crea una ahora' },
+        register: { title: 'Crear Cuenta', subtitle: '\u00danete a Nosso Momento', nome: 'Tu nombre', email: 'Correo', telefone: 'Tel\u00e9fono (solo n\u00fameros, ej: 11999991111)', senha: 'Crea una contrase\u00f1a', sexo_placeholder: 'Selecciona tu g\u00e9nero', sexo_m: 'Masculino', sexo_f: 'Femenino', idioma_placeholder: 'Selecciona el idioma', btn: 'REGISTRARSE', terms_pre: 'Al continuar, aceptas nuestros', terms: 'T\u00e9rminos', and: 'y', privacy: 'Pol\u00edtica de Privacidad', has_account: '\u00bfYa tienes cuenta?', signin_link: 'Inicia sesi\u00f3n' },
+        profile: { title: 'Mi Perfil', subtitle: 'Tus datos y preferencias', name: 'Nombre:', age: 'Edad:', change_photo: 'Cambiar foto', phone: 'Tel\u00e9fono', gender: 'Sexo', language: 'Idioma', email: 'Correo', change: 'Cambiar', notif_title: 'Notificaciones', notif_desc: 'Al activar, recibir\u00e1s notificaciones push sobre la actividad del app.', notif_enable: 'Activar Notificaciones', notif_disable: 'Desactivar Notificaciones', notif_blocked: 'Notificaciones Bloqueadas', edit_name: 'Editar nombre' },
+        dashboard: { greeting: '\u00a1Hola, {nome}!', tab_home: 'Inicio' },
+        pairing: { title: 'Conectar con tu Amor', your_code: 'Tu c\u00f3digo de emparejamiento es:', enter_code: 'Ingresar C\u00f3digo', partner_code: 'C\u00f3digo de tu pareja', connect: 'Conectar', title_list: 'Emparejamientos', add_connection: 'Agregar Conexi\u00f3n', unlink: 'Desemparejar' },
+        pairing_popup: { title: 'Invitaci\u00f3n de Emparejamiento', accept: 'Aceptar', decline: 'Rechazar', later: 'Ver despu\u00e9s', invited_by: 'quiere emparejarse contigo' },
+        moments: { title: 'Momentos', received_sent: 'Recibidos y enviados', redeem: 'Canjear', redeemed: 'Realizado', add_to_cart: 'Agregar al Carrito', cart: 'Carrito', checkout: 'Finalizar', empty_cart: 'Carrito vac\u00edo' },
+        memories: { title: 'Recuerdos', remember: 'Recordar', view_share: 'Ver y Compartir', prev: 'Foto anterior', next: 'Siguiente foto', del_photo: 'Eliminar foto', add: 'Agregar Recuerdo' },
+        achievements: { tab_open: 'En Curso', tab_done: 'Completados', tab_conquistas: 'Logros', weekly_challenge: 'Desaf\u00edo Semanal', time_left: 'Tiempo restante', your_answer: 'Escribe tu respuesta' },
+        foguinhos: { title: 'Foguinhos', balance: 'Saldo total', history: 'Historial de Regalos', extract: 'Extracto' },
+        notif: { title: 'Notificaciones', tab_checkin: 'Check-in', tab_moments: 'Momentos', tab_pairing: 'Emparejamiento', empty: 'Sin notificaciones' },
+        catalog: { title: 'Mi Cat\u00e1logo', save: 'Guardar Cambios', price: 'Precio', blocked: 'Bloqueado' },
+        partner: { how_feeling: '\u00bfC\u00f3mo est\u00e1s hoy?', climate: 'Clima de la Semana' },
+        legal: { terms: 'T\u00e9rminos de Uso', privacy: 'Pol\u00edtica de Privacidad' },
+        toast: { register_success: '\u00a1Registro exitoso! Ser\u00e1s redirigido al emparejamiento.', login_error: 'Correo o contrase\u00f1a incorrectos.', error_generic: 'Ocurri\u00f3 un error. Por favor, int\u00e9ntalo de nuevo.', save_success: '\u00a1Guardado correctamente!', pairing_success: '\u00a1Emparejamiento exitoso!', photo_success: '\u00a1Foto actualizada con \u00e9xito!', copy_success: '\u00a1C\u00f3digo copiado!', checkin_success: '\u00a1Check-in enviado! \U0001f525', language_saved: '\u00a1Idioma actualizado!' },
+        validate: { fill_all: 'Por favor, completa todos los campos.', phone_format: 'El tel\u00e9fono debe tener exactamente 11 d\u00edgitos num\u00e9ricos (con c\u00f3digo de \u00e1rea).', password_min: 'La contrase\u00f1a debe tener al menos 6 caracteres.' },
+        auth: { email_in_use: 'Este correo ya est\u00e1 en uso. Intenta iniciar sesi\u00f3n o usa otro correo.', invalid_email: 'El formato del correo es inv\u00e1lido.', weak_password: 'La contrase\u00f1a es muy d\u00e9bil (m\u00ednimo 6 caracteres).', error_generic: 'Error al registrarse. Por favor, int\u00e9ntalo de nuevo.', login_error: 'Error al iniciar sesi\u00f3n.' },
+      },
+      'zh': {
+        lang: { pt_BR: '\U0001f1e7\U0001f1f7 \u8461\u8404\u7259\u8bed', en: '\U0001f1fa\U0001f1f8 \u82f1\u8bed', es: '\U0001f1ea\U0001f1f8 \u897f\u73ed\u7259\u8bed', zh: '\U0001f1e8\U0001f1f3 \u4e2d\u6587', ja: '\U0001f1ef\U0001f1f5 \u65e5\u8bed' },
+        common: { save: '\u4fdd\u5b58', cancel: '\u53d6\u6d88', close: '\u5173\u95ed', back: '\u8fd4\u56de', confirm: '\u786e\u8ba4', ok: '\u786e\u5b9a', edit: '\u7f16\u8f91', del: '\u5220\u9664', loading: '\u52a0\u8f7d\u4e2d...', error: '\u9519\u8bef', success: '\u6210\u529f\uff01', attention: '\u6ce8\u610f', yes: '\u662f', no: '\u5426', send: '\u53d1\u9001', add: '\u6dfb\u52a0', view: '\u67e5\u770b', and: '\u548c', change: '\u66f4\u6539' },
+        idioma_modal: { title: '\u9009\u62e9\u8bed\u8a00', cancel: '\u53d6\u6d88', save: '\u4fdd\u5b58' },
+        landing: { headline: '\u4e3a\u4f60\u7684\u7231\u60c5\u589e\u6dfb\u60c5\u8da3', subheadline: '\u8ba9\u4e00\u5207\u66f4\u7f8e\u597d\uff01', btn_enter: '\u767b\u5f55', btn_register: '\u521b\u5efa\u8d26\u6237' },
+        signin: { title: '\u767b\u5f55', email: '\u90ae\u7b31', password: '\u5bc6\u7801', btn_login: '\u767b\u5f55', forgot: '\u5fd8\u8bb0\u5bc6\u7801\uff1f', no_account: '\u6ca1\u6709\u8d26\u6237\uff1f', create_account: '\u7acb\u5373\u521b\u5efa' },
+        register: { title: '\u521b\u5efa\u8d26\u6237', subtitle: '\u52a0\u5165 Nosso Momento', nome: '\u4f60\u7684\u540d\u5b57', email: '\u90ae\u7b31', telefone: '\u7535\u8bdd\uff08\u4ec5\u6570\u5b57\uff09', senha: '\u521b\u5efa\u5bc6\u7801', sexo_placeholder: '\u9009\u62e9\u6027\u522b', sexo_m: '\u7537\u6027', sexo_f: '\u5973\u6027', idioma_placeholder: '\u9009\u62e9\u8bed\u8a00', btn: '\u6ce8\u518c', terms_pre: '\u7ee7\u7eed\u5373\u8868\u793a\u60a8\u540c\u610f\u6211\u4eec\u7684', terms: '\u6761\u6b3e', and: '\u548c', privacy: '\u9690\u79c1\u653f\u7b56', has_account: '\u5df2\u6709\u8d26\u6237\uff1f', signin_link: '\u767b\u5f55' },
+        profile: { title: '\u6211\u7684\u8d44\u6599', subtitle: '\u60a8\u7684\u6570\u636e\u548c\u504f\u597d', name: '\u540d\u5b57\uff1a', age: '\u5e74\u9f84\uff1a', change_photo: '\u66f4\u6362\u5934\u50cf', phone: '\u7535\u8bdd', gender: '\u6027\u522b', language: '\u8bed\u8a00', email: '\u90ae\u7b31', change: '\u66f4\u6539', notif_title: '\u901a\u77e5', notif_desc: '\u542f\u7528\u540e\uff0c\u60a8\u5c06\u6536\u5230\u6709\u5173\u5e94\u7528\u5185\u6d3b\u52a8\u7684\u63a8\u9001\u901a\u77e5\u3002', notif_enable: '\u542f\u7528\u901a\u77e5', notif_disable: '\u7981\u7528\u901a\u77e5', notif_blocked: '\u901a\u77e5\u5df2\u963b\u6b62', edit_name: '\u7f16\u8f91\u540d\u5b57' },
+        dashboard: { greeting: '\u4f60\u597d\uff0c{nome}\uff01', tab_home: '\u9996\u9875' },
+        pairing: { title: '\u4e0e\u4f60\u7684\u7231\u4eba\u914d\u5bf9', your_code: '\u4f60\u7684\u914d\u5bf9\u7801\u662f\uff1a', enter_code: '\u8f93\u5165\u4ee3\u7801', partner_code: '\u4f34\u4fa3\u7684\u4ee3\u7801', connect: '\u8fde\u63a5', title_list: '\u914d\u5bf9', add_connection: '\u6dfb\u52a0\u8fde\u63a5', unlink: '\u89e3\u9664\u914d\u5bf9' },
+        pairing_popup: { title: '\u914d\u5bf9\u9080\u8bf7', accept: '\u63a5\u53d7', decline: '\u62d2\u7edd', later: '\u7a0d\u540e', invited_by: '\u60f3\u4e0e\u4f60\u914d\u5bf9' },
+        moments: { title: '\u65f6\u523b', received_sent: '\u6536\u5230\u548c\u53d1\u9001', redeem: '\u5151\u6362', redeemed: '\u5df2\u5b8c\u6210', add_to_cart: '\u52a0\u5165\u8d2d\u7269\u8f66', cart: '\u8d2d\u7269\u8f66', checkout: '\u7ed3\u8d26', empty_cart: '\u8d2d\u7269\u8f66\u4e3a\u7a7a' },
+        memories: { title: '\u56de\u5fc6', remember: '\u56de\u987e', view_share: '\u67e5\u770b\u548c\u5206\u4eab', prev: '\u4e0a\u4e00\u5f20', next: '\u4e0b\u4e00\u5f20', del_photo: '\u5220\u9664\u7167\u7247', add: '\u6dfb\u52a0\u56de\u5fc6' },
+        achievements: { tab_open: '\u8fdb\u884c\u4e2d', tab_done: '\u5df2\u5b8c\u6210', tab_conquistas: '\u6210\u5c31', weekly_challenge: '\u6bcf\u5468\u6311\u6218', time_left: '\u5269\u4f59\u65f6\u95f4', your_answer: '\u8f93\u5165\u4f60\u7684\u7b54\u6848' },
+        foguinhos: { title: '\u5c0f\u706b\u82d7', balance: '\u603b\u4f59\u989d', history: '\u793c\u7269\u5386\u53f2', extract: '\u660e\u7ec6' },
+        notif: { title: '\u901a\u77e5', tab_checkin: '\u7b7e\u5230', tab_moments: '\u65f6\u523b', tab_pairing: '\u914d\u5bf9', empty: '\u6ca1\u6709\u901a\u77e5' },
+        catalog: { title: '\u6211\u7684\u76ee\u5f55', save: '\u4fdd\u5b58\u66f4\u6539', price: '\u4ef7\u683c', blocked: '\u5df2\u9501\u5b9a' },
+        partner: { how_feeling: '\u4f60\u4eca\u5929\u611f\u89c9\u5982\u4f55\uff1f', climate: '\u672c\u5468\u5fc3\u60c5' },
+        legal: { terms: '\u4f7f\u7528\u6761\u6b3e', privacy: '\u9690\u79c1\u653f\u7b56' },
+        toast: { register_success: '\u6ce8\u518c\u6210\u529f\uff01\u60a8\u5c06\u88ab\u91cd\u5b9a\u5411\u5230\u914d\u5bf9\u3002', login_error: '\u90ae\u7b31\u6216\u5bc6\u7801\u4e0d\u6b63\u786e\u3002', error_generic: '\u53d1\u751f\u9519\u8bef\uff0c\u8bf7\u91cd\u8bd5\u3002', save_success: '\u4fdd\u5b58\u6210\u529f\uff01', pairing_success: '\u914d\u5bf9\u6210\u529f\uff01', photo_success: '\u7167\u7247\u66f4\u65b0\u6210\u529f\uff01', copy_success: '\u4ee3\u7801\u5df2\u590d\u5236\uff01', checkin_success: '\u7b7e\u5230\u6210\u529f\uff01\U0001f525', language_saved: '\u8bed\u8a00\u5df2\u66f4\u65b0\uff01' },
+        validate: { fill_all: '\u8bf7\u586b\u5199\u6240\u6709\u5b57\u6bb5\u3002', phone_format: '\u7535\u8bdd\u53f7\u7801\u5fc5\u987b\u5305\u542b\u6070\u597d11\u4f4d\u6570\u5b57\uff08\u542b\u533a\u53f7\uff09\u3002', password_min: '\u5bc6\u7801\u81f3\u5c11\u9700\u89816\u4e2a\u5b57\u7b26\u3002' },
+        auth: { email_in_use: '\u6b64\u90ae\u7b31\u5df2\u88ab\u4f7f\u7528\u3002\u8bf7\u5c1d\u8bd5\u767b\u5f55\u6216\u4f7f\u7528\u5176\u4ed6\u90ae\u7b31\u3002', invalid_email: '\u90ae\u7b31\u683c\u5f0f\u65e0\u6548\u3002', weak_password: '\u5bc6\u7801\u592a\u5f31\uff08\u6700\u5c116\u4e2a\u5b57\u7b26\uff09\u3002', error_generic: '\u6ce8\u518c\u9519\u8bef\uff0c\u8bf7\u91cd\u8bd5\u3002', login_error: '\u767b\u5f55\u9519\u8bef\u3002' },
+      },
+      'ja': {
+        lang: { pt_BR: '\U0001f1e7\U0001f1f7 \u30dd\u30eb\u30c8\u30ac\u30eb\u8a9e', en: '\U0001f1fa\U0001f1f8 \u82f1\u8a9e', es: '\U0001f1ea\U0001f1f8 \u30b9\u30da\u30a4\u30f3\u8a9e', zh: '\U0001f1e8\U0001f1f3 \u4e2d\u56fd\u8a9e', ja: '\U0001f1ef\U0001f1f5 \u65e5\u672c\u8a9e' },
+        common: { save: '\u4fdd\u5b58', cancel: '\u30ad\u30e3\u30f3\u30bb\u30eb', close: '\u9589\u3058\u308b', back: '\u623b\u308b', confirm: '\u78ba\u8a8d', ok: 'OK', edit: '\u7de8\u96c6', del: '\u524a\u9664', loading: '\u8aad\u307f\u8fbc\u307f\u4e2d...', error: '\u30a8\u30e9\u30fc', success: '\u6210\u529f\uff01', attention: '\u6ce8\u610f', yes: '\u306f\u3044', no: '\u3044\u3044\u3048', send: '\u9001\u4fe1', add: '\u8ffd\u52a0', view: '\u898b\u308b', and: '\u3068', change: '\u5909\u66f4' },
+        idioma_modal: { title: '\u8a00\u8a9e\u3092\u9078\u629e', cancel: '\u30ad\u30e3\u30f3\u30bb\u30eb', save: '\u4fdd\u5b58' },
+        landing: { headline: '\u604b\u611b\u306b\u30b9\u30d1\u30a4\u30b9\u3092', subheadline: '\u3082\u3063\u3068\u697d\u3057\u304f\u3057\u3088\u3046\uff01', btn_enter: '\u30ed\u30b0\u30a4\u30f3', btn_register: '\u30a2\u30ab\u30a6\u30f3\u30c8\u4f5c\u6210' },
+        signin: { title: '\u30ed\u30b0\u30a4\u30f3', email: '\u30e1\u30fc\u30eb', password: '\u30d1\u30b9\u30ef\u30fc\u30c9', btn_login: '\u30ed\u30b0\u30a4\u30f3', forgot: '\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u5fd8\u308c\u307e\u3057\u305f\u304b\uff1f', no_account: '\u30a2\u30ab\u30a6\u30f3\u30c8\u3092\u304a\u6301\u3061\u3067\u306a\u3044\u3067\u3059\u304b\uff1f', create_account: '\u4eca\u3059\u3050\u4f5c\u6210' },
+        register: { title: '\u30a2\u30ab\u30a6\u30f3\u30c8\u4f5c\u6210', subtitle: 'Nosso Momento\u306b\u53c2\u52a0', nome: '\u3042\u306a\u305f\u306e\u540d\u524d', email: '\u30e1\u30fc\u30eb', telefone: '\u96fb\u8a71\uff08\u6570\u5b57\u306e\u307f\uff09', senha: '\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u4f5c\u6210', sexo_placeholder: '\u6027\u5225\u3092\u9078\u629e', sexo_m: '\u7537\u6027', sexo_f: '\u5973\u6027', idioma_placeholder: '\u8a00\u8a9e\u3092\u9078\u629e', btn: '\u767b\u9332', terms_pre: '\u7d9a\u3051\u308b\u3053\u3068\u3067\u3001\u5f53\u793e\u306e', terms: '\u5229\u7528\u898f\u7d04', and: '\u3068', privacy: '\u30d7\u30e9\u30a4\u30d0\u30b7\u30fc\u30dd\u30ea\u30b7\u30fc', has_account: '\u3059\u3067\u306b\u30a2\u30ab\u30a6\u30f3\u30c8\u3092\u304a\u6301\u3061\u3067\u3059\u304b\uff1f', signin_link: '\u30ed\u30b0\u30a4\u30f3' },
+        profile: { title: '\u30de\u30a4\u30d7\u30ed\u30d5\u30a3\u30fc\u30eb', subtitle: '\u3042\u306a\u305f\u306e\u30c7\u30fc\u30bf\u3068\u8a2d\u5b9a', name: '\u540d\u524d\uff1a', age: '\u5e74\u9f62\uff1a', change_photo: '\u5199\u771f\u3092\u5909\u66f4', phone: '\u96fb\u8a71', gender: '\u6027\u5225', language: '\u8a00\u8a9e', email: '\u30e1\u30fc\u30eb', change: '\u5909\u66f4', notif_title: '\u901a\u77e5', notif_desc: '\u6709\u52b9\u306b\u3059\u308b\u3068\u3001\u30a2\u30d7\u30ea\u5185\u306e\u30a2\u30af\u30c6\u30a3\u30d3\u30c6\u30a3\u306b\u95a2\u3059\u308b\u30d7\u30c3\u30b7\u30e5\u901a\u77e5\u304c\u5c4a\u304d\u307e\u3059\u3002', notif_enable: '\u901a\u77e5\u3092\u6709\u52b9\u306b\u3059\u308b', notif_disable: '\u901a\u77e5\u3092\u7121\u52b9\u306b\u3059\u308b', notif_blocked: '\u901a\u77e5\u304c\u30d6\u30ed\u30c3\u30af\u3055\u308c\u3066\u3044\u307e\u3059', edit_name: '\u540d\u524d\u3092\u7de8\u96c6' },
+        dashboard: { greeting: '\u3053\u3093\u306b\u3061\u306f\u3001{nome}\uff01', tab_home: '\u30db\u30fc\u30e0' },
+        pairing: { title: '\u3042\u306a\u305f\u306e\u611b\u3068\u7e4b\u304c\u308b', your_code: '\u3042\u306a\u305f\u306e\u30da\u30a2\u30ea\u30f3\u30b0\u30b3\u30fc\u30c9\u306f\uff1a', enter_code: '\u30b3\u30fc\u30c9\u3092\u5165\u529b', partner_code: '\u30d1\u30fc\u30c8\u30ca\u30fc\u306e\u30b3\u30fc\u30c9', connect: '\u63a5\u7d9a', title_list: '\u30da\u30a2\u30ea\u30f3\u30b0', add_connection: '\u63a5\u7d9a\u3092\u8ffd\u52a0', unlink: '\u30da\u30a2\u30ea\u30f3\u30b0\u89e3\u9664' },
+        pairing_popup: { title: '\u30da\u30a2\u30ea\u30f3\u30b0\u62db\u5f85', accept: '\u53d7\u3051\u5165\u308c\u308b', decline: '\u62d2\u5426', later: '\u5f8c\u3067', invited_by: '\u3042\u306a\u305f\u3068\u30da\u30a2\u306b\u306a\u308a\u305f\u304c\u3063\u3066\u3044\u307e\u3059' },
+        moments: { title: '\u30e2\u30fc\u30e1\u30f3\u30c8', received_sent: '\u53d7\u4fe1\u3068\u9001\u4fe1', redeem: '\u5f15\u304d\u6362\u3048', redeemed: '\u5b8c\u4e86', add_to_cart: '\u30ab\u30fc\u30c8\u306b\u8ffd\u52a0', cart: '\u30ab\u30fc\u30c8', checkout: '\u30c1\u30a7\u30c3\u30af\u30a2\u30a6\u30c8', empty_cart: '\u30ab\u30fc\u30c8\u306f\u7a7a\u3067\u3059' },
+        memories: { title: '\u601d\u3044\u51fa', remember: '\u632f\u308a\u8fd4\u308b', view_share: '\u898b\u3066\u30b7\u30a7\u30a2', prev: '\u524d\u306e\u5199\u771f', next: '\u6b21\u306e\u5199\u771f', del_photo: '\u5199\u771f\u3092\u524a\u9664', add: '\u601d\u3044\u51fa\u3092\u8ffd\u52a0' },
+        achievements: { tab_open: '\u9032\u884c\u4e2d', tab_done: '\u5b8c\u4e86', tab_conquistas: '\u5b9f\u7e3e', weekly_challenge: '\u9031\u6b21\u30c1\u30e3\u30ec\u30f3\u30b8', time_left: '\u6b8b\u308a\u6642\u9593', your_answer: '\u56de\u7b54\u3092\u5165\u529b' },
+        foguinhos: { title: '\u30d5\u30a9\u30ae\u30fc\u30cb\u30e7\u30b9', balance: '\u5408\u8a08\u6b8b\u9ad8', history: '\u30ae\u30d5\u30c8\u5c65\u6b74', extract: '\u660e\u7d30' },
+        notif: { title: '\u901a\u77e5', tab_checkin: '\u30c1\u30a7\u30c3\u30af\u30a4\u30f3', tab_moments: '\u30e2\u30fc\u30e1\u30f3\u30c8', tab_pairing: '\u30da\u30a2\u30ea\u30f3\u30b0', empty: '\u901a\u77e5\u306a\u3057' },
+        catalog: { title: '\u30de\u30a4\u30ab\u30bf\u30ed\u30b0', save: '\u5909\u66f4\u3092\u4fdd\u5b58', price: '\u4fa1\u683c', blocked: '\u30d6\u30ed\u30c3\u30af\u6e08\u307f' },
+        partner: { how_feeling: '\u4eca\u65e5\u306e\u6c17\u5206\u306f\u3069\u3046\u3067\u3059\u304b\uff1f', climate: '\u4eca\u9031\u306e\u6c17\u5206' },
+        legal: { terms: '\u5229\u7528\u898f\u7d04', privacy: '\u30d7\u30e9\u30a4\u30d0\u30b7\u30fc\u30dd\u30ea\u30b7\u30fc' },
+        toast: { register_success: '\u767b\u9332\u6210\u529f\uff01\u30da\u30a2\u30ea\u30f3\u30b0\u306b\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u3055\u308c\u307e\u3059\u3002', login_error: '\u30e1\u30fc\u30eb\u307e\u305f\u306f\u30d1\u30b9\u30ef\u30fc\u30c9\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002', error_generic: '\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f\u3002\u3082\u3046\u4e00\u5ea6\u304a\u8a66\u3057\u304f\u3060\u3055\u3044\u3002', save_success: '\u4fdd\u5b58\u3057\u307e\u3057\u305f\uff01', pairing_success: '\u30da\u30a2\u30ea\u30f3\u30b0\u6210\u529f\uff01', photo_success: '\u5199\u771f\u304c\u6b63\u5e38\u306b\u66f4\u65b0\u3055\u308c\u307e\u3057\u305f\uff01', copy_success: '\u30b3\u30fc\u30c9\u304c\u30b3\u30d4\u30fc\u3055\u308c\u307e\u3057\u305f\uff01', checkin_success: '\u30c1\u30a7\u30c3\u30af\u30a4\u30f3\u9001\u4fe1\uff01\U0001f525', language_saved: '\u8a00\u8a9e\u304c\u66f4\u65b0\u3055\u308c\u307e\u3057\u305f\uff01' },
+        validate: { fill_all: '\u3059\u3079\u3066\u306e\u9805\u76ee\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002', phone_format: '\u96fb\u8a71\u756a\u53f7\u306f\u5e02\u5916\u5c40\u756a\u3092\u542b\u308011\u6841\u306e\u6570\u5b57\u3067\u306a\u3051\u308c\u3070\u306a\u308a\u307e\u305b\u3093\u3002', password_min: '\u30d1\u30b9\u30ef\u30fc\u30c9\u306f6\u6587\u5b57\u4ee5\u4e0a\u5fc5\u8981\u3067\u3059\u3002' },
+        auth: { email_in_use: '\u3053\u306e\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9\u306f\u3059\u3067\u306b\u4f7f\u7528\u3055\u308c\u3066\u3044\u307e\u3059\u3002\u30ed\u30b0\u30a4\u30f3\u3059\u308b\u304b\u5225\u306e\u30e1\u30fc\u30eb\u3092\u4f7f\u7528\u3057\u3066\u304f\u3060\u3055\u3044\u3002', invalid_email: '\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9\u306e\u5f62\u5f0f\u304c\u7121\u52b9\u3067\u3059\u3002', weak_password: '\u30d1\u30b9\u30ef\u30fc\u30c9\u304c\u5f31\u3059\u304e\u307e\u3059\uff08\u6700\u4f566\u6587\u5b57\uff09\u3002', error_generic: '\u767b\u9332\u30a8\u30e9\u30fc\u3002\u3082\u3046\u4e00\u5ea6\u304a\u8a66\u3057\u304f\u3060\u3055\u3044\u3002', login_error: '\u30ed\u30b0\u30a4\u30f3\u30a8\u30e9\u30fc\u3002' },
+      },
+    };
+
+    /**
+     * Retorna a string traduzida para o idioma atual.
+     * Uso: t('profile.language')  ou  t('dashboard.greeting', {nome: 'Joao'})
+     * Fallback: se a chave nao existir no idioma selecionado, usa pt-BR.
+     */
+    function t(key, vars) {
+        vars = vars || {};
+        var lang = (typeof state !== 'undefined' && state.idioma) ? state.idioma : (localStorage.getItem('idioma') || 'pt-BR');
+        var keys = key.split('.');
+        var resolve = function(obj) {
+            var r = obj;
+            for (var i = 0; i < keys.length; i++) {
+                if (r && typeof r === 'object') { r = r[keys[i]]; } else { return undefined; }
+            }
+            return r;
+        };
+        var result = resolve(TRANSLATIONS[lang]);
+        if (result === undefined) result = resolve(TRANSLATIONS['pt-BR']);
+        if (typeof result !== 'string') return key;
+        return result.replace(/\{(\w+)\}/g, function(_, k) {
+            return vars[k] !== undefined ? String(vars[k]) : '{' + k + '}';
+        });
+    }
+
     // Main application state
     // Deve permanecer sincronizado com a definição em functions/index.js (ACHIEVEMENTS)
     const ACHIEVEMENTS = [
@@ -1225,6 +1370,7 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     climaSemana: [], // array of 7 days with both users' moods
     climaHoje: null, // { humor, registradoEm } or null
     climaPartnerHoje: null,
+    idioma: localStorage.getItem('idioma') || 'pt-BR',
     incomingPairingDismissedId: null, // ID da solicitação recebida que foi dispensada
     pairingTransition: false, // loading durante aceite de pareamento
 };
@@ -1963,6 +2109,16 @@ function triggerAchievementCelebration(notif) {
                                 <option value="" disabled selected>Selecione seu sexo</option>
                                 <option value="Masculino">Masculino</option>
                                 <option value="Feminino">Feminino</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="registerIdioma" aria-label="Idioma" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300">
+                                <option value="" disabled selected>Selecione o idioma</option>
+                                <option value="pt-BR">🇧🇷 Português</option>
+                                <option value="en">🇺🇸 English</option>
+                                <option value="es">🇪🇸 Español</option>
+                                <option value="zh">🇨🇳 中文</option>
+                                <option value="ja">🇯🇵 日本語</option>
                             </select>
                         </div>
                     </div>
@@ -5198,6 +5354,9 @@ function renderMeuPerfil() {
     const sexo = state.usuario?.sexo || '—';
     const idade = state.usuario?.idade ?? 'XX';
     const fotoUrl = state.usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
+    const idiomaAtual = state.idioma || 'pt-BR';
+    const IDIOMA_LABELS = {'pt-BR':'🇧🇷 Português','en':'🇺🇸 English','es':'🇪🇸 Español','zh':'🇨🇳 中文','ja':'🇯🇵 日本語'};
+    const idiomaLabel = IDIOMA_LABELS[idiomaAtual] || idiomaAtual;
 
     let notificationButtonHtml = '';
     if (window.Notification) {
@@ -5275,6 +5434,11 @@ function renderMeuPerfil() {
                                 <span class="text-sm text-white/70">Sexo</span>
                                 <span class="text-sm font-semibold">${escapeHtml(sexo)}</span>
                             </div>
+                            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                                <span class="text-sm text-white/70">Idioma</span>
+                                <span class="text-sm font-semibold">${idiomaLabel}</span>
+                                <button type="button" onclick="changeIdiomaModal()" class="text-xs text-pink-400 hover:text-pink-300 transition" aria-label="Alterar idioma">Alterar</button>
+                            </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-white/70">Email</span>
                                 <span class="text-sm font-semibold">${email}</span>
@@ -5292,6 +5456,63 @@ function renderMeuPerfil() {
             </section>
         </div>
     `;
+}
+
+function changeIdiomaModal() {
+    var idiomaAtual = state.idioma || 'pt-BR';
+    var opcoes = [
+        { value: 'pt-BR', label: '\U0001f1e7\U0001f1f7 Portugu\u00eas' },
+        { value: 'en',    label: '\U0001f1fa\U0001f1f8 English' },
+        { value: 'es',    label: '\U0001f1ea\U0001f1f8 Espa\u00f1ol' },
+        { value: 'zh',    label: '\U0001f1e8\U0001f1f3 \u4e2d\u6587' },
+        { value: 'ja',    label: '\U0001f1ef\U0001f1f5 \u65e5\u672c\u8a9e' }
+    ];
+    var opcoesHtml = opcoes.map(function(op) {
+        return '<label class="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-white/5 transition">'
+            + '<input type="radio" name="idioma_radio" value="' + escapeHtml(op.value) + '" '
+            + (idiomaAtual === op.value ? 'checked' : '')
+            + ' class="accent-pink-500">'
+            + '<span class="text-white text-sm">' + escapeHtml(op.label) + '</span></label>';
+    }).join('');
+    var container = document.createElement('div');
+    container.id = 'idioma-modal-container';
+    container.innerHTML = ''
+        + '<div class="fixed inset-0 z-[9998] flex items-center justify-center bg-black/70" onclick="closeIdiomaModal()">'
+        + '<div class="w-full max-w-xs rounded-2xl p-6 text-white" onclick="event.stopPropagation()"'
+        + ' role="dialog" aria-modal="true" aria-label="Selecionar idioma"'
+        + ' style="background:#1a1025;border:1px solid rgba(255,255,255,0.1);">'
+        + '<h3 class="text-lg font-semibold mb-4">Selecionar Idioma</h3>'
+        + '<div class="space-y-1">' + opcoesHtml + '</div>'
+        + '<div class="flex gap-3 mt-6">'
+        + '<button onclick="closeIdiomaModal()" class="flex-1 py-2 rounded-xl text-sm text-white/60 hover:text-white transition border border-white/10">Cancelar</button>'
+        + '<button onclick="saveIdioma()" class="flex-1 py-2 rounded-xl text-sm font-semibold text-white transition" style="background:linear-gradient(135deg,#ff2d3f,#ff5565);">Salvar</button>'
+        + '</div></div></div>';
+    document.body.appendChild(container);
+}
+
+function closeIdiomaModal() {
+    var el = document.getElementById('idioma-modal-container');
+    if (el) el.remove();
+}
+
+async function saveIdioma() {
+    var selected = document.querySelector('input[name=idioma_radio]:checked');
+    if (!selected) return;
+    var novoIdioma = selected.value;
+    state.idioma = novoIdioma;
+    localStorage.setItem('idioma', novoIdioma);
+    document.documentElement.lang = novoIdioma;
+    closeIdiomaModal();
+    if (state.usuario && state.usuario.uid) {
+        try {
+            await db.collection('usuarios').doc(state.usuario.uid).update({ idioma: novoIdioma });
+            state.usuario.idioma = novoIdioma;
+        } catch(e) {
+            if (typeof DEBUG_MODE !== 'undefined' && DEBUG_MODE) console.warn('N\u00e3o foi poss\u00edvel salvar idioma no Firestore:', e);
+        }
+    }
+    showToast('Idioma atualizado!', 'sucesso');
+    renderApp();
 }
 
 function toggleMostrarConquistas() {
@@ -5600,6 +5821,7 @@ const email = document.getElementById('registerEmail').value;
 const telefone = document.getElementById('registerTelefone').value;
 const senha = document.getElementById('registerSenha').value;
 const sexo = document.getElementById('registerSexo').value;
+const idioma = (document.getElementById('registerIdioma') ? document.getElementById('registerIdioma').value : '') || 'pt-BR';
 
 // Validação de Frontend
 if (!nome || !email || !telefone || !senha || !sexo) {
@@ -5626,6 +5848,7 @@ try {
         telefone: telefone,
         email: email,
         sexo: sexo,
+        idioma: idioma,
         foguinhos: INITIAL_FOGUINHOS,
         lastCheckInDate: null,
         pareadoCom: null,
@@ -5643,6 +5866,7 @@ try {
         nome,
         telefone,
         sexo,
+        idioma,
         foguinhos: INITIAL_FOGUINHOS,
         lastCheckInDate: null,
         pareadoCom: null,
@@ -5650,6 +5874,9 @@ try {
         conquistas: {},
         achievementStats: {}
     };
+    state.idioma = idioma;
+    localStorage.setItem('idioma', idioma);
+    document.documentElement.lang = idioma;
     state.conquistas = {};
     state.achievementStats = {};
     state.etapa = 'parear';
@@ -7896,6 +8123,7 @@ try {
     const userDoc = await db.collection('usuarios').doc(uid).get();
     if (userDoc.exists) {
     state.usuario = { uid: uid, email: email, ...userDoc.data() };
+    if (state.usuario.idioma) { state.idioma = state.usuario.idioma; localStorage.setItem('idioma', state.usuario.idioma); document.documentElement.lang = state.usuario.idioma; }
     state.parceirosAtivos = Array.isArray(state.usuario.pareamentosAtivos)
         ? state.usuario.pareamentosAtivos
         : [];
@@ -8383,6 +8611,9 @@ try {
         window.backToMemoriasSharePicker = backToMemoriasSharePicker;
         window.shareMemoriasPreview = shareMemoriasPreview;
         window.saveMemoriasPreview = saveMemoriasPreview;
+        window.changeIdiomaModal = changeIdiomaModal;
+        window.closeIdiomaModal = closeIdiomaModal;
+        window.saveIdioma = saveIdioma;
 
         if (DEBUG_MODE) console.log('✅ Funções de evento prontas.');
 
