@@ -6343,7 +6343,7 @@ async function renderMomentos() {
                 : `<span class="text-2xl">${escapeHtml(tarefa.momentoEmoji || 'ðŸ”¥')}</span>`;
 
             return `
-                <div class="notif-item ${!isPendente ? 'opacity-70' : '')}">
+                <div class="notif-item ${!isPendente ? 'opacity-70' : ''}">
                     ${imagemHtml}
                     <div class="flex-1">
                         <p class="text-sm font-semibold text-gray-800">${escapeHtml(tarefa.momentoNome)}</p>
