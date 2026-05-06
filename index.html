@@ -24,7 +24,7 @@
         }
         body {
             font-family: 'Poppins', sans-serif;
-            /* Adicionado padding-bottom para que o conteÃºdo nÃ£o fique por baixo do footer fixo */
+            /* Adicionado padding-bottom para que o conteúdo não fique por baixo do footer fixo */
             overflow-x: hidden; /* Esconder a barra de rolagem horizontal se algo escapar */
         }
         #app {
@@ -196,7 +196,7 @@
         }
         */
 
-        /* Novo estilo para a barra de navegaÃ§Ã£o inferior (footer) */
+        /* Novo estilo para a barra de navegação inferior (footer) */
         .bottom-nav-bar {
             background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(0,0,0,0.95) 100%);
             backdrop-filter: blur(10px);
@@ -224,7 +224,7 @@
             position: relative;
             height: 100%;
             flex-grow: 1;
-            text-align: center; /* Centraliza o conteÃºdo dentro do item */
+            text-align: center; /* Centraliza o conteúdo dentro do item */
         }
         .bottom-nav-item.active {
             color: #FF6B7C; /* Cor de destaque no hover */
@@ -233,12 +233,12 @@
             font-size: 20px;
         }
 
-        /* Estilo para as bolinhas de notificaÃ§Ã£o */
+        /* Estilo para as bolinhas de notificação */
         .badge-notification {
             position: absolute;
-            top: 5px; /* Ajusta a posiÃ§Ã£o vertical */
-            right: 5px;  /* Ajusta a posiÃ§Ã£o horizontal */
-            min-width: 20px; /* Largura mÃ­nima para 1-2 dÃ­gitos */
+            top: 5px; /* Ajusta a posição vertical */
+            right: 5px;  /* Ajusta a posição horizontal */
+            min-width: 20px; /* Largura mínima para 1-2 dígitos */
             height: 20px;
             border-radius: 50%;
             color: white;
@@ -248,8 +248,8 @@
             justify-content: center;
             font-weight: bold;
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-            pointer-events: none; /* Garante que o clique passe para o botÃ£o pai */
-            transform: translate(50%, -50%); /* Ajusta para centralizar na quina do Ã­cone */
+            pointer-events: none; /* Garante que o clique passe para o botão pai */
+            transform: translate(50%, -50%); /* Ajusta para centralizar na quina do ícone */
         }
         /* Cores das bolinhas */
         .badge-yellow { background-color: #f59e0b; /* yellow-500 */ }
@@ -320,16 +320,16 @@
 
         #foguinhosBadge,
         #carrinhoBadge {
-            /* 1. Posiciona o badge com base no centro do botÃ£o */
+            /* 1. Posiciona o badge com base no centro do botão */
             top: 50%;
             left: 50%;
             
             /* 2. Anula o 'right: 5px' da regra original */
             right: auto; 
             
-            /* 3. Anula a transformaÃ§Ã£o original e aplica a nova:
-                - Move 14px para a direita (para ficar ao lado do Ã­cone)
-                - Move 70% da sua prÃ³pria altura para cima (para ficar ligeiramente 
+            /* 3. Anula a transformação original e aplica a nova:
+                - Move 14px para a direita (para ficar ao lado do ícone)
+                - Move 70% da sua própria altura para cima (para ficar ligeiramente 
                   acima do centro, como no seu 'green square')
             */
             transform: translate(14px, -70%);
@@ -351,11 +351,11 @@
                 padding-left: 1rem; /* px-4 */
                 padding-right: 1rem; /* px-4 */
             }
-            .header-content > div:nth-child(2) { /* AÃ§Ãµes Ã  direita */
+            .header-content > div:nth-child(2) { /* Ações à direita */
                 display: flex;
                 gap: 0.5rem; /* Menor gap para caber tudo */
             }
-            .header-content h1 { /* Ajuste para o tÃ­tulo do app na header */
+            .header-content h1 { /* Ajuste para o título do app na header */
                 font-size: 1.5rem; /* Reduz o tamanho da fonte em telas pequenas */
             }
         }
@@ -367,18 +367,18 @@
     transform: rotate(180deg);
 }
 
-        /* Adicione este novo estilo para o botÃ£o central */
+        /* Adicione este novo estilo para o botão central */
 .bottom-nav-item-center {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 52px;   /* Tamanho do cÃ­rculo */
-    height: 52px;  /* Tamanho do cÃ­rculo */
+    width: 52px;   /* Tamanho do círculo */
+    height: 52px;  /* Tamanho do círculo */
     background: linear-gradient(135deg, #FF3547 0%, #FF6B7C 100%);
     color: white;
-    border-radius: 50%; /* Deixa o botÃ£o redondo */
-    border: 3px solid #1f2937; /* Cor de fundo da sua barra de navegaÃ§Ã£o, para dar um efeito de recorte */
-    transform: translateY(-14px); /* Move o botÃ£o para cima */
+    border-radius: 50%; /* Deixa o botão redondo */
+    border: 3px solid #1f2937; /* Cor de fundo da sua barra de navegação, para dar um efeito de recorte */
+    transform: translateY(-14px); /* Move o botão para cima */
     box-shadow: 0 -5px 15px rgba(255, 53, 71, 0.4);
     transition: all 0.3s ease;
 }
@@ -666,19 +666,19 @@
 
 /*
 // =========================================
-// NOVO SISTEMA DE NOTIFICAÃ‡Ã•ES (TOASTS)
+// NOVO SISTEMA DE NOTIFICAÇÕES (TOASTS)
 // =========================================
 */
 .toast {
     display: flex;
     align-items: center;
-    padding: 10px 16px; /* Padding vertical diminuÃ­do */
+    padding: 10px 16px; /* Padding vertical diminuído */
     font-size: 14px; /* Fonte menor */
-    border-radius: 9999px; /* Formato de pÃ­lula */
+    border-radius: 9999px; /* Formato de pílula */
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
-    animation: slideInUp 0.5s ease-out forwards; /* Nova animaÃ§Ã£o de entrada */
+    animation: slideInUp 0.5s ease-out forwards; /* Nova animação de entrada */
 }
 
 .toast.exiting {
@@ -756,7 +756,7 @@
 /* Instagram CTA com borda em gradiente e fundo discreto */
 .instagram-cta-outline {
     display: inline-block;
-    padding: 2px; /* espaÃ§o para a borda em gradiente */
+    padding: 2px; /* espaço para a borda em gradiente */
     border-radius: 12px;
     background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
 }
@@ -842,7 +842,7 @@
     <div class="container mx-auto px-4 py-3 flex items-center header-content">
         <div class="flex-1">
             <button onclick="changeStep('dashboard')" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
-                <i class="fas fa-home text-xs"></i> <span class="hidden sm:inline">InÃ­cio</span>
+                <i class="fas fa-home text-xs"></i> <span class="hidden sm:inline">Início</span>
             </button>
         </div>
 
@@ -871,13 +871,20 @@
       appId: "1:503855316994:web:7d5ee171b44c4f8b86a71b",
     };
 
-    // InicializaÃ§Ã£o do Firebase, Firestore e Auth
+    // Inicialização do Firebase, Firestore e Auth
     firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
     const storage = firebase.storage();
 
-    // â”€â”€ Flags & Constantes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // Habilita cache offline para uso sem rede (falha silenciosa em Safari privado / múltiplas abas)
+    db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+        if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
+            console.warn('[Firestore] Offline persistence error:', err.code);
+        }
+    });
+
+    // ── Flags & Constantes ──────────────────────────────────
     const DEBUG_MODE = false;
     const REGISTRATION_ENABLED = false;
 
@@ -897,7 +904,7 @@
     const ACHIEVEMENT_COOLDOWN_MS = 6000;
     const CHALLENGE_DURATION_MS = 60000;
 
-    // Limites e valores padrÃ£o
+    // Limites e valores padrão
     const DEFAULT_PRICE_FOGUINHOS = 10;
     const PRICE_INTENSITY_MULTIPLIER = 2;
     const INITIAL_FOGUINHOS = 10;
@@ -921,7 +928,7 @@
     <script>
     /**
      * Adiciona um input ao Firestore garantindo que o token do Auth esteja
-     * vÃ¡lido e tentando um refresh antes de falhar com permission errors.
+     * válido e tentando um refresh antes de falhar com permission errors.
      * Retorna o DocumentReference resolvido pela chamada .add().
      */
     async function safeAddInput(inputObj) {
@@ -935,7 +942,7 @@
             }
         }
 
-        // Sempre delegamos ao backend, entÃ£o removemos sentinelas do Firestore.
+        // Sempre delegamos ao backend, então removemos sentinelas do Firestore.
         delete payload.timestamp;
         payload.processed = false;
 
@@ -965,7 +972,7 @@
             try {
                 body = await response.json();
             } catch (jsonErr) {
-                console.warn('safeAddInput: corpo nÃ£o pÃ´de ser parseado', jsonErr);
+                console.warn('safeAddInput: corpo não pôde ser parseado', jsonErr);
             }
 
             if (response.ok) {
@@ -984,7 +991,7 @@
             return await callBackend(false);
         } catch (err) {
             if (err.status === 401 || err.status === 403) {
-                // ForÃ§a refresh do token e tenta novamente uma vez.
+                // Força refresh do token e tenta novamente uma vez.
                 return await callBackend(true);
             }
             throw err;
@@ -1014,7 +1021,7 @@
             try {
                 body = await response.json();
             } catch (jsonErr) {
-                console.warn('safeFetchBackend: corpo nÃ£o pÃ´de ser parseado', jsonErr);
+                console.warn('safeFetchBackend: corpo não pôde ser parseado', jsonErr);
             }
 
             if (response.ok) {
@@ -1040,13 +1047,13 @@
     }
 
     // Main application state
-    // Deve permanecer sincronizado com a definiÃ§Ã£o em functions/index.js (ACHIEVEMENTS)
+    // Deve permanecer sincronizado com a definição em functions/index.js (ACHIEVEMENTS)
     const ACHIEVEMENTS = [
     {
         id: 'first_check_in',
         trigger: 'daily_check_in',
         title: 'Primeiro Passo',
-        description: 'Realize seu primeiro check-in diÃ¡rio com o seu par.',
+        description: 'Realize seu primeiro check-in diário com o seu par.',
         hint: 'Envie um foguinho pela tela de check-in.',
         icon: 'fa-person-rays',
         accentColor: '#fbbf24',
@@ -1057,7 +1064,7 @@
         trigger: 'daily_check_in',
         title: 'Foguinho Semanal',
         description: 'Complete 7 check-ins em dias consecutivos.',
-        hint: 'FaÃ§a check-ins diÃ¡rios sem perder nenhum dia.',
+        hint: 'Faça check-ins diários sem perder nenhum dia.',
         icon: 'fa-calendar-week',
         accentColor: '#34d399',
         reward: 3,
@@ -1067,7 +1074,7 @@
         trigger: 'daily_check_in',
         title: 'Mestre do Check-in',
         description: 'Realize 30 check-ins no total.',
-        hint: 'ConsistÃªncia Ã© tudo: presenteie seu par frequentemente.',
+        hint: 'Consistência é tudo: presenteie seu par frequentemente.',
         icon: 'fa-stopwatch',
         accentColor: '#60a5fa',
         reward: 10,
@@ -1077,7 +1084,7 @@
         trigger: 'daily_check_in',
         title: 'Sou Fiel',
         description: 'Realize 60 check-ins no total.',
-        hint: 'Mantenha o ritmo diÃ¡rio para mostrar compromisso.',
+        hint: 'Mantenha o ritmo diário para mostrar compromisso.',
         icon: 'fa-hand-holding-heart',
         accentColor: '#38bdf8',
         reward: 20,
@@ -1107,7 +1114,7 @@
         trigger: 'moment_redeem',
         title: 'Investidor de Foguinhos',
         description: 'Gaste 50 foguinhos em momentos.',
-        hint: 'Momentos incrÃ­veis custam foguinhos â€“ continue investindo!',
+        hint: 'Momentos incríveis custam foguinhos – continue investindo!',
         icon: 'fa-coins',
         accentColor: '#facc15',
         reward: 10,
@@ -1117,7 +1124,7 @@
         trigger: 'moment_redeem',
         title: 'Caliente',
         description: 'Gaste 100 foguinhos em momentos.',
-        hint: 'Quanto mais foguinhos, mais experiÃªncias intensas.',
+        hint: 'Quanto mais foguinhos, mais experiências intensas.',
         icon: 'fa-fire-flame-curved',
         accentColor: '#fb923c',
         reward: 20,
@@ -1208,7 +1215,7 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     tarefasCache: [],
     conquistas: {},
     achievementStats: {},
-    // --- Multi-conexÃ£o (VIP) ---
+    // --- Multi-conexão (VIP) ---
     conexaoAtiva: null, // { uid, nome, fotoUrl, pareamentoId, idAmigavel }
     // --- Perfil do Parceiro ---
     conexaoAberta: null, // partner data when viewing perfilParceiro
@@ -1218,7 +1225,7 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     climaSemana: [], // array of 7 days with both users' moods
     climaHoje: null, // { humor, registradoEm } or null
     climaPartnerHoje: null,
-    incomingPairingDismissedId: null, // ID da solicitaÃ§Ã£o recebida que foi dispensada
+    incomingPairingDismissedId: null, // ID da solicitação recebida que foi dispensada
     pairingTransition: false, // loading durante aceite de pareamento
 };
 
@@ -1279,7 +1286,7 @@ function shouldShowPwaInstallPopup() {
 }
 
 function maybeShowPwaInstallPopup() {
-    // JÃ¡ existe no DOM? NÃ£o duplicar
+    // Já existe no DOM? Não duplicar
     if (document.getElementById('pwa-install-overlay')) return;
     if (!shouldShowPwaInstallPopup()) return;
     const html = getPwaInstallHtml();
@@ -1297,12 +1304,12 @@ function getPwaInstallHtml() {
 
     const hasNativePrompt = !!deferredInstallPrompt;
 
-    // InstruÃ§Ãµes especÃ­ficas por plataforma
+    // Instruções específicas por plataforma
     let stepsHtml = '';
     if (hasNativePrompt) {
-        // Android Chrome â€” pode instalar direto
+        // Android Chrome — pode instalar direto
         stepsHtml = `
-            <p class="text-sm text-white/70 mb-4">Instale o app direto no seu celular para a melhor experiÃªncia!</p>
+            <p class="text-sm text-white/70 mb-4">Instale o app direto no seu celular para a melhor experiência!</p>
             <button onclick="triggerPwaInstall()" class="w-full py-3 rounded-xl font-semibold text-white transition" style="background: linear-gradient(135deg, #ff2d3f, #ff5565);">
                 <i class="fas fa-download mr-2"></i>Instalar Agora
             </button>
@@ -1310,7 +1317,7 @@ function getPwaInstallHtml() {
     } else if (isIOS()) {
         // iOS Safari
         stepsHtml = `
-            <p class="text-sm text-white/70 mb-3">Para a melhor experiÃªncia, adicione Ã  sua tela inicial:</p>
+            <p class="text-sm text-white/70 mb-3">Para a melhor experiência, adicione à sua tela inicial:</p>
             <div class="space-y-2 text-left">
                 <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">1</span>
@@ -1318,18 +1325,18 @@ function getPwaInstallHtml() {
                 </div>
                 <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">2</span>
-                    <p class="text-sm">Toque em <i class="fas fa-plus-square text-white/80"></i> <strong>Adicionar Ã  Tela de InÃ­cio</strong></p>
+                    <p class="text-sm">Toque em <i class="fas fa-plus-square text-white/80"></i> <strong>Adicionar à Tela de Início</strong></p>
                 </div>
                 <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">3</span>
-                    <p class="text-sm">Toque em <strong>Adicionar</strong> â€” pronto!</p>
+                    <p class="text-sm">Toque em <strong>Adicionar</strong> — pronto!</p>
                 </div>
             </div>
         `;
     } else {
         // Desktop ou outro navegador
         stepsHtml = `
-            <p class="text-sm text-white/70 mb-3">Para a melhor experiÃªncia, adicione Ã  sua tela inicial:</p>
+            <p class="text-sm text-white/70 mb-3">Para a melhor experiência, adicione à sua tela inicial:</p>
             <div class="space-y-2 text-left">
                 <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">1</span>
@@ -1337,7 +1344,7 @@ function getPwaInstallHtml() {
                 </div>
                 <div class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3">
                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold">2</span>
-                    <p class="text-sm">Selecione <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar Ã  tela inicial"</strong></p>
+                    <p class="text-sm">Selecione <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong></p>
                 </div>
             </div>
         `;
@@ -1361,10 +1368,10 @@ function getPwaInstallHtml() {
                 ${stepsHtml}
                 <div class="flex gap-3 mt-4">
                     <button onclick="dismissPwaInstallPermanent()" class="flex-1 py-2.5 rounded-xl font-semibold text-white text-sm transition" style="background: linear-gradient(135deg, #ff2d3f, #ff5565);">
-                        <i class="fas fa-check mr-1.5"></i>JÃ¡ Adicionei
+                        <i class="fas fa-check mr-1.5"></i>Já Adicionei
                     </button>
                     <button onclick="dismissPwaInstallPopup()" class="flex-1 py-2.5 rounded-xl bg-white/10 text-white/70 text-sm font-semibold hover:bg-white/20 transition">
-                        Agora nÃ£o
+                        Agora não
                     </button>
                 </div>
             </div>
@@ -1398,13 +1405,13 @@ function triggerAchievementCelebration(notif) {
         }
 }
 
-    // DOM elements (Declarar como `let` para que possam ser atribuÃ­das apÃ³s o DOM carregar)
+    // DOM elements (Declarar como `let` para que possam ser atribuídas após o DOM carregar)
     let appContainer;
     let userNameDisplay;
     let foguinhosBadge;
     let carrinhoBadge;
-    let bottomNavBar; // ReferÃªncia para a barra de navegaÃ§Ã£o inferior
-    let mainHeader; // ReferÃªncia para o cabeÃ§alho principal
+    let bottomNavBar; // Referência para a barra de navegação inferior
+    let mainHeader; // Referência para o cabeçalho principal
 
     window.ACHIEVEMENTS = ACHIEVEMENTS;
     window.ACHIEVEMENTS_BY_ID = ACHIEVEMENTS_BY_ID;
@@ -1440,7 +1447,7 @@ function triggerAchievementCelebration(notif) {
                     year: 'numeric'
                 });
             } catch (err) {
-                console.warn('NÃ£o foi possÃ­vel formatar a data da conquista:', err);
+                console.warn('Não foi possível formatar a data da conquista:', err);
                 return '';
             }
         }
@@ -1464,7 +1471,7 @@ function triggerAchievementCelebration(notif) {
 
                     return data.toLocaleDateString('pt-BR');
                 } catch (err) {
-                    console.warn('NÃ£o foi possÃ­vel formatar a data numÃ©rica:', err);
+                    console.warn('Não foi possível formatar a data numérica:', err);
                     return '';
                 }
             }
@@ -1592,19 +1599,19 @@ function triggerAchievementCelebration(notif) {
     }
 
 // ==========================================================
-    // NOVA FUNÃ‡ÃƒO DE RASTREAMENTO (ANALYTICS)
+    // NOVA FUNÇÃO DE RASTREAMENTO (ANALYTICS)
     // ==========================================================
     /**
      * Envia um evento customizado para o Google Analytics (GA4).
      * @param {string} eventName O nome do evento (ex: 'sign_up', 'purchase_moment').
-     * @param {Object} [eventParams={}] ParÃ¢metros adicionais (ex: { value: 10, currency: 'BRL' }).
+     * @param {Object} [eventParams={}] Parâmetros adicionais (ex: { value: 10, currency: 'BRL' }).
      */
     function trackGAEvent(eventName, eventParams = {}) {
-        // Verifica se a funÃ§Ã£o gtag() estÃ¡ disponÃ­vel
+        // Verifica se a função gtag() está disponível
         if (typeof gtag === 'function') {
             gtag('event', eventName, eventParams);
         } else {
-            console.warn(`gtag() nÃ£o definido. Evento "${eventName}" nÃ£o rastreado.`);
+            console.warn(`gtag() não definido. Evento "${eventName}" não rastreado.`);
         }
     }
 
@@ -1635,19 +1642,19 @@ function triggerAchievementCelebration(notif) {
     }
 
     // ==========================================================
-    // COLE ESTA NOVA FUNÃ‡ÃƒO AQUI (LOGO ABAIXO DA ANTERIOR)
+    // COLE ESTA NOVA FUNÇÃO AQUI (LOGO ABAIXO DA ANTERIOR)
     // ==========================================================
     /**
      * Envia um evento customizado para o Meta Pixel.
      * @param {string} eventName O nome do evento (ex: 'CompleteRegistration', 'Purchase').
-     * @param {Object} [eventParams={}] ParÃ¢metros adicionais (ex: { value: 10, currency: 'BRL' }).
+     * @param {Object} [eventParams={}] Parâmetros adicionais (ex: { value: 10, currency: 'BRL' }).
      */
     function trackMetaEvent(eventName, eventParams = {}) {
-        // Verifica se a funÃ§Ã£o fbq() estÃ¡ disponÃ­vel
+        // Verifica se a função fbq() está disponível
         if (typeof fbq === 'function') {
             fbq('track', eventName, eventParams);
         } else {
-            console.warn(`fbq() nÃ£o definido. Evento "${eventName}" nÃ£o rastreado.`);
+            console.warn(`fbq() não definido. Evento "${eventName}" não rastreado.`);
         }
     }
 
@@ -1674,7 +1681,7 @@ function triggerAchievementCelebration(notif) {
             try {
                 body = await response.json();
             } catch (jsonErr) {
-                console.warn('syncNotificationToken: corpo nÃ£o pÃ´de ser parseado', jsonErr);
+                console.warn('syncNotificationToken: corpo não pôde ser parseado', jsonErr);
             }
 
             if (response.ok) {
@@ -1698,8 +1705,8 @@ function triggerAchievementCelebration(notif) {
             throw err;
         }
     }
-    // --- FunÃ§Ãµes de RenderizaÃ§Ã£o das Etapas ---
-    // Apenas o conteÃºdo DENTRO da #app serÃ¡ renderizado por estas funÃ§Ãµes
+    // --- Funções de Renderização das Etapas ---
+    // Apenas o conteúdo DENTRO da #app será renderizado por estas funções
 
     function renderLandingPage() {
         const registerButton = REGISTRATION_ENABLED ? `
@@ -1716,7 +1723,7 @@ function triggerAchievementCelebration(notif) {
                     
                     <div class="text-center mb-6">
                         <img src="/assets/icons/logo-topdown-white-txt.png" alt="Nosso Momento" class="w-2/3 max-w-[200px] mx-auto mb-6">
-                        <p class="text-gray-300 tracking-wider">Apimente a relaÃ§Ã£o.<br>Deixe tudo mais gostoso!</p>
+                        <p class="text-gray-300 tracking-wider">Apimente a relação.<br>Deixe tudo mais gostoso!</p>
                     </div>
                     
                     <div class="space-y-4">
@@ -1755,8 +1762,8 @@ function triggerAchievementCelebration(notif) {
                             <img loading="lazy" src="${sanitizeUrl(fotoPerfil)}" class="w-16 h-16 rounded-full object-cover" alt="Foto de perfil">
                         </div>
                         <div class="-mt-2">
-                            <h2 class="text-xl font-semibold leading-tight">OlÃ¡, ${escapeHtml(userName)}</h2>
-                            <p class="text-sm text-white/80 leading-snug">Apimente suas relaÃ§Ãµes</p>
+                            <h2 class="text-xl font-semibold leading-tight">Olá, ${escapeHtml(userName)}</h2>
+                            <p class="text-sm text-white/80 leading-snug">Apimente suas relações</p>
                         </div>
                     </div>
                 </section>
@@ -1776,7 +1783,7 @@ function triggerAchievementCelebration(notif) {
                                 <div id="dashboardNotifIconWrap" class="w-12 h-12 rounded-xl ${notifIconBg} flex items-center justify-center mb-3">
                                     <i id="dashboardNotifIcon" class="fas fa-bell text-xl ${notifIconClass}"></i>
                                 </div>
-                                <h3 id="dashboardNotifTitle" class="text-sm font-semibold ${notifTitleClass}">NotificaÃ§Ãµes</h3>
+                                <h3 id="dashboardNotifTitle" class="text-sm font-semibold ${notifTitleClass}">Notificações</h3>
                                 <p id="dashboardNotifSub" class="text-xs ${notifSubClass}">${hasPending ? `${pendingCount} pendentes` : 'Tudo em dia'}</p>
                             </button>
 
@@ -1785,14 +1792,14 @@ function triggerAchievementCelebration(notif) {
                                     <i class="fas fa-heart text-xl icon-gradient"></i>
                                 </div>
                                 <h3 class="text-sm font-semibold">Pareamentos</h3>
-                                <p class="text-xs text-white/70">${pareamentosCount} conexÃµ${pareamentosCount === 1 ? '' : 'es'}</p>
+                                <p class="text-xs text-white/70">${pareamentosCount} conexõ${pareamentosCount === 1 ? '' : 'es'}</p>
                             </button>
 
                             <button onclick="changeStep('memorias')" class="rounded-2xl bg-white/10 p-5 text-left transition hover:bg-white/20">
                                 <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-3">
                                     <i class="fas fa-book-open text-xl icon-gradient"></i>
                                 </div>
-                                <h3 class="text-sm font-semibold">MemÃ³rias</h3>
+                                <h3 class="text-sm font-semibold">Memórias</h3>
                                 <p class="text-xs text-white/70">Relembre</p>
                             </button>
                         </div>
@@ -1803,7 +1810,7 @@ function triggerAchievementCelebration(notif) {
     }
 
     // =========================================================
-    // SELETOR DE CONEXÃƒO â€” Tela VIP para multi-conexÃ£o
+    // SELETOR DE CONEXÃO — Tela VIP para multi-conexão
     // =========================================================
     function renderSelecionarConexao() {
         const parceiros = buildPareamentosLista();
@@ -1835,8 +1842,8 @@ function triggerAchievementCelebration(notif) {
                             <img loading="lazy" src="${sanitizeUrl(fotoPerfil)}" class="w-16 h-16 rounded-full object-cover" alt="Foto de perfil">
                         </div>
                         <div class="-mt-2">
-                            <h2 class="text-xl font-semibold leading-tight">OlÃ¡, ${escapeHtml(userName)}</h2>
-                            <p class="text-sm text-white/80 leading-snug">Escolha sua conexÃ£o</p>
+                            <h2 class="text-xl font-semibold leading-tight">Olá, ${escapeHtml(userName)}</h2>
+                            <p class="text-sm text-white/80 leading-snug">Escolha sua conexão</p>
                         </div>
                     </div>
                 </section>
@@ -1872,11 +1879,11 @@ function triggerAchievementCelebration(notif) {
         state.parceiroNome = partner.nome;
         state.idPareamentoAmigavel = partner.pareamentoId || state.idPareamentoAmigavel;
 
-        // Persiste Ãºltima conexÃ£o usada
+        // Persiste última conexão usada
         try {
             const uid = state.usuario ? state.usuario.uid : '';
             if (uid) localStorage.setItem('conexaoAtivaUid:' + uid, partner.uid);
-        } catch (e) { /* localStorage indisponÃ­vel */ }
+        } catch (e) { /* localStorage indisponível */ }
 
         // Carrega dados completos do parceiro selecionado
         if (partner.uid) {
@@ -1936,7 +1943,7 @@ function triggerAchievementCelebration(notif) {
                     </button>
                     <div class="text-center mb-10">
                         <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">CADASTRO</h2>
-                        <p class="text-gray-300 tracking-wider">Crie sua conta para comeÃ§ar a apimentar!</p>
+                        <p class="text-gray-300 tracking-wider">Crie sua conta para começar a apimentar!</p>
                     </div>
                     <div class="space-y-5">
                         <div>
@@ -1946,7 +1953,7 @@ function triggerAchievementCelebration(notif) {
                             <input id="registerEmail" type="email" placeholder="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
                         </div>
                         <div>
-                            <input id="registerTelefone" type="tel" placeholder="Telefone (apenas nÃºmeros, ex: 11999991111)" pattern="[0-9]{11}" required class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            <input id="registerTelefone" type="tel" placeholder="Telefone (apenas números, ex: 11999991111)" pattern="[0-9]{11}" required class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
                         </div>
                         <div>
                             <input id="registerSenha" type="password" placeholder="Crie uma senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
@@ -1964,7 +1971,7 @@ function triggerAchievementCelebration(notif) {
                         <i class="fas fa-arrow-right-long"></i>
                     </button>
                     <p class="text-center mt-6 text-gray-400 text-sm">
-                        Ao continuar, vocÃª concorda com nossos <button type="button" class="text-pink-400 hover:underline" onclick="openLegalModal('terms')">Termos</button> e <button type="button" class="text-pink-400 hover:underline" onclick="openLegalModal('privacy')">PolÃ­tica de Privacidade</button>
+                        Ao continuar, você concorda com nossos <button type="button" class="text-pink-400 hover:underline" onclick="openLegalModal('terms')">Termos</button> e <button type="button" class="text-pink-400 hover:underline" onclick="openLegalModal('privacy')">Política de Privacidade</button>
                     </p>
                 </div>
             </div>
@@ -1991,8 +1998,8 @@ function ensureFirstPairingChallenge() {
         const concluido = !!(localChallenge.concluido || localChallenge.completed || localChallenge.status === 'finalizado' || localChallenge.status === 'finalizado_sem_recompensa');
         state.pendingChallenge = concluido ? null : {
             id: localChallenge.id,
-            titulo: localChallenge.titulo || 'Alma GÃªmea',
-            pergunta: localChallenge.pergunta || 'Pergunta indisponÃ­vel.',
+            titulo: localChallenge.titulo || 'Alma Gêmea',
+            pergunta: localChallenge.pergunta || 'Pergunta indisponível.',
         };
         state.hasTriggeredFirstPairingChallenge = true;
         return;
@@ -2018,7 +2025,7 @@ function ensureFirstPairingChallenge() {
         const desafioBase = {
             id: desafioId,
             challengeId: 'alma_gemea',
-            titulo: 'Alma GÃªmea',
+            titulo: 'Alma Gêmea',
             descricao: 'Respondam a mesma pergunta para ganhar 1 foguinho.',
             pergunta: perguntaSelecionada,
             icon: 'fa-heart',
@@ -2041,7 +2048,7 @@ function ensureFirstPairingChallenge() {
     const perguntaFinal = existingChallenge?.pergunta || perguntaSelecionada;
     state.pendingChallenge = {
         id: desafioId,
-        titulo: 'Alma GÃªmea',
+        titulo: 'Alma Gêmea',
         pergunta: perguntaFinal,
     };
 
@@ -2051,10 +2058,10 @@ function ensureFirstPairingChallenge() {
 
 function getStableChallengeQuestion(seed, cycleIndex = 0) {
     const perguntasAlmaGemea = [
-        'Qual Ã© a mÃºsica que representa vocÃªs dois?',
-        'Qual o local que nÃ³s demos o primeiro beijo?',
+        'Qual é a música que representa vocês dois?',
+        'Qual o local que nós demos o primeiro beijo?',
         'Qual foi o primeiro filme que vimos juntos?',
-        'Qual Ã© a nossa comida favorita para pedir juntos?',
+        'Qual é a nossa comida favorita para pedir juntos?',
     ];
     const seedStr = `${seed || 'alma_gemea'}:${cycleIndex}`;
     let hash = 0;
@@ -2297,8 +2304,8 @@ function applyLocalWeeklyChallenge() {
     const concluido = !!(migrated.concluido || migrated.completed || migrated.status === 'finalizado' || migrated.status === 'finalizado_sem_recompensa');
     state.pendingChallenge = concluido ? null : {
         id: migrated.id,
-        titulo: migrated.titulo || 'Alma GÃªmea',
-        pergunta: migrated.pergunta || 'Pergunta indisponÃ­vel.',
+        titulo: migrated.titulo || 'Alma Gêmea',
+        pergunta: migrated.pergunta || 'Pergunta indisponível.',
     };
     state.hasTriggeredFirstPairingChallenge = true;
     if (shouldMigrate) {
@@ -2352,8 +2359,8 @@ function setupWeeklyChallengeListener() {
             const concluido = !!(merged.concluido || merged.completed || merged.status === 'finalizado' || merged.status === 'finalizado_sem_recompensa');
             state.pendingChallenge = concluido ? null : {
                 id: merged.id,
-                titulo: merged.titulo || 'Alma GÃªmea',
-                pergunta: merged.pergunta || 'Pergunta indisponÃ­vel.',
+                titulo: merged.titulo || 'Alma Gêmea',
+                pergunta: merged.pergunta || 'Pergunta indisponível.',
             };
             saveLocalWeeklyChallenge(merged);
             if (state.etapa === 'achievementsPopup' || state.showChallengePopup) {
@@ -2470,7 +2477,7 @@ function markWeeklyChallengeStarted(desafioId) {
         challengeId: desafiosSemanais[index].challengeId || 'alma_gemea',
         challengeDocId: desafiosSemanais[index].id || desafioId,
         startedAt: Date.now(),
-    }).catch((err) => console.warn('Falha ao registrar inÃ­cio do desafio semanal:', err));
+    }).catch((err) => console.warn('Falha ao registrar início do desafio semanal:', err));
 }
 
 function normalizeChallengeAnswer(answer) {
@@ -2555,7 +2562,7 @@ function applyWeeklyChallengeAnswer(desafioId, answer, responderUid, responderNa
 
 async function solicitarPermissaoDeNotificacao() {
 if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.warn("Este navegador nÃ£o suporta notificaÃ§Ãµes Push.");
+    console.warn("Este navegador não suporta notificações Push.");
     return;
 }
 
@@ -2566,15 +2573,15 @@ try {
     const permission = await Notification.requestPermission();
 
     if (permission !== "granted") {
-        showToast("VocÃª nÃ£o receberÃ¡ notificaÃ§Ãµes.", "aviso");
+        showToast("Você não receberá notificações.", "aviso");
         return;
     }
 
-    console.log("PermissÃ£o de notificaÃ§Ã£o concedida.");
+    console.log("Permissão de notificação concedida.");
 
     if (!firebase.messaging || !firebase.messaging.isSupported || !firebase.messaging.isSupported()) {
-        console.warn('Firebase Messaging nÃ£o suportado neste navegador.');
-        showToast('NotificaÃ§Ãµes push nÃ£o sÃ£o suportadas neste dispositivo.', 'aviso');
+        console.warn('Firebase Messaging não suportado neste navegador.');
+        showToast('Notificações push não são suportadas neste dispositivo.', 'aviso');
         return;
     }
 
@@ -2585,7 +2592,7 @@ try {
     });
 
     if (!fcmToken) {
-        showToast("NÃ£o foi possÃ­vel ativar notificaÃ§Ãµes agora.", "aviso");
+        showToast("Não foi possível ativar notificações agora.", "aviso");
         return;
     }
 
@@ -2597,11 +2604,11 @@ try {
     }
     state.usuario.notificationsEnabled = true;
 
-    showToast("NotificaÃ§Ãµes ativadas!", "sucesso");
+    showToast("Notificações ativadas!", "sucesso");
     renderApp();
 } catch (error) {
-    console.error("Erro detalhado ao solicitar permissÃ£o:", error);
-    showToast("Erro ao ativar notificaÃ§Ãµes.", "erro");
+    console.error("Erro detalhado ao solicitar permissão:", error);
+    showToast("Erro ao ativar notificações.", "erro");
 }
 }
 
@@ -2635,24 +2642,24 @@ try {
     }
     state.fcmToken = null;
 
-    showToast("NotificaÃ§Ãµes desativadas com sucesso!", 'sucesso');
+    showToast("Notificações desativadas com sucesso!", 'sucesso');
 
-    // ForÃ§a a re-renderizaÃ§Ã£o da pÃ¡gina para atualizar o botÃ£o
+    // Força a re-renderização da página para atualizar o botão
     renderApp();
 
 } catch (error) {
-    console.error("Erro ao desativar notificaÃ§Ãµes:", error);
-    showToast("Erro ao desativar notificaÃ§Ãµes.", 'erro');
+    console.error("Erro ao desativar notificações:", error);
+    showToast("Erro ao desativar notificações.", 'erro');
 }
 }
 
 function setupForegroundMessageHandler() {
-// Certifique-se de que 'firebase.messaging' estÃ¡ disponÃ­vel
+// Certifique-se de que 'firebase.messaging' está disponível
 if (firebase.messaging && firebase.messaging.isSupported && firebase.messaging.isSupported()) {
     const messaging = firebase.messaging();
     messaging.onMessage((payload) => {
 
-        // Em vez de uma notificaÃ§Ã£o do sistema, mostramos um "toast"
+        // Em vez de uma notificação do sistema, mostramos um "toast"
         const title = payload.data.title;
         const body = payload.data.body;
         const notificationType = payload.data?.type || null;
@@ -2665,9 +2672,9 @@ if (firebase.messaging && firebase.messaging.isSupported && firebase.messaging.i
                 achievement_id: payload.data?.achievementId || 'unknown',
             });
         } else if (notificationType === 'pairing' || (title && title.toLowerCase().includes('pareamento'))) {
-            // NÃ£o mostra toast genÃ©rico para pairing â€” o popup dedicado cuida disso
+            // Não mostra toast genérico para pairing — o popup dedicado cuida disso
         } else {
-            showToast(`ðŸ”” ${title}: ${body}`, 'sucesso');
+            showToast(`🔔 ${title}: ${body}`, 'sucesso');
         }
         updateFixedUI();
     });
@@ -2681,12 +2688,12 @@ if (firebase.messaging && firebase.messaging.isSupported && firebase.messaging.i
     const isVip = !!(state.usuario && state.usuario.vip);
     const hasPending = !!(state.usuario && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_'));
     if (!isVip && hasPending) {
-        showToast('VocÃª jÃ¡ tem uma solicitaÃ§Ã£o pendente.', 'aviso');
+        showToast('Você já tem uma solicitação pendente.', 'aviso');
         return;
     }
 
 if (!codigoDigitado || codigoDigitado.length !== 11 || !/^(\d+)$/.test(codigoDigitado)) {
-    showToast('Por favor, digite um telefone com 11 dÃ­gitos.', 'aviso');
+    showToast('Por favor, digite um telefone com 11 dígitos.', 'aviso');
     return;
 }
 if (apelidoEl && (!apelidoDigitado || !apelidoDigitado.trim())) {
@@ -2694,7 +2701,7 @@ if (apelidoEl && (!apelidoDigitado || !apelidoDigitado.trim())) {
     return;
 }
 if (codigoDigitado === state.usuario.telefone) {
-    showToast('VocÃª nÃ£o pode parear consigo mesmo!', 'erro');
+    showToast('Você não pode parear consigo mesmo!', 'erro');
     return;
 }
 try {
@@ -2711,25 +2718,25 @@ try {
         processed: false,
     };
 
-    // Cria um input para o backend processar a solicitaÃ§Ã£o de pareamento.
+    // Cria um input para o backend processar a solicitação de pareamento.
     await safeAddInput(inputData);
 
     trackGAEvent('initiate_pairing');
     trackMetaEvent('InitiatePairing');
 
-    // Atualiza estado local do sender; VIPs mantÃªm pareadoCom existente
+    // Atualiza estado local do sender; VIPs mantêm pareadoCom existente
     if (!isVip || !state.usuario.pareadoCom || state.usuario.pareadoCom.startsWith('pending_')) {
         state.usuario.pareadoCom = `pending_${codigoDigitado}`;
     }
     state.pendingPartnerName = apelidoFormatado;
-    showToast('SolicitaÃ§Ã£o enviada! Aguardando confirmaÃ§Ã£o.', 'sucesso');
+    showToast('Solicitação enviada! Aguardando confirmação.', 'sucesso');
     state.etapa = 'pareamentos';
     state.codigoDigitando = false;
     state.showPairingModal = false;
     renderApp();
 } catch (error) {
-    console.error('Erro ao enviar solicitaÃ§Ã£o de pareamento:', error);
-    showToast('Erro ao enviar solicitaÃ§Ã£o. Tente novamente.', 'erro');
+    console.error('Erro ao enviar solicitação de pareamento:', error);
+    showToast('Erro ao enviar solicitação. Tente novamente.', 'erro');
 }
 }
 
@@ -2737,35 +2744,35 @@ try {
 try {
     const isVip = !!(state.usuario && state.usuario.vip);
     if (!isVip && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && !state.usuario.pareadoCom.startsWith('pending_')) {
-        showToast('VocÃª jÃ¡ estÃ¡ pareado. Atualize para VIP para ter mÃºltiplas conexÃµes!', 'aviso');
+        showToast('Você já está pareado. Atualize para VIP para ter múltiplas conexões!', 'aviso');
         return;
     }
 
-    // Ativa tela de transiÃ§Ã£o para evitar flash do parceiro antigo
+    // Ativa tela de transição para evitar flash do parceiro antigo
     state.pairingTransition = true;
     state.pendingPairingRequest = null;
     renderApp();
 
-    // Cria um input indicando que o receiver aceitou a solicitaÃ§Ã£o. O backend
-    // processarÃ¡ a aceitaÃ§Ã£o (atualizarÃ¡ `usuarios` e criarÃ¡ `pareamentos`).
+    // Cria um input indicando que o receiver aceitou a solicitação. O backend
+    // processará a aceitação (atualizará `usuarios` e criará `pareamentos`).
     await safeAddInput({
         type: 'pairing_response',
         fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
         requestId: requestId,
         response: 'accepted',
     });
-    showToast('SolicitaÃ§Ã£o aceita! Conectando...', 'sucesso');
+    showToast('Solicitação aceita! Conectando...', 'sucesso');
     // Aguarda backend processar e recarrega dados
     setTimeout(async () => {
         try {
             await loadUserDataAndNavigate(state.usuario.uid, state.usuario.email);
             state.incomingPairingDismissedId = null;
-            // Navega para pareamentos (VIP com mÃºltiplas conexÃµes) ou dashboard
+            // Navega para pareamentos (VIP com múltiplas conexões) ou dashboard
             const isVipNow = !!(state.usuario && state.usuario.vip);
             const numParceiros = Array.isArray(state.parceirosAtivos) ? state.parceirosAtivos.length : 0;
             state.etapa = (isVipNow && numParceiros > 1) ? 'pareamentos' : 'dashboard';
         } catch (innerErr) {
-            console.error('Erro ao carregar dados pÃ³s-pareamento:', innerErr);
+            console.error('Erro ao carregar dados pós-pareamento:', innerErr);
         } finally {
             state.pairingTransition = false;
             renderApp();
@@ -2781,30 +2788,30 @@ try {
 
     async function rejectPairingRequest(requestId) {
 try {
-    // Cria um input indicando que o receiver rejeitou a solicitaÃ§Ã£o. O backend
-    // irÃ¡ processar a rejeiÃ§Ã£o e limpar o estado do sender.
+    // Cria um input indicando que o receiver rejeitou a solicitação. O backend
+    // irá processar a rejeição e limpar o estado do sender.
     await safeAddInput({
         type: 'pairing_response',
         fromUid: (auth.currentUser && auth.currentUser.uid) || state.usuario.uid,
         requestId: requestId,
         response: 'rejected',
     });
-    showToast('SolicitaÃ§Ã£o de pareamento rejeitada.', 'sucesso');
+    showToast('Solicitação de pareamento rejeitada.', 'sucesso');
     state.pendingPairingRequest = null;
     state.incomingPairingDismissedId = null;
-    // Navega para a tela correta apÃ³s rejeitar
+    // Navega para a tela correta após rejeitar
     const isVip = !!(state.usuario && state.usuario.vip);
     state.etapa = (isVip && state.pareado) ? 'pareamentos' : (state.pareado ? 'dashboard' : 'parear');
     renderApp();
 } catch (error) {
     console.error('Erro ao rejeitar pareamento:', error);
-    showToast('Erro ao rejeitar solicitaÃ§Ã£o.', 'erro');
+    showToast('Erro ao rejeitar solicitação.', 'erro');
 }
 }
 
-    // FunÃ§Ã£o para cancelar uma solicitaÃ§Ã£o de pareamento pendente (do lado do sender)
+    // Função para cancelar uma solicitação de pareamento pendente (do lado do sender)
     async function cancelPendingPairingRequest() {
-        openSystemConfirm('Tem certeza que deseja cancelar esta solicitaÃ§Ã£o de pareamento?', async () => {
+        openSystemConfirm('Tem certeza que deseja cancelar esta solicitação de pareamento?', async () => {
             try {
                 const senderUid = state.usuario.uid;
                 const receiverPhone = state.usuario.pareadoCom.replace('pending_', '');
@@ -2814,7 +2821,7 @@ try {
                     partnerPhone: receiverPhone,
                 });
 
-                showToast('SolicitaÃ§Ã£o de pareamento cancelada. Aguardando processamento', 'sucesso');
+                showToast('Solicitação de pareamento cancelada. Aguardando processamento', 'sucesso');
                 state.usuario.pareadoCom = null;
                 state.usuario.pareadoUid = null;
                 state.parceiroData = null;
@@ -2826,8 +2833,8 @@ try {
                 state.etapa = 'pareamentos';
                 renderApp();
             } catch (error) {
-                console.error('Erro ao cancelar solicitaÃ§Ã£o:', error);
-                showToast('Erro ao cancelar solicitaÃ§Ã£o.', 'erro');
+                console.error('Erro ao cancelar solicitação:', error);
+                showToast('Erro ao cancelar solicitação.', 'erro');
             }
         });
     }
@@ -2849,7 +2856,7 @@ try {
                 <div class="w-full max-w-sm rounded-3xl overflow-hidden text-white shadow-2xl animate-fadeIn" onclick="event.stopPropagation()"
                      style="background: linear-gradient(160deg, #1a0a1e 0%, #0d0a0f 100%); border: 1px solid rgba(255,60,100,0.25);">
 
-                    <!-- CabeÃ§alho com logo e barra de gradiente -->
+                    <!-- Cabeçalho com logo e barra de gradiente -->
                     <div style="background: linear-gradient(90deg, rgba(255,45,80,0.18) 0%, rgba(255,100,130,0.10) 100%); border-bottom: 1px solid rgba(255,60,100,0.18);" class="px-6 py-4 flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <img src="/assets/icons/iconprincipal.png" style="width:28px;height:28px;filter:drop-shadow(0 0 6px rgba(255,73,106,0.7));" alt="Nosso Momento">
@@ -2873,7 +2880,7 @@ try {
                         <!-- Texto -->
                         <p class="text-white/50 text-xs uppercase tracking-widest mb-1">Convite de pareamento</p>
                         <h3 class="text-xl font-bold text-white mb-1">${senderName}</h3>
-                        <p class="text-white/50 text-sm mb-6">quer se conectar com voc\u00ea&nbsp;ðŸ’ž</p>
+                        <p class="text-white/50 text-sm mb-6">quer se conectar com voc\u00ea&nbsp;💞</p>
 
                         <!-- Bot\u00f5es -->
                         <div class="flex gap-3">
@@ -2917,8 +2924,8 @@ try {
 
 
     function renderPareamento() {
-// PRIORIDADE: Se hÃ¡ solicitaÃ§Ã£o pendente recebida, sempre mostrÃ¡-la primeiro
-// (mesmo que o usuÃ¡rio jÃ¡ esteja pareado â€” ex: VIP com mÃºltiplas conexÃµes)
+// PRIORIDADE: Se há solicitação pendente recebida, sempre mostrá-la primeiro
+// (mesmo que o usuário já esteja pareado — ex: VIP com múltiplas conexões)
 if (state.pendingPairingRequest) {
     const req = state.pendingPairingRequest;
     const sNome = escapeHtml(req.senderName || req.partnerNickname || 'Algu\u00e9m especial');
@@ -2976,13 +2983,13 @@ if (state.pendingPairingRequest) {
 }
 
 if (state.pareado && state.parceiroData) {
-    // UsuÃ¡rio jÃ¡ estÃ¡ pareado â€” redireciona para o dashboard em vez de exibir tela legada
+    // Usuário já está pareado — redireciona para o dashboard em vez de exibir tela legada
     state.etapa = 'dashboard';
     renderApp();
     return;
 }
 
-// Se nÃ£o estiver pareado, mostra a lÃ³gica antiga de pareamento
+// Se não estiver pareado, mostra a lógica antiga de pareamento
 const codigoUsuario = state.usuario.telefone.replace(/\D/g, '');
 let content = '';
 
@@ -2991,10 +2998,10 @@ if (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_'))
     content = `
         <div class="screen screen-pad flex flex-col justify-center items-center bg-black bg-opacity-90 text-white p-8">
             <div class="card p-8 max-w-md w-full text-center">
-                <h2 class="text-3xl font-bold mb-4 text-yellow-400">SolicitaÃ§Ã£o Enviada</h2>
-                <p class="mb-4">Sua solicitaÃ§Ã£o para ${pendingPhone} estÃ¡ pendente.</p>
-                <p class="text-sm text-gray-300 mb-6">Aguardando aceitaÃ§Ã£o...</p>
-                <button onclick="cancelPendingPairingRequest()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">Cancelar SolicitaÃ§Ã£o</button>
+                <h2 class="text-3xl font-bold mb-4 text-yellow-400">Solicitação Enviada</h2>
+                <p class="mb-4">Sua solicitação para ${pendingPhone} está pendente.</p>
+                <p class="text-sm text-gray-300 mb-6">Aguardando aceitação...</p>
+                <button onclick="cancelPendingPairingRequest()" class="btn-red px-6 py-3 rounded text-white font-semibold transition">Cancelar Solicitação</button>
             </div>
         </div>`;
 } else {
@@ -3003,21 +3010,21 @@ if (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_'))
             <div class="card p-8 max-w-md w-full text-center">
                 <h2 class="text-3xl font-bold mb-4 text-pink-400">Parear com seu Amor</h2>
                 ${!state.codigoDigitando ? `
-                    <p class="mb-4">Seu cÃ³digo de pareamento Ã©:</p>
+                    <p class="mb-4">Seu código de pareamento é:</p>
                     <div class="text-4xl font-bold bg-gray-800 py-3 px-6 rounded-lg inline-block">${codigoUsuario}</div>
-                    <p class="mt-4 text-sm text-gray-300 mb-6">Compartilhe este cÃ³digo com seu/sua parceiro(a).</p>
+                    <p class="mt-4 text-sm text-gray-300 mb-6">Compartilhe este código com seu/sua parceiro(a).</p>
                     <div class="flex flex-col sm:flex-row justify-center gap-4">
-                        <button onclick="state.codigoDigitando = true; renderApp();" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded text-white font-semibold transition">Digitar CÃ³digo</button>
+                        <button onclick="state.codigoDigitando = true; renderApp();" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded text-white font-semibold transition">Digitar Código</button>
                         <button onclick="handleContinuarSemParear()" class="btn-red">Fazer Isso Depois</button>
                     </div>
                 ` : `
                     <div class="mb-6">
-                        <label class="block mb-2">Digite o cÃ³digo do seu parceiro(a)</label>
+                        <label class="block mb-2">Digite o código do seu parceiro(a)</label>
                         <input id="codigoParceiro" type="text" class="w-full p-3 rounded text-white text-center" placeholder="11999991111" maxlength="11" />
                     </div>
                     <div class="flex gap-4">
                         <button onclick="state.codigoDigitando = false; renderApp();" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded font-semibold transition">Voltar</button>
-                        <button onclick="sendPairingRequest()" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded font-semibold transition flex-1">Enviar SolicitaÃ§Ã£o</button>
+                        <button onclick="sendPairingRequest()" class="bg-green-700 hover:bg-green-600 px-6 py-3 rounded font-semibold transition flex-1">Enviar Solicitação</button>
                     </div>
                 `}
             </div>
@@ -3026,10 +3033,10 @@ if (state.usuario.pareadoCom && state.usuario.pareadoCom.startsWith('pending_'))
 appContainer.innerHTML = content;
 }
 
-    // Nova funÃ§Ã£o para renderizar o pop-up de Foguinhos
+    // Nova função para renderizar o pop-up de Foguinhos
     async function renderFoguinhosPopupContent() {
     
-    // 1. Limpa a "bolinha" de notificaÃ§Ãµes de PRESENTES (fa-gift)
+    // 1. Limpa a "bolinha" de notificações de PRESENTES (fa-gift)
     // ==================================================================
     try {
         if (state.notificacoesPresentesNaoLidas > 0) {
@@ -3037,7 +3044,7 @@ appContainer.innerHTML = content;
             let notificacoesDePresenteLidas = 0;
 
             state.notificacoes.forEach(notif => {
-                // Marcamos como lidas APENAS as notificaÃ§Ãµes de 'fa-gift'
+                // Marcamos como lidas APENAS as notificações de 'fa-gift'
                 if (!notif.lida && notif.icone === 'fa-gift') {
                     const notifRef = db.collection('notificacoes').doc(notif.id);
                     batch.update(notifRef, { lida: true });
@@ -3047,23 +3054,23 @@ appContainer.innerHTML = content;
 
             if (notificacoesDePresenteLidas > 0) {
                 await batch.commit();
-                // Atualiza o state local (sÃ³ subtrai as que limpamos)
+                // Atualiza o state local (só subtrai as que limpamos)
                 state.notificacoesPresentesNaoLidas = 0;
                 updateFixedUI(); // Atualiza a bolinha
             }
         }
     } catch (err) {
-        console.error("Erro ao marcar notificaÃ§Ãµes de presente como lidas:", err);
+        console.error("Erro ao marcar notificações de presente como lidas:", err);
     }
     // ==================================================================
     // FIM DO BLOCO DE LIMPEZA
     // ==================================================================
 
 
-    // 2. Busca o histÃ³rico de presentes (filtrando as notificaÃ§Ãµes)
+    // 2. Busca o histórico de presentes (filtrando as notificações)
     const historicoPresentes = state.notificacoes.filter(notif => notif.icone === 'fa-gift');
 
-    // 3. Renderiza o HTML da pÃ¡gina
+    // 3. Renderiza o HTML da página
     const partnerBalances = Array.isArray(state.parceirosAtivos)
         ? state.parceirosAtivos
         : [];
@@ -3081,7 +3088,7 @@ appContainer.innerHTML = content;
             <div>
                 <div class="flex items-center justify-between mb-3">
                     <h4 class="text-sm font-semibold text-white/80">Saldo por parceiro</h4>
-                    <span class="text-xs text-white/50">${partnerBalances.length} conexÃµes</span>
+                    <span class="text-xs text-white/50">${partnerBalances.length} conexões</span>
                 </div>
                 <div class="notif-list-shell space-y-3">
                     ${partnerBalances.map((partner) => {
@@ -3136,7 +3143,7 @@ appContainer.innerHTML = content;
 
                     <div>
                         <div class="flex items-center justify-between mb-3">
-                            <h4 class="text-sm font-semibold text-white/80">HistÃ³rico de Presentes</h4>
+                            <h4 class="text-sm font-semibold text-white/80">Histórico de Presentes</h4>
                             <span class="text-xs text-white/50">${historicoPresentes.length} itens</span>
                         </div>
                         <div class="notif-list-shell space-y-3">
@@ -3239,8 +3246,8 @@ function setupMomentosListener() {
         : state.idPareamentoAmigavel;
     if (!uid || !pareamentoId) return;
 
-    // Escuta tarefas deste pareamento onde o usuÃ¡rio Ã© executor (recebidos)
-    // Usa a mesma query que renderMomentos para reaproveitar Ã­ndice existente
+    // Escuta tarefas deste pareamento onde o usuário é executor (recebidos)
+    // Usa a mesma query que renderMomentos para reaproveitar índice existente
     const unsub1 = db.collection('tarefasMomentos')
         .where('executadoPorUid', '==', uid)
         .where('idPareamento', '==', pareamentoId)
@@ -3336,7 +3343,7 @@ function mergeAndRenderTarefas(uid) {
 }
 
 function setupNotificationListener(userId) {
-    // Se jÃ¡ existe um ouvinte, desliga ele primeiro
+    // Se já existe um ouvinte, desliga ele primeiro
     if (unsubscribeNotifications) {
         unsubscribeNotifications();
     }
@@ -3358,7 +3365,7 @@ function setupNotificationListener(userId) {
     state.notificacoes = notifs; // Guarda a lista completa no state
         
         // ==========================================================
-        // AQUI ESTÃ A NOVA LÃ“GICA DE CONTAGEM
+        // AQUI ESTÁ A NOVA LÓGICA DE CONTAGEM
         // ==========================================================
         let tarefasNaoLidas = 0;
         let presentesNaoLidos = 0;
@@ -3375,7 +3382,7 @@ function setupNotificationListener(userId) {
                 } else if (n.tipo === 'pairing' || n.icone === 'fa-heart') {
                     presentesNaoLidos++;
                 } else {
-                    // Qualquer outro tipo nÃ£o lido tambÃ©m conta
+                    // Qualquer outro tipo não lido também conta
                     tarefasNaoLidas++;
                 }
             }
@@ -3406,11 +3413,11 @@ function setupNotificationListener(userId) {
         lastNotificationIds = currentNotificationIds;
         hasProcessedInitialNotifications = true;
 
-        // Se o usuÃ¡rio estiver na tela de notificaÃ§Ãµes, atualiza a lista
+        // Se o usuário estiver na tela de notificações, atualiza a lista
         if (state.etapa === 'notificacoes') {
             renderNossasTarefas();
         } else if (state.etapa === 'dashboard') {
-            // Re-render dashboard para atualizar contadores de notificaÃ§Ãµes
+            // Re-render dashboard para atualizar contadores de notificações
             renderApp();
         }
 
@@ -3520,11 +3527,11 @@ async function renderAchievementsPopup() {
                         ${desbloqueada ? (isSemanal
                             ? (isFinalizadoSemRecompensa
                                 ? `<div class="mt-1">
-                                    <p class="text-xs text-rose-400"><i class="fas fa-times-circle mr-1"></i>ConexÃ£o abalada!</p>
+                                    <p class="text-xs text-rose-400"><i class="fas fa-times-circle mr-1"></i>Conexão abalada!</p>
                                     ${dataDesbloqueioNumerica ? `<p class="text-[11px] text-gray-400 mt-1">${dataDesbloqueioNumerica}</p>` : ''}
                                 </div>`
                                 : `<div class="mt-1">
-                                    <p class="text-xs text-emerald-400"><i class="fas fa-check-circle mr-1"></i>VocÃªs estÃ£o sintonizados!</p>
+                                    <p class="text-xs text-emerald-400"><i class="fas fa-check-circle mr-1"></i>Vocês estão sintonizados!</p>
                                     ${dataDesbloqueioNumerica ? `<p class="text-[11px] text-gray-400 mt-1">${dataDesbloqueioNumerica}</p>` : ''}
                                 </div>`)
                             : `<p class="text-xs text-emerald-400 mt-1"><i class="fas fa-check-circle mr-1"></i>${dataDesbloqueio ? dataDesbloqueio : 'Conquista desbloqueada!'}</p>`)
@@ -3620,7 +3627,7 @@ function getFoguinhosConexao(partnerUid) {
     if (Number.isFinite(saldo)) {
         return saldo;
     }
-    // Fallback: se conexÃ£o ativa, tenta o estado dela
+    // Fallback: se conexão ativa, tenta o estado dela
     if (state.conexaoAtiva && state.conexaoAtiva.uid === partnerUid) {
         return state.conexaoAtiva.foguinhos || 0;
     }
@@ -3653,7 +3660,7 @@ function renderPareamentosLista() {
         </div>
     ` : '';
 
-    // Card de solicitaÃ§Ã£o recebida (para VIP que estÃ¡ pareado e recebeu nova solicitaÃ§Ã£o)
+    // Card de solicitação recebida (para VIP que está pareado e recebeu nova solicitação)
     const incomingReq = state.pendingPairingRequest;
     const incomingReqCardHtml = incomingReq ? `
         <div class="rounded-2xl p-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_12px_30px_rgba(236,72,153,0.35)]">
@@ -3662,8 +3669,8 @@ function renderPareamentosLista() {
                     <i class="fas fa-envelope-open-text text-white text-xl"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-lg font-semibold">${escapeHtml(incomingReq.senderName || incomingReq.partnerNickname || 'AlguÃ©m especial')}</p>
-                    <p class="text-xs text-white/80">Quer parear com vocÃª!</p>
+                    <p class="text-lg font-semibold">${escapeHtml(incomingReq.senderName || incomingReq.partnerNickname || 'Alguém especial')}</p>
+                    <p class="text-xs text-white/80">Quer parear com você!</p>
                     <div class="flex gap-2 mt-2">
                         <button onclick="acceptIncomingPairingPopup()" class="px-4 py-2 rounded-lg font-semibold bg-green-600 hover:bg-green-500 text-white text-sm transition">
                             <i class="fas fa-check mr-1"></i>Aceitar
@@ -3683,7 +3690,7 @@ function renderPareamentosLista() {
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-heart text-3xl mb-3"></i>
                     <h2 class="text-3xl font-semibold">Pareamentos</h2>
-                    <p class="text-white/80">Toque para entrar na conexÃ£o</p>
+                    <p class="text-white/80">Toque para entrar na conexão</p>
                 </div>
             </section>
 
@@ -3704,7 +3711,7 @@ function renderPareamentosLista() {
                             const foguinhos = partner.foguinhos || 0;
                             const pareadoDesde = partner.pareadoDesde
                                 ? new Date(partner.pareadoDesde).toLocaleDateString('pt-BR')
-                                : 'â€”';
+                                : '—';
                             return `
                                 <div class="relative rounded-2xl bg-[#ff4457] shadow-[0_12px_30px_rgba(255,68,87,0.35)] overflow-hidden cursor-pointer transition hover:scale-[1.01] active:scale-[0.99]"
                                      onclick="abrirPerfilParceiro(${index})">
@@ -3740,10 +3747,10 @@ function renderPareamentosLista() {
                     <div class="text-center">
                         <button type="button" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-gray-800 font-semibold shadow-lg" onclick="handlePairingCtaClick()">
                             <i class="fas ${(hasPareamentos || hasPending) ? 'fa-gem text-blue-500' : 'fa-heart text-red-500'}"></i>
-                            Adicionar ConexÃ£o
+                            Adicionar Conexão
                         </button>
                         ${(!isVip && hasPareamentos) ? `
-                            <p class="text-xs text-white/50 mt-3"><i class="fas fa-lock mr-1"></i>Seja VIP para adicionar mais conexÃµes</p>
+                            <p class="text-xs text-white/50 mt-3"><i class="fas fa-lock mr-1"></i>Seja VIP para adicionar mais conexões</p>
                         ` : ''}
                     </div>
                 </div>
@@ -3764,7 +3771,7 @@ function renderPairingModal() {
                     <div>
                         <p class="text-xs uppercase tracking-widest text-white/60">Pareamento</p>
                         <h3 class="text-2xl font-semibold mt-1">Conectar com seu amor</h3>
-                        <p class="text-sm text-white/70 mt-2">Digite o telefone e o apelido carinhoso para personalizar a conexÃ£o.</p>
+                        <p class="text-sm text-white/70 mt-2">Digite o telefone e o apelido carinhoso para personalizar a conexão.</p>
                     </div>
                     <button class="text-white/70 hover:text-white" onclick="closePairingModal()">
                         <i class="fas fa-times"></i>
@@ -3773,12 +3780,12 @@ function renderPairingModal() {
 
                 <div class="mt-5 space-y-4">
                     <div class="rounded-2xl bg-white/5 border border-white/10 p-4">
-                        <p class="text-xs text-white/60">Seu cÃ³digo</p>
-                        <p class="text-lg font-semibold mt-1">${codigoUsuario || 'â€”'}</p>
+                        <p class="text-xs text-white/60">Seu código</p>
+                        <p class="text-lg font-semibold mt-1">${codigoUsuario || '—'}</p>
                     </div>
 
                     <div>
-                        <label class="text-xs text-white/70">Telefone do parceiro (11 dÃ­gitos)</label>
+                        <label class="text-xs text-white/70">Telefone do parceiro (11 dígitos)</label>
                         <input id="codigoParceiro" inputmode="numeric" maxlength="11" placeholder="Ex: 11999999999" class="mt-2 w-full rounded-xl bg-white/10 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-rose-400" />
                     </div>
 
@@ -3789,7 +3796,7 @@ function renderPairingModal() {
                 </div>
 
                 <div class="mt-6 flex flex-col gap-3">
-                    <button onclick="sendPairingRequest()" class="w-full rounded-xl bg-gradient-to-r from-rose-500 to-red-500 py-3 text-white font-semibold shadow-lg">Enviar solicitaÃ§Ã£o</button>
+                    <button onclick="sendPairingRequest()" class="w-full rounded-xl bg-gradient-to-r from-rose-500 to-red-500 py-3 text-white font-semibold shadow-lg">Enviar solicitação</button>
                     <button onclick="closePairingModal()" class="w-full rounded-xl bg-white/10 py-3 text-white/80 font-semibold">Cancelar</button>
                 </div>
             </div>
@@ -3812,13 +3819,13 @@ function handlePairingCtaClick() {
     const hasPareamentos = buildPareamentosLista().length > 0;
     const isVip = !!(state.usuario && state.usuario.vip);
 
-    // VIPs podem adicionar mÃºltiplas conexÃµes livremente
+    // VIPs podem adicionar múltiplas conexões livremente
     if (isVip) {
         openPairingModal();
         return;
     }
 
-    // Free users: bloqueados se jÃ¡ tÃªm conexÃ£o ou pending
+    // Free users: bloqueados se já têm conexão ou pending
     if (hasPareamentos || hasPending) {
         openVipPopup();
         return;
@@ -3842,7 +3849,7 @@ function renderVipPopup() {
                 </div>
 
                 <div class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-white/80">
-                    Ambiente VIP: para se tornar um usuÃ¡rio VIP e usufruir dos benefÃ­cios, entre em contato com <span class="text-white font-semibold">faleconosco@nossomomento.app</span>.
+                    Ambiente VIP: para se tornar um usuário VIP e usufruir dos benefícios, entre em contato com <span class="text-white font-semibold">faleconosco@nossomomento.app</span>.
                 </div>
 
                 <div class="mt-6">
@@ -3856,10 +3863,10 @@ function renderVipPopup() {
 function renderLegalModal() {
     const type = state.legalModalType || 'terms';
     const isTerms = type === 'terms';
-    const title = isTerms ? 'Termos de Uso' : 'PolÃ­tica de Privacidade';
+    const title = isTerms ? 'Termos de Uso' : 'Política de Privacidade';
     const content = isTerms
-        ? `Ao utilizar o Nosso Momento, vocÃª concorda em usar o app de forma responsÃ¡vel, respeitando seu par e as regras do serviÃ§o. VocÃª Ã© responsÃ¡vel pelas informaÃ§Ãµes fornecidas e pelos conteÃºdos enviados.`
-        : `NÃ³s coletamos apenas os dados necessÃ¡rios para oferecer a melhor experiÃªncia no app, como informaÃ§Ãµes de conta, pareamento e interaÃ§Ãµes. Seus dados nÃ£o sÃ£o vendidos e ficam protegidos pelos serviÃ§os do Firebase.`;
+        ? `Ao utilizar o Nosso Momento, você concorda em usar o app de forma responsável, respeitando seu par e as regras do serviço. Você é responsável pelas informações fornecidas e pelos conteúdos enviados.`
+        : `Nós coletamos apenas os dados necessários para oferecer a melhor experiência no app, como informações de conta, pareamento e interações. Seus dados não são vendidos e ficam protegidos pelos serviços do Firebase.`;
 
     return `
         <div class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onclick="closeLegalModal()"></div>
@@ -3900,10 +3907,10 @@ function renderInstagramModal() {
                     </button>
                 </div>
                 <div class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-white/80 leading-relaxed">
-                    VocÃª serÃ¡ direcionado para o Instagram em uma nova aba.
+                    Você será direcionado para o Instagram em uma nova aba.
                 </div>
                 <div class="mt-6 flex gap-3">
-                    <button onclick="closeInstagramModal()" class="flex-1 rounded-xl bg-white/10 py-3 text-white/80 font-semibold">Agora nÃ£o</button>
+                    <button onclick="closeInstagramModal()" class="flex-1 rounded-xl bg-white/10 py-3 text-white/80 font-semibold">Agora não</button>
                     <button onclick="confirmInstagramRedirect()" class="flex-1 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 py-3 text-white font-semibold">Abrir Instagram</button>
                 </div>
             </div>
@@ -3946,8 +3953,8 @@ function renderSystemModal() {
             <div class="w-full max-w-md rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7" onclick="event.stopPropagation()">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-xs uppercase tracking-widest text-white/60">AtenÃ§Ã£o</p>
-                        <h3 class="text-2xl font-semibold mt-1">${isConfirm ? 'ConfirmaÃ§Ã£o' : 'Aviso'}</h3>
+                        <p class="text-xs uppercase tracking-widest text-white/60">Atenção</p>
+                        <h3 class="text-2xl font-semibold mt-1">${isConfirm ? 'Confirmação' : 'Aviso'}</h3>
                     </div>
                     <button class="text-white/70 hover:text-white" onclick="closeSystemModal()">
                         <i class="fas fa-times"></i>
@@ -4077,7 +4084,7 @@ async function submitEditName() {
         updateFixedUI();
     } catch (error) {
         console.error('Erro ao atualizar nome:', error);
-        showToast('NÃ£o foi possÃ­vel atualizar o nome.', 'aviso');
+        showToast('Não foi possível atualizar o nome.', 'aviso');
     }
 }
 
@@ -4085,7 +4092,7 @@ function requestUnpairFromList(index) {
     const pareamentos = buildPareamentosLista();
     const partner = pareamentos[index];
     if (!partner || !partner.uid) {
-        showToast('Parceiro invÃ¡lido para desfazer pareamento.', 'erro');
+        showToast('Parceiro inválido para desfazer pareamento.', 'erro');
         return;
     }
 
@@ -4108,7 +4115,7 @@ async function handleCheckInFromList(index) {
     const pareamentos = buildPareamentosLista();
     const partner = pareamentos[index];
     if (!partner || !partner.uid) {
-        showToast('Parceiro invÃ¡lido para check-in.', 'erro');
+        showToast('Parceiro inválido para check-in.', 'erro');
         return;
     }
 
@@ -4116,7 +4123,7 @@ async function handleCheckInFromList(index) {
         ? state.usuario.lastCheckInDate.toDate()
         : (state.usuario?.lastCheckInDate ? new Date(state.usuario.lastCheckInDate) : null);
     if (lastCheckIn && isSameDay(lastCheckIn, new Date())) {
-        showToast('Check-in jÃ¡ realizado hoje.', 'aviso');
+        showToast('Check-in já realizado hoje.', 'aviso');
         renderPareamentosLista();
         return;
     }
@@ -4164,7 +4171,7 @@ function abrirCatalogoPareamento(index) {
 }
 
 // =========================================================
-// HELPER â€” Calcula tempo de relacionamento
+// HELPER — Calcula tempo de relacionamento
 // =========================================================
 function calcTempoJunto(pareadoDesde) {
     if (!pareadoDesde) return null;
@@ -4189,7 +4196,7 @@ function calcTempoJunto(pareadoDesde) {
 
     const partes = [];
     if (anos > 0) partes.push(`${anos} ${anos === 1 ? 'ano' : 'anos'}`);
-    if (mesesRest > 0) partes.push(`${mesesRest} ${mesesRest === 1 ? 'mÃªs' : 'meses'}`);
+    if (mesesRest > 0) partes.push(`${mesesRest} ${mesesRest === 1 ? 'mês' : 'meses'}`);
     if (diasRest > 0 || partes.length === 0) partes.push(`${diasRest} ${diasRest === 1 ? 'dia' : 'dias'}`);
 
     const texto = partes.length > 1
@@ -4204,7 +4211,7 @@ function calcTempoJunto(pareadoDesde) {
 }
 
 // =========================================================
-// ABRIR PERFIL DO PARCEIRO â€” Nova tela contextual
+// ABRIR PERFIL DO PARCEIRO — Nova tela contextual
 // =========================================================
 function abrirPerfilParceiro(index) {
     const pareamentos = buildPareamentosLista();
@@ -4222,7 +4229,7 @@ function abrirPerfilParceiro(index) {
         pareadoDesde: partner.pareadoDesde || null,
     };
 
-    // Sincroniza state legado para catÃ¡logo/desafios
+    // Sincroniza state legado para catálogo/desafios
     if (partner.uid) {
         state.usuario.pareadoUid = partner.uid;
         state.parceiroNome = partner.nome || state.parceiroNome;
@@ -4258,7 +4265,7 @@ function abrirPerfilParceiro(index) {
 
     // Carrega dados async
     loadPerfilParceiroDados();
-    // Inicia listener de momentos para esta conexÃ£o
+    // Inicia listener de momentos para esta conexão
     setupMomentosListener();
 }
 
@@ -4272,7 +4279,7 @@ async function loadPerfilParceiroDados() {
         // 1. Carrega climaHoje do doc de pareamento
         const pareamentoDoc = await db.collection('pareamentos').doc(conex.pareamentoId).get();
         if (!pareamentoDoc.exists) {
-            // Pareamento foi removido â€” volta ao dashboard
+            // Pareamento foi removido — volta ao dashboard
             console.warn('loadPerfilParceiroDados: pareamento n\u00e3o encontrado, redirecionando.');
             state.conexaoAberta = null;
             state.pareado = false;
@@ -4296,14 +4303,14 @@ async function loadPerfilParceiroDados() {
                 : (pData.foguinhos_pessoa2 || 0);
         }
 
-        // 2. Carrega tracking semanal (Ãºltimos 7 dias)
+        // 2. Carrega tracking semanal (últimos 7 dias)
         // Usa UTC para ser consistente com backend (que grava doc IDs em UTC)
-        // Usa fuso de SÃ£o Paulo (UTC-3) para calcular os dias da semana corretamente
+        // Usa fuso de São Paulo (UTC-3) para calcular os dias da semana corretamente
         const _now = new Date();
         const _spNow = new Date(_now.getTime() - 3 * 60 * 60 * 1000);
         const diasSemana = [];
-        // Encontra a segunda-feira desta semana no horÃ¡rio de SP
-        const dayOfWeekSP = _spNow.getUTCDay(); // 0=Dom .. 6=Sab (jÃ¡ deslocado para SP)
+        // Encontra a segunda-feira desta semana no horário de SP
+        const dayOfWeekSP = _spNow.getUTCDay(); // 0=Dom .. 6=Sab (já deslocado para SP)
         const diffToMonday = dayOfWeekSP === 0 ? -6 : 1 - dayOfWeekSP;
         const mondayMs = _spNow.getTime() + diffToMonday * 86400000;
         // Normaliza para meia-noite em SP
@@ -4326,7 +4333,7 @@ async function loadPerfilParceiroDados() {
             const data = climaDocs[i].exists ? climaDocs[i].data() : {};
             return {
                 dia,
-                label: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'SÃ¡b', 'Dom'][i],
+                label: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][i],
                 meu: data[uid] ? data[uid].humor : null,
                 parceiro: data[conex.uid] ? data[conex.uid].humor : null,
             };
@@ -4385,10 +4392,10 @@ async function submitClima(humor) {
             pareamentoId: conex.pareamentoId,
             humor: humor,
         });
-        showToast('Clima registrado! ðŸ”¥', 'sucesso');
+        showToast('Clima registrado! 🔥', 'sucesso');
         // Atualiza localmente para feedback imediato
         state.climaHoje = { humor, registradoEm: new Date() };
-        // Usa fuso de SÃ£o Paulo (UTC-3) para determinar o dia correto
+        // Usa fuso de São Paulo (UTC-3) para determinar o dia correto
         const _agora = new Date();
         const _spDate = new Date(_agora.getTime() - 3 * 60 * 60 * 1000);
         const hojeStr = _spDate.toISOString().slice(0, 10);
@@ -4408,7 +4415,7 @@ async function submitClima(humor) {
 }
 
 // =========================================================
-// RENDER PERFIL DO PARCEIRO â€” Tela contextual tema claro
+// RENDER PERFIL DO PARCEIRO — Tela contextual tema claro
 // =========================================================
 function renderPerfilParceiro() {
     const conex = state.conexaoAberta;
@@ -4423,16 +4430,16 @@ function renderPerfilParceiro() {
     const foguinhos = conex.foguinhos || 0;
     const uid = state.usuario?.uid || (auth.currentUser && auth.currentUser.uid);
 
-    // --- TermÃ´metro de Clima ---
+    // --- Termômetro de Clima ---
     const jaFezClima = !!state.climaHoje;
     const humorAtual = jaFezClima ? state.climaHoje.humor : null;
     const climaPartner = state.climaPartnerHoje;
 
     const humores = [
-        { key: 'muito_feliz', emoji: 'ðŸ˜', label: 'Muito Feliz', delta: '+2' },
-        { key: 'feliz', emoji: 'ðŸ¥°', label: 'Feliz', delta: '+1' },
-        { key: 'normal', emoji: 'ðŸ˜', label: 'Normal', delta: '0' },
-        { key: 'triste', emoji: 'ðŸ˜¢', label: 'Triste', delta: '-1' },
+        { key: 'muito_feliz', emoji: '😍', label: 'Muito Feliz', delta: '+2' },
+        { key: 'feliz', emoji: '🥰', label: 'Feliz', delta: '+1' },
+        { key: 'normal', emoji: '😐', label: 'Normal', delta: '0' },
+        { key: 'triste', emoji: '😢', label: 'Triste', delta: '-1' },
     ];
 
     const termometroHtml = humores.map(h => {
@@ -4457,7 +4464,7 @@ function renderPerfilParceiro() {
     ` : '';
 
     // --- Tracking Semanal ---
-    const HUMOR_EMOJI = { muito_feliz: 'ðŸ˜', feliz: 'ðŸ¥°', normal: 'ðŸ˜', triste: 'ðŸ˜¢' };
+    const HUMOR_EMOJI = { muito_feliz: '😍', feliz: '🥰', normal: '😐', triste: '😢' };
     const HUMOR_BG = { muito_feliz: '#fecaca', feliz: '#fde68a', normal: '#e5e7eb', triste: '#bfdbfe' };
     const meuFoto = state.usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
     const partnerFoto = conex.fotoUrl || '/assets/icons/iconprincipal.png';
@@ -4466,12 +4473,12 @@ function renderPerfilParceiro() {
         if (!humor) {
             return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:#f3f4f6;border:2px solid #e5e7eb" class="flex-shrink-0"></div>`;
         }
-        const emoji = HUMOR_EMOJI[humor] || 'â“';
+        const emoji = HUMOR_EMOJI[humor] || '❓';
         const bg = HUMOR_BG[humor] || '#f3f4f6';
         return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size * 0.5)}px;border:2px solid rgba(0,0,0,0.06)" class="flex-shrink-0">${emoji}</div>`;
     }
 
-    // Gera dia de hoje no fuso de SÃ£o Paulo (UTC-3) para comparaÃ§Ã£o
+    // Gera dia de hoje no fuso de São Paulo (UTC-3) para comparação
     const _nowSP = new Date(new Date().getTime() - 3 * 60 * 60 * 1000);
     const hojeUTC = _nowSP.toISOString().slice(0, 10);
     const diasSemana = state.climaSemana || [];
@@ -4514,7 +4521,7 @@ function renderPerfilParceiro() {
                     </div>
                     <div>
                         <p class="text-sm text-gray-800">${escapeHtml(item.descricao || '')}</p>
-                        <p class="text-[10px] text-gray-400">${escapeHtml(item.autorNome || '')} Â· ${dateStr}</p>
+                        <p class="text-[10px] text-gray-400">${escapeHtml(item.autorNome || '')} · ${dateStr}</p>
                     </div>
                 </div>
                 <span class="${valorClass} text-sm">${valorStr}</span>
@@ -4565,13 +4572,13 @@ function renderPerfilParceiro() {
                         <div class="mt-3 px-1">
                             <div class="flex justify-between text-[10px] text-gray-500 mb-1.5">
                                 <span>${tc.dias} dias juntos</span>
-                                <span>Meta: ${proximaMeta} dias Â· faltam ${diasParaMeta}</span>
+                                <span>Meta: ${proximaMeta} dias · faltam ${diasParaMeta}</span>
                             </div>
                             <div class="h-1.5 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.08)">
                                 <div class="h-full rounded-full transition-all" style="width:${progressoPct}%;background:linear-gradient(90deg,#ff2d3f,#ff6a78)"></div>
                             </div>
                         </div>
-                    ` : `<p class="text-xs font-semibold mt-2" style="color:#ff6a78">ðŸ† Mais de 2000 dias juntos!</p>`;
+                    ` : `<p class="text-xs font-semibold mt-2" style="color:#ff6a78">🏆 Mais de 2000 dias juntos!</p>`;
                     return `
                     <div class="perfil-parceiro-card p-5 text-center">
                         <img src="/assets/icons/iconprincipal.png" alt="Nosso Momento" class="w-12 h-12 mx-auto mb-2 object-contain" style="filter:drop-shadow(0 0 8px rgba(255,73,106,0.55))">
@@ -4582,13 +4589,13 @@ function renderPerfilParceiro() {
                     `;
                 })()}
 
-                <!-- TermÃ´metro de Clima -->
+                <!-- Termômetro de Clima -->
                 <div class="perfil-parceiro-card p-4">
                     <h3 class="text-sm font-semibold text-gray-800 mb-1">
                         <i class="fas fa-thermometer-half text-red-400 mr-1"></i>
-                        Como vocÃª estÃ¡ hoje?
+                        Como você está hoje?
                     </h3>
-                    ${jaFezClima ? `<p class="text-xs text-gray-400 mb-3">VocÃª jÃ¡ registrou seu clima hoje.</p>` : `<p class="text-xs text-gray-400 mb-3">Marque e seu parceiro ganha foguinhos!</p>`}
+                    ${jaFezClima ? `<p class="text-xs text-gray-400 mb-3">Você já registrou seu clima hoje.</p>` : `<p class="text-xs text-gray-400 mb-3">Marque e seu parceiro ganha foguinhos!</p>`}
                     <div class="flex gap-2">
                         ${termometroHtml}
                     </div>
@@ -4621,11 +4628,11 @@ function renderPerfilParceiro() {
                     `}
                 </div>
 
-                <!-- AÃ§Ãµes rÃ¡pidas -->
+                <!-- Ações rápidas -->
                 <div class="grid grid-cols-2 gap-3">
                     <button onclick="abrirCatalogoPareamento(findPareamentoIndex('${escapeJsString(conex.uid)}'))" class="perfil-parceiro-card action-premium action-catalog p-4 text-center hover:shadow-md transition">
                         <span class="action-icon-circle"><i class="fas fa-store"></i></span>
-                        <p class="text-xs font-semibold text-gray-700">CatÃ¡logo</p>
+                        <p class="text-xs font-semibold text-gray-700">Catálogo</p>
                     </button>
                     <button onclick="openPersonalizarFromPerfil()" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
                         <span class="action-icon-circle"><i class="fas fa-tags"></i></span>
@@ -4680,7 +4687,7 @@ function voltarDoCatalogo() {
 }
 
 // =========================================================
-// RENDER EXTRATO POPUP â€” Tela dedicada de extrato
+// RENDER EXTRATO POPUP — Tela dedicada de extrato
 // =========================================================
 function renderExtratoPopup() {
     const conex = state.conexaoAberta;
@@ -4715,7 +4722,7 @@ function renderExtratoPopup() {
                     </div>
                     <div>
                         <p class="text-sm text-gray-800">${escapeHtml(item.descricao || '')}</p>
-                        <p class="text-[10px] text-gray-400">${escapeHtml(item.autorNome || '')} Â· ${dateStr}</p>
+                        <p class="text-[10px] text-gray-400">${escapeHtml(item.autorNome || '')} · ${dateStr}</p>
                     </div>
                 </div>
                 <span class="${valorClass} text-sm">${valorStr}</span>
@@ -4745,7 +4752,7 @@ function renderExtratoPopup() {
 
             <div class="px-4 py-4 pb-24">
                 <div class="perfil-parceiro-card overflow-hidden">
-                    ${extratoListHtml || `<p class="text-xs text-center py-8" style="color:#8b8d96">Nenhuma movimentaÃ§Ã£o ainda.</p>`}
+                    ${extratoListHtml || `<p class="text-xs text-center py-8" style="color:#8b8d96">Nenhuma movimentação ainda.</p>`}
                     ${loadMoreBtn}
                 </div>
             </div>
@@ -4753,7 +4760,7 @@ function renderExtratoPopup() {
     `;
 }
 
-    // Nova funÃ§Ã£o para renderizar o pop-up de InformaÃ§Ãµes do Parceiro Pareado
+    // Nova função para renderizar o pop-up de Informações do Parceiro Pareado
     function renderPartnerInfoPopup() {
         const lastCheckIn = state.usuario.lastCheckInDate ? state.usuario.lastCheckInDate.toDate() : null;
         const canCheckIn = state.pareado && (!lastCheckIn || !isSameDay(lastCheckIn, new Date()));
@@ -4774,14 +4781,14 @@ function renderExtratoPopup() {
                         <button onclick="handleDailyCheckIn()" ${!canCheckIn ? 'disabled' : ''}
                             class="w-full text-sm px-6 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2
                             ${canCheckIn ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}">
-                            <i class="fas fa-gift text-xs"></i> Presentear ðŸ”¥
+                            <i class="fas fa-gift text-xs"></i> Presentear 🔥
                         </button>
 
                         <button onclick="desparearParceiro()" class="w-full text-sm bg-red-800 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition">
                             <i class="fas fa-unlink text-xs"></i> Desfazer Pareamento
                         </button>
 
-                        <!-- BotÃ£o de seguir no Instagram (discreto, com borda em gradiente) -->
+                        <!-- Botão de seguir no Instagram (discreto, com borda em gradiente) -->
                         <button onclick="openInstagramModal()" class="instagram-cta-outline w-full">
                             <span class="instagram-cta-inner w-full justify-center">
                                 <i class="fab fa-instagram text-xs"></i> Siga-nos no Instagram!
@@ -4805,15 +4812,15 @@ function renderExtratoPopup() {
                     <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                         <div class="flex flex-col items-center text-center -mt-6">
                             <i class="fas fa-store text-3xl mb-3"></i>
-                            <h2 class="text-3xl font-semibold">CatÃ¡logo</h2>
+                            <h2 class="text-3xl font-semibold">Catálogo</h2>
                             <p class="text-white/80">Escolha momentos para viver</p>
                         </div>
                     </section>
                     <section class="px-5 pb-8 -mt-10">
                         <div class="notif-shell max-w-2xl mx-auto">
                             <div class="notif-card-white text-center">
-                                <h3 class="text-lg font-semibold text-red-500">VocÃª ainda nÃ£o estÃ¡ pareado(a)</h3>
-                                <p class="text-sm text-gray-600 mt-2">Pareie com seu parceiro para acessar o catÃ¡logo de momentos.</p>
+                                <h3 class="text-lg font-semibold text-red-500">Você ainda não está pareado(a)</h3>
+                                <p class="text-sm text-gray-600 mt-2">Pareie com seu parceiro para acessar o catálogo de momentos.</p>
                                 <button onclick="changeStep('parear')" class="mt-4 w-full py-2 rounded-lg bg-red-500 text-white font-semibold">
                                     Parear agora
                                 </button>
@@ -4844,7 +4851,7 @@ function renderExtratoPopup() {
                 <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                     <div class="flex flex-col items-center text-center -mt-6">
                         <img loading="lazy" src="${sanitizeUrl(fotoParceiroUrl)}" class="w-20 h-20 rounded-full object-cover border-2 border-white/40 mb-3">
-                        <h2 class="text-3xl font-semibold">CatÃ¡logo de Momentos</h2>
+                        <h2 class="text-3xl font-semibold">Catálogo de Momentos</h2>
                         <p class="text-white/80">${escapeHtml(state.parceiroNome)}</p>
                         <div class="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white text-sm">
                             <i class="fas fa-fire text-yellow-200"></i>
@@ -4890,7 +4897,7 @@ function renderExtratoPopup() {
                                                 <button onclick='adicionarAoCarrinho(${JSON.stringify(momentoParaCarrinho).replace(/"/g, "&quot;")})'
                                                     class="text-sm px-3 py-2 rounded-lg transition ${bloqueado ? 'bg-gray-700 cursor-not-allowed' : 'bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white'}"
                                                     ${bloqueado ? 'disabled' : ''}>
-                                                    ${bloqueado ? 'ðŸ”’' : 'Resgatar'}
+                                                    ${bloqueado ? '🔒' : 'Resgatar'}
                                                 </button>
                                             </div>
                                         </div>
@@ -4913,18 +4920,18 @@ function renderCartSidebar() {
         const valor = Number(item?.custoFoguinhos ?? 0);
         return total + (Number.isFinite(valor) ? valor : 0);
     }, 0);
-    // Multi-conexÃ£o: usa saldo per-conexÃ£o se disponÃ­vel
+    // Multi-conexão: usa saldo per-conexão se disponível
     const saldoAtual = (state.conexaoAberta && Number.isFinite(state.conexaoAberta.foguinhos))
         ? state.conexaoAberta.foguinhos
         : (Number(state.usuario?.foguinhos ?? 0) || 0);
     const saldoFinal = saldoAtual - totalFoguinhos;
 
     const itemsHtml = state.carrinho.length === 0
-        ? '<p class="text-white/70 text-center py-6">Seu carrinho estÃ¡ vazio.</p>'
+        ? '<p class="text-white/70 text-center py-6">Seu carrinho está vazio.</p>'
         : state.carrinho.map((item, index) => {
             const imageHtml = item.img
                 ? `<img loading="lazy" src="${sanitizeUrl(item.img)}" alt="${escapeHtml(item.nome)}" class="w-full h-full object-cover">`
-                : `<span class="text-2xl">${escapeHtml(item.emoji || 'ðŸ”¥')}</span>`;
+                : `<span class="text-2xl">${escapeHtml(item.emoji || '🔥')}</span>`;
 
             return `
                 <div class="bg-white rounded-2xl p-4 flex gap-3 items-center shadow-md">
@@ -4960,7 +4967,7 @@ function renderCartSidebar() {
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 <h3 class="text-lg font-semibold text-center flex-1">Meu carrinho</h3>
-                <button class="text-white/70 hover:text-white" aria-label="OpÃ§Ãµes do carrinho">
+                <button class="text-white/70 hover:text-white" aria-label="Opções do carrinho">
                     <i class="fas fa-ellipsis-vertical"></i>
                 </button>
             </div>
@@ -5078,19 +5085,19 @@ if (window.Notification) {
     if (state.usuario && state.usuario.notificationsEnabled && Notification.permission === 'granted') {
         notificationButtonHtml = `
             <button onclick="handleNotificationToggle()" class="mt-4 bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-lg transition">
-                <i class="fas fa-bell-slash"></i> Desativar NotificaÃ§Ãµes
+                <i class="fas fa-bell-slash"></i> Desativar Notificações
             </button>
         `;
     } else if (Notification.permission === 'denied') {
         notificationButtonHtml = `
-            <button onclick="handleNotificationToggle()" class="mt-4 bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed" title="VocÃª precisa permitir as notificaÃ§Ãµes nas configuraÃ§Ãµes do seu navegador.">
-                <i class="fas fa-ban"></i> NotificaÃ§Ãµes Bloqueadas
+            <button onclick="handleNotificationToggle()" class="mt-4 bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed" title="Você precisa permitir as notificações nas configurações do seu navegador.">
+                <i class="fas fa-ban"></i> Notificações Bloqueadas
             </button>
         `;
     } else {
         notificationButtonHtml = `
             <button onclick="handleNotificationToggle()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                <i class="fas fa-bell"></i> Ativar NotificaÃ§Ãµes
+                <i class="fas fa-bell"></i> Ativar Notificações
             </button>
         `;
     }
@@ -5101,8 +5108,8 @@ appContainer.innerHTML = `
         <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
             <div class="flex flex-col items-center text-center -mt-6">
                 <i class="fas fa-store text-3xl mb-3"></i>
-                <h2 class="text-3xl font-semibold">Meu CatÃ¡logo</h2>
-                <p class="text-white/80">Gerencie preÃ§os e disponibilidade</p>
+                <h2 class="text-3xl font-semibold">Meu Catálogo</h2>
+                <p class="text-white/80">Gerencie preços e disponibilidade</p>
             </div>
         </section>
 
@@ -5172,7 +5179,7 @@ appContainer.innerHTML = `
 
                 <div class="text-center">
                     <button onclick="handleSaveCatalogo()" class="btn-red px-10 py-4">
-                        Salvar AlteraÃ§Ãµes
+                        Salvar Alterações
                     </button>
                 </div>
             </div>
@@ -5185,9 +5192,9 @@ appContainer.innerHTML = `
 
 function renderMeuPerfil() {
     const userName = state.usuario?.nome || 'Amor';
-    const email = state.usuario?.email || 'â€”';
-    const telefone = state.usuario?.telefone || 'â€”';
-    const sexo = state.usuario?.sexo || 'â€”';
+    const email = state.usuario?.email || '—';
+    const telefone = state.usuario?.telefone || '—';
+    const sexo = state.usuario?.sexo || '—';
     const idade = state.usuario?.idade ?? 'XX';
     const fotoUrl = state.usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
 
@@ -5196,19 +5203,19 @@ function renderMeuPerfil() {
         if (state.usuario && state.usuario.notificationsEnabled && Notification.permission === 'granted') {
             notificationButtonHtml = `
                 <button onclick="handleNotificationToggle()" class="mt-4 bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-lg transition">
-                    <i class="fas fa-bell-slash"></i> Desativar NotificaÃ§Ãµes
+                    <i class="fas fa-bell-slash"></i> Desativar Notificações
                 </button>
             `;
         } else if (Notification.permission === 'denied') {
             notificationButtonHtml = `
-                <button onclick="handleNotificationToggle()" class="mt-4 bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed" title="VocÃª precisa permitir as notificaÃ§Ãµes nas configuraÃ§Ãµes do seu navegador.">
-                    <i class="fas fa-ban"></i> NotificaÃ§Ãµes Bloqueadas
+                <button onclick="handleNotificationToggle()" class="mt-4 bg-gray-600 text-gray-400 font-bold py-2 px-4 rounded-lg cursor-not-allowed" title="Você precisa permitir as notificações nas configurações do seu navegador.">
+                    <i class="fas fa-ban"></i> Notificações Bloqueadas
                 </button>
             `;
         } else {
             notificationButtonHtml = `
                 <button onclick="handleNotificationToggle()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                    <i class="fas fa-bell"></i> Ativar NotificaÃ§Ãµes
+                    <i class="fas fa-bell"></i> Ativar Notificações
                 </button>
             `;
         }
@@ -5220,7 +5227,7 @@ function renderMeuPerfil() {
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-user text-3xl mb-3"></i>
                     <h2 class="text-3xl font-semibold">Meu Perfil</h2>
-                    <p class="text-white/80">Seus dados e preferÃªncias</p>
+                    <p class="text-white/80">Seus dados e preferências</p>
                 </div>
             </section>
 
@@ -5275,8 +5282,8 @@ function renderMeuPerfil() {
                     </div>
 
                     <div class="notif-card-white p-5">
-                        <h3 class="text-lg font-semibold text-gray-800">NotificaÃ§Ãµes</h3>
-                        <p class="text-sm text-gray-500">Ao ativar, vocÃª receberÃ¡ mensagens de push com as movimentaÃ§Ãµes dentro do app.</p>
+                        <h3 class="text-lg font-semibold text-gray-800">Notificações</h3>
+                        <p class="text-sm text-gray-500">Ao ativar, você receberá mensagens de push com as movimentações dentro do app.</p>
                         ${notificationButtonHtml}
                     </div>
 
@@ -5299,25 +5306,25 @@ function setDesafiosTab(tab) {
 }
 
 async function handleSaveCatalogo() {
-const novoCatalogo = {}; // 1. ComeÃ§amos com um objeto vazio.
+const novoCatalogo = {}; // 1. Começamos com um objeto vazio.
 
 // 2. Para cada momento da nossa lista mestra...
 state.momentosMestres.forEach(momento => {
-    // Montamos os IDs dos campos na tela, como fizemos ao criÃ¡-los.
+    // Montamos os IDs dos campos na tela, como fizemos ao criá-los.
     const idPreco = `preco-${momento.nome.replace(/\s+/g, '-')}`;
     const idBloqueado = `bloqueado-${momento.nome.replace(/\s+/g, '-')}`;
 
     const inputPreco = document.getElementById(idPreco);
     const inputBloqueado = document.getElementById(idBloqueado);
 
-    // Verificamos se encontramos os campos na tela, por seguranÃ§a.
+    // Verificamos se encontramos os campos na tela, por segurança.
     if (inputPreco && inputBloqueado) {
         // 3. Coletamos os valores.
         const precoPadrao = calcularPrecoBase(momento);
         const preco = normalizarPreco(inputPreco.value, precoPadrao);
-        const bloqueado = inputBloqueado.checked; // 'checked' serÃ¡ true ou false.
+        const bloqueado = inputBloqueado.checked; // 'checked' será true ou false.
 
-        // 4. Montamos o objeto para este momento especÃ­fico.
+        // 4. Montamos o objeto para este momento específico.
         novoCatalogo[momento.nome] = {
             preco: preco,
             bloqueado: bloqueado
@@ -5334,7 +5341,7 @@ try {
     // 6. Atualizamos o estado local para manter tudo sincronizado.
     state.usuario.catalogoPersonalizado = novoCatalogo;
 
-    // 6.5 Notifica parceiros sobre atualizaÃ§Ã£o do catÃ¡logo
+    // 6.5 Notifica parceiros sobre atualização do catálogo
     try {
         const parceiros = Array.isArray(state.parceirosAtivos) ? state.parceirosAtivos : [];
         const meuNome = state.usuario?.nome || 'Seu parceiro';
@@ -5342,8 +5349,8 @@ try {
             if (parceiro.uid) {
                 await db.collection('notificacoes').add({
                     userId: parceiro.uid,
-                    titulo: 'CatÃ¡logo atualizado! ðŸ›ï¸',
-                    mensagem: `${meuNome} atualizou o catÃ¡logo de momentos.`,
+                    titulo: 'Catálogo atualizado! 🛍️',
+                    mensagem: `${meuNome} atualizou o catálogo de momentos.`,
                     icone: 'fa-store',
                     tipo: 'catalog_update',
                     lida: false,
@@ -5352,20 +5359,20 @@ try {
             }
         }
     } catch (notifErr) {
-        console.warn('Erro ao enviar notificaÃ§Ã£o de catÃ¡logo:', notifErr);
+        console.warn('Erro ao enviar notificação de catálogo:', notifErr);
     }
 
     trackGAEvent('customize_catalog');
     trackMetaEvent('CustomizeProduct');
 
     // 7. Damos um feedback de sucesso.
-    showToast('Seu catÃ¡logo foi salvo com sucesso!', 'sucesso');
-    // Re-renderiza para refletir mudanÃ§as
+    showToast('Seu catálogo foi salvo com sucesso!', 'sucesso');
+    // Re-renderiza para refletir mudanças
     renderApp();
 
 } catch (error) {
-    console.error("Erro ao salvar o catÃ¡logo: ", error);
-    openSystemAlert('Houve um erro ao salvar seu catÃ¡logo. Tente novamente.');
+    console.error("Erro ao salvar o catálogo: ", error);
+    openSystemAlert('Houve um erro ao salvar seu catálogo. Tente novamente.');
 }
 }
 
@@ -5398,8 +5405,8 @@ async function carregarMomentosMestres() {
 
     } catch (error) {
         console.error("Erro ao carregar momentos mestres:", error);
-        // Se falhar, como fallback, podemos carregar a lista antiga (mas por enquanto, sÃ³ avisamos)
-        showToast("Erro ao carregar catÃ¡logo de momentos.", "erro");
+        // Se falhar, como fallback, podemos carregar a lista antiga (mas por enquanto, só avisamos)
+        showToast("Erro ao carregar catálogo de momentos.", "erro");
     }
 }
 
@@ -5448,12 +5455,12 @@ async function handleNotificationToggle() {
 const notificationsActive = state.usuario && state.usuario.notificationsEnabled && Notification.permission === 'granted';
 
 if (Notification.permission === 'denied') {
-    openSystemAlert("As notificaÃ§Ãµes estÃ£o bloqueadas. VocÃª precisa permitir manualmente nas configuraÃ§Ãµes do seu navegador (clicando no Ã­cone de cadeado ðŸ”’ ao lado da URL).");
+    openSystemAlert("As notificações estão bloqueadas. Você precisa permitir manualmente nas configurações do seu navegador (clicando no ícone de cadeado 🔒 ao lado da URL).");
 } else if (notificationsActive) {
-    // Se estÃ¡ ativo, a aÃ§Ã£o Ã© desativar
+    // Se está ativo, a ação é desativar
     await desativarNotificacoes();
 } else {
-    // Se nÃ£o estÃ¡ ativo, a aÃ§Ã£o Ã© ativar
+    // Se não está ativo, a ação é ativar
     await solicitarPermissaoDeNotificacao();
 }
 }
@@ -5461,20 +5468,20 @@ if (Notification.permission === 'denied') {
 function handleFileSelect(event) {
 const file = event.target.files[0];
 if (!file) {
-    return; // O usuÃ¡rio nÃ£o escolheu nenhum arquivo
+    return; // O usuário não escolheu nenhum arquivo
 }
 
-// ValidaÃ§Ã£o simples: checa se Ã© uma imagem e se tem menos de 5MB
+// Validação simples: checa se é uma imagem e se tem menos de 5MB
 if (!file.type.startsWith('image/')){
     openSystemAlert('Por favor, selecione um arquivo de imagem (jpg, png, etc.).');
     return;
 }
 if (file.size > 5 * 1024 * 1024) { // 5 Megabytes
-    openSystemAlert('A imagem Ã© muito grande. Por favor, escolha uma com menos de 5MB.');
+    openSystemAlert('A imagem é muito grande. Por favor, escolha uma com menos de 5MB.');
     return;
 }
 
-// Mostra a prÃ©-visualizaÃ§Ã£o da imagem na tela
+// Mostra a pré-visualização da imagem na tela
 const reader = new FileReader();
 reader.onload = function(e) {
     const profilePicPreview = document.getElementById('profilePicPreview');
@@ -5496,10 +5503,10 @@ async function handleEditarNome() {
     openEditNameModal();
 }
 
-// FunÃ§Ã£o 2: Faz o upload do arquivo para o Firebase Storage
+// Função 2: Faz o upload do arquivo para o Firebase Storage
 async function uploadProfilePic(file) {
 if (!state.usuario) {
-    openSystemAlert('VocÃª precisa estar logado para enviar uma foto.');
+    openSystemAlert('Você precisa estar logado para enviar uma foto.');
     return;
 }
 
@@ -5508,7 +5515,7 @@ const progressContainer = document.getElementById('uploadProgress');
 const progressBar = document.getElementById('uploadProgressBar');
 if(progressContainer) progressContainer.classList.remove('hidden');
 
-// 1. Define o caminho onde a imagem serÃ¡ salva no Storage
+// 1. Define o caminho onde a imagem será salva no Storage
 // Ex: profile_pics/UID_DO_USUARIO.jpg
 const filePath = `profile_pics/${state.usuario.uid}/${file.name}`;
 const fileRef = storage.ref(filePath);
@@ -5530,17 +5537,17 @@ uploadTask.on('state_changed',
         if(progressContainer) progressContainer.classList.add('hidden');
     }, 
     () => {
-        // 4. Quando o upload terminar, pega a URL pÃºblica da imagem
+        // 4. Quando o upload terminar, pega a URL pública da imagem
         uploadTask.snapshot.ref.getDownloadURL().then(async (downloadURL) => {
 
-            // 5. Salva a URL da foto no perfil do usuÃ¡rio no Firestore
+            // 5. Salva a URL da foto no perfil do usuário no Firestore
             await db.collection('usuarios').doc(state.usuario.uid).update({
                 fotoUrl: downloadURL
             });
 
             // 6. Atualiza o estado local e a UI
             state.usuario.fotoUrl = downloadURL;
-            updateFixedUI(); // Chama a funÃ§Ã£o para atualizar a header
+            updateFixedUI(); // Chama a função para atualizar a header
 
             showToast('Foto de perfil atualizada com sucesso!', 'sucesso');
             if(progressContainer) progressContainer.classList.add('hidden'); // Esconde a barra
@@ -5549,7 +5556,7 @@ uploadTask.on('state_changed',
 );
 }
 
-    // --- FunÃ§Ãµes de ManipulaÃ§Ã£o de Eventos e Firebase Auth/Firestore ---
+    // --- Funções de Manipulação de Eventos e Firebase Auth/Firestore ---
 
     async function handleSignIn() {
         const email = document.getElementById('signInEmail').value;
@@ -5573,13 +5580,13 @@ uploadTask.on('state_changed',
             console.error('Erro no login:', error.code, error.message);
             let errorMessage = 'Erro ao fazer login. Verifique seu email e senha.';
             if (error.code === 'auth/user-not-found') {
-                errorMessage = 'Nenhum usuÃ¡rio encontrado com este email.';
+                errorMessage = 'Nenhum usuário encontrado com este email.';
             } else if (error.code === 'auth/wrong-password') {
                 errorMessage = 'Senha incorreta.';
             } else if (error.code === 'auth/invalid-email') {
-                errorMessage = 'Email invÃ¡lido.';
+                errorMessage = 'Email inválido.';
             } else if (error.code === 'auth/invalid-credential') { 
-                errorMessage = 'Credenciais invÃ¡lidas. Verifique seu email e senha.';
+                errorMessage = 'Credenciais inválidas. Verifique seu email e senha.';
             }
             openSystemAlert(errorMessage);
         }
@@ -5592,22 +5599,22 @@ const telefone = document.getElementById('registerTelefone').value;
 const senha = document.getElementById('registerSenha').value;
 const sexo = document.getElementById('registerSexo').value;
 
-// ValidaÃ§Ã£o de Frontend
+// Validação de Frontend
 if (!nome || !email || !telefone || !senha || !sexo) {
     openSystemAlert('Por favor, preencha todos os campos.');
     return;
 }
 if (telefone.length !== 11 || !/^\d+$/.test(telefone)) {
-    openSystemAlert('O telefone deve conter exatamente 11 dÃ­gitos numÃ©ricos (com DDD).');
+    openSystemAlert('O telefone deve conter exatamente 11 dígitos numéricos (com DDD).');
     return;
 }
 if (senha.length < 6) {
-     openSystemAlert('A senha deve ter no mÃ­nimo 6 caracteres.');
+     openSystemAlert('A senha deve ter no mínimo 6 caracteres.');
      return;
 }
 
 try {
-    // 1. Criar usuÃ¡rio no Firebase Authentication
+    // 1. Criar usuário no Firebase Authentication
     const userCredential = await auth.createUserWithEmailAndPassword(email, senha);
     const user = userCredential.user;
 
@@ -5627,7 +5634,7 @@ try {
     trackGAEvent('sign_up');
     trackMetaEvent('CompleteRegistration');
 
-    // Atualiza o estado local com os dados do novo usuÃ¡rio
+    // Atualiza o estado local com os dados do novo usuário
     state.usuario = {
         uid: user.uid,
         email: user.email,
@@ -5645,17 +5652,17 @@ try {
     state.achievementStats = {};
     state.etapa = 'parear';
     renderApp();
-    showToast('Cadastro realizado com sucesso! VocÃª serÃ¡ redirecionado para o pareamento.', 'sucesso');
+    showToast('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.', 'sucesso');
 
 } catch (error) {
     console.error('Erro no cadastro:', error.code, error.message);
     let errorMessage = 'Erro ao cadastrar. Tente novamente.';
     if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'Este email jÃ¡ estÃ¡ em uso. Tente fazer login ou use outro email.';
+        errorMessage = 'Este email já está em uso. Tente fazer login ou use outro email.';
     } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'O formato do email Ã© invÃ¡lido.';
+        errorMessage = 'O formato do email é inválido.';
     } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'A senha Ã© muito fraca (mÃ­nimo de 6 caracteres).';
+        errorMessage = 'A senha é muito fraca (mínimo de 6 caracteres).';
     }
     openSystemAlert(errorMessage);
 }
@@ -5691,7 +5698,7 @@ try {
 
     await auth.signOut();
     
-    // Resetar todo o estado da aplicaÃ§Ã£o para o padrÃ£o inicial
+    // Resetar todo o estado da aplicação para o padrão inicial
     state.usuario = null;
     state.pareado = false;
     state.parceiroData = null;
@@ -5718,7 +5725,7 @@ try {
     state.pendingPartnerName = null;
     state.conexaoAtiva = null;
 
-    // Limpa localStorage da conexÃ£o ativa
+    // Limpa localStorage da conexão ativa
     if (auth.currentUser) {
         localStorage.removeItem('conexaoAtivaUid:' + auth.currentUser.uid);
     }
@@ -5732,7 +5739,7 @@ try {
 
     async function handleDailyCheckIn() {
 if (!state.pareado || !state.usuario || !state.usuario.pareadoUid) {
-    showToast('VocÃª precisa estar pareado para presentear.', 'aviso');
+    showToast('Você precisa estar pareado para presentear.', 'aviso');
     return;
 }
 
@@ -5750,7 +5757,7 @@ try {
 
     showToast(`Presente enviado!`, 'sucesso');
 } catch (error) {
-    console.error('Erro ao realizar Presentear (Check-in) diÃ¡rio:', error);
+    console.error('Erro ao realizar Presentear (Check-in) diário:', error);
     showToast('Erro ao presentear. Tente novamente.', 'erro');
 }
 }
@@ -5763,32 +5770,32 @@ try {
 
     function filtrarMomentos(categoria) {
         state.filtro = categoria;
-        renderApp(); // Re-renderiza a etapa atual, que Ã© 'main'
+        renderApp(); // Re-renderiza a etapa atual, que é 'main'
     }
 
     async function adicionarAoCarrinho(momento) {
-// ValidaÃ§Ã£o 1: Limite de itens no carrinho
+// Validação 1: Limite de itens no carrinho
 if (state.carrinho.length >= 2) {
     showToast('Limite de 2 itens no carrinho!', 'aviso');
     return;
 }
 
-// ValidaÃ§Ã£o 2: Checa se o usuÃ¡rio estÃ¡ pareado
+// Validação 2: Checa se o usuário está pareado
 if (!state.pareado) {
-    showToast('VocÃª precisa estar pareado para resgatar momentos.', 'aviso');
+    showToast('Você precisa estar pareado para resgatar momentos.', 'aviso');
     return;
 }
 
 const custo = momento.custoFoguinhos;
 const foguinhosEmUso = state.carrinho.reduce((total, item) => total + item.custoFoguinhos, 0);
-// Multi-conexÃ£o: usa saldo per-conexÃ£o se disponÃ­vel
+// Multi-conexão: usa saldo per-conexão se disponível
 const saldoBase = (state.conexaoAberta && Number.isFinite(state.conexaoAberta.foguinhos))
     ? state.conexaoAberta.foguinhos
     : (state.usuario.foguinhos || 0);
 const saldoDisponivel = saldoBase - foguinhosEmUso;
-// ValidaÃ§Ã£o 3: Checa se o usuÃ¡rio tem "foguinhos" suficientes
+// Validação 3: Checa se o usuário tem "foguinhos" suficientes
 if (saldoDisponivel < custo) {
-    showToast(`VocÃª precisa de ${custo} foguinhos para este momento.`, 'aviso');
+    showToast(`Você precisa de ${custo} foguinhos para este momento.`, 'aviso');
     return;
 }
 
@@ -5797,7 +5804,7 @@ trackGAEvent('add_to_cart', {
             currency: 'FOG', // Moeda customizada "Foguinhos"
             value: momento.custoFoguinhos,
             items: [{
-                item_id: momento.nome.replace(/\s+/g, '_'), // ID do item (nome sem espaÃ§os)
+                item_id: momento.nome.replace(/\s+/g, '_'), // ID do item (nome sem espaços)
                 item_name: momento.nome,
                 item_category: momento.categoria,
                 price: momento.custoFoguinhos,
@@ -5806,8 +5813,8 @@ trackGAEvent('add_to_cart', {
         });
 
 trackMetaEvent('AddToCart', {
-            currency: 'BRL', // A Meta prefere moedas reais, mas podemos ajustar se necessÃ¡rio.
-            value: 0, // Como Ã© moeda virtual, o valor monetÃ¡rio Ã© 0
+            currency: 'BRL', // A Meta prefere moedas reais, mas podemos ajustar se necessário.
+            value: 0, // Como é moeda virtual, o valor monetário é 0
             content_name: momento.nome,
             content_ids: [momento.nome.replace(/\s+/g, '_')],
             content_type: 'product'
@@ -5825,22 +5832,22 @@ renderApp();
 }
 
     async function desparearParceiro() {
-        openSystemConfirm('Tem certeza que deseja desfazer o pareamento? Isso irÃ¡ resetar os foguinhos de ambos os usuÃ¡rios para 0.', async () => {
+        openSystemConfirm('Tem certeza que deseja desfazer o pareamento? Isso irá resetar os foguinhos de ambos os usuários para 0.', async () => {
             try {
-                // Ao invÃ©s de tentar atualizar `usuarios` diretamente (que viola
-                // regras de seguranÃ§a para campos sensÃ­veis), criaremos um
-                // input que o backend processarÃ¡ com privilÃ©gios de Admin.
-                // Use o uid do usuÃ¡rio autenticado no Auth (mais seguro)
+                // Ao invés de tentar atualizar `usuarios` diretamente (que viola
+                // regras de segurança para campos sensíveis), criaremos um
+                // input que o backend processará com privilégios de Admin.
+                // Use o uid do usuário autenticado no Auth (mais seguro)
                 const currentUser = auth.currentUser;
                 if (!currentUser) {
-                    throw new Error('UsuÃ¡rio nÃ£o autenticado. FaÃ§a login antes de desfazer o pareamento.');
+                    throw new Error('Usuário não autenticado. Faça login antes de desfazer o pareamento.');
                 }
                 const usuarioUid = currentUser.uid;
                 const parceiroTelefone = state.parceiroCodigo || null;
                 const parceiroUid = state.usuario.pareadoUid || (state.parceiroData && state.parceiroData.uid) || null;
 
                 // Cria um input 'pairing_unpair' para o backend processar a
-                // operaÃ§Ã£o com privilÃ©gios administrativos.
+                // operação com privilégios administrativos.
                 await safeAddInput({
                     type: 'pairing_unpair',
                     fromUid: usuarioUid,
@@ -5848,8 +5855,8 @@ renderApp();
                     partnerPhone: parceiroTelefone || null,
                 });
 
-                // AtualizaÃ§Ã£o otimista da UI (serÃ¡ corrigida pelo ouvinte do
-                // documento do usuÃ¡rio assim que o backend aplicar as mudanÃ§as).
+                // Atualização otimista da UI (será corrigida pelo ouvinte do
+                // documento do usuário assim que o backend aplicar as mudanças).
                 state.pareado = false;
                 state.parceiroCodigo = null;
                 state.parceiroTelefone = null;
@@ -5861,7 +5868,7 @@ renderApp();
                 state.showCartSidebar = false;
                 state.pareado = false;
                 state.idPareamentoAmigavel = null;
-                showToast('SolicitaÃ§Ã£o de desfazer pareamento enviada. Aguardando processamento...', 'sucesso');
+                showToast('Solicitação de desfazer pareamento enviada. Aguardando processamento...', 'sucesso');
                 renderApp();
 
             } catch (error) {
@@ -5869,7 +5876,7 @@ renderApp();
                 if (error && error.message && error.message.toLowerCase().includes('autenticado')) {
                     openSystemAlert(error.message);
                 } else if (error && error.code === 'permission-denied') {
-                    openSystemAlert('PermissÃ£o negada: sua sessÃ£o expirou ou vocÃª nÃ£o estÃ¡ autenticado. FaÃ§a login novamente.');
+                    openSystemAlert('Permissão negada: sua sessão expirou ou você não está autenticado. Faça login novamente.');
                 } else {
                     openSystemAlert('Erro ao desfazer pareamento. Tente novamente.');
                 }
@@ -5878,17 +5885,17 @@ renderApp();
     }
 
     async function finalizarPedido() {
-    // 1. ValidaÃ§Ãµes iniciais
+    // 1. Validações iniciais
     if (!state.pareado) {
-        showToast('VocÃª precisa estar pareado para finalizar o pedido.', 'aviso');
+        showToast('Você precisa estar pareado para finalizar o pedido.', 'aviso');
         return;
     }
     if (state.carrinho.length === 0) {
-        showToast('Seu carrinho estÃ¡ vazio.', 'aviso');
+        showToast('Seu carrinho está vazio.', 'aviso');
         return;
     }
 
-    // Multi-conexÃ£o: prioriza dados da conexÃ£o aberta
+    // Multi-conexão: prioriza dados da conexão aberta
     const partnerUid = (state.conexaoAberta && state.conexaoAberta.uid)
         ? state.conexaoAberta.uid
         : (state.usuario && state.usuario.pareadoUid);
@@ -5897,11 +5904,11 @@ renderApp();
         : (state.idPareamentoAmigavel || '');
 
     if (!state.usuario || !partnerUid) {
-        showToast('Erro: parceiro pareado nÃ£o encontrado.', 'erro');
+        showToast('Erro: parceiro pareado não encontrado.', 'erro');
         return;
     }
 
-    // ValidaÃ§Ã£o de saldo local (per-conexÃ£o)
+    // Validação de saldo local (per-conexão)
     const totalCost = state.carrinho.reduce((sum, item) => sum + item.custoFoguinhos, 0);
     const saldoLocal = (state.conexaoAberta && Number.isFinite(state.conexaoAberta.foguinhos))
         ? state.conexaoAberta.foguinhos
@@ -5951,9 +5958,9 @@ renderApp();
 
         const totalItens = state.carrinho.length;
         const plural = totalItens > 1 ? 's' : '';
-        showToast(`Pedido enviado! ${totalItens} momento${plural} aguardando confirmaÃ§Ã£o.`, 'sucesso');
+        showToast(`Pedido enviado! ${totalItens} momento${plural} aguardando confirmação.`, 'sucesso');
 
-        // Atualiza saldo local imediatamente (per-conexÃ£o e global)
+        // Atualiza saldo local imediatamente (per-conexão e global)
         if (state.conexaoAberta && Number.isFinite(state.conexaoAberta.foguinhos)) {
             state.conexaoAberta.foguinhos = Math.max(0, state.conexaoAberta.foguinhos - totalCost);
         }
@@ -5988,13 +5995,13 @@ renderApp();
     }
 }
 
-    // FunÃ§Ã£o para alternar a visibilidade do carrinho
+    // Função para alternar a visibilidade do carrinho
     function toggleCartSidebar() {
         state.showCartSidebar = !state.showCartSidebar;
         renderApp(); // Re-renderiza para exibir/esconder a sidebar
     }
 
-    // --- FunÃ§Ã£o Central de RenderizaÃ§Ã£o (Gerencia as etapas) ---
+    // --- Função Central de Renderização (Gerencia as etapas) ---
     function renderApp() {
         if (document && document.body) {
             const isLightTheme = state.etapa === 'memorias' || state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup';
@@ -6007,7 +6014,7 @@ renderApp();
                 document.body.classList.remove('theme-light');
             }
         }
-        // Atualiza os elementos da header e footer que sÃ£o fixos no DOM
+        // Atualiza os elementos da header e footer que são fixos no DOM
         updateFixedUI();
 
         // --- PWA Install Popup (global, qualquer tela) ---
@@ -6018,7 +6025,7 @@ renderApp();
             state.desafiosCountdownId = null;
         }
         
-        // Renderiza o conteÃºdo principal dentro da #app
+        // Renderiza o conteúdo principal dentro da #app
         switch (state.etapa) {
             case 'landing':
                 renderLandingPage();
@@ -6093,7 +6100,7 @@ renderApp();
     }
 
     async function renderNossasTarefas() {
-        // Guarda etapa para detectar se o usuÃ¡rio navegou para outra tela durante ops async
+        // Guarda etapa para detectar se o usuário navegou para outra tela durante ops async
         const etapaNoInicio = state.etapa;
 
         const pendingCount = (state.notificacoesTarefasNaoLidas || 0) +
@@ -6121,39 +6128,39 @@ renderApp();
                     ? new Date(notif.timestamp.seconds * 1000).toLocaleString('pt-BR')
                     : '';
 
-                // === CORES POR TIPO DE ÃCONE ===
+                // === CORES POR TIPO DE ÍCONE ===
                 let iconColor = 'text-gray-500';
                 let iconBg = 'bg-gray-100';
                 let navTarget = 'dashboard'; // tela destino ao clicar
 
                 if (iconClass === 'fa-fire') {
-                    // MissÃ£o concluÃ­da (momento realizado) â€” foguinho dourado
+                    // Missão concluída (momento realizado) — foguinho dourado
                     iconColor = 'text-amber-500';
                     iconBg = 'bg-amber-50';
                     navTarget = 'momentos';
                 } else if (iconClass === 'fa-gift') {
-                    // Presente / check-in â€” rosa vibrante
+                    // Presente / check-in — rosa vibrante
                     iconColor = 'text-pink-500';
                     iconBg = 'bg-pink-50';
                     navTarget = 'perfilParceiro';
                 } else if (iconClass === 'fa-shopping-bag') {
-                    // Momento resgatado â€” laranja
+                    // Momento resgatado — laranja
                     iconColor = 'text-orange-500';
                     iconBg = 'bg-orange-50';
                     navTarget = 'momentos';
                 } else if (iconClass === 'fa-thermometer-half') {
-                    // Clima / termÃ´metro â€” rosa (rose)
+                    // Clima / termômetro — rosa (rose)
                     iconColor = 'text-rose-500';
                     iconBg = 'bg-rose-50';
                     navTarget = 'perfilParceiro';
                 } else if (iconClass === 'fa-trophy') {
                     if (notif.tipo === 'desafio') {
-                        // Desafio semanal â€” roxo
+                        // Desafio semanal — roxo
                         iconColor = 'text-purple-500';
                         iconBg = 'bg-purple-50';
                         navTarget = 'achievementsPopup';
                     } else {
-                        // Conquista â€” amarelo ouro
+                        // Conquista — amarelo ouro
                         iconColor = 'text-yellow-500';
                         iconBg = 'bg-yellow-50';
                         navTarget = 'achievementsPopup';
@@ -6161,48 +6168,48 @@ renderApp();
                 }
 
                 // === TEXTO OTIMIZADO ===
-                let titulo = notif.titulo || 'AtualizaÃ§Ã£o';
+                let titulo = notif.titulo || 'Atualização';
                 let mensagem = notif.mensagem || '';
 
                 // Simplifica textos longos por tipo
                 if (iconClass === 'fa-gift') {
-                    titulo = 'ðŸŽ Presente recebido';
-                    // Extrai nome do parceiro da mensagem original se possÃ­vel
+                    titulo = '🎁 Presente recebido';
+                    // Extrai nome do parceiro da mensagem original se possível
                     const matchP = (notif.mensagem || '').match(/^(.+?) te presenteou/);
-                    mensagem = matchP ? `${matchP[1]} te enviou foguinhos!` : 'VocÃª ganhou foguinhos!';
+                    mensagem = matchP ? `${matchP[1]} te enviou foguinhos!` : 'Você ganhou foguinhos!';
                 } else if (iconClass === 'fa-thermometer-half') {
-                    titulo = 'ðŸŒ¡ï¸ Clima do Dia';
+                    titulo = '🌡️ Clima do Dia';
                     // Extrai nome + sentimento + delta da mensagem original
                     const matchC = (notif.mensagem || '').match(/^(.+?) marcou \"(.+?)\"/);
                     if (matchC) {
                         const nome = matchC[1];
-                        const sentimento = matchC[2]; // jÃ¡ vem com emoji ex: "Feliz ðŸ”¥"
+                        const sentimento = matchC[2]; // já vem com emoji ex: "Feliz 🔥"
                         const deltaMatch = (notif.mensagem || '').match(/ganhou (\d+)/);
                         const removedMatch = (notif.mensagem || '').match(/(\d+) foguinho.*removidos/);
                         if (deltaMatch) {
-                            mensagem = `${nome} estÃ¡ ${sentimento} hoje, por isso vocÃª recebe ${deltaMatch[1]} foguinho(s)!`;
+                            mensagem = `${nome} está ${sentimento} hoje, por isso você recebe ${deltaMatch[1]} foguinho(s)!`;
                         } else if (removedMatch) {
-                            mensagem = `${nome} estÃ¡ ${sentimento} hoje. ${removedMatch[1]} foguinho(s) removido(s).`;
+                            mensagem = `${nome} está ${sentimento} hoje. ${removedMatch[1]} foguinho(s) removido(s).`;
                         } else {
-                            mensagem = `${nome} estÃ¡ ${sentimento} hoje.`;
+                            mensagem = `${nome} está ${sentimento} hoje.`;
                         }
                     }
                 } else if (iconClass === 'fa-shopping-bag') {
-                    titulo = 'ðŸ›ï¸ Momento resgatado!';
-                    // JÃ¡ Ã© OK, sÃ³ encurta se muito longo
+                    titulo = '🛍️ Momento resgatado!';
+                    // Já é OK, só encurta se muito longo
                     if (mensagem.length > 80) mensagem = mensagem.slice(0, 77) + '...';
                 } else if (iconClass === 'fa-fire' && notif.tipo === 'moment_completion') {
-                    titulo = 'ðŸ”¥ MissÃ£o concluÃ­da!';
+                    titulo = '🔥 Missão concluída!';
                 } else if (iconClass === 'fa-trophy' && notif.tipo === 'desafio') {
                     if ((notif.titulo || '').includes('semana')) {
-                        titulo = 'ðŸ§© Sua vez no desafio!';
-                    } else if ((notif.titulo || '').includes('concluÃ­do')) {
-                        titulo = 'ðŸ† Desafio concluÃ­do!';
+                        titulo = '🧩 Sua vez no desafio!';
+                    } else if ((notif.titulo || '').includes('concluído')) {
+                        titulo = '🏆 Desafio concluído!';
                     } else {
-                        titulo = 'ðŸ† Desafio finalizado';
+                        titulo = '🏆 Desafio finalizado';
                     }
                 } else if (notif.tipo === 'achievement') {
-                    titulo = 'ðŸ… Nova conquista!';
+                    titulo = '🏅 Nova conquista!';
                 }
 
                 // Formata tempo relativo
@@ -6233,17 +6240,17 @@ renderApp();
                     </div>
                 `;
             }).join('')
-            : `<p class="text-center text-gray-500 py-8">Nenhuma notificaÃ§Ã£o disponÃ­vel.</p>`;
+            : `<p class="text-center text-gray-500 py-8">Nenhuma notificação disponível.</p>`;
 
         const challengePending = !!state.pendingChallenge;
-        // Aborta se o usuÃ¡rio navegou para outra tela durante operaÃ§Ãµes async (race condition)
+        // Aborta se o usuário navegou para outra tela durante operações async (race condition)
         if (state.etapa !== etapaNoInicio) return;
         appContainer.innerHTML = `
             <div class="screen screen-pad bg-black text-white">
                 <section class="px-6 pt-20 pb-16" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                     <div class="flex flex-col items-center text-center -mt-6">
                         <i class="fas fa-bell text-3xl mb-3"></i>
-                        <h2 class="text-3xl font-semibold">NotificaÃ§Ãµes</h2>
+                        <h2 class="text-3xl font-semibold">Notificações</h2>
                         <p class="text-white/80">Veja as novidades do seu perfil</p>
                     </div>
                 </section>
@@ -6336,11 +6343,11 @@ async function renderMomentos() {
             const isPendente = tarefa.status === 'Pendente';
             const statusCor = isPendente ? 'text-yellow-500' : 'text-green-600';
             const statusIcon = isPendente ? 'fa-clock' : 'fa-check-circle';
-            const dataFormatada = tarefa.dataResgate ? new Date(tarefa.dataResgate.seconds * 1000).toLocaleDateString('pt-BR') : 'Data indisponÃ­vel';
+            const dataFormatada = tarefa.dataResgate ? new Date(tarefa.dataResgate.seconds * 1000).toLocaleDateString('pt-BR') : 'Data indisponível';
             const momentoInfo = state.momentosMestres.find(m => m.nome === tarefa.momentoNome);
             const imagemHtml = momentoInfo
                 ? `<img loading="lazy" src="${sanitizeUrl(momentoInfo.img)}" class="w-12 h-12 rounded-lg object-cover">`
-                : `<span class="text-2xl">${escapeHtml(tarefa.momentoEmoji || 'ðŸ”¥')}</span>`;
+                : `<span class="text-2xl">${escapeHtml(tarefa.momentoEmoji || '🔥')}</span>`;
 
             return `
                 <div class="notif-item ${!isPendente ? 'opacity-70' : ''}">
@@ -6563,7 +6570,7 @@ async function loadMemoriasPosts() {
         state.memoriasHasMore = !!response?.hasMore;
         state.memoriasItems = items;
     } catch (err) {
-        console.warn('Erro ao carregar memÃ³rias:', err);
+        console.warn('Erro ao carregar memórias:', err);
         state.memoriasItems = [];
         state.memoriasHasMore = false;
     } finally {
@@ -6617,7 +6624,7 @@ function renderMemoriaViewer() {
             <div class="w-full max-w-md bg-white rounded-3xl p-5 shadow-2xl" onclick="event.stopPropagation()">
                 <div class="relative">
                     <div class="w-full aspect-[3/4] overflow-hidden rounded-2xl">
-                        <img loading="lazy" src="${sanitizeUrl(item.fotoUrl)}" alt="MemÃ³ria" class="w-full h-full object-cover">
+                        <img loading="lazy" src="${sanitizeUrl(item.fotoUrl)}" alt="Memória" class="w-full h-full object-cover">
                     </div>
                     <button onclick="changeMemoriaViewer(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white text-sm">&#10094;</button>
                     <button onclick="changeMemoriaViewer(1)" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white text-sm">&#10095;</button>
@@ -6642,7 +6649,7 @@ function requestDeleteMemoriaFromViewer(memoriaId) {
         try {
             await deleteMemoriaById(memoriaId);
         } catch (error) {
-            console.error('Erro ao excluir memÃ³ria:', error);
+            console.error('Erro ao excluir memória:', error);
             openSystemAlert('Erro ao excluir a foto. Tente novamente.');
         }
     }, { confirmText: 'Excluir', cancelText: 'Cancelar' });
@@ -6664,7 +6671,7 @@ async function deleteMemoriaById(memoriaId) {
     }
 
     renderMemorias();
-    showToast('Foto excluÃ­da com sucesso!', 'sucesso');
+    showToast('Foto excluída com sucesso!', 'sucesso');
 }
 
 function openMemoriasSharePicker() {
@@ -6682,32 +6689,32 @@ function renderMemoriasShareModal() {
         <div class="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0" onclick="closeMemoriasSharePicker()">
             <div class="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl" onclick="event.stopPropagation()" style="background:linear-gradient(160deg,#1a0a1e 0%,#0d0a0f 100%);border:1px solid rgba(255,60,100,0.22);">
                 <div style="background:linear-gradient(90deg,rgba(255,45,80,0.18),rgba(255,100,130,0.08));border-bottom:1px solid rgba(255,60,100,0.15);" class="px-6 py-4">
-                    <h3 class="text-white font-bold text-base">Escolha o estilo do cartÃ£o</h3>
-                    <p class="text-white/40 text-xs mt-0.5">Nosso Momento Â· ${new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</p>
+                    <h3 class="text-white font-bold text-base">Escolha o estilo do cartão</h3>
+                    <p class="text-white/40 text-xs mt-0.5">Nosso Momento · ${new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</p>
                 </div>
                 <div class="p-5 grid gap-3">
                     <button onclick="handleMemoriasShareChoice('simple')" class="w-full rounded-2xl overflow-hidden text-left transition active:scale-95" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.10);">
                         <div class="flex items-center gap-4 p-4">
                             <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#0d0008,#1a0010);">
-                                <span style="font-size:22px;">ðŸŒ™</span>
+                                <span style="font-size:22px;">🌙</span>
                             </div>
                             <div>
                                 <div class="text-white font-bold text-sm">Dark Cinema</div>
-                                <div class="text-white/40 text-xs mt-0.5">Foto em destaque Â· Fundo escuro premium</div>
+                                <div class="text-white/40 text-xs mt-0.5">Foto em destaque · Fundo escuro premium</div>
                             </div>
-                            <div class="ml-auto text-white/20 text-lg">â€º</div>
+                            <div class="ml-auto text-white/20 text-lg">›</div>
                         </div>
                     </button>
                     <button onclick="handleMemoriasShareChoice('detailed')" class="w-full rounded-2xl overflow-hidden text-left transition active:scale-95" style="background:linear-gradient(135deg,rgba(255,45,80,0.18),rgba(180,10,40,0.15));border:1px solid rgba(255,60,100,0.25);">
                         <div class="flex items-center gap-4 p-4">
                             <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#8b0030,#e8294e);">
-                                <span style="font-size:22px;">ðŸ”¥</span>
+                                <span style="font-size:22px;">🔥</span>
                             </div>
                             <div>
                                 <div class="text-white font-bold text-sm">Vivid Couple</div>
-                                <div class="text-white/40 text-xs mt-0.5">Fotos do casal Â· Stats completos Â· Vermelho vibrante</div>
+                                <div class="text-white/40 text-xs mt-0.5">Fotos do casal · Stats completos · Vermelho vibrante</div>
                             </div>
-                            <div class="ml-auto text-white/20 text-lg">â€º</div>
+                            <div class="ml-auto text-white/20 text-lg">›</div>
                         </div>
                     </button>
                 </div>
@@ -6751,13 +6758,13 @@ function renderMemoriasSharePreview() {
         <div class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center px-4" onclick="closeMemoriasSharePreview()">
             <div class="w-full max-w-sm sm:max-w-md bg-[#111827] border border-gray-700 rounded-3xl p-4 shadow-2xl" style="max-height:90vh;width:94vw;max-width:460px;" onclick="event.stopPropagation()">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-white">PrÃ©-visualizaÃ§Ã£o</h3>
+                    <h3 class="text-lg font-semibold text-white">Pré-visualização</h3>
                     <button onclick="closeMemoriasSharePreview()" class="w-9 h-9 rounded-full bg-white/10 text-white/70 flex items-center justify-center" aria-label="Fechar">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="mt-3 rounded-2xl overflow-hidden bg-black/30 flex items-center justify-center" style="max-height:55vh;">
-                    ${isGenerating ? '<div class="py-12 text-sm text-gray-300">Gerando imagem...</div>' : `<img loading="lazy" src="${sanitizeUrl(previewUrl)}" alt="PrÃ©-visualizaÃ§Ã£o" style="width:100%;height:auto;max-height:55vh;object-fit:contain;">`}
+                    ${isGenerating ? '<div class="py-12 text-sm text-gray-300">Gerando imagem...</div>' : `<img loading="lazy" src="${sanitizeUrl(previewUrl)}" alt="Pré-visualização" style="width:100%;height:auto;max-height:55vh;object-fit:contain;">`}
                 </div>
                 <div class="mt-3 grid grid-cols-3 gap-2">
                     <button onclick="backToMemoriasSharePicker()" class="py-3 rounded-xl bg-white/10 text-white/80 text-sm">Voltar</button>
@@ -6790,7 +6797,7 @@ async function generateMemoriasSharePreview(mode) {
 async function shareMemoriasPreview() {
     const file = state.memoriasSharePreviewFile;
     if (!file) {
-        openSystemAlert('A imagem ainda nÃ£o foi gerada. Aguarde alguns segundos e tente novamente.');
+        openSystemAlert('A imagem ainda não foi gerada. Aguarde alguns segundos e tente novamente.');
         return;
     }
 
@@ -6799,16 +6806,16 @@ async function shareMemoriasPreview() {
             await navigator.share({ files: [file], title: 'Nosso Momento', text: 'Resumo de foguinhos do mes.' });
             showToast('Extrato pronto para compartilhar!', 'sucesso');
         } catch (error) {
-            // AbortError = usuÃ¡rio fechou o seletor â€” nÃ£o Ã© erro real
+            // AbortError = usuário fechou o seletor — não é erro real
             if (error && error.name !== 'AbortError') {
                 console.error('Erro ao compartilhar:', error);
-                showToast('NÃ£o foi possÃ­vel compartilhar. Tente usar o botÃ£o Salvar.', 'erro');
+                showToast('Não foi possível compartilhar. Tente usar o botão Salvar.', 'erro');
             }
         }
     } else {
-        // Fallback: salva a imagem diretamente quando Share API nÃ£o Ã© suportada
+        // Fallback: salva a imagem diretamente quando Share API não é suportada
         saveMemoriasPreview();
-        showToast('Compartilhamento nÃ£o suportado. Imagem salva no dispositivo.', 'aviso');
+        showToast('Compartilhamento não suportado. Imagem salva no dispositivo.', 'aviso');
     }
 }
 
@@ -6849,7 +6856,7 @@ function buildMemoriasShareContainerSimple() {
     <img src="${sanitizeUrl(photoUrl)}" alt="" style="width:100%;height:100%;object-fit:${photoFit};display:block;" crossorigin="anonymous">
     <div style="position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(to top,rgba(7,0,12,0.97)0%,rgba(7,0,12,0.50)55%,transparent 100%);"></div>
     <div style="position:absolute;bottom:32px;left:0;right:0;text-align:center;">
-      <div style="font-size:48px;line-height:1;">ðŸ”¥</div>
+      <div style="font-size:48px;line-height:1;">🔥</div>
       <div style="font-size:96px;font-weight:900;line-height:0.9;letter-spacing:-2px;">${totalFoguinhos}</div>
       <div style="font-size:15px;font-weight:800;color:rgba(255,255,255,0.60);margin-top:14px;">FOGUINHOS INVESTIDOS NO NOSSO AMOR</div>
     </div>
@@ -6885,9 +6892,9 @@ function buildMemoriasShareContainerDetailed() {
     const counts = getMemoriasCategoriaCounts(items);
     const userFoto = (state.usuario && state.usuario.fotoUrl) || '/assets/icons/iconprincipal.png';
     const parcFoto = (state.parceiroData && state.parceiroData.fotoUrl) || '/assets/icons/iconprincipal.png';
-    const userName = (state.usuario && state.usuario.nome) || 'VocÃª';
+    const userName = (state.usuario && state.usuario.nome) || 'Você';
     const parcName = (state.parceiroData && state.parceiroData.nome) || 'Parceiro(a)';
-    const trunc = (n) => n.length > 11 ? n.slice(0, 10) + 'â€¦' : n;
+    const trunc = (n) => n.length > 11 ? n.slice(0, 10) + '…' : n;
 
     // Busca foto de momento: tenta categorias em ordem de prioridade
     const tryCategories = ['Sair da Rotina', 'Lovezin', 'Quentes'];
@@ -6922,7 +6929,7 @@ function buildMemoriasShareContainerDetailed() {
       </div>
       <span style="font-size:16px;font-weight:700;color:rgba(255,255,255,0.88);">${escapeHtml(trunc(userName))}</span>
     </div>
-    <div style="font-size:34px;color:rgba(255,255,255,0.82);padding-bottom:34px;">â™¥</div>
+    <div style="font-size:34px;color:rgba(255,255,255,0.82);padding-bottom:34px;">♥</div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
       <div style="width:130px;height:130px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,0.42);box-shadow:0 10px 32px rgba(0,0,0,0.4);">
         <img src="${sanitizeUrl(parcFoto)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous">
@@ -6934,13 +6941,13 @@ function buildMemoriasShareContainerDetailed() {
     <img src="${sanitizeUrl(momentPhotoUrl)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" crossorigin="anonymous">
   </div>` : `<div style="position:relative;z-index:1;flex-shrink:0;height:1px;background:rgba(255,255,255,0.16);margin-top:28px;"></div><div style="flex:1;"></div>`}
   <div style="position:relative;z-index:1;flex-shrink:0;display:flex;gap:12px;margin-top:18px;">
-    ${statCard('ðŸ·', counts.sairRotina, 'Sair da Rotina')}
-    ${statCard('â¤ï¸', counts.lovezin, 'Lovezin')}
-    ${statCard('ðŸŒ¶ï¸', counts.quentes, 'Quentes')}
+    ${statCard('🍷', counts.sairRotina, 'Sair da Rotina')}
+    ${statCard('❤️', counts.lovezin, 'Lovezin')}
+    ${statCard('🌶️', counts.quentes, 'Quentes')}
   </div>
   <div style="position:relative;z-index:1;flex-shrink:0;background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.17);border-radius:22px;padding:22px 36px;margin-top:14px;">
     <div style="display:flex;align-items:flex-start;justify-content:center;gap:14px;">
-      <span style="font-size:54px;line-height:1;padding-top:5px;flex-shrink:0;">ðŸ”¥</span>
+      <span style="font-size:54px;line-height:1;padding-top:5px;flex-shrink:0;">🔥</span>
       <div>
         <div style="font-size:74px;font-weight:900;line-height:1;letter-spacing:-2px;">${totalFoguinhos}</div>
         <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.60);margin-top:6px;">FOGUINHOS INVESTIDOS</div>
@@ -7014,14 +7021,14 @@ function renderMemoriasWelcome() {
             <section class="px-6 pt-20 pb-10">
                 <div class="flex flex-col items-center text-center">
                     <h2 class="text-lg tracking-wide text-gray-500">Bem vindos as suas</h2>
-                    <h3 class="text-3xl font-semibold text-gray-900 mt-2">MemÃ³rias</h3>
+                    <h3 class="text-3xl font-semibold text-gray-900 mt-2">Memórias</h3>
                 </div>
             </section>
             <section class="px-4 pb-8">
                 <div class="max-w-md mx-auto bg-white rounded-3xl p-6 shadow-xl">
                     <div class="flex items-center justify-center gap-4">
                         <div class="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden">
-                            <img loading="lazy" src="${sanitizeUrl(fotoUsuario)}" class="w-full h-full object-cover" alt="VocÃª">
+                            <img loading="lazy" src="${sanitizeUrl(fotoUsuario)}" class="w-full h-full object-cover" alt="Você">
                         </div>
                         <div class="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white text-xl">
                             <i class="fas fa-heart"></i>
@@ -7030,7 +7037,7 @@ function renderMemoriasWelcome() {
                             <img loading="lazy" src="${sanitizeUrl(fotoParceiro)}" class="w-full h-full object-cover" alt="Par">
                         </div>
                     </div>
-                    ${podeRelembrar ? '' : '<p class="text-xs text-gray-500 mt-2 text-center">Pareie seu parceiro para comeÃ§ar a guardar memÃ³rias.</p>'}
+                    ${podeRelembrar ? '' : '<p class="text-xs text-gray-500 mt-2 text-center">Pareie seu parceiro para começar a guardar memórias.</p>'}
                     <button onclick="${podeRelembrar ? 'openMemoriasFeed()' : ''}" class="w-full mt-5 py-3 rounded-full text-white font-semibold ${podeRelembrar ? 'bg-gradient-to-r from-pink-500 to-red-500' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}">Relembrar</button>
                     <button onclick="changeStep('dashboard')" class="w-full mt-3 py-3 rounded-full bg-gray-200 text-gray-600 font-semibold">Fechar</button>
                 </div>
@@ -7057,7 +7064,7 @@ function renderMemoriasFeed() {
             <div class="memorias-screen text-white min-h-screen">
                 <section class="px-6 pt-24 pb-10 text-center">
                     <h2 class="text-2xl font-bold">Sua Jornada</h2>
-                    <p class="mt-3 text-sm text-neutral-400">Pareie seu parceiro para visualizar suas memÃ³rias.</p>
+                    <p class="mt-3 text-sm text-neutral-400">Pareie seu parceiro para visualizar suas memórias.</p>
                     <button onclick="changeStep('pareamentos')" class="mt-6 w-full max-w-xs mx-auto py-3 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold">Parear agora</button>
                 </section>
             </div>
@@ -7070,7 +7077,7 @@ function renderMemoriasFeed() {
             <section class="px-6 pt-20 pb-6 text-center">
                 <div class="flex flex-col items-center text-center">
                     <i class="fas fa-book-open text-3xl mb-2 text-white/80"></i>
-                    <h2 class="text-3xl font-semibold text-white">MemÃ³rias</h2>
+                    <h2 class="text-3xl font-semibold text-white">Memórias</h2>
                     <p class="text-sm text-white/70">Sua jornada registrada</p>
                 </div>
                 <div class="mt-4 flex items-center justify-center gap-2 w-full max-w-sm mx-auto">
@@ -7157,7 +7164,7 @@ function trocarAbaTarefas(aba) {
 function renderChallengePopup() {
     const secondsLeft = state.challengeSecondsLeft || 60;
     const disabled = secondsLeft <= 0;
-    const pergunta = state.pendingChallenge?.pergunta || 'Pergunta indisponÃ­vel.';
+    const pergunta = state.pendingChallenge?.pergunta || 'Pergunta indisponível.';
     return `
         <div class="fixed inset-0 bg-black/60 z-40 flex items-center justify-center px-4" onclick="closeChallengePopup()">
             <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" onclick="event.stopPropagation()">
@@ -7204,7 +7211,7 @@ function renderRealizadoPhotoPrompt() {
         : `
             <div class="flex gap-3">
                 <button onclick="handleRealizadoPhotoChoice(true)" class="flex-1 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold">Sim</button>
-                <button onclick="handleRealizadoPhotoChoice(false)" class="flex-1 py-2 rounded-lg bg-white/10 text-white/80">NÃ£o</button>
+                <button onclick="handleRealizadoPhotoChoice(false)" class="flex-1 py-2 rounded-lg bg-white/10 text-white/80">Não</button>
             </div>
         `;
 
@@ -7230,7 +7237,7 @@ function requestRealizadoWithPhoto(tarefaId, momentoNome, custoFoguinhos) {
         custoFoguinhos,
         pareamentoId: tarefa.idPareamento || state.idPareamentoAmigavel || null,
         executadoPorNome: tarefa.executadoPorNome || state.parceiroApelido || state.parceiroNome || 'Parceiro',
-        resgatadoPorNome: tarefa.resgatadoPorNome || state.usuario?.nome || 'VocÃª',
+        resgatadoPorNome: tarefa.resgatadoPorNome || state.usuario?.nome || 'Você',
         executadoPorUid: tarefa.executadoPorUid || state.usuario?.pareadoUid || null,
         resgatadoPorUid: tarefa.resgatadoPorUid || state.usuario?.uid || null,
     };
@@ -7323,7 +7330,7 @@ function handleRealizadoPhotoSelect(event) {
 }
 
 function buildMemoriaDescricao(pending) {
-    const executado = pending.executadoPorNome || 'AlguÃ©m';
+    const executado = pending.executadoPorNome || 'Alguém';
     const resgatado = pending.resgatadoPorNome || 'seu par';
     const momentoNome = pending.momentoNome || 'um momento especial';
     return `${executado} realizou ${momentoNome} para ${resgatado} e esse foi o registro desse momento especial`;
@@ -7366,8 +7373,8 @@ async function createMemoriaPostPhoto(pending, file) {
         }
         await uploadMemoriaPhoto(file, pending);
     } catch (err) {
-        console.warn('Falha ao criar memÃ³ria:', err);
-        showToast('NÃ£o foi possÃ­vel salvar a memÃ³ria.', 'aviso');
+        console.warn('Falha ao criar memória:', err);
+        showToast('Não foi possível salvar a memória.', 'aviso');
     }
 }
 
@@ -7378,9 +7385,9 @@ function setNotificacoesTab(tab) {
     }
 }
 
-// Navega para a tela relevante ao clicar em uma notificaÃ§Ã£o
+// Navega para a tela relevante ao clicar em uma notificação
 function handleNotifClick(target, notifId) {
-    // Marca a notificaÃ§Ã£o individual como lida
+    // Marca a notificação individual como lida
     if (notifId) {
         const notif = (state.notificacoes || []).find(n => n.id === notifId);
         if (notif && !notif.lida) {
@@ -7399,15 +7406,15 @@ function handleNotifClick(target, notifId) {
             updateFixedUI();
         }
     }
-    // Telas que precisam de conexÃ£o aberta (perfil/momentos/desafios)
+    // Telas que precisam de conexão aberta (perfil/momentos/desafios)
     const needsConexao = ['perfilParceiro', 'momentos', 'achievementsPopup', 'extratoPopup'];
     if (needsConexao.includes(target)) {
-        // Se nÃ£o tem conexÃ£o aberta, tenta selecionar a primeira
+        // Se não tem conexão aberta, tenta selecionar a primeira
         if (!state.conexaoAberta || !state.conexaoAberta.uid) {
             const pareamentos = buildPareamentosLista();
             if (pareamentos.length > 0) {
                 abrirPerfilParceiro(0);
-                // Se o target nÃ£o Ã© perfilParceiro, navega para a tela destino depois
+                // Se o target não é perfilParceiro, navega para a tela destino depois
                 if (target !== 'perfilParceiro') {
                     setTimeout(() => {
                         state.etapa = target;
@@ -7461,7 +7468,7 @@ function openWeeklyChallengePopup(desafioId, evt) {
         evt.stopPropagation();
     }
     if (!state.pareado || !state.usuario?.pareadoUid) {
-        showToast('VocÃª precisa estar pareado para responder este desafio.', 'aviso');
+        showToast('Você precisa estar pareado para responder este desafio.', 'aviso');
         return;
     }
     const desafiosSemanais = Array.isArray(state.desafiosSemanais) ? state.desafiosSemanais : [];
@@ -7473,7 +7480,7 @@ function openWeeklyChallengePopup(desafioId, evt) {
     state.pendingChallenge = {
         id: desafio.id,
         titulo: desafio.titulo || 'Desafio da Semana',
-        pergunta: desafio.pergunta || 'Pergunta indisponÃ­vel.',
+        pergunta: desafio.pergunta || 'Pergunta indisponível.',
     };
     state.showChallengePopup = true;
     state.challengePopupOpenedAt = Date.now();
@@ -7540,7 +7547,7 @@ function submitWeeklyChallengeAnswer() {
     }
 
     if (result.status === 'finalizado') {
-        showToast('Respostas iguais! Desafio concluÃ­do.', 'sucesso');
+        showToast('Respostas iguais! Desafio concluído.', 'sucesso');
     } else if (result.status === 'finalizado_sem_recompensa') {
         showToast('Respostas diferentes. Sem sincronia.', 'aviso');
     } else {
@@ -7552,7 +7559,7 @@ function submitWeeklyChallengeAnswer() {
 function handlePartnerChallengeAnswer(desafioId, answer, partnerName) {
     const result = applyWeeklyChallengeAnswer(desafioId, answer, state.usuario?.pareadoUid || null, partnerName);
     if (result.status === 'finalizado') {
-        showToast('Respostas iguais! Desafio concluÃ­do.', 'sucesso');
+        showToast('Respostas iguais! Desafio concluído.', 'sucesso');
     } else if (result.status === 'finalizado_sem_recompensa') {
         showToast('Respostas diferentes. Sem sincronia.', 'aviso');
     }
@@ -7580,13 +7587,13 @@ function handleWeeklyChallengeTimeout(desafioId) {
     state.showChallengePopup = false;
     state.activeWeeklyChallengeId = null;
     state.challengeDeadline = null;
-    showToast('Tempo esgotado. VocÃª pode tentar novamente depois.', 'aviso');
+    showToast('Tempo esgotado. Você pode tentar novamente depois.', 'aviso');
     renderAchievementsPopup();
 }
 
 async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
     if (!tarefaId) {
-        console.error("ID da tarefa nÃ£o fornecido.");
+        console.error("ID da tarefa não fornecido.");
         return;
     }
     openSystemConfirm("Tem certeza que deseja marcar este momento como 'Realizado'?", async () => {
@@ -7619,7 +7626,7 @@ async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
 
             showToast("Momento confirmado com sucesso!", "sucesso");
             
-            // Re-renderiza a tela para mostrar a mudanÃ§a de status
+            // Re-renderiza a tela para mostrar a mudança de status
             renderMomentos();
 
         } catch (error) {
@@ -7629,25 +7636,25 @@ async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
     });
 }
 
-    // FunÃ§Ã£o para mudar a etapa da aplicaÃ§Ã£o
+    // Função para mudar a etapa da aplicação
     function changeStep(newStep) {
-// Bloqueia navegaÃ§Ã£o para cadastro quando desativado
+// Bloqueia navegação para cadastro quando desativado
 if (!REGISTRATION_ENABLED && newStep === 'register') {
-    showToast('Cadastros estÃ£o fechados nesta fase.', 'aviso');
+    showToast('Cadastros estão fechados nesta fase.', 'aviso');
     newStep = 'signIn';
 }
-// LÃ³gica de NavegaÃ§Ã£o Simplificada
-// Se o usuÃ¡rio clicar no Ã­cone da tela em que ele jÃ¡ estÃ¡...
+// Lógica de Navegação Simplificada
+// Se o usuário clicar no ícone da tela em que ele já está...
 if (state.etapa === newStep) {
-    // ...e essa tela NÃƒO for a principal, entÃ£o ele volta para a principal (efeito de fechar).
+    // ...e essa tela NÃO for a principal, então ele volta para a principal (efeito de fechar).
     if (newStep !== 'dashboard') {
         state.etapa = 'dashboard';
     } else {
-        // Se ele jÃ¡ estÃ¡ na 'dashboard' e clica na 'dashboard', nÃ£o faz nada.
+        // Se ele já está na 'dashboard' e clica na 'dashboard', não faz nada.
         return;
     }
 } else {
-    // Se ele clicar em um Ã­cone de uma tela DIFERENTE, ele navega para ela. Simples assim.
+    // Se ele clicar em um ícone de uma tela DIFERENTE, ele navega para ela. Simples assim.
     state.etapa = newStep;
 }
 
@@ -7665,15 +7672,15 @@ state.showAchievementsPopup = false;
 state.showPairingModal = false;
 state.showVipPopup = false;
 
-// Renderiza a aplicaÃ§Ã£o com o novo estado definido
+// Renderiza a aplicação com o novo estado definido
 renderApp();
 }
 
-    // Nova funÃ§Ã£o para atualizar elementos da UI fixa (header e footer)
+    // Nova função para atualizar elementos da UI fixa (header e footer)
     function updateFixedUI() {
-    // ATUALIZA O NOME DO USUÃRIO (igual)
+    // ATUALIZA O NOME DO USUÁRIO (igual)
     if (userNameDisplay) {
-        userNameDisplay.textContent = state.usuario && state.usuario.nome ? `OlÃ¡, ${state.usuario.nome}!` : '';
+        userNameDisplay.textContent = state.usuario && state.usuario.nome ? `Olá, ${state.usuario.nome}!` : '';
     }
 
     // ATUALIZA FOTO DE PERFIL NA HEADER (igual)
@@ -7687,9 +7694,9 @@ renderApp();
     }
 
     // ==================================================================
-    // LÃ“GICA ATUALIZADA (PONTO VERMELHO)
+    // LÓGICA ATUALIZADA (PONTO VERMELHO)
     // ==================================================================
-    // CONTROLA PONTO VERMELHO DE NOTIFICAÃ‡ÃƒO (SÃ“ PARA TAREFAS)
+    // CONTROLA PONTO VERMELHO DE NOTIFICAÇÃO (SÓ PARA TAREFAS)
     const notificationDot = document.getElementById('notificationDot');
     if (notificationDot) {
         // AGORA VERIFICA O CONTADOR DE TAREFAS
@@ -7716,25 +7723,25 @@ renderApp();
         }
     }
 
-    // Atualiza botÃ£o de notificaÃ§Ãµes do Dashboard em tempo real (via DOM)
+    // Atualiza botão de notificações do Dashboard em tempo real (via DOM)
     const dashBtn = document.getElementById('dashboardNotifBtn');
     if (dashBtn) {
         const pc = (state.notificacoesTarefasNaoLidas || 0) +
             (state.notificacoesPresentesNaoLidas || 0) +
             (state.notificacoesConquistasNaoLidas || 0);
         const hp = pc > 0;
-        // Atualiza classes do botÃ£o
+        // Atualiza classes do botão
         dashBtn.className = `rounded-2xl ${hp ? 'bg-white text-gray-900 shadow-lg shadow-white/20' : 'bg-white/10'} p-5 text-left transition hover:bg-white/20`;
-        // Atualiza Ã­cone wrapper
+        // Atualiza ícone wrapper
         const iconWrap = document.getElementById('dashboardNotifIconWrap');
         if (iconWrap) iconWrap.className = `w-12 h-12 rounded-xl ${hp ? 'bg-pink-100' : 'bg-white/10'} flex items-center justify-center mb-3`;
-        // Atualiza Ã­cone
+        // Atualiza ícone
         const icon = document.getElementById('dashboardNotifIcon');
         if (icon) icon.className = `fas fa-bell text-xl ${hp ? 'text-pink-500' : 'icon-gradient'}`;
-        // Atualiza tÃ­tulo
+        // Atualiza título
         const title = document.getElementById('dashboardNotifTitle');
         if (title) title.className = `text-sm font-semibold ${hp ? 'text-gray-900' : ''}`;
-        // Atualiza subtÃ­tulo
+        // Atualiza subtítulo
         const sub = document.getElementById('dashboardNotifSub');
         if (sub) {
             sub.className = `text-xs ${hp ? 'text-gray-600' : 'text-white/70'}`;
@@ -7742,9 +7749,9 @@ renderApp();
         }
     }
 
-    // ATUALIZA OS BADGES DA BARRA DE NAVEGAÃ‡ÃƒO (igual)
+    // ATUALIZA OS BADGES DA BARRA DE NAVEGAÇÃO (igual)
     if (foguinhosBadge) {
-        // Se tem conexÃ£o ativa, mostra foguinhos daquela conexÃ£o
+        // Se tem conexão ativa, mostra foguinhos daquela conexão
         if (state.conexaoAtiva && state.conexaoAtiva.uid) {
             foguinhosBadge.textContent = getFoguinhosConexao(state.conexaoAtiva.uid);
         } else {
@@ -7755,7 +7762,7 @@ renderApp();
         carrinhoBadge.textContent = state.carrinho.length;
     }
 
-    // LÃ“GICA DE VISIBILIDADE DAS BARRAS (igual)
+    // LÓGICA DE VISIBILIDADE DAS BARRAS (igual)
     if (bottomNavBar && mainHeader) {
         const telasComBarraVisivel = ['dashboard', 'main', 'momentos', 'memorias', 'parear', 'pareamentos', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes', 'achievementsPopup', 'meuPerfil'];
         if (telasComBarraVisivel.includes(state.etapa)) {
@@ -7784,36 +7791,36 @@ renderApp();
         }
     }
 
-    // LÃ“GICA PARA CORES E ESTADO "ATIVO" DOS ÃCONES (atualizada)
+    // LÓGICA PARA CORES E ESTADO "ATIVO" DOS ÍCONES (atualizada)
     const bottomNavItems = document.querySelectorAll('.bottom-nav-bar .bottom-nav-item, .bottom-nav-bar .bottom-nav-item-center');
     
     // ==================================================================
-    // NOVA LÃ“GICA DE COR (ÃCONE DE FOGO AMARELO)
+    // NOVA LÓGICA DE COR (ÍCONE DE FOGO AMARELO)
     // ==================================================================
-    // Primeiro, tratamos o Ã­cone de fogo separadamente
+    // Primeiro, tratamos o ícone de fogo separadamente
     const foguinhosBtn = document.getElementById('foguinhosNavButton');
     if (foguinhosBtn) {
         // Limpa os estados de cor primeiro
         foguinhosBtn.classList.remove('active', 'text-yellow-400'); 
         
         if (state.etapa === 'foguinhosPopup') {
-            // 1. Se a tela estÃ¡ ATIVA, fica ROSA (cor 'active')
+            // 1. Se a tela está ATIVA, fica ROSA (cor 'active')
             foguinhosBtn.classList.add('active');
         } else if (state.notificacoesPresentesNaoLidas > 0) {
-            // 2. Se nÃ£o estÃ¡ ativa, MAS TEM notificaÃ§Ã£o, fica AMARELO
+            // 2. Se não está ativa, MAS TEM notificação, fica AMARELO
             foguinhosBtn.classList.add('text-yellow-400');
         }
-        // 3. Se nÃ£o for nenhum dos casos, ele fica com a cor padrÃ£o (cinza)
+        // 3. Se não for nenhum dos casos, ele fica com a cor padrão (cinza)
     }
 
-    // Agora, tratamos o resto dos Ã­cones (exceto o de fogo)
+    // Agora, tratamos o resto dos ícones (exceto o de fogo)
     bottomNavItems.forEach(item => {
-        // NÃ£o mexemos no de fogo, pois jÃ¡ fizemos isso
+        // Não mexemos no de fogo, pois já fizemos isso
         if (item.id === 'foguinhosNavButton') return; 
 
         item.classList.remove('active');
         
-        // (LÃ³gica do Ã­cone de coraÃ§Ã£o - continua igual)
+        // (Lógica do ícone de coração - continua igual)
         const heartIcon = item.querySelector('.fas.fa-heart');
         if (heartIcon) {
             heartIcon.classList.remove('text-red-500', 'text-yellow-400', 'text-gray-400');
@@ -7826,7 +7833,7 @@ renderApp();
             }
         }
 
-        // (LÃ³gica de ativaÃ§Ã£o dos outros botÃµes - continua igual)
+        // (Lógica de ativação dos outros botões - continua igual)
         if (item.querySelector('.fas.fa-store') && state.etapa === 'gerenciarCatalogo') {
             item.classList.add('active');
         } else if (item.querySelector('.fas.fa-heart') && (state.etapa === 'parear' || state.etapa === 'pareamentos' || state.etapa === 'partnerInfoPopup')) {
@@ -7839,7 +7846,7 @@ renderApp();
     });
 }
 
-    // FunÃ§Ã£o para alternar a visibilidade do pop-up de Foguinhos
+    // Função para alternar a visibilidade do pop-up de Foguinhos
     function toggleFoguinhosPopup() {
         if (state.etapa === 'foguinhosPopup') {
             state.etapa = 'main';
@@ -7850,7 +7857,7 @@ renderApp();
         renderApp();
     }
 
-    // FunÃ§Ã£o para alternar a visibilidade do pop-up de InformaÃ§Ãµes do Parceiro Pareado
+    // Função para alternar a visibilidade do pop-up de Informações do Parceiro Pareado
     function togglePartnerInfoPopup() {
         if (state.etapa === 'partnerInfoPopup') {
             state.etapa = 'main';
@@ -7871,14 +7878,14 @@ renderApp();
         renderApp();
     }
 
-    // Carrega dados do usuÃ¡rio e do parceiro se pareado
+    // Carrega dados do usuário e do parceiro se pareado
     
 async function loadUserDataAndNavigate(uid, email) {
 await carregarMomentosMestres();
 try {
     hasProcessedInitialConquistas = false;
     if (!uid) {
-        console.error('UID do usuÃ¡rio Ã© nulo ou indefinido em loadUserDataAndNavigate. Abortando carregamento.');
+        console.error('UID do usuário é nulo ou indefinido em loadUserDataAndNavigate. Abortando carregamento.');
         state.etapa = 'landing';
         renderApp();
         return;
@@ -7924,10 +7931,10 @@ try {
         state.parceiroTelefone = null;
         state.idPareamentoAmigavel = null;
 
-        // >>> LIGA O OUVINTE DE NOTIFICAÃ‡Ã•ES AQUI <<<
+        // >>> LIGA O OUVINTE DE NOTIFICAÇÕES AQUI <<<
         setupNotificationListener(uid);
 
-        // LIGA O OUVINTE DE NOTIFICAÃ‡Ã•ES PUSH EM PRIMEIRO PLANO
+        // LIGA O OUVINTE DE NOTIFICAÇÕES PUSH EM PRIMEIRO PLANO
         setupForegroundMessageHandler();
 
         if (state.pareado && state.usuario.pareadoUid) {
@@ -7953,17 +7960,17 @@ try {
                             setupWeeklyChallengeListener();
                         }
                     } catch (pareamentoErr) {
-                        // Documento pode ter sido deletado (ex: apÃ³s desparamento) ou
-                        // regra de seguranÃ§a nega acesso a docs inexistentes.
-                        // Continua sem idAmigavel â€” nÃ£o deve impedir o login.
-                        console.warn('NÃ£o foi possÃ­vel carregar doc de pareamento:', pareamentoErr.code || pareamentoErr.message);
+                        // Documento pode ter sido deletado (ex: após desparamento) ou
+                        // regra de segurança nega acesso a docs inexistentes.
+                        // Continua sem idAmigavel — não deve impedir o login.
+                        console.warn('Não foi possível carregar doc de pareamento:', pareamentoErr.code || pareamentoErr.message);
                         state.idPareamentoAmigavel = null;
                         state.pareado = false;
                         state.usuario.pareadoUid = null;
                     }
                 }
             } else {
-                console.warn('Parceiro pareado nÃ£o encontrado no Firestore.');
+                console.warn('Parceiro pareado não encontrado no Firestore.');
                 state.pareado = false;
                 state.usuario.pareadoUid = null;
             }
@@ -7985,11 +7992,11 @@ try {
             }
         }
         
-        // --- Multi-conexÃ£o: roteia para seletor ou auto-seleciona ---
+        // --- Multi-conexão: roteia para seletor ou auto-seleciona ---
         const isVipUser = !!(state.usuario && state.usuario.vip);
         const parceirosLista = buildPareamentosLista();
         if (isVipUser && parceirosLista.length > 1) {
-            // Tenta restaurar Ãºltima conexÃ£o usada do localStorage
+            // Tenta restaurar última conexão usada do localStorage
             let autoSelected = false;
             try {
                 const savedConexaoUid = localStorage.getItem('conexaoAtivaUid:' + uid);
@@ -8000,9 +8007,9 @@ try {
                         autoSelected = true;
                     }
                 }
-            } catch (e) { /* localStorage indisponÃ­vel */ }
+            } catch (e) { /* localStorage indisponível */ }
             if (!autoSelected) {
-                // Auto-seleciona primeira conexÃ£o e vai para dashboard
+                // Auto-seleciona primeira conexão e vai para dashboard
                 state.conexaoAtiva = {
                     uid: parceirosLista[0].uid,
                     nome: parceirosLista[0].nome,
@@ -8014,7 +8021,7 @@ try {
                 state.etapa = 'dashboard';
             }
         } else if (parceirosLista.length === 1) {
-            // Auto-seleciona a Ãºnica conexÃ£o
+            // Auto-seleciona a única conexão
             state.conexaoAtiva = {
                 uid: parceirosLista[0].uid,
                 nome: parceirosLista[0].nome,
@@ -8028,8 +8035,8 @@ try {
             state.etapa = 'dashboard';
         }
 
-        // Ouvinte em tempo real: documento do usuÃ¡rio (para refletir mudanÃ§as
-        // feitas pelo backend, como remoÃ§Ã£o de pending quando rejeitado)
+        // Ouvinte em tempo real: documento do usuário (para refletir mudanças
+        // feitas pelo backend, como remoção de pending quando rejeitado)
         if (unsubscribeUserDoc) {
             unsubscribeUserDoc();
             unsubscribeUserDoc = null;
@@ -8141,7 +8148,7 @@ try {
                                 if (pareamentoDoc.exists && pareamentoDoc.data().idAmigavel) {
                                     state.idPareamentoAmigavel = pareamentoDoc.data().idAmigavel;
                                 } else if (!pareamentoDoc.exists) {
-                                    // Doc de pareamento deletado â€” trata como despareado
+                                    // Doc de pareamento deletado — trata como despareado
                                     state.idPareamentoAmigavel = null;
                                     state.pareado = false;
                                     state.usuario.pareadoUid = null;
@@ -8166,7 +8173,7 @@ try {
                         const celebrationText = celebrationInfo.description
                             ? `${celebrationInfo.title}: ${celebrationInfo.description}`
                             : celebrationInfo.title;
-                        showToast(`ðŸ† ${celebrationText}`, 'sucesso');
+                        showToast(`🏆 ${celebrationText}`, 'sucesso');
                     }
                 });
             }
@@ -8174,7 +8181,7 @@ try {
             renderApp();
         });
 
-        // Ouvinte para solicitaÃ§Ãµes pendentes onde este usuÃ¡rio Ã© receiver
+        // Ouvinte para solicitações pendentes onde este usuário é receiver
         if (unsubscribePendingPairing) {
             unsubscribePendingPairing();
             unsubscribePendingPairing = null;
@@ -8189,7 +8196,7 @@ try {
                     const hadPending = !!state.pendingPairingRequest;
                     const reqData = { id: requestDoc.id, ...requestDoc.data() };
                     state.pendingPairingRequest = reqData;
-                    // Busca a foto do solicitante se ainda nÃ£o tiver
+                    // Busca a foto do solicitante se ainda não tiver
                     if (reqData.senderUid && !reqData.senderFotoUrl) {
                         db.collection('usuarios').doc(reqData.senderUid).get()
                             .then((sSnap) => {
@@ -8204,19 +8211,19 @@ try {
                     if (state.incomingPairingDismissedId && state.incomingPairingDismissedId !== requestDoc.id) {
                         state.incomingPairingDismissedId = null;
                     }
-                    // NÃ£o forÃ§a navegaÃ§Ã£o â€” o popup flutuante aparece na tela atual via renderApp()
+                    // Não força navegação — o popup flutuante aparece na tela atual via renderApp()
                 } else {
                     state.pendingPairingRequest = null;
-                    // Se sender estÃ¡ em "pending_" e nÃ£o estÃ¡ pareado, mantÃ©m em parear
+                    // Se sender está em "pending_" e não está pareado, mantém em parear
                     if (!state.pareado && state.usuario.pareadoCom && typeof state.usuario.pareadoCom === 'string' && state.usuario.pareadoCom.startsWith('pending_')) {
                         state.etapa = 'parear';
                     }
-                    // NÃ£o forÃ§ar etapa = 'dashboard' â€” respeitar navegaÃ§Ã£o atual
+                    // Não forçar etapa = 'dashboard' — respeitar navegação atual
                 }
                 renderApp();
             });
     } else {
-        console.log('UsuÃ¡rio logado via Auth, mas sem documento de perfil no Firestore.');
+        console.log('Usuário logado via Auth, mas sem documento de perfil no Firestore.');
     state.usuario = { uid: uid, email: email, conquistas: {}, achievementStats: {} };
         if (REGISTRATION_ENABLED) {
             state.etapa = 'register';
@@ -8227,7 +8234,7 @@ try {
         }
     }
 } catch (error) {
-    console.error('Erro ao carregar dados do usuÃ¡rio:', error);
+    console.error('Erro ao carregar dados do usuário:', error);
     state.etapa = 'landing';
 } finally {
     renderApp();
@@ -8237,14 +8244,14 @@ try {
 
     // Initialize app
     function init() {
-        // Monitora o estado de autenticaÃ§Ã£o do Firebase ao carregar a pÃ¡gina
+        // Monitora o estado de autenticação do Firebase ao carregar a página
         auth.onAuthStateChanged(async (user) => {
             if (user) {
-                if (DEBUG_MODE) console.log('init: UsuÃ¡rio logado no Auth:', user.email);
+                if (DEBUG_MODE) console.log('init: Usuário logado no Auth:', user.email);
                 await loadUserDataAndNavigate(user.uid, user.email);
             } else {
-                if (DEBUG_MODE) console.log('init: Nenhum usuÃ¡rio logado no Auth.');
-                // Limpa todo o estado do usuÃ¡rio ao deslogar
+                if (DEBUG_MODE) console.log('init: Nenhum usuário logado no Auth.');
+                // Limpa todo o estado do usuário ao deslogar
                 state.usuario = null;
                 state.pareado = false;
                 state.etapa = 'landing';
@@ -8268,11 +8275,11 @@ try {
         });
     }
 
-    // FunÃ§Ã£o que inicializa o aplicativo
+    // Função que inicializa o aplicativo
     function initializeApp() {
-        console.log("ðŸš€ AplicaÃ§Ã£o inicializando...");
+        console.log("🚀 Aplicação inicializando...");
 
-        // 1. Atribui os elementos do DOM a variÃ¡veis globais
+        // 1. Atribui os elementos do DOM a variáveis globais
         appContainer = document.getElementById('app');
         userNameDisplay = document.getElementById('userNameDisplay');
         foguinhosBadge = document.getElementById('foguinhosBadge');
@@ -8280,7 +8287,7 @@ try {
         bottomNavBar = document.getElementById('bottom-nav-bar');
         mainHeader = document.getElementById('mainHeader');
 
-        // 2. Torna as funÃ§Ãµes de evento acessÃ­veis globalmente para o HTML
+        // 2. Torna as funções de evento acessíveis globalmente para o HTML
         window.changeStep = changeStep;
         window.handleSignIn = handleSignIn;
         window.handleRegister = handleRegister;
@@ -8375,13 +8382,13 @@ try {
         window.shareMemoriasPreview = shareMemoriasPreview;
         window.saveMemoriasPreview = saveMemoriasPreview;
 
-        if (DEBUG_MODE) console.log('âœ… FunÃ§Ãµes de evento prontas.');
+        if (DEBUG_MODE) console.log('✅ Funções de evento prontas.');
 
-        // 3. Inicia a lÃ³gica principal da aplicaÃ§Ã£o
+        // 3. Inicia a lógica principal da aplicação
         init();
     }
 
-    // Ouve pelo evento que indica que o HTML estÃ¡ pronto
+    // Ouve pelo evento que indica que o HTML está pronto
     document.addEventListener('DOMContentLoaded', initializeApp);
 
     // Captura o evento beforeinstallprompt (Android/Desktop Chrome)
