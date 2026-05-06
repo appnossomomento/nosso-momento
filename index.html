@@ -1352,7 +1352,7 @@ function getPwaInstallHtml() {
 
     return `
         <div id="pwa-install-overlay" class="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 animate-fadeIn" onclick="dismissPwaInstallPopup()">
-            <div class="w-full max-w-md rounded-3xl bg-[#1a1025] text-white shadow-2xl border border-white/10 p-6 pb-8" onclick="event.stopPropagation()" style="animation: slideUp 0.3s ease-out;">
+            <div class="w-full max-w-md rounded-3xl bg-[#1a1025] text-white shadow-2xl border border-white/10 p-6 pb-8" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Instalar aplicativo" style="animation: slideUp 0.3s ease-out;">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <img src="/assets/icons/icon-192x192.png" class="w-12 h-12 rounded-xl" alt="Nosso Momento">
@@ -1361,7 +1361,7 @@ function getPwaInstallHtml() {
                             <p class="text-xs text-white/50">Nosso Momento</p>
                         </div>
                     </div>
-                    <button onclick="dismissPwaInstallPopup()" class="text-white/50 hover:text-white p-1">
+                    <button onclick="dismissPwaInstallPopup()" class="text-white/50 hover:text-white p-1" aria-label="Fechar">
                         <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
@@ -1919,10 +1919,10 @@ function triggerAchievementCelebration(notif) {
                     </div>
                     <div class="space-y-4">
                         <div>
-                            <input id="signInEmail" type="email" placeholder="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            <input id="signInEmail" type="email" placeholder="Email" aria-label="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
                         </div>
                         <div>
-                            <input id="signInPassword" type="password" placeholder="Senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            <input id="signInPassword" type="password" placeholder="Senha" aria-label="Senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
                         </div>
                     </div>
                     <button onclick="handleSignIn()" class="btn-red w-full mt-6 py-4 rounded-xl hover:shadow-xl transition-all duration-400 flex items-center justify-center gap-3">
@@ -1947,19 +1947,19 @@ function triggerAchievementCelebration(notif) {
                     </div>
                     <div class="space-y-5">
                         <div>
-                            <input id="registerNome" placeholder="Seu nome" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            <input id="registerNome" placeholder="Seu nome" aria-label="Seu nome" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
                         </div>
                         <div>
-                            <input id="registerEmail" type="email" placeholder="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            <input id="registerEmail" type="email" placeholder="Email" aria-label="Email" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
                         </div>
                         <div>
-                            <input id="registerTelefone" type="tel" placeholder="Telefone (apenas números, ex: 11999991111)" pattern="[0-9]{11}" required class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            <input id="registerTelefone" type="tel" placeholder="Telefone (apenas números, ex: 11999991111)" pattern="[0-9]{11}" required aria-label="Telefone" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
                         </div>
                         <div>
-                            <input id="registerSenha" type="password" placeholder="Crie uma senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
+                            <input id="registerSenha" type="password" placeholder="Crie uma senha" aria-label="Crie uma senha" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
                         </div>
                         <div>
-                            <select id="registerSexo" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300">
+                            <select id="registerSexo" aria-label="Sexo" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300">
                                 <option value="" disabled selected>Selecione seu sexo</option>
                                 <option value="Masculino">Masculino</option>
                                 <option value="Feminino">Feminino</option>
@@ -2854,6 +2854,7 @@ try {
             <div class="fixed inset-0 z-[60] bg-black/75 backdrop-blur-sm" onclick="dismissIncomingPairingPopup()"></div>
             <div class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0" onclick="dismissIncomingPairingPopup()">
                 <div class="w-full max-w-sm rounded-3xl overflow-hidden text-white shadow-2xl animate-fadeIn" onclick="event.stopPropagation()"
+                     role="dialog" aria-modal="true" aria-label="Convite de pareamento"
                      style="background: linear-gradient(160deg, #1a0a1e 0%, #0d0a0f 100%); border: 1px solid rgba(255,60,100,0.25);">
 
                     <!-- Cabeçalho com logo e barra de gradiente -->
@@ -2862,7 +2863,7 @@ try {
                             <img src="/assets/icons/iconprincipal.png" style="width:28px;height:28px;filter:drop-shadow(0 0 6px rgba(255,73,106,0.7));" alt="Nosso Momento">
                             <span class="text-sm font-bold tracking-widest uppercase" style="color:rgba(255,100,130,0.9);">Nosso Momento</span>
                         </div>
-                        <button onclick="dismissIncomingPairingPopup()" class="text-white/30 hover:text-white/70 transition text-lg leading-none">&times;</button>
+                        <button onclick="dismissIncomingPairingPopup()" class="text-white/60 hover:text-white/90 transition text-lg leading-none" aria-label="Fechar">&times;</button>
                     </div>
 
                     <!-- Corpo -->
@@ -2894,7 +2895,7 @@ try {
                             </button>
                         </div>
 
-                        <button onclick="dismissIncomingPairingPopup()" class="mt-4 text-white/30 text-xs hover:text-white/60 transition">Ver depois</button>
+                        <button onclick="dismissIncomingPairingPopup()" class="mt-4 text-white/60 text-xs hover:text-white/90 transition">Ver depois</button>
                     </div>
                 </div>
             </div>
@@ -3716,7 +3717,7 @@ function renderPareamentosLista() {
                                 <div class="relative rounded-2xl bg-[#ff4457] shadow-[0_12px_30px_rgba(255,68,87,0.35)] overflow-hidden cursor-pointer transition hover:scale-[1.01] active:scale-[0.99]"
                                      onclick="abrirPerfilParceiro(${index})">
                                     <button type="button" class="absolute top-3 right-3 z-10 p-2 rounded-full bg-black/20 text-white/80 hover:bg-black/40 hover:text-white transition"
-                                        onclick="event.stopPropagation(); requestUnpairFromList(${index})" title="Desfazer Pareamento">
+                                        onclick="event.stopPropagation(); requestUnpairFromList(${index})" title="Desfazer Pareamento" aria-label="Desfazer Pareamento">
                                         <i class="fas fa-link-slash text-xs"></i>
                                     </button>
                                     <div class="flex items-center gap-4 p-4">
@@ -5118,7 +5119,7 @@ appContainer.innerHTML = `
                 <div class="space-y-4">
                     ${categorias.map(categoria => `
                         <div class="notification-card overflow-hidden">
-                            <button onclick="toggleAccordion(this)" class="w-full p-4 text-left font-semibold text-base flex justify-between items-center text-white">
+                            <button onclick="toggleAccordion(this)" class="w-full p-4 text-left font-semibold text-base flex justify-between items-center text-white" aria-expanded="false">
                                 <span>${categoria}</span>
                                 <i class="fas fa-chevron-down transition-transform duration-300"></i>
                             </button>
@@ -5415,6 +5416,7 @@ const content = buttonElement.nextElementSibling;
 const isOpening = !content.classList.contains('open');
 
 buttonElement.classList.toggle('open');
+buttonElement.setAttribute('aria-expanded', isOpening);
 content.classList.toggle('open');
 
 const finalizeTransition = (event) => {
@@ -6626,8 +6628,8 @@ function renderMemoriaViewer() {
                     <div class="w-full aspect-[3/4] overflow-hidden rounded-2xl">
                         <img loading="lazy" src="${sanitizeUrl(item.fotoUrl)}" alt="Memória" class="w-full h-full object-cover">
                     </div>
-                    <button onclick="changeMemoriaViewer(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white text-sm">&#10094;</button>
-                    <button onclick="changeMemoriaViewer(1)" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white text-sm">&#10095;</button>
+                    <button onclick="changeMemoriaViewer(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white text-sm" aria-label="Foto anterior">&#10094;</button>
+                    <button onclick="changeMemoriaViewer(1)" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/30 text-white text-sm" aria-label="Próxima foto">&#10095;</button>
                 </div>
                 <p class="text-sm text-gray-600 mt-4">${escapeHtml(item.descricao || '')}</p>
                 <div class="mt-4 flex items-center justify-center gap-3">
@@ -8426,7 +8428,7 @@ try {
         </button>
     </div>
 </nav>
-<div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] space-y-2 w-auto max-w-sm"></div>
+<div id="toast-container" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] space-y-2 w-auto max-w-sm" role="status" aria-live="polite" aria-atomic="true"></div>
 
 </body>
 </html>
