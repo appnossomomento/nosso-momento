@@ -110,7 +110,8 @@ exports.createInput = https.onRequest(async (req, res) => {
       ],
       weekly_challenge_answer: [
         "type", "fromUid", "partnerUid", "pareamentoId",
-        "challengeId", "answer", "payloadJson",
+        "challengeId", "challengeDocId",
+        "responderUid", "responderName", "answer", "payloadJson",
       ],
       weekly_challenge_timeout: [
         "type", "fromUid", "partnerUid", "pareamentoId",
