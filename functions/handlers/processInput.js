@@ -1358,7 +1358,22 @@ exports.processInput = onDocumentCreated(
             }
 
             const responderData = responderSnap.data();
-            const partnerUid = responderData.pareadoUid || null;
+            let partnerUid = responderData.pareadoUid || null;
+
+            // Fallback multi-conexão: resolve via pareamentoId
+            if (!partnerUid && input.pareamentoId) {
+              const cpRef = admin.firestore()
+                  .collection("pareamentos")
+                  .doc(String(input.pareamentoId));
+              const cpSnap = await tx.get(cpRef);
+              if (cpSnap.exists) {
+                const cpData = cpSnap.data();
+                partnerUid = cpData.pessoa1Uid === responderUid ?
+                    cpData.pessoa2Uid :
+                    cpData.pessoa1Uid;
+              }
+            }
+
             if (!partnerUid) {
               tx.update(inputRef, {
                 error: "partner_not_found",
@@ -1609,6 +1624,71 @@ exports.processInput = onDocumentCreated(
 
           console.log(
               "processInput: weekly_challenge_answer processado",
+              inputId,
+          );
+        } else if (input.type === "catalog_update") {
+          const fromUid = input.fromUid;
+          const partnerUids = Array.isArray(input.partnerUids) ?
+            input.partnerUids.filter(
+                (u) => typeof u === "string" && u.length > 0,
+            ) :
+            [];
+
+          if (!fromUid || partnerUids.length === 0) {
+            await inputRef.update({
+              error: "missing_catalog_update_info",
+              processed: false,
+            });
+            return;
+          }
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const senderRef = admin
+                .firestore()
+                .collection("usuarios")
+                .doc(fromUid);
+            const senderSnap = await tx.get(senderRef);
+            if (!senderSnap.exists) {
+              tx.update(inputRef, {
+                error: "sender_not_found",
+                processed: false,
+              });
+              return;
+            }
+
+            const meuNome = senderSnap.data().nome || "Seu parceiro";
+
+            for (const partnerUid of partnerUids) {
+              const notifRef = admin
+                  .firestore()
+                  .collection("notificacoes")
+                  .doc();
+              tx.set(notifRef, {
+                userId: partnerUid,
+                titulo: `${meuNome} fez mudanças na lojinha! 👀`,
+                mensagem:
+                  "Corre lá... vai que tem promoção hahaha 🤭",
+                icone: "fa-store",
+                tipo: "catalog_update",
+                redirectTo: "main",
+                lida: false,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log(
+              "processInput: catalog_update processado",
               inputId,
           );
         } else if (input.type === "pairing_unpair") {

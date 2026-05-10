@@ -5339,23 +5339,15 @@ try {
     // 6. Atualizamos o estado local para manter tudo sincronizado.
     state.usuario.catalogoPersonalizado = novoCatalogo;
 
-    // 6.5 Notifica parceiros sobre atualização do catálogo
+    // 6.5 Notifica parceiros sobre atualização do catálogo (via backend)
     try {
         const parceiros = Array.isArray(state.parceirosAtivos) ? state.parceirosAtivos : [];
-        const meuNome = state.usuario?.nome || 'Seu parceiro';
-        for (const parceiro of parceiros) {
-            if (parceiro.uid) {
-                await db.collection('notificacoes').add({
-                    userId: parceiro.uid,
-                    titulo: `${meuNome} fez mudanças na lojinha! 👀`,
-                    mensagem: 'Corre lá... vai que tem promoção hahaha 🤭',
-                    icone: 'fa-store',
-                    tipo: 'catalog_update',
-                    redirectTo: 'main',
-                    lida: false,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                });
-            }
+        const partnerUids = parceiros.map(p => p.uid).filter(Boolean);
+        if (partnerUids.length > 0) {
+            await safeAddInput({
+                type: 'catalog_update',
+                partnerUids,
+            });
         }
     } catch (notifErr) {
         console.warn('Erro ao enviar notificação de catálogo:', notifErr);
