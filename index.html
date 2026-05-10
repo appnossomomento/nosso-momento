@@ -4274,6 +4274,7 @@ function abrirPerfilParceiro(index) {
 
     state.etapaHistorico.push(state.etapa);
     state.etapa = 'perfilParceiro';
+    state.emContextoParceiro = true;
     renderApp();
 
     // Carrega dados async
