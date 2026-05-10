@@ -24,11 +24,16 @@
         }
         body {
             font-family: 'Poppins', sans-serif;
-            /* Adicionado padding-bottom para que o conteúdo não fique por baixo do footer fixo */
-            overflow-x: hidden; /* Esconder a barra de rolagem horizontal se algo escapar */
+            overflow-x: hidden;
+            height: 100dvh;
+            overflow-y: hidden;
+            display: flex;
+            flex-direction: column;
         }
         #app {
-            min-height: 100vh;
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             display: flex;
             flex-direction: column;
         }
@@ -402,10 +407,7 @@
         }
 
         /* ===== TEMA CLARO (Perfil do Parceiro) ===== */
-        body.theme-light {
-            background: #050507 !important;
-        }
-        body.theme-light .perfil-parceiro-card {
+        .perfil-parceiro-card {
             background:
                 linear-gradient(#1a1b20, #1a1b20) padding-box,
                 linear-gradient(135deg, rgba(255,45,63,0.50), rgba(255,106,120,0.34), rgba(255,45,63,0.20)) border-box;
@@ -414,29 +416,29 @@
             box-shadow: 0 10px 28px rgba(0,0,0,0.48), 0 0 0 1px rgba(255,85,101,0.10), 0 0 20px rgba(255,73,106,0.16);
             transition: box-shadow 0.25s ease, transform 0.25s ease;
         }
-        body.theme-light .perfil-parceiro-card:hover {
+        .perfil-parceiro-card:hover {
             box-shadow: 0 12px 34px rgba(0,0,0,0.54), 0 0 0 1px rgba(255,85,101,0.16), 0 0 26px rgba(255,73,106,0.22);
         }
-        body.theme-light .perfil-parceiro-card.action-premium {
+        .perfil-parceiro-card.action-premium {
             background:
                 linear-gradient(#1e1f25, #1e1f25) padding-box,
                 linear-gradient(135deg, rgba(255,45,63,0.58), rgba(255,106,120,0.40), rgba(255,45,63,0.23)) border-box;
             box-shadow: 0 11px 30px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,85,101,0.14), 0 0 24px rgba(255,73,106,0.21);
         }
-        body.theme-light .perfil-parceiro-card.action-premium:hover {
+        .perfil-parceiro-card.action-premium:hover {
             transform: translateY(-1px);
             box-shadow: 0 16px 38px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,85,101,0.24), 0 0 36px rgba(255,73,106,0.32);
         }
-        body.theme-light .perfil-parceiro-card.action-premium.action-catalog {
+        .perfil-parceiro-card.action-premium.action-catalog {
             background:
                 linear-gradient(#1f2024, #1f2024) padding-box,
                 linear-gradient(135deg, rgba(255,145,42,0.68), rgba(255,190,100,0.46), rgba(255,145,42,0.24)) border-box;
             box-shadow: 0 11px 30px rgba(0,0,0,0.52), 0 0 0 1px rgba(255,165,79,0.20), 0 0 26px rgba(255,152,72,0.24);
         }
-        body.theme-light .perfil-parceiro-card.action-premium.action-catalog:hover {
+        .perfil-parceiro-card.action-premium.action-catalog:hover {
             box-shadow: 0 16px 38px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,176,98,0.30), 0 0 38px rgba(255,163,82,0.34);
         }
-        body.theme-light .action-icon-circle {
+        .action-icon-circle {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -448,33 +450,33 @@
             box-shadow: 0 0 14px rgba(255,73,106,0.38), inset 0 0 6px rgba(255,73,106,0.12);
             transition: box-shadow 0.25s ease;
         }
-        body.theme-light .action-icon-circle i {
+        .action-icon-circle i {
             color: #ff6a78;
             font-size: 18px;
             filter: drop-shadow(0 0 5px rgba(255,73,106,0.85));
             transition: filter 0.25s ease;
         }
-        body.theme-light .perfil-parceiro-card.action-premium:hover .action-icon-circle {
+        .perfil-parceiro-card.action-premium:hover .action-icon-circle {
             box-shadow: 0 0 22px rgba(255,73,106,0.62), inset 0 0 10px rgba(255,73,106,0.22);
         }
-        body.theme-light .perfil-parceiro-card.action-premium:hover .action-icon-circle i {
+        .perfil-parceiro-card.action-premium:hover .action-icon-circle i {
             filter: drop-shadow(0 0 8px rgba(255,73,106,1));
         }
-        body.theme-light .perfil-parceiro-card.action-premium.action-catalog .action-icon-circle {
+        .perfil-parceiro-card.action-premium.action-catalog .action-icon-circle {
             background: rgba(255,145,42,0.14);
             box-shadow: 0 0 16px rgba(255,163,82,0.46), inset 0 0 7px rgba(255,163,82,0.16);
         }
-        body.theme-light .perfil-parceiro-card.action-premium.action-catalog .action-icon-circle i {
+        .perfil-parceiro-card.action-premium.action-catalog .action-icon-circle i {
             color: #ffb86a;
             filter: drop-shadow(0 0 6px rgba(255,167,87,0.95));
         }
-        body.theme-light .perfil-parceiro-card.action-premium.action-catalog:hover .action-icon-circle {
+        .perfil-parceiro-card.action-premium.action-catalog:hover .action-icon-circle {
             box-shadow: 0 0 24px rgba(255,167,87,0.70), inset 0 0 11px rgba(255,167,87,0.24);
         }
-        body.theme-light .perfil-parceiro-card.action-premium.action-catalog:hover .action-icon-circle i {
+        .perfil-parceiro-card.action-premium.action-catalog:hover .action-icon-circle i {
             filter: drop-shadow(0 0 9px rgba(255,177,98,1));
         }
-        body.theme-light .termometro-btn {
+        .termometro-btn {
             background: #1f2024;
             border: 2px solid #31333a;
             border-radius: 16px;
@@ -482,48 +484,48 @@
             transition: all 0.2s ease;
             cursor: pointer;
         }
-        body.theme-light .termometro-btn:hover:not(:disabled) {
+        .termometro-btn:hover:not(:disabled) {
             border-color: #474a55;
             background: #282a31;
         }
-        body.theme-light .termometro-btn.active {
+        .termometro-btn.active {
             border-color: #ff6b81;
             background: linear-gradient(135deg, #3b1f28, #2b1f24);
             box-shadow: 0 0 0 3px rgba(255,107,129,0.28);
         }
-        body.theme-light .termometro-btn:disabled {
+        .termometro-btn:disabled {
             opacity: 0.65;
             cursor: not-allowed;
         }
-        body.theme-light .extrato-item {
+        .extrato-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 12px 16px;
             border-bottom: 1px solid #2b2d33;
         }
-        body.theme-light .extrato-item:last-child { border-bottom: none; }
-        body.theme-light .extrato-icon-circle {
+        .extrato-item:last-child { border-bottom: none; }
+        .extrato-icon-circle {
             width: 32px; height: 32px;
             border-radius: 50%;
             background: rgba(255,45,63,0.10);
             box-shadow: 0 0 8px rgba(255,73,106,0.22), inset 0 0 4px rgba(255,73,106,0.08);
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
-        body.theme-light .extrato-icon-circle i {
+        .extrato-icon-circle i {
             color: #ff6a78;
             font-size: 12px;
             filter: drop-shadow(0 0 3px rgba(255,73,106,0.70));
         }
-        body.theme-light .extrato-valor-pos { color: #4ade80; font-weight: 600; }
-        body.theme-light .extrato-valor-neg { color: #fb7185; font-weight: 600; }
-        body.theme-light .tracking-day {
+        .extrato-valor-pos { color: #4ade80; font-weight: 600; }
+        .extrato-valor-neg { color: #fb7185; font-weight: 600; }
+        .tracking-day {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 4px;
         }
-        body.theme-light .tracking-dot {
+        .tracking-dot {
             width: 28px;
             height: 28px;
             border-radius: 50%;
@@ -532,19 +534,20 @@
             justify-content: center;
             font-size: 14px;
         }
-        body.theme-light .tracking-dot.empty {
+        .tracking-dot.empty {
             background: #1f2024;
             border: 2px solid #31333a;
         }
-        body.theme-light .text-gray-800 { color: #f5f5f5 !important; }
-        body.theme-light .text-gray-700 { color: #dedee3 !important; }
-        body.theme-light .text-gray-600 { color: #c7c8ce !important; }
-        body.theme-light .text-gray-500 { color: #a9abb4 !important; }
-        body.theme-light .text-gray-400 { color: #8b8d96 !important; }
-        body.theme-light .bg-gray-100 { background-color: #1f2024 !important; }
-        body.theme-light .bg-gray-200 { background-color: #2a2c33 !important; }
-        body.theme-light .border-gray-200 { border-color: #3a3c44 !important; }
-        body.theme-light .border-gray-100 { border-color: #2b2d33 !important; }
+        .perfil-parceiro-card .text-gray-800,
+        .extrato-item .text-gray-800 { color: rgba(255,255,255,0.90) !important; }
+        .perfil-parceiro-card .text-gray-700,
+        .extrato-item .text-gray-700 { color: rgba(255,255,255,0.80) !important; }
+        .perfil-parceiro-card .text-gray-600,
+        .extrato-item .text-gray-600 { color: rgba(255,255,255,0.65) !important; }
+        .perfil-parceiro-card .text-gray-500,
+        .extrato-item .text-gray-500 { color: rgba(255,255,255,0.55) !important; }
+        .perfil-parceiro-card .text-gray-400,
+        .extrato-item .text-gray-400 { color: rgba(255,255,255,0.50) !important; }
 
         .notification-shell {
             background: rgba(16, 12, 20, 0.92);
@@ -838,16 +841,16 @@
             <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js" integrity="sha384-XtSlZdmg0Ad5zf0AX4W9TGdm+dGjaNK4KG3lNFjfgbnxkCEuT9ugWXkLExgQTJ+6" crossorigin="anonymous"></script>
 </head>
 <body class="bg-black text-white font-sans">
-    <header id="mainHeader" class="sticky top-0 z-20 bg-[#141414]/80 backdrop-blur-md border-b border-[#222]" style="display: none;">
+    <header id="mainHeader" class="z-20 bg-[#141414]/80 backdrop-blur-md border-b border-[#222] flex-shrink-0" style="display: none;">
     <div class="container mx-auto px-4 py-3 flex items-center header-content">
         <div class="flex-1">
-            <button onclick="changeStep('dashboard')" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
-                <i class="fas fa-home text-xs"></i> <span class="hidden sm:inline">Início</span>
+            <button id="headerBackBtn" onclick="goBack()" class="text-sm bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg text-white font-medium transition flex items-center gap-2">
+                <i class="fas fa-arrow-left text-xs"></i> <span class="hidden sm:inline">Voltar</span>
             </button>
         </div>
 
         <div class="flex-1 flex justify-center">
-            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento Logo" class="h-[36px] w-auto">
+            <img src="/assets/icons/logo-white-txt-v2.png" alt="Nosso Momento Logo" class="h-[36px] w-auto cursor-pointer" onclick="changeStep('dashboard')">
         </div>
 
         <div class="flex-1 flex justify-end">
@@ -1141,6 +1144,8 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     pareado: false,
     parceiroData: null,
     idPareamentoAmigavel: null,
+    etapaAnterior: null,
+    etapaHistorico: [],
     notificacoesTarefasNaoLidas: 0,
     notificacoesPresentesNaoLidas: 0,
     notificacoesConquistasNaoLidas: 0,
@@ -1219,6 +1224,7 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     conexaoAtiva: null, // { uid, nome, fotoUrl, pareamentoId, idAmigavel }
     // --- Perfil do Parceiro ---
     conexaoAberta: null, // partner data when viewing perfilParceiro
+    emContextoParceiro: false, // true apenas quando acessando tela via Perfil Parceiro
     extratoItems: [],
     extratoHasMore: false,
     extratoLoading: false,
@@ -1412,6 +1418,7 @@ function triggerAchievementCelebration(notif) {
     let carrinhoBadge;
     let bottomNavBar; // Referência para a barra de navegação inferior
     let mainHeader; // Referência para o cabeçalho principal
+    let mainHeaderOriginalHTML = ''; // HTML original do mainHeader para restauração
 
     window.ACHIEVEMENTS = ACHIEVEMENTS;
     window.ACHIEVEMENTS_BY_ID = ACHIEVEMENTS_BY_ID;
@@ -3119,7 +3126,7 @@ appContainer.innerHTML = content;
 
     appContainer.innerHTML = `
         <div class="screen screen-pad bg-black text-white">
-            <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+            <section class="px-6 pt-6 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-fire text-3xl mb-3"></i>
                     <h2 class="text-3xl font-semibold">Foguinhos</h2>
@@ -3544,15 +3551,17 @@ async function renderAchievementsPopup() {
         `;
     }).join('');
 
-    appContainer.innerHTML = `
-        <div class="screen screen-pad bg-black text-white">
-            <section class="px-6 pt-16 pb-20" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+    const _desafiosHero = `
+            <section class="px-6 pt-10 pb-28" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                 <div class="flex flex-col items-center text-center -mt-2">
                     <i class="fas fa-flag-checkered text-3xl mb-3"></i>
                     <h2 class="text-3xl font-semibold">Desafios</h2>
                     <p class="text-white/80">Acompanhe seus desafios e conquistas</p>
                 </div>
-            </section>
+            </section>`;
+    appContainer.innerHTML = `
+        <div class="screen screen-pad bg-black text-white">
+            ${_desafiosHero}
 
             <section class="px-5 pb-8 -mt-10">
                 <div class="notif-shell max-w-4xl mx-auto space-y-6">
@@ -3687,7 +3696,7 @@ function renderPareamentosLista() {
 
     appContainer.innerHTML = `
         <div class="screen screen-pad bg-black text-white">
-            <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+            <section class="px-6 pt-6 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-heart text-3xl mb-3"></i>
                     <h2 class="text-3xl font-semibold">Pareamentos</h2>
@@ -4167,6 +4176,8 @@ function abrirCatalogoPareamento(index) {
         };
     }
 
+    state.emContextoParceiro = true;
+    state.etapaHistorico.push(state.etapa);
     state.etapa = 'main';
     renderApp();
 }
@@ -4261,6 +4272,7 @@ function abrirPerfilParceiro(index) {
     state.climaHoje = null;
     state.climaPartnerHoje = null;
 
+    state.etapaHistorico.push(state.etapa);
     state.etapa = 'perfilParceiro';
     renderApp();
 
@@ -4472,11 +4484,10 @@ function renderPerfilParceiro() {
 
     function buildEmojiCircle(humor, size = 32) {
         if (!humor) {
-            return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:#f3f4f6;border:2px solid #e5e7eb" class="flex-shrink-0"></div>`;
+            return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:rgba(0,0,0,0.18);border:2px solid rgba(0,0,0,0.30)" class="flex-shrink-0"></div>`;
         }
         const emoji = HUMOR_EMOJI[humor] || '❓';
-        const bg = HUMOR_BG[humor] || '#f3f4f6';
-        return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:${Math.round(size * 0.5)}px;border:2px solid rgba(0,0,0,0.06)" class="flex-shrink-0">${emoji}</div>`;
+        return `<div style="width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size * 0.85)}px" class="flex-shrink-0">${emoji}</div>`;
     }
 
     // Gera dia de hoje no fuso de São Paulo (UTC-3) para comparação
@@ -4485,7 +4496,7 @@ function renderPerfilParceiro() {
     const diasSemana = state.climaSemana || [];
     const trackingLabelsHtml = diasSemana.map(dia => {
         const isHoje = dia.dia === hojeUTC;
-        return `<div class="flex flex-col items-center flex-1"><span class="text-[10px] font-semibold uppercase ${isHoje ? 'text-red-500' : 'text-gray-400'}">${dia.label}</span></div>`;
+        return `<div class="flex flex-col items-center flex-1"><span class="text-[10px] font-bold uppercase" style="color:${isHoje ? '#fff' : 'rgba(0,0,0,0.65)'}">${dia.label}</span></div>`;
     }).join('');
 
     const trackingMeuHtml = diasSemana.map(dia => {
@@ -4538,25 +4549,7 @@ function renderPerfilParceiro() {
     ` : '';
 
     appContainer.innerHTML = `
-        <div class="screen screen-pad" style="background: #050507; min-height: 100vh;">
-            <!-- Header -->
-            <div class="sticky top-0 z-20 bg-black/75 backdrop-blur-md border-b border-gray-800 px-4 py-3 flex items-center gap-3">
-                <button onclick="changeStep('pareamentos')" class="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center hover:bg-gray-800 transition">
-                    <i class="fas fa-arrow-left text-gray-200 text-sm"></i>
-                </button>
-                <div class="flex items-center gap-3 flex-1 min-w-0">
-                    <div class="w-10 h-10 rounded-full bg-gray-800 overflow-hidden flex items-center justify-center flex-shrink-0">
-                        ${foto ? `<img loading="lazy" src="${sanitizeUrl(foto)}" class="w-full h-full object-cover">` : `<i class="fas fa-user text-gray-400"></i>`}
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-sm font-semibold text-gray-800 truncate">${escapeHtml(nome)}</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-1 flex-shrink-0">
-                    <i class="fas fa-fire text-orange-400 text-lg"></i>
-                    <span class="text-lg font-bold text-gray-100">${foguinhos}</span>
-                </div>
-            </div>
+        <div class="screen screen-pad bg-black" style="min-height: 100vh;">
 
             <div class="px-4 py-4 space-y-4 pb-24">
                 ${partnerAlertHtml}
@@ -4603,7 +4596,7 @@ function renderPerfilParceiro() {
                 </div>
 
                 <!-- Tracking Semanal -->
-                <div class="perfil-parceiro-card p-4">
+                <div class="rounded-2xl p-4 overflow-hidden" style="background:linear-gradient(135deg,#ff2d3f 0%,#ff5565 60%,#ff7080 100%);box-shadow:0 4px 12px rgba(255,45,63,0.20)">
                     ${diasSemana.length ? `
                         <!-- Labels dos dias -->
                         <div class="flex items-center gap-1 mb-2">
@@ -4612,20 +4605,20 @@ function renderPerfilParceiro() {
                         </div>
                         <!-- Minha linha -->
                         <div class="flex items-center gap-1 mb-2">
-                            <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border-2 border-gray-200">
+                            <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0" style="border:2px solid rgba(0,0,0,0.30)">
                                 <img loading="lazy" src="${sanitizeUrl(meuFoto)}" class="w-full h-full object-cover" alt="Eu">
                             </div>
                             <div class="flex flex-1">${trackingMeuHtml}</div>
                         </div>
                         <!-- Linha do parceiro -->
                         <div class="flex items-center gap-1">
-                            <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border-2 border-gray-200">
+                            <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0" style="border:2px solid rgba(0,0,0,0.30)">
                                 <img loading="lazy" src="${sanitizeUrl(partnerFoto)}" class="w-full h-full object-cover" alt="${escapeHtml(nome)}">
                             </div>
                             <div class="flex flex-1">${trackingPartnerHtml}</div>
                         </div>
                     ` : `
-                        <p class="text-xs text-gray-400">Carregando...</p>
+                        <p class="text-xs text-white/70">Carregando...</p>
                     `}
                 </div>
 
@@ -4633,23 +4626,23 @@ function renderPerfilParceiro() {
                 <div class="grid grid-cols-2 gap-3">
                     <button onclick="abrirCatalogoPareamento(findPareamentoIndex('${escapeJsString(conex.uid)}'))" class="perfil-parceiro-card action-premium action-catalog p-4 text-center hover:shadow-md transition">
                         <span class="action-icon-circle"><i class="fas fa-store"></i></span>
-                        <p class="text-xs font-semibold text-gray-700">Catálogo</p>
+                        <p class="text-xs font-semibold text-white/80">Catálogo</p>
                     </button>
                     <button onclick="openPersonalizarFromPerfil()" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
                         <span class="action-icon-circle"><i class="fas fa-tags"></i></span>
-                        <p class="text-xs font-semibold text-gray-700">Personalizar</p>
+                        <p class="text-xs font-semibold text-white/80">Personalizar</p>
                     </button>
                     <button onclick="openMomentosFromPerfil()" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
                         <span class="action-icon-circle"><i class="fas fa-heart"></i></span>
-                        <p class="text-xs font-semibold text-gray-700">Momentos</p>
+                        <p class="text-xs font-semibold text-white/80">Momentos</p>
                     </button>
                     <button onclick="openExtratoFromPerfil()" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
                         <span class="action-icon-circle"><i class="fas fa-fire"></i></span>
-                        <p class="text-xs font-semibold text-gray-700">Extrato</p>
+                        <p class="text-xs font-semibold text-white/80">Extrato</p>
                     </button>
                     <button onclick="openDesafioFromPerfil()" class="perfil-parceiro-card action-premium p-4 text-center hover:shadow-md transition">
                         <span class="action-icon-circle"><i class="fas fa-trophy"></i></span>
-                        <p class="text-xs font-semibold text-gray-700">Desafios</p>
+                        <p class="text-xs font-semibold text-white/80">Desafios</p>
                     </button>
                 </div>
             </div>
@@ -4663,28 +4656,27 @@ function findPareamentoIndex(uid) {
 }
 
 function openDesafioFromPerfil() {
-    state.etapa = 'achievementsPopup';
-    renderApp();
+    state.emContextoParceiro = true;
+    changeStep('achievementsPopup');
 }
 
 function openMomentosFromPerfil() {
-    state.etapa = 'momentos';
-    renderApp();
+    state.emContextoParceiro = true;
+    changeStep('momentos');
 }
 
 function openExtratoFromPerfil() {
-    state.etapa = 'extratoPopup';
-    renderApp();
+    state.emContextoParceiro = true;
+    changeStep('extratoPopup');
 }
 
 function openPersonalizarFromPerfil() {
-    state.etapa = 'gerenciarCatalogo';
-    renderApp();
+    state.emContextoParceiro = true;
+    changeStep('gerenciarCatalogo');
 }
 
 function voltarDoCatalogo() {
-    state.etapa = 'perfilParceiro';
-    renderApp();
+    goBack();
 }
 
 // =========================================================
@@ -4733,16 +4725,16 @@ function renderExtratoPopup() {
 
     const loadMoreBtn = state.extratoHasMore ? `
         <button onclick="loadExtrato(true).then(() => { if(state.etapa === 'extratoPopup') renderApp(); })"
-                class="w-full py-3 text-sm text-gray-500 hover:text-gray-700 transition ${state.extratoLoading ? 'opacity-50' : ''}">
+                class="w-full py-3 text-sm text-white/50 hover:text-white/70 transition ${state.extratoLoading ? 'opacity-50' : ''}">
             ${state.extratoLoading ? 'Carregando...' : 'Carregar mais'}
         </button>
     ` : '';
 
     appContainer.innerHTML = `
-        <div class="screen screen-pad" style="background: #050507; min-height: 100vh;">
+        <div class="screen screen-pad bg-black" style="min-height: 100vh;">
             <!-- Header -->
-            <div class="sticky top-0 z-20 bg-black/75 backdrop-blur-md border-b border-gray-800 px-4 py-3 flex items-center gap-3">
-                <button onclick="voltarDoCatalogo()" class="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center hover:bg-gray-800 transition">
+            <div class="sticky top-0 z-20 bg-black/75 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center gap-3">
+                <button onclick="goBack()" class="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center hover:bg-gray-800 transition">
                     <i class="fas fa-arrow-left text-gray-200 text-sm"></i>
                 </button>
                 <h2 class="text-sm font-semibold flex-1" style="color:#f5f5f5">
@@ -4810,7 +4802,7 @@ function renderExtratoPopup() {
         if (!state.pareado || !state.parceiroData) {
             appContainer.innerHTML = `
                 <div class="screen screen-pad bg-black text-white">
-                    <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                    <section class="px-6 pt-6 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                         <div class="flex flex-col items-center text-center -mt-6">
                             <i class="fas fa-store text-3xl mb-3"></i>
                             <h2 class="text-3xl font-semibold">Catálogo</h2>
@@ -4847,10 +4839,9 @@ function renderExtratoPopup() {
 
         const fotoParceiroUrl = state.parceiroData.fotoUrl || '/assets/icons/logo-instagram-white.png';
 
-        appContainer.innerHTML = `
-            <div class="screen screen-pad bg-black text-white">
-                <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
-                    <div class="flex flex-col items-center text-center -mt-6">
+        const _mainHero = `
+                <section class="px-6 pt-10 pb-28" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                    <div class="flex flex-col items-center text-center -mt-2">
                         <img loading="lazy" src="${sanitizeUrl(fotoParceiroUrl)}" class="w-20 h-20 rounded-full object-cover border-2 border-white/40 mb-3">
                         <h2 class="text-3xl font-semibold">Catálogo de Momentos</h2>
                         <p class="text-white/80">${escapeHtml(state.parceiroNome)}</p>
@@ -4859,7 +4850,10 @@ function renderExtratoPopup() {
                             <span>Seus foguinhos: ${Number.isFinite(foguinhosConexao) ? foguinhosConexao : 0}</span>
                         </div>
                     </div>
-                </section>
+                </section>`;
+        appContainer.innerHTML = `
+            <div class="screen screen-pad bg-black text-white">
+                ${_mainHero}
 
                 <section class="px-5 pb-8 -mt-10">
                     <div class="notif-shell max-w-5xl mx-auto space-y-6">
@@ -5104,15 +5098,17 @@ if (window.Notification) {
     }
 }
 
-appContainer.innerHTML = `
-    <div class="screen screen-pad bg-black text-white">
-        <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
-            <div class="flex flex-col items-center text-center -mt-6">
+    const _catalogoHero = `
+        <section class="px-6 pt-10 pb-28" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+            <div class="flex flex-col items-center text-center -mt-2">
                 <i class="fas fa-store text-3xl mb-3"></i>
                 <h2 class="text-3xl font-semibold">Meu Catálogo</h2>
                 <p class="text-white/80">Gerencie preços e disponibilidade</p>
             </div>
-        </section>
+        </section>`;
+    appContainer.innerHTML = `
+    <div class="screen screen-pad bg-black text-white">
+        ${_catalogoHero}
 
         <section class="px-5 pb-8 -mt-10">
             <div class="notif-shell max-w-5xl mx-auto space-y-6">
@@ -5224,7 +5220,7 @@ function renderMeuPerfil() {
 
     appContainer.innerHTML = `
         <div class="screen screen-pad bg-black text-white">
-            <section class="px-6 pt-20 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+            <section class="px-6 pt-6 pb-12" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                 <div class="flex flex-col items-center text-center -mt-6">
                     <i class="fas fa-user text-3xl mb-3"></i>
                     <h2 class="text-3xl font-semibold">Meu Perfil</h2>
@@ -5350,10 +5346,11 @@ try {
             if (parceiro.uid) {
                 await db.collection('notificacoes').add({
                     userId: parceiro.uid,
-                    titulo: 'Catálogo atualizado! 🛍️',
-                    mensagem: `${meuNome} atualizou o catálogo de momentos.`,
+                    titulo: `${meuNome} fez mudanças na lojinha! 👀`,
+                    mensagem: 'Corre lá... vai que tem promoção hahaha 🤭',
                     icone: 'fa-store',
                     tipo: 'catalog_update',
+                    redirectTo: 'main',
                     lida: false,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                 });
@@ -6006,15 +6003,9 @@ renderApp();
     // --- Função Central de Renderização (Gerencia as etapas) ---
     function renderApp() {
         if (document && document.body) {
-            const isLightTheme = state.etapa === 'memorias' || state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup';
-            document.body.style.backgroundColor = (state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup')
-                ? '#050507'
-                : isLightTheme ? '#f5f3f7' : '#000000';
-            if (state.etapa === 'perfilParceiro' || state.etapa === 'extratoPopup') {
-                document.body.classList.add('theme-light');
-            } else {
-                document.body.classList.remove('theme-light');
-            }
+            const isLightTheme = state.etapa === 'memorias';
+            document.body.style.backgroundColor = isLightTheme ? '#f5f3f7' : '#000000';
+            document.body.classList.remove('theme-light');
         }
         // Atualiza os elementos da header e footer que são fixos no DOM
         updateFixedUI();
@@ -6249,7 +6240,7 @@ renderApp();
         if (state.etapa !== etapaNoInicio) return;
         appContainer.innerHTML = `
             <div class="screen screen-pad bg-black text-white">
-                <section class="px-6 pt-20 pb-16" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                <section class="px-6 pt-6 pb-16" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
                     <div class="flex flex-col items-center text-center -mt-6">
                         <i class="fas fa-bell text-3xl mb-3"></i>
                         <h2 class="text-3xl font-semibold">Notificações</h2>
@@ -6278,15 +6269,17 @@ renderApp();
 
 async function renderMomentos() {
     const abaAtiva = state.abaTarefasAtiva || 'recebidos';
-    appContainer.innerHTML = `
-        <div class="screen screen-pad bg-black text-white">
-            <section class="px-6 pt-20 pb-16" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
-                <div class="flex flex-col items-center text-center -mt-6">
+    const _momentosHero = `
+            <section class="px-6 pt-10 pb-28" style="background: linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%);">
+                <div class="flex flex-col items-center text-center -mt-2">
                     <i class="fas fa-heart text-3xl mb-3"></i>
                     <h2 class="text-3xl font-semibold">Momentos</h2>
                     <p class="text-white/80">Recebidos e enviados</p>
                 </div>
-            </section>
+            </section>`;
+    appContainer.innerHTML = `
+        <div class="screen screen-pad bg-black text-white">
+            ${_momentosHero}
 
             <section class="px-5 pb-8 -mt-10">
                 <div class="notif-shell max-w-2xl mx-auto space-y-6">
@@ -7020,7 +7013,7 @@ function renderMemoriasWelcome() {
     const podeRelembrar = !!(state.pareado && state.idPareamentoAmigavel);
     return `
         <div class="memorias-screen bg-[#f7f5f9] text-gray-900">
-            <section class="px-6 pt-20 pb-10">
+            <section class="px-6 pt-6 pb-10">
                 <div class="flex flex-col items-center text-center">
                     <h2 class="text-lg tracking-wide text-gray-500">Bem vindos as suas</h2>
                     <h3 class="text-3xl font-semibold text-gray-900 mt-2">Memórias</h3>
@@ -7076,7 +7069,7 @@ function renderMemoriasFeed() {
 
     appContainer.innerHTML = `
         <div class="memorias-screen text-white min-h-screen">
-            <section class="px-6 pt-20 pb-6 text-center">
+            <section class="px-6 pt-6 pb-6 text-center">
                 <div class="flex flex-col items-center text-center">
                     <i class="fas fa-book-open text-3xl mb-2 text-white/80"></i>
                     <h2 class="text-3xl font-semibold text-white">Memórias</h2>
@@ -7650,6 +7643,8 @@ if (!REGISTRATION_ENABLED && newStep === 'register') {
 if (state.etapa === newStep) {
     // ...e essa tela NÃO for a principal, então ele volta para a principal (efeito de fechar).
     if (newStep !== 'dashboard') {
+        state.etapaAnterior = state.etapa;
+        state.etapaHistorico.push(state.etapa);
         state.etapa = 'dashboard';
     } else {
         // Se ele já está na 'dashboard' e clica na 'dashboard', não faz nada.
@@ -7657,6 +7652,8 @@ if (state.etapa === newStep) {
     }
 } else {
     // Se ele clicar em um ícone de uma tela DIFERENTE, ele navega para ela. Simples assim.
+    state.etapaAnterior = state.etapa;
+    state.etapaHistorico.push(state.etapa);
     state.etapa = newStep;
 }
 
@@ -7674,11 +7671,80 @@ state.showAchievementsPopup = false;
 state.showPairingModal = false;
 state.showVipPopup = false;
 
+// Limpa contexto de parceiro ao navegar via bottomNav (changeStep não vem de openXFromPerfil)
+const telasContextoParceiro = ['perfilParceiro', 'main', 'momentos', 'gerenciarCatalogo', 'achievementsPopup', 'extratoPopup'];
+if (!state.emContextoParceiro && telasContextoParceiro.includes(state.etapa) && state.etapa !== 'perfilParceiro') {
+    // chamada veio do bottomNav/changeStep direto, não do contexto de parceiro
+    state.emContextoParceiro = false;
+}
+
+const appEl = document.getElementById('app');
+if (appEl) appEl.scrollTop = 0;
+
 // Renderiza a aplicação com o novo estado definido
 renderApp();
 }
 
     // Nova função para atualizar elementos da UI fixa (header e footer)
+
+    function goBack() {
+        const telasContextoParceiro = ['perfilParceiro', 'main', 'momentos', 'gerenciarCatalogo', 'achievementsPopup', 'extratoPopup'];
+        if (state.etapaHistorico.length > 0) {
+            const destino = state.etapaHistorico.pop();
+            state.etapaAnterior = state.etapa;
+            state.etapa = destino;
+            if (!telasContextoParceiro.includes(destino)) {
+                state.emContextoParceiro = false;
+            }
+        } else {
+            state.etapaAnterior = state.etapa;
+            state.etapa = 'dashboard';
+            state.emContextoParceiro = false;
+        }
+        const appEl = document.getElementById('app');
+        if (appEl) appEl.scrollTop = 0;
+        renderApp();
+    }
+
+    // Retorna HTML do header de contexto do parceiro.
+    // variant: 'gradient' | 'black'
+    function buildParceiroHeaderHtml(variant = 'black') {
+        const conex = state.conexaoAberta;
+        if (!conex) return '';
+        const foto = conex.fotoUrl;
+        const nome = conex.nome || 'Parceiro';
+        const foguinhos = conex.foguinhos ?? 0;
+        const bgStyle = variant === 'gradient'
+            ? 'background:linear-gradient(180deg,#ff2d3f 0%,#ff5565 100%);box-shadow:0 4px 20px rgba(255,45,63,0.35)'
+            : 'background:#000000';
+        const btnBg = variant === 'gradient' ? 'rgba(0,0,0,0.20)' : 'rgba(255,255,255,0.08)';
+        const pillBg = variant === 'gradient' ? 'rgba(0,0,0,0.20)' : 'rgba(255,255,255,0.10)';
+        const fotoBorder = variant === 'gradient' ? 'rgba(255,255,255,0.40)' : 'rgba(255,255,255,0.25)';
+        return `
+        <div class="flex-shrink-0 px-4 py-3 flex items-center gap-3 w-full" style="${bgStyle}">
+            <button onclick="goBack()" class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition" style="background:${btnBg}">
+                <i class="fas fa-arrow-left text-white text-sm"></i>
+            </button>
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0" style="border:2px solid ${fotoBorder};background:rgba(0,0,0,0.20)">
+                    ${foto ? `<img loading="lazy" src="${sanitizeUrl(foto)}" class="w-full h-full object-cover">` : `<i class="fas fa-user text-white/70 text-xs"></i>`}
+                </div>
+                <p class="text-sm font-bold text-white truncate">${escapeHtml(nome)}</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <div class="flex items-center gap-1.5" style="background:${pillBg};border-radius:20px;padding:4px 10px">
+                    <i class="fas fa-fire text-white text-sm"></i>
+                    <span class="text-sm font-bold text-white">${foguinhos}</span>
+                </div>
+                ${state.etapa === 'main' ? `
+                <button onclick="toggleCartSidebar()" class="relative w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition" style="background:${pillBg}">
+                    <i class="fas fa-shopping-cart text-white text-sm"></i>
+                    ${state.carrinho.length > 0 ? `<span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-yellow-400 text-black text-[10px] font-bold flex items-center justify-center leading-none">${state.carrinho.length}</span>` : ''}
+                </button>` : ''}
+            </div>
+        </div>`;
+    }
+
     function updateFixedUI() {
     // ATUALIZA O NOME DO USUÁRIO (igual)
     if (userNameDisplay) {
@@ -7767,29 +7833,42 @@ renderApp();
     // LÓGICA DE VISIBILIDADE DAS BARRAS (igual)
     if (bottomNavBar && mainHeader) {
         const telasComBarraVisivel = ['dashboard', 'main', 'momentos', 'memorias', 'parear', 'pareamentos', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes', 'achievementsPopup', 'meuPerfil'];
-        if (telasComBarraVisivel.includes(state.etapa)) {
+        // Telas que têm header próprio de contexto quando acessadas via parceiro
+        const telasComHeaderParceiro = ['main', 'momentos', 'gerenciarCatalogo', 'achievementsPopup', 'extratoPopup'];
+        const usaHeaderParceiro = state.emContextoParceiro && telasComHeaderParceiro.includes(state.etapa);
+        if (telasComBarraVisivel.includes(state.etapa) && !usaHeaderParceiro) {
+            mainHeader.innerHTML = mainHeaderOriginalHTML;
+            mainHeader.style.cssText = '';
             bottomNavBar.style.display = 'flex';
             mainHeader.style.display = 'flex';
+        } else if (usaHeaderParceiro) {
+            const variant = state.etapa === 'extratoPopup' ? 'gradient' : 'black';
+            mainHeader.innerHTML = buildParceiroHeaderHtml(variant);
+            const bgCss = variant === 'gradient'
+                ? 'background:linear-gradient(180deg,#ff2d3f 0%,#ff5565 100%);box-shadow:0 4px 20px rgba(255,45,63,0.35)'
+                : 'background:#000000;border-bottom:1px solid #222';
+            mainHeader.style.cssText = `display:flex;flex-direction:column;flex-shrink:0;${bgCss}`;
+            bottomNavBar.style.display = 'none';
         } else {
+            mainHeader.innerHTML = mainHeaderOriginalHTML;
+            mainHeader.style.cssText = '';
             bottomNavBar.style.display = 'none';
             mainHeader.style.display = 'none';
         }
     }
 
+    // Mostra/esconde o botão Voltar do header: oculto no dashboard
+    const headerBackBtn = document.getElementById('headerBackBtn');
+    if (headerBackBtn) {
+        headerBackBtn.style.visibility = state.etapa === 'dashboard' ? 'hidden' : 'visible';
+    }
+
     const catalogActions = document.getElementById('catalogActions');
-    const backFromCatalog = document.getElementById('backFromCatalog');
     if (catalogActions) {
         if (state.etapa === 'main') {
             catalogActions.classList.remove('hidden');
         } else {
             catalogActions.classList.add('hidden');
-        }
-    }
-    if (backFromCatalog) {
-        if (state.etapa === 'main' || ((state.etapa === 'momentos' || state.etapa === 'achievementsPopup') && state.conexaoAberta)) {
-            backFromCatalog.classList.remove('hidden');
-        } else {
-            backFromCatalog.classList.add('hidden');
         }
     }
 
@@ -8288,6 +8367,7 @@ try {
         carrinhoBadge = document.getElementById('carrinhoBadge');
         bottomNavBar = document.getElementById('bottom-nav-bar');
         mainHeader = document.getElementById('mainHeader');
+        mainHeaderOriginalHTML = mainHeader ? mainHeader.innerHTML : '';
 
         // 2. Torna as funções de evento acessíveis globalmente para o HTML
         window.changeStep = changeStep;
@@ -8317,7 +8397,9 @@ try {
         window.openDesafioFromPerfil = openDesafioFromPerfil;
         window.openMomentosFromPerfil = openMomentosFromPerfil;
         window.openExtratoFromPerfil = openExtratoFromPerfil;
+        window.openPersonalizarFromPerfil = openPersonalizarFromPerfil;
         window.voltarDoCatalogo = voltarDoCatalogo;
+        window.goBack = goBack;
         window.renderPerfilParceiro = renderPerfilParceiro;
         window.renderExtratoPopup = renderExtratoPopup;
     window.toggleAchievementsPopup = toggleAchievementsPopup;
@@ -8411,12 +8493,6 @@ try {
 </script>
 
 <nav class="bottom-nav-bar" id="bottom-nav-bar" style="display: none;">
-    <div id="backFromCatalog" class="absolute left-6 top-1/2 -translate-y-1/2 hidden">
-        <button class="bottom-nav-item" onclick="voltarDoCatalogo()">
-            <i class="fas fa-arrow-left"></i>
-            <span class="text-[10px] leading-none mt-0.5">Voltar</span>
-        </button>
-    </div>
     <button class="bottom-nav-item-center" onclick="changeStep('pareamentos');">
         <i class="fas fa-heart"></i>
     </button>

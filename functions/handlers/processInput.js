@@ -853,7 +853,7 @@ exports.processInput = onDocumentCreated(
             tx.set(notifRef, {
               userId: partnerUid,
               titulo: "Você ganhou um presente!",
-              mensagem: `${giverName} te presenteou com 1 foguinho ðŸ"¥.`,
+              mensagem: `${giverName} te presenteou com 1 foguinho!`,
               icone: "fa-gift",
               lida: false,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
@@ -1042,7 +1042,7 @@ exports.processInput = onDocumentCreated(
                   .doc();
               tx.set(tarefaRef, {
                 momentoNome: item.nome,
-                momentoEmoji: item.emoji || "ðŸ›ï¸",
+                momentoEmoji: item.emoji || "",
                 momentoCategoria: item.categoria || "Geral",
                 custoFoguinhos: item.custoFoguinhos,
                 status: "Pendente",
@@ -1061,22 +1061,27 @@ exports.processInput = onDocumentCreated(
                 .collection("notificacoes")
                 .doc();
             const giverName = senderData.nome || "Seu parceiro";
-            const itensResumo = sanitizedItems
-                .map((item) => item.nome)
-                .slice(0, 2)
-                .join(", ");
-            const plural = sanitizedItems.length > 1 ? "s" : "";
-            const mensagemResumoParts = [
-              `${giverName} resgatou `,
-              `${sanitizedItems.length} momento${plural}: `,
-              `${itensResumo}.`,
-            ];
-            const mensagemResumo = mensagemResumoParts.join("");
+            const primeiroItem = sanitizedItems[0] || {};
+            const categoria = (primeiroItem.categoria || "").toLowerCase();
+            let momentoTitulo;
+            let momentoMensagem;
+            if (categoria === "quentes" || categoria === "quente") {
+              momentoTitulo = `${giverName} resgatou um momento! 🔥`;
+              momentoMensagem = "Agora você tem uma missão...😈";
+            } else if (categoria === "lovezin" || categoria === "lovezinho") {
+              momentoTitulo = `${giverName} resgatou um momento! ❤️`;
+              momentoMensagem = "Faça com amor e carinho. 🥰";
+            } else {
+              momentoTitulo = `${giverName} resgatou um momento! 👀`;
+              momentoMensagem = "Nada de rotina nessa relação. 🤪";
+            }
             tx.set(notifRef, {
               userId: partnerUid,
-              titulo: "Momento resgatado!",
-              mensagem: mensagemResumo,
+              titulo: momentoTitulo,
+              mensagem: momentoMensagem,
               icone: "fa-shopping-bag",
+              tipo: "momento_resgatado",
+              redirectTo: "momentos",
               lida: false,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
             });
@@ -1507,11 +1512,11 @@ exports.processInput = onDocumentCreated(
                     .collection("notificacoes").doc();
                 tx.set(notifR, {
                   userId: responderUid,
-                  titulo: "Desafio concluido!",
-                  mensagem: `Voces responderam igual no desafio` +
-                    ` - ganharam ${rewardN} foguinho(s) cada!`,
+                  titulo: "Vocês acertaram juntos! 🏆",
+                  mensagem: `+${rewardN} foguinho(s) para cada um. Continuem assim! 🔥`,
                   icone: "fa-trophy",
                   tipo: "desafio",
+                  redirectTo: "achievementsPopup",
                   lida: false,
                   timestamp:
                     admin.firestore.FieldValue.serverTimestamp(),
@@ -1520,11 +1525,11 @@ exports.processInput = onDocumentCreated(
                     .collection("notificacoes").doc();
                 tx.set(notifP, {
                   userId: partnerUid,
-                  titulo: "Desafio concluido!",
-                  mensagem: `Voces responderam igual no desafio` +
-                    ` - ganharam ${rewardN} foguinho(s) cada!`,
+                  titulo: "Vocês acertaram juntos! 🏆",
+                  mensagem: `+${rewardN} foguinho(s) para cada um. Continuem assim! 🔥`,
                   icone: "fa-trophy",
                   tipo: "desafio",
+                  redirectTo: "achievementsPopup",
                   lida: false,
                   timestamp:
                     admin.firestore.FieldValue.serverTimestamp(),
@@ -1534,11 +1539,11 @@ exports.processInput = onDocumentCreated(
                     .collection("notificacoes").doc();
                 tx.set(notifR2, {
                   userId: responderUid,
-                  titulo: "Desafio finalizado",
-                  mensagem: "As respostas foram diferentes" +
-                    " desta vez. Na próxima vocês acertam!",
+                  titulo: "Quase lá... 😅",
+                  mensagem: "As respostas foram diferentes desta vez. Na próxima vocês acertam!",
                   icone: "fa-trophy",
                   tipo: "desafio",
+                  redirectTo: "achievementsPopup",
                   lida: false,
                   timestamp:
                     admin.firestore.FieldValue.serverTimestamp(),
@@ -1547,11 +1552,11 @@ exports.processInput = onDocumentCreated(
                     .collection("notificacoes").doc();
                 tx.set(notifP2, {
                   userId: partnerUid,
-                  titulo: "Desafio finalizado",
-                  mensagem: "As respostas foram diferentes" +
-                    " desta vez. Na próxima vocês acertam!",
+                  titulo: "Quase lá... 😅",
+                  mensagem: "As respostas foram diferentes desta vez. Na próxima vocês acertam!",
                   icone: "fa-trophy",
                   tipo: "desafio",
+                  redirectTo: "achievementsPopup",
                   lida: false,
                   timestamp:
                     admin.firestore.FieldValue.serverTimestamp(),
@@ -1562,11 +1567,11 @@ exports.processInput = onDocumentCreated(
                   .collection("notificacoes").doc();
               tx.set(notifWait, {
                 userId: partnerUid,
-                titulo: "Desafio da semana ðŸ§©",
-                mensagem: `${responderName} já respondeu` +
-                  ` o desafio. Agora é a sua vez!`,
+                titulo: `${responderName} respondeu o desafio! ⏳`,
+                mensagem: "Agora só falta você. Corre lá!",
                 icone: "fa-trophy",
                 tipo: "desafio",
+                redirectTo: "achievementsPopup",
                 lida: false,
                 timestamp:
                   admin.firestore.FieldValue.serverTimestamp(),
@@ -1918,7 +1923,7 @@ exports.processInput = onDocumentCreated(
                   .collection("extrato").doc();
               tx.set(extratoRef, {
                 tipo: "clima",
-                descricao: `TermÃ´metro: ${HUMOR_LABELS[humor]}`,
+                descricao: `Termometro: ${HUMOR_LABELS[humor]}`,
                 valor: delta,
                 beneficiarioUid: partnerUid,
                 autorUid: fromUid,
@@ -1957,23 +1962,32 @@ exports.processInput = onDocumentCreated(
             // --- Notificação para o parceiro ---
             const notifRef = admin.firestore()
                 .collection("notificacoes").doc();
-            const giverName = senderData.nome || "Seu parceiro";
-            let notifMsg;
-            if (delta > 0) {
-              notifMsg = `${giverName} marcou "${HUMOR_LABELS[humor]}"` +
-                ` - voce ganhou ${delta} foguinho(s)!`;
-            } else if (delta < 0) {
-              notifMsg = `${giverName} marcou "${HUMOR_LABELS[humor]}"` +
-                ` - ${Math.abs(delta)} foguinho(s) removidos.`;
-            } else {
-              notifMsg = `${giverName} marcou "${HUMOR_LABELS[humor]}" hoje.`;
-            }
-
+            const senderName = senderData.nome || "Seu parceiro";
+            const HUMOR_EMOJI_MAP = {
+              muito_feliz: "😄",
+              feliz: "😊",
+              normal: "😐",
+              triste: "😢",
+            };
+            const HUMOR_TITULO_MAP = {
+              muito_feliz: `${senderName} está ${HUMOR_LABELS["muito_feliz"]} hoje! ${HUMOR_EMOJI_MAP["muito_feliz"]}`,
+              feliz: `${senderName} está ${HUMOR_LABELS["feliz"]} hoje! ${HUMOR_EMOJI_MAP["feliz"]}`,
+              normal: `${senderName} está ${HUMOR_LABELS["normal"]} hoje! ${HUMOR_EMOJI_MAP["normal"]}`,
+              triste: `${senderName} está ${HUMOR_LABELS["triste"]} hoje! ${HUMOR_EMOJI_MAP["triste"]}`,
+            };
+            const HUMOR_CORPO_MAP = {
+              muito_feliz: "Aproveite para apimentar a relação.",
+              feliz: "Aproveite para apimentar a relação.",
+              normal: "Ótima oportunidade para melhorar o dia.",
+              triste: "Não acha que deve dar um pouco de atenção?",
+            };
             tx.set(notifRef, {
               userId: partnerUid,
-              titulo: "TermÃ´metro do Dia",
-              mensagem: notifMsg,
+              titulo: HUMOR_TITULO_MAP[humor] || `${senderName} registrou o humor hoje.`,
+              mensagem: HUMOR_CORPO_MAP[humor] || "",
               icone: "fa-thermometer-half",
+              tipo: "clima",
+              redirectTo: "perfilParceiro",
               lida: false,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
             });

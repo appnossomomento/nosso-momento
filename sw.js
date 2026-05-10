@@ -188,21 +188,27 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Ao clicar na notificação, abre/foca o app
+// Ao clicar na notificação, abre/foca o app e navega para a tela correta
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+
+  const redirectTo = event.notification.data && event.notification.data.redirectTo;
+  const targetUrl = redirectTo ? `/?screen=${encodeURIComponent(redirectTo)}` : '/';
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Se o app já está aberto, foca nele
+        // Se o app já está aberto, foca e envia mensagem para navegar
         for (const client of clientList) {
           if (client.url.includes(self.location.origin) && 'focus' in client) {
+            if (redirectTo) {
+              client.postMessage({ type: 'NOTIFICATION_CLICK', redirectTo });
+            }
             return client.focus();
           }
         }
-        // Senão, abre uma nova janela
-        return self.clients.openWindow('/');
+        // Senão, abre uma nova janela com o parâmetro de navegação
+        return self.clients.openWindow(targetUrl);
       })
   );
 });
