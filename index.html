@@ -7834,7 +7834,7 @@ renderApp();
     if (bottomNavBar && mainHeader) {
         const telasComBarraVisivel = ['dashboard', 'main', 'momentos', 'memorias', 'parear', 'pareamentos', 'foguinhosPopup', 'partnerInfoPopup', 'gerenciarCatalogo', 'notificacoes', 'achievementsPopup', 'meuPerfil'];
         // Telas que têm header próprio de contexto quando acessadas via parceiro
-        const telasComHeaderParceiro = ['main', 'momentos', 'gerenciarCatalogo', 'achievementsPopup', 'extratoPopup'];
+        const telasComHeaderParceiro = ['perfilParceiro', 'main', 'momentos', 'gerenciarCatalogo', 'achievementsPopup', 'extratoPopup'];
         const usaHeaderParceiro = state.emContextoParceiro && telasComHeaderParceiro.includes(state.etapa);
         if (telasComBarraVisivel.includes(state.etapa) && !usaHeaderParceiro) {
             mainHeader.innerHTML = mainHeaderOriginalHTML;
@@ -7842,7 +7842,7 @@ renderApp();
             bottomNavBar.style.display = 'flex';
             mainHeader.style.display = 'flex';
         } else if (usaHeaderParceiro) {
-            const variant = state.etapa === 'extratoPopup' ? 'gradient' : 'black';
+            const variant = (state.etapa === 'extratoPopup' || state.etapa === 'perfilParceiro') ? 'gradient' : 'black';
             mainHeader.innerHTML = buildParceiroHeaderHtml(variant);
             const bgCss = variant === 'gradient'
                 ? 'background:linear-gradient(180deg,#ff2d3f 0%,#ff5565 100%);box-shadow:0 4px 20px rgba(255,45,63,0.35)'
