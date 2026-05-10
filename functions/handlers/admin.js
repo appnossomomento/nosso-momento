@@ -64,6 +64,7 @@ exports.createInput = https.onRequest(async (req, res) => {
       "weekly_challenge_upsert",
       "weekly_challenge_answer",
       "weekly_challenge_timeout",
+      "catalog_update",
     ];
     if (!input.type || !allowedTypes.includes(input.type)) {
       res.status(400).send({error: "unsupported_type"});
@@ -114,6 +115,9 @@ exports.createInput = https.onRequest(async (req, res) => {
       weekly_challenge_timeout: [
         "type", "fromUid", "partnerUid", "pareamentoId",
         "challengeId", "payloadJson",
+      ],
+      catalog_update: [
+        "type", "fromUid", "partnerUids",
       ],
     };
 
