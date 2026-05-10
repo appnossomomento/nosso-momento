@@ -34,14 +34,11 @@ exports.checkMonthlyMilestones = onSchedule({
     }
     if (isNaN(startDate.getTime())) continue;
 
-    // Calcula meses completos considerando o dia do mês
-    const yearsDiff =
-      nowDate.getFullYear() - startDate.getFullYear();
-    const rawMonths =
-      yearsDiff * 12 + (nowDate.getMonth() - startDate.getMonth());
-    const totalMonths = nowDate.getDate() >= startDate.getDate() ?
-      rawMonths :
-      rawMonths - 1;
+    // Calcula intervalos exatos de 30 dias juntos
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const daysDiff =
+      Math.floor((nowDate - startDate) / MS_PER_DAY);
+    const totalMonths = Math.floor(daysDiff / 30);
 
     if (totalMonths < 1) continue;
 
@@ -57,8 +54,8 @@ exports.checkMonthlyMilestones = onSchedule({
 
     for (const mes of newMonths) {
       const mesLabel = mes === 1 ?
-        "1 mês juntos" :
-        `${mes} meses juntos`;
+        "1 mês" :
+        `${mes} meses`;
       const nowMsLocal = Date.now();
 
       const extA = doc.ref.collection("extrato").doc();
@@ -97,7 +94,7 @@ exports.checkMonthlyMilestones = onSchedule({
 
           // Extrato para cada um
           const descricao =
-            `ðŸŽ‰ ${mesLabel} juntos! BÃ´nus comemorativo`;
+            `🎉 ${mesLabel} sintonizados! Bônus comemorativo`;
           tx.set(extA, {
             tipo: "bonus",
             descricao,
@@ -120,10 +117,10 @@ exports.checkMonthlyMilestones = onSchedule({
           });
 
           // Notificações – disparam push via enviarNotificacaoPush
-          const titulo = `${mesLabel} juntos!`;
+          const titulo = `🎉 ${mesLabel} sintonizados!`;
           const mensagem =
-            "Parabens! Mais um mes de uniao. " +
-            "Os dois ganharam 5 foguinhos como presente.";
+            "Parabéns! Mais um mês de sintonia. " +
+            "Vocês dois ganharam 5 foguinhos! 🔥";
           tx.set(notifA, {
             userId: uidA,
             titulo,
