@@ -1113,6 +1113,31 @@ exports.processInput = onDocumentCreated(
                   granted.map((ach) => ach.id),
               );
             }
+
+            // --- Conquistas do parceiro (momento recebido) ---
+            const partnerExistingStats = partnerData.achievementStats || {};
+            const partnerUpdatedStats = {
+              ...partnerExistingStats,
+              momentosRecebidos:
+                (partnerExistingStats.momentosRecebidos || 0) + 1,
+            };
+            tx.update(partnerRef, {achievementStats: partnerUpdatedStats});
+            const grantedPartner = await grantAchievementsInTransaction({
+              tx,
+              userRef: partnerRef,
+              userId: partnerUid,
+              trigger: "moment_redeem_received",
+              currentAchievements: partnerData.conquistas || {},
+              statsBefore: partnerExistingStats,
+              statsAfter: partnerUpdatedStats,
+              eventContext: {},
+            });
+            if (grantedPartner.length) {
+              console.log(
+                  "processInput: conquistas (moment_redeem_received)",
+                  grantedPartner.map((ach) => ach.id),
+              );
+            }
           });
 
           console.log("processInput: moment_redeem processado", inputId);
@@ -1615,6 +1640,40 @@ exports.processInput = onDocumentCreated(
             }
             tx.set(challengeRef, base, {merge: true});
 
+            // --- Achievements do desafio ---
+            const answeredInMs = challengeData.startedAtMs ?
+              Date.now() - challengeData.startedAtMs : 0;
+            const responderExistingStats =
+              responderData.achievementStats || {};
+            const prevStreak =
+              responderExistingStats.challengeSuccessStreak || 0;
+            const newStreak = concluido ?
+              (status === "finalizado" ? prevStreak + 1 : 0) :
+              prevStreak;
+            const responderUpdatedStats = {
+              ...responderExistingStats,
+              challengeSuccessStreak: newStreak,
+            };
+            tx.update(responderRef, {
+              achievementStats: responderUpdatedStats,
+            });
+            const grantedChallenge = await grantAchievementsInTransaction({
+              tx,
+              userRef: responderRef,
+              userId: responderUid,
+              trigger: "weekly_challenge_answer",
+              currentAchievements: responderData.conquistas || {},
+              statsBefore: responderExistingStats,
+              statsAfter: responderUpdatedStats,
+              eventContext: {answeredInMs},
+            });
+            if (grantedChallenge.length) {
+              console.log(
+                  "processInput: conquistas (weekly_challenge_answer)",
+                  grantedChallenge.map((ach) => ach.id),
+              );
+            }
+
             tx.update(inputRef, {
               processed: true,
               processedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -1625,6 +1684,142 @@ exports.processInput = onDocumentCreated(
           console.log(
               "processInput: weekly_challenge_answer processado",
               inputId,
+          );
+        } else if (input.type === "moment_complete") {
+          const fromUid = input.fromUid;
+          if (!fromUid) {
+            await inputRef.update({error: "missing_uid", processed: false});
+            return;
+          }
+          const mcUserRef = admin.firestore()
+              .collection("usuarios").doc(fromUid);
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+            const userSnap = await tx.get(mcUserRef);
+            if (!userSnap.exists) {
+              tx.update(inputRef, {
+                error: "user_not_found", processed: false,
+              });
+              return;
+            }
+            const userData = userSnap.data();
+            const existingStats = userData.achievementStats || {};
+            const updatedStats = {
+              ...existingStats,
+              momentosCompletados:
+                (existingStats.momentosCompletados || 0) + 1,
+            };
+            tx.update(mcUserRef, {achievementStats: updatedStats});
+            await grantAchievementsInTransaction({
+              tx,
+              userRef: mcUserRef,
+              userId: fromUid,
+              trigger: "moment_complete",
+              currentAchievements: userData.conquistas || {},
+              statsBefore: existingStats,
+              statsAfter: updatedStats,
+              eventContext: {},
+            });
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+          console.log("processInput: moment_complete processado", inputId);
+        } else if (input.type === "profile_photo_upload") {
+          const fromUid = input.fromUid;
+          if (!fromUid) {
+            await inputRef.update({error: "missing_uid", processed: false});
+            return;
+          }
+          const ppuUserRef = admin.firestore()
+              .collection("usuarios").doc(fromUid);
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+            const userSnap = await tx.get(ppuUserRef);
+            if (!userSnap.exists) {
+              tx.update(inputRef, {
+                error: "user_not_found", processed: false,
+              });
+              return;
+            }
+            const userData = userSnap.data();
+            const existingStats = userData.achievementStats || {};
+            const updatedStats = {
+              ...existingStats,
+              profilePhotosUploaded:
+                (existingStats.profilePhotosUploaded || 0) + 1,
+            };
+            tx.update(ppuUserRef, {achievementStats: updatedStats});
+            await grantAchievementsInTransaction({
+              tx,
+              userRef: ppuUserRef,
+              userId: fromUid,
+              trigger: "profile_photo_upload",
+              currentAchievements: userData.conquistas || {},
+              statsBefore: existingStats,
+              statsAfter: updatedStats,
+              eventContext: {},
+            });
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+          console.log(
+              "processInput: profile_photo_upload processado", inputId,
+          );
+        } else if (input.type === "moment_photo_upload") {
+          const fromUid = input.fromUid;
+          if (!fromUid) {
+            await inputRef.update({error: "missing_uid", processed: false});
+            return;
+          }
+          const mpuUserRef = admin.firestore()
+              .collection("usuarios").doc(fromUid);
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+            const userSnap = await tx.get(mpuUserRef);
+            if (!userSnap.exists) {
+              tx.update(inputRef, {
+                error: "user_not_found", processed: false,
+              });
+              return;
+            }
+            const userData = userSnap.data();
+            const existingStats = userData.achievementStats || {};
+            const updatedStats = {
+              ...existingStats,
+              momentPhotosUploaded:
+                (existingStats.momentPhotosUploaded || 0) + 1,
+            };
+            tx.update(mpuUserRef, {achievementStats: updatedStats});
+            await grantAchievementsInTransaction({
+              tx,
+              userRef: mpuUserRef,
+              userId: fromUid,
+              trigger: "moment_photo_upload",
+              currentAchievements: userData.conquistas || {},
+              statsBefore: existingStats,
+              statsAfter: updatedStats,
+              eventContext: {},
+            });
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+          console.log(
+              "processInput: moment_photo_upload processado", inputId,
           );
         } else if (input.type === "catalog_update") {
           const fromUid = input.fromUid;
@@ -2036,6 +2231,9 @@ exports.processInput = onDocumentCreated(
               currentDailyStreak: currentStreak,
               bestDailyStreak: bestStreak,
               lastCheckInAt: nowTs,
+              totalHumorOtimo: humor === "muito_feliz" ?
+                (existingStats.totalHumorOtimo || 0) + 1 :
+                (existingStats.totalHumorOtimo || 0),
             };
 
             tx.update(senderRef, {
@@ -2086,6 +2284,21 @@ exports.processInput = onDocumentCreated(
             });
 
             // --- Achievements ---
+            const partnerClima = climaHoje[partnerUid] || null;
+            const partnerAlsoRegisteredToday = !!(partnerClima &&
+              partnerClima.registradoEm &&
+              isSameCalendarDay(partnerClima.registradoEm, nowTs));
+
+            const criadoEm = senderData.criadoEm || null;
+            let diasNoApp = 0;
+            if (criadoEm) {
+              const criadoDate = typeof criadoEm.toDate === "function" ?
+                criadoEm.toDate() : new Date(criadoEm);
+              diasNoApp = Math.floor(
+                  (nowTs.toDate() - criadoDate) / (24 * 60 * 60 * 1000),
+              );
+            }
+
             const granted = await grantAchievementsInTransaction({
               tx,
               userRef: senderRef,
@@ -2097,6 +2310,8 @@ exports.processInput = onDocumentCreated(
               eventContext: {
                 streak: currentStreak,
                 totalCheckins: updatedStats.totalCheckins,
+                partnerAlsoRegisteredToday,
+                diasNoApp,
               },
             });
             if (granted.length) {

@@ -1052,86 +1052,82 @@
     // Main application state
     // Deve permanecer sincronizado com a definição em functions/index.js (ACHIEVEMENTS)
     const ACHIEVEMENTS = [
-    {
-        id: 'first_check_in',
-        trigger: 'daily_check_in',
-        title: 'Primeiro Passo',
-        description: 'Realize seu primeiro check-in diário com o seu par.',
-        hint: 'Envie um foguinho pela tela de check-in.',
-        icon: 'fa-person-rays',
-        accentColor: '#fbbf24',
-        reward: 1,
-    },
-    {
-        id: 'checkin_streak_7',
-        trigger: 'daily_check_in',
-        title: 'Foguinho Semanal',
-        description: 'Complete 7 check-ins em dias consecutivos.',
-        hint: 'Faça check-ins diários sem perder nenhum dia.',
-        icon: 'fa-calendar-week',
-        accentColor: '#34d399',
-        reward: 3,
-    },
-    {
-        id: 'checkin_master',
-        trigger: 'daily_check_in',
-        title: 'Mestre do Check-in',
-        description: 'Realize 30 check-ins no total.',
-        hint: 'Consistência é tudo: presenteie seu par frequentemente.',
-        icon: 'fa-stopwatch',
-        accentColor: '#60a5fa',
-        reward: 10,
-    },
-    {
-        id: 'sou_fiel',
-        trigger: 'daily_check_in',
-        title: 'Sou Fiel',
-        description: 'Realize 60 check-ins no total.',
-        hint: 'Mantenha o ritmo diário para mostrar compromisso.',
-        icon: 'fa-hand-holding-heart',
-        accentColor: '#38bdf8',
-        reward: 20,
-    },
-    {
-        id: 'first_moment_redeem',
-        trigger: 'moment_redeem',
-        title: 'Primeiro Momento',
-        description: 'Resgate o seu primeiro momento.',
-        hint: 'Escolha um momento e resgate com foguinhos.',
-        icon: 'fa-heart',
-        accentColor: '#f472b6',
-        reward: 1,
-    },
-    {
-        id: 'moment_collector',
-        trigger: 'moment_redeem',
-        title: 'Colecionador de Momentos',
-        description: 'Resgate 5 momentos diferentes.',
-        hint: 'Continue resgatando momentos para o seu mural.',
-        icon: 'fa-gift',
-        accentColor: '#c084fc',
-        reward: 3,
-    },
-    {
-        id: 'foguinhos_investor',
-        trigger: 'moment_redeem',
-        title: 'Investidor de Foguinhos',
-        description: 'Gaste 50 foguinhos em momentos.',
-        hint: 'Momentos incríveis custam foguinhos – continue investindo!',
-        icon: 'fa-coins',
-        accentColor: '#facc15',
-        reward: 10,
-    },
-    {
-        id: 'caliente',
-        trigger: 'moment_redeem',
-        title: 'Caliente',
-        description: 'Gaste 100 foguinhos em momentos.',
-        hint: 'Quanto mais foguinhos, mais experiências intensas.',
-        icon: 'fa-fire-flame-curved',
-        accentColor: '#fb923c',
-        reward: 20,
-    },
+    // ── CLIMA
+    { id: 'first_check_in', trigger: 'daily_check_in', categoria: 'clima',
+      title: 'Primeiro Passo', description: 'Realize seu primeiro registro de clima.',
+      hint: 'Registre seu humor pela tela de clima.', icon: 'fa-person-rays',
+      accentColor: '#fbbf24', reward: 1 },
+    { id: 'checkin_streak_7', trigger: 'daily_check_in', categoria: 'clima',
+      title: 'Foguinho Semanal', description: 'Registre o clima 7 dias consecutivos.',
+      hint: 'Registre diariamente sem perder nenhum dia.', icon: 'fa-calendar-week',
+      accentColor: '#34d399', reward: 3 },
+    { id: 'checkin_master', trigger: 'daily_check_in', categoria: 'clima',
+      title: 'Mestre do Clima', description: 'Registre o clima 30 vezes no total.',
+      hint: 'Consistência é tudo: registre seu humor frequentemente.', icon: 'fa-stopwatch',
+      accentColor: '#60a5fa', reward: 10 },
+    { id: 'sou_fiel', trigger: 'daily_check_in', categoria: 'clima',
+      title: 'Sou Fiel', description: 'Registre o clima 60 vezes no total.',
+      hint: 'Mantenha o ritmo diário para mostrar compromisso.', icon: 'fa-hand-holding-heart',
+      accentColor: '#38bdf8', reward: 20 },
+    { id: 'sintonia_clima', trigger: 'daily_check_in', categoria: 'clima',
+      title: 'Sintonia', description: 'Registre o clima no mesmo dia que seu parceiro.',
+      hint: 'Vocês dois precisam registrar o humor no mesmo dia.', icon: 'fa-heart-pulse',
+      accentColor: '#f43f5e', reward: 1 },
+    { id: 'relacao_saudavel', trigger: 'daily_check_in', categoria: 'clima',
+      title: 'Relação Saudável', description: "Registre o humor 'Ótimo' 5 vezes.",
+      hint: 'Registre seu melhor humor 5 vezes para desbloquear.', icon: 'fa-face-laugh-beam',
+      accentColor: '#4ade80', reward: 2 },
+    // ── RELAÇÃO
+    { id: 'first_moment_redeem', trigger: 'moment_redeem', categoria: 'relacao',
+      title: 'Primeiro Momento', description: 'Resgate o seu primeiro momento.',
+      hint: 'Escolha um momento e resgate com foguinhos.', icon: 'fa-heart',
+      accentColor: '#f472b6', reward: 1 },
+    { id: 'moment_collector', trigger: 'moment_redeem', categoria: 'relacao',
+      title: 'Colecionador de Momentos', description: 'Resgate 5 momentos diferentes.',
+      hint: 'Continue resgatando momentos para o seu mural.', icon: 'fa-gift',
+      accentColor: '#c084fc', reward: 3 },
+    { id: 'to_amando', trigger: 'moment_redeem', categoria: 'relacao',
+      title: 'Tô Amando', description: 'Resgate momentos de 3 categorias diferentes.',
+      hint: 'Explore diferentes categorias de momentos.', icon: 'fa-stars',
+      accentColor: '#e879f9', reward: 2 },
+    { id: 'jornada_iniciada', trigger: 'moment_redeem_received', categoria: 'relacao',
+      title: 'Jornada Iniciada', description: 'Tenha um momento resgatado pelo seu parceiro.',
+      hint: 'Seu parceiro precisa resgatar um momento para você.', icon: 'fa-envelope-open-text',
+      accentColor: '#fb7185', reward: 1 },
+    { id: 'atitude', trigger: 'moment_complete', categoria: 'relacao',
+      title: 'Atitude', description: 'Complete um momento marcando como realizado.',
+      hint: 'Marque um momento como realizado na aba de momentos.', icon: 'fa-circle-check',
+      accentColor: '#34d399', reward: 1 },
+    // ── ENGAJAMENTO
+    { id: 'foguinhos_investor', trigger: 'moment_redeem', categoria: 'engajamento',
+      title: 'Investidor de Foguinhos', description: 'Gaste 50 foguinhos em momentos.',
+      hint: 'Momentos incríveis custam foguinhos – continue investindo!', icon: 'fa-coins',
+      accentColor: '#facc15', reward: 10 },
+    { id: 'caliente', trigger: 'moment_redeem', categoria: 'engajamento',
+      title: 'Caliente', description: 'Gaste 100 foguinhos em momentos.',
+      hint: 'Quanto mais foguinhos, mais experiências intensas.', icon: 'fa-fire-flame-curved',
+      accentColor: '#fb923c', reward: 20 },
+    { id: 'em_sincronia', trigger: 'weekly_challenge_answer', categoria: 'engajamento',
+      title: 'Em Sincronia', description: 'Acerte o desafio 3 semanas seguidas.',
+      hint: 'Respondam juntos e certos por 3 semanas consecutivas.', icon: 'fa-brain',
+      accentColor: '#a78bfa', reward: 5 },
+    { id: 'ligeiro', trigger: 'weekly_challenge_answer', categoria: 'engajamento',
+      title: 'Ligeiro', description: 'Responda o desafio em menos de 1 hora.',
+      hint: 'Abra o desafio e responda rapidinho!', icon: 'fa-bolt',
+      accentColor: '#fbbf24', reward: 1 },
+    // ── INDIVIDUAL
+    { id: 'primeiro_mes', trigger: 'daily_check_in', categoria: 'individual',
+      title: 'Primeiro Mês', description: 'Complete 30 dias usando o Nosso Momento.',
+      hint: 'Continue usando o app por 30 dias.', icon: 'fa-calendar-check',
+      accentColor: '#67e8f9', reward: 3 },
+    { id: 'com_cara', trigger: 'profile_photo_upload', categoria: 'individual',
+      title: 'Com Cara', description: 'Adicione uma foto de perfil.',
+      hint: 'Vá em Meu Perfil e envie uma foto.', icon: 'fa-camera',
+      accentColor: '#94a3b8', reward: 1 },
+    { id: 'criando_memorias', trigger: 'moment_photo_upload', categoria: 'individual',
+      title: 'Criando Memórias', description: 'Envie uma foto ao registrar um momento realizado.',
+      hint: 'Ao marcar um momento como feito, adicione uma foto.', icon: 'fa-images',
+      accentColor: '#f472b6', reward: 1 },
 ];
 
 const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
@@ -1180,6 +1176,7 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     showVipPopup: false,
     abaTarefasAtiva: 'recebidos',
     desafiosTab: 'emAberto',
+    conquistasCategoria: 'todos',
     desafiosSemanais: [],
     weeklyChallengeFromServer: false,
     hasTriggeredFirstPairingChallenge: false,
@@ -3449,6 +3446,7 @@ async function renderAchievementsPopup() {
     }, 0);
     const mostrarTodas = !!state.mostrarTodasConquistas;
     const desafiosTab = state.desafiosTab || 'conquistas';
+    const conquistasCategoria = state.conquistasCategoria || 'todos';
 
     const desafiosSemanais = (state.pareado && state.usuario?.pareadoUid && Array.isArray(state.desafiosSemanais))
         ? state.desafiosSemanais
@@ -3463,7 +3461,10 @@ async function renderAchievementsPopup() {
 
     let itensFiltrados = [];
     if (desafiosTab === 'emAberto') {
-        const conquistasEmAberto = ACHIEVEMENTS.filter((achievement) => !conquistasUsuario[achievement.id]).map((achievement) => ({
+        const conquistasEmAberto = ACHIEVEMENTS.filter((achievement) =>
+            !conquistasUsuario[achievement.id] &&
+            (conquistasCategoria === 'todos' || achievement.categoria === conquistasCategoria)
+        ).map((achievement) => ({
             ...achievement,
             tipo: 'conquista',
         }));
@@ -3478,7 +3479,10 @@ async function renderAchievementsPopup() {
             tipo: 'semanal',
         }));
     } else {
-        itensFiltrados = ACHIEVEMENTS.filter((achievement) => !!conquistasUsuario[achievement.id]).map((achievement) => ({
+        itensFiltrados = ACHIEVEMENTS.filter((achievement) =>
+            !!conquistasUsuario[achievement.id] &&
+            (conquistasCategoria === 'todos' || achievement.categoria === conquistasCategoria)
+        ).map((achievement) => ({
             ...achievement,
             tipo: 'conquista',
         }));
@@ -3579,6 +3583,14 @@ async function renderAchievementsPopup() {
                         <button class="notif-tab ${desafiosTab === 'finalizados' ? 'active' : ''}" onclick="setDesafiosTab('finalizados')">Finalizados</button>
                         <button class="notif-tab ${desafiosTab === 'conquistas' ? 'active' : ''}" onclick="setDesafiosTab('conquistas')">Conquistas</button>
                     </div>
+                    ${desafiosTab !== 'finalizados' ? `
+                    <div class="flex gap-2 flex-wrap">
+                        ${['todos','engajamento','relacao','clima','individual'].map(cat => {
+                            const labels = {todos:'Todos',engajamento:'Engajamento',relacao:'Relação',clima:'Clima',individual:'Individual'};
+                            const isActive = conquistasCategoria === cat;
+                            return `<button class="px-3 py-1 rounded-full text-xs font-semibold transition ${isActive ? 'bg-red-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}" onclick="setConquistasCategoria('${cat}')">${labels[cat]}</button>`;
+                        }).join('')}
+                    </div>` : ''}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                         ${gridHtml || '<p class="text-center text-gray-500 py-6 col-span-full">Nenhum item para exibir.</p>'}
                     </div>
@@ -5303,6 +5315,14 @@ function setDesafiosTab(tab) {
     }
 }
 
+function setConquistasCategoria(cat) {
+    if (state.conquistasCategoria !== cat) {
+        state.conquistasCategoria = cat;
+        renderAchievementsPopup();
+    }
+}
+window.setConquistasCategoria = setConquistasCategoria;
+
 async function handleSaveCatalogo() {
 const novoCatalogo = {}; // 1. Começamos com um objeto vazio.
 
@@ -5540,6 +5560,11 @@ uploadTask.on('state_changed',
             // 6. Atualiza o estado local e a UI
             state.usuario.fotoUrl = downloadURL;
             updateFixedUI(); // Chama a função para atualizar a header
+
+            // Dispara badge "Com Cara"
+            try {
+                await safeAddInput({ type: 'profile_photo_upload', fromUid: state.usuario.uid });
+            } catch (e) { console.warn('profile_photo_upload badge error', e); }
 
             showToast('Foto de perfil atualizada com sucesso!', 'sucesso');
             if(progressContainer) progressContainer.classList.add('hidden'); // Esconde a barra
@@ -7286,6 +7311,11 @@ async function confirmRealizadoWithPhoto() {
 
     if (photoFile) {
         await createMemoriaPostPhoto(pending, photoFile);
+        // Dispara badge "Criando Memórias"
+        try {
+            const uid = state.usuario?.uid;
+            if (uid) await safeAddInput({ type: 'moment_photo_upload', fromUid: uid });
+        } catch (e) { console.warn('moment_photo_upload badge error', e); }
     }
     handleDarCheck(pending.tarefaId, pending.momentoNome, pending.custoFoguinhos);
 }
@@ -7613,6 +7643,16 @@ async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
             // ==========================================================
 
             showToast("Momento confirmado com sucesso!", "sucesso");
+
+            // Dispara badge "Atitude"
+            try {
+                const uid = state.usuario?.uid;
+                if (uid) await safeAddInput({
+                    type: 'moment_complete',
+                    fromUid: uid,
+                    pareamentoId: state.idPareamentoAmigavel || '',
+                });
+            } catch (e) { console.warn('moment_complete badge error', e); }
             
             // Re-renderiza a tela para mostrar a mudança de status
             renderMomentos();

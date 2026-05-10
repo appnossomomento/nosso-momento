@@ -65,6 +65,9 @@ exports.createInput = https.onRequest(async (req, res) => {
       "weekly_challenge_answer",
       "weekly_challenge_timeout",
       "catalog_update",
+      "moment_complete",
+      "profile_photo_upload",
+      "moment_photo_upload",
     ];
     if (!input.type || !allowedTypes.includes(input.type)) {
       res.status(400).send({error: "unsupported_type"});
@@ -119,6 +122,15 @@ exports.createInput = https.onRequest(async (req, res) => {
       ],
       catalog_update: [
         "type", "fromUid", "partnerUids",
+      ],
+      moment_complete: [
+        "type", "fromUid", "pareamentoId",
+      ],
+      profile_photo_upload: [
+        "type", "fromUid",
+      ],
+      moment_photo_upload: [
+        "type", "fromUid",
       ],
     };
 
