@@ -1513,7 +1513,8 @@ exports.processInput = onDocumentCreated(
                 tx.set(notifR, {
                   userId: responderUid,
                   titulo: "Vocês acertaram juntos! 🏆",
-                  mensagem: `+${rewardN} foguinho(s) para cada um. Continuem assim! 🔥`,
+                  mensagem: `+${rewardN} foguinho(s) para` +
+                    ` cada um. Continuem assim! 🔥`,
                   icone: "fa-trophy",
                   tipo: "desafio",
                   redirectTo: "achievementsPopup",
@@ -1526,7 +1527,8 @@ exports.processInput = onDocumentCreated(
                 tx.set(notifP, {
                   userId: partnerUid,
                   titulo: "Vocês acertaram juntos! 🏆",
-                  mensagem: `+${rewardN} foguinho(s) para cada um. Continuem assim! 🔥`,
+                  mensagem: `+${rewardN} foguinho(s) para` +
+                    ` cada um. Continuem assim! 🔥`,
                   icone: "fa-trophy",
                   tipo: "desafio",
                   redirectTo: "achievementsPopup",
@@ -1540,7 +1542,8 @@ exports.processInput = onDocumentCreated(
                 tx.set(notifR2, {
                   userId: responderUid,
                   titulo: "Quase lá... 😅",
-                  mensagem: "As respostas foram diferentes desta vez. Na próxima vocês acertam!",
+                  mensagem: "As respostas foram diferentes" +
+                    " desta vez. Na próxima vocês acertam!",
                   icone: "fa-trophy",
                   tipo: "desafio",
                   redirectTo: "achievementsPopup",
@@ -1553,7 +1556,8 @@ exports.processInput = onDocumentCreated(
                 tx.set(notifP2, {
                   userId: partnerUid,
                   titulo: "Quase lá... 😅",
-                  mensagem: "As respostas foram diferentes desta vez. Na próxima vocês acertam!",
+                  mensagem: "As respostas foram diferentes" +
+                    " desta vez. Na próxima vocês acertam!",
                   icone: "fa-trophy",
                   tipo: "desafio",
                   redirectTo: "achievementsPopup",
@@ -1970,10 +1974,18 @@ exports.processInput = onDocumentCreated(
               triste: "😢",
             };
             const HUMOR_TITULO_MAP = {
-              muito_feliz: `${senderName} está ${HUMOR_LABELS["muito_feliz"]} hoje! ${HUMOR_EMOJI_MAP["muito_feliz"]}`,
-              feliz: `${senderName} está ${HUMOR_LABELS["feliz"]} hoje! ${HUMOR_EMOJI_MAP["feliz"]}`,
-              normal: `${senderName} está ${HUMOR_LABELS["normal"]} hoje! ${HUMOR_EMOJI_MAP["normal"]}`,
-              triste: `${senderName} está ${HUMOR_LABELS["triste"]} hoje! ${HUMOR_EMOJI_MAP["triste"]}`,
+              muito_feliz: `${senderName} está` +
+                ` ${HUMOR_LABELS["muito_feliz"]} hoje!` +
+                ` ${HUMOR_EMOJI_MAP["muito_feliz"]}`,
+              feliz: `${senderName} está` +
+                ` ${HUMOR_LABELS["feliz"]} hoje!` +
+                ` ${HUMOR_EMOJI_MAP["feliz"]}`,
+              normal: `${senderName} está` +
+                ` ${HUMOR_LABELS["normal"]} hoje!` +
+                ` ${HUMOR_EMOJI_MAP["normal"]}`,
+              triste: `${senderName} está` +
+                ` ${HUMOR_LABELS["triste"]} hoje!` +
+                ` ${HUMOR_EMOJI_MAP["triste"]}`,
             };
             const HUMOR_CORPO_MAP = {
               muito_feliz: "Aproveite para apimentar a relação.",
@@ -1983,7 +1995,8 @@ exports.processInput = onDocumentCreated(
             };
             tx.set(notifRef, {
               userId: partnerUid,
-              titulo: HUMOR_TITULO_MAP[humor] || `${senderName} registrou o humor hoje.`,
+              titulo: HUMOR_TITULO_MAP[humor] ||
+                `${senderName} registrou o humor hoje.`,
               mensagem: HUMOR_CORPO_MAP[humor] || "",
               icone: "fa-thermometer-half",
               tipo: "clima",
