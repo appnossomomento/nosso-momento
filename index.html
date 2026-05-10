@@ -603,23 +603,23 @@
             border-radius: 999px;
             font-weight: 600;
             text-align: center;
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.75);
-            border: 1px solid rgba(255,255,255,0.12);
-            transition: all 0.2s ease;
-            backdrop-filter: blur(6px);
+            background: #1a1a1a;
+            color: #888888;
+            border: none;
+            transition: background 0.2s ease, color 0.2s ease;
             font-size: 0.82rem;
             line-height: 1.1;
             white-space: nowrap;
         }
         .notif-tab:hover {
-            background: rgba(255,255,255,0.16);
+            background: #2a2a2a;
+            color: #cccccc;
         }
         .notif-tab.active {
-            background: linear-gradient(135deg, #ff2d3f 0%, #ff5565 100%);
+            background: #ef4444;
             color: #fff;
-            border-color: rgba(255,255,255,0.2);
-            box-shadow: 0 8px 18px rgba(255, 45, 63, 0.25);
+            border: none;
+            box-shadow: none;
         }
         .notif-list-shell {
             background: #ffffff;
@@ -1176,7 +1176,7 @@ const ACHIEVEMENTS_BY_ID = ACHIEVEMENTS.reduce((acc, achievement) => {
     showVipPopup: false,
     abaTarefasAtiva: 'recebidos',
     desafiosTab: 'emAberto',
-    conquistasCategoria: 'todos',
+    conquistasCategoria: 'engajamento',
     desafiosSemanais: [],
     weeklyChallengeFromServer: false,
     hasTriggeredFirstPairingChallenge: false,
@@ -3446,7 +3446,7 @@ async function renderAchievementsPopup() {
     }, 0);
     const mostrarTodas = !!state.mostrarTodasConquistas;
     const desafiosTab = state.desafiosTab || 'conquistas';
-    const conquistasCategoria = state.conquistasCategoria || 'todos';
+    const conquistasCategoria = state.conquistasCategoria || 'engajamento';
 
     const desafiosSemanais = (state.pareado && state.usuario?.pareadoUid && Array.isArray(state.desafiosSemanais))
         ? state.desafiosSemanais
@@ -3463,7 +3463,7 @@ async function renderAchievementsPopup() {
     if (desafiosTab === 'emAberto') {
         const conquistasEmAberto = ACHIEVEMENTS.filter((achievement) =>
             !conquistasUsuario[achievement.id] &&
-            (conquistasCategoria === 'todos' || achievement.categoria === conquistasCategoria)
+            achievement.categoria === conquistasCategoria
         ).map((achievement) => ({
             ...achievement,
             tipo: 'conquista',
@@ -3481,7 +3481,7 @@ async function renderAchievementsPopup() {
     } else {
         itensFiltrados = ACHIEVEMENTS.filter((achievement) =>
             !!conquistasUsuario[achievement.id] &&
-            (conquistasCategoria === 'todos' || achievement.categoria === conquistasCategoria)
+            achievement.categoria === conquistasCategoria
         ).map((achievement) => ({
             ...achievement,
             tipo: 'conquista',
@@ -3511,7 +3511,7 @@ async function renderAchievementsPopup() {
                 ? 'bg-white/20 border-white/20 backdrop-blur-sm text-gray-200 opacity-90'
                 : (desbloqueada
                     ? 'bg-gray-900 border-transparent shadow-lg shadow-black/30'
-                    : 'bg-gray-800/40 border-gray-700 backdrop-blur-sm opacity-70'));
+                    : 'bg-[#141414] border-[#2a2a2a] backdrop-blur-sm opacity-65'));
         const cor = item.accentColor || '#fbbf24';
         const titulo = item.title || item.titulo || 'Desafio';
         const descricao = item.description || item.descricao || '';
@@ -3527,8 +3527,8 @@ async function renderAchievementsPopup() {
         return `
             <div class="achievement-card sm-card-padding rounded-2xl border transition ${cardClasses} ${cardClickable ? 'cursor-pointer hover:-translate-y-0.5' : ''}" ${hintAttr} ${cardOnClick}>
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${desbloqueada || isSemanalEmAberto ? '' : 'border border-gray-600'}" style="${desbloqueada || isSemanalEmAberto ? `background: ${cor}; color: #111827;` : ''}">
-                        <i class="fas ${iconClass} text-lg sm:text-xl"></i>
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${desbloqueada || isSemanalEmAberto ? '' : 'bg-gray-700'}" style="${desbloqueada || isSemanalEmAberto ? `background: ${cor}; color: #111827;` : ''}">
+                        <i class="fas ${iconClass} text-lg sm:text-xl ${desbloqueada || isSemanalEmAberto ? '' : 'text-gray-500'}"></i>
                     </div>
                     <div class="flex-1">
                         <h4 class="font-semibold text-base sm:text-lg ${desbloqueada || isSemanalEmAberto ? '' : 'text-gray-300'}">${escapeHtml(titulo)}</h4>
@@ -3584,11 +3584,11 @@ async function renderAchievementsPopup() {
                         <button class="notif-tab ${desafiosTab === 'conquistas' ? 'active' : ''}" onclick="setDesafiosTab('conquistas')">Conquistas</button>
                     </div>
                     ${desafiosTab !== 'finalizados' ? `
-                    <div class="flex gap-2 flex-wrap">
-                        ${['todos','engajamento','relacao','clima','individual'].map(cat => {
-                            const labels = {todos:'Todos',engajamento:'Engajamento',relacao:'Relação',clima:'Clima',individual:'Individual'};
+                    <div class="flex gap-2">
+                        ${['engajamento','relacao','clima','individual'].map(cat => {
+                            const labels = {engajamento:'Engajar',relacao:'Relação',clima:'Clima',individual:'Individual'};
                             const isActive = conquistasCategoria === cat;
-                            return `<button class="px-3 py-1 rounded-full text-xs font-semibold transition ${isActive ? 'bg-red-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}" onclick="setConquistasCategoria('${cat}')">${labels[cat]}</button>`;
+                            return `<button class="notif-tab ${isActive ? 'active' : ''}" onclick="setConquistasCategoria('${cat}')">${labels[cat]}</button>`;
                         }).join('')}
                     </div>` : ''}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
