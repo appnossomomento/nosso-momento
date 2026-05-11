@@ -11,30 +11,30 @@
 
 jest.mock("../lib/config", () => {
   const mockFirestore = Object.assign(
-    jest.fn(() => ({
-      collection: jest.fn((name) => ({
-        doc: jest.fn((id) => ({_path: `${name}/${id}`, get: jest.fn()})),
-        add: jest.fn(),
+      jest.fn(() => ({
+        collection: jest.fn((name) => ({
+          doc: jest.fn((id) => ({_path: `${name}/${id}`, get: jest.fn()})),
+          add: jest.fn(),
+        })),
+        doc: jest.fn(),
+        runTransaction: jest.fn(async (fn) => fn({})),
       })),
-      doc: jest.fn(),
-      runTransaction: jest.fn(async (fn) => fn({})),
-    })),
-    {
-      Timestamp: {
-        now: () => ({
-          toDate: () => new Date(),
-          seconds: Math.floor(Date.now() / 1000),
-          nanoseconds: 0,
-        }),
-        fromDate: (d) => ({toDate: () => d}),
+      {
+        Timestamp: {
+          now: () => ({
+            toDate: () => new Date(),
+            seconds: Math.floor(Date.now() / 1000),
+            nanoseconds: 0,
+          }),
+          fromDate: (d) => ({toDate: () => d}),
+        },
+        FieldValue: {
+          increment: (n) => ({_increment: n}),
+          serverTimestamp: () => ({_serverTimestamp: true}),
+          delete: () => ({_delete: true}),
+          arrayRemove: (...args) => ({_arrayRemove: args}),
+        },
       },
-      FieldValue: {
-        increment: (n) => ({_increment: n}),
-        serverTimestamp: () => ({_serverTimestamp: true}),
-        delete: () => ({_delete: true}),
-        arrayRemove: (...args) => ({_arrayRemove: args}),
-      },
-    },
   );
   return {
     admin: {
@@ -204,7 +204,7 @@ describe("processInput — clima_update event context logic", () => {
     const criadoDate = new Date(now);
     criadoDate.setDate(criadoDate.getDate() - 30);
     const diasNoApp = Math.floor(
-      (now - criadoDate) / (24 * 60 * 60 * 1000),
+        (now - criadoDate) / (24 * 60 * 60 * 1000),
     );
     expect(diasNoApp).toBe(30);
   });

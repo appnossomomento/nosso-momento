@@ -3,22 +3,22 @@
 
 jest.mock("./config", () => {
   const mockFirestore = Object.assign(
-    () => ({collection: () => ({doc: () => ({})})}),
-    {
-      Timestamp: {
-        now: () => ({
-          toDate: () => new Date(),
-          seconds: 0,
-          nanoseconds: 0,
-        }),
+      () => ({collection: () => ({doc: () => ({})})}),
+      {
+        Timestamp: {
+          now: () => ({
+            toDate: () => new Date(),
+            seconds: 0,
+            nanoseconds: 0,
+          }),
+        },
+        FieldValue: {
+          increment: (n) => ({_increment: n}),
+          serverTimestamp: () => ({_serverTimestamp: true}),
+          delete: () => ({_delete: true}),
+          arrayRemove: (...args) => ({_arrayRemove: args}),
+        },
       },
-      FieldValue: {
-        increment: (n) => ({_increment: n}),
-        serverTimestamp: () => ({_serverTimestamp: true}),
-        delete: () => ({_delete: true}),
-        arrayRemove: (...args) => ({_arrayRemove: args}),
-      },
-    },
   );
   return {
     admin: {firestore: mockFirestore},
@@ -61,10 +61,10 @@ function grant({trigger, statsBefore = {}, statsAfter = {}, eventContext = {}, c
   });
   // Extract which achievement ids were written
   return tx._ops
-    .filter((o) => o.op === "set" || o.op === "update")
-    .flatMap((o) => Object.keys(o.data || {}))
-    .filter((k) => k.startsWith("conquistas."))
-    .map((k) => k.replace("conquistas.", ""));
+      .filter((o) => o.op === "set" || o.op === "update")
+      .flatMap((o) => Object.keys(o.data || {}))
+      .filter((k) => k.startsWith("conquistas."))
+      .map((k) => k.replace("conquistas.", ""));
 }
 
 // ── ACHIEVEMENTS array sanity ──────────────────────────────────────────────
@@ -315,7 +315,7 @@ describe("grantAchievementsInTransaction", () => {
       eventContext: {},
     });
     const notifOps = tx._ops.filter(
-      (o) => o.op === "set" && o.data && o.data.tipo === "achievement",
+        (o) => o.op === "set" && o.data && o.data.tipo === "achievement",
     );
     expect(notifOps.length).toBeGreaterThanOrEqual(1);
   });
