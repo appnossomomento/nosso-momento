@@ -1,0 +1,41 @@
+name: Deploy Functions
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'functions/**'
+
+jobs:
+  lint-and-deploy:
+    name: Lint + Deploy Firebase Functions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: functions
+
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: functions
+
+      - name: Run tests
+        run: npm test --if-present
+        working-directory: functions
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          PROJECT_ID: nosso-momento-app
