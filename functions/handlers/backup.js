@@ -3,9 +3,6 @@
 
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {GoogleAuth} = require("google-auth-library");
-const {setGlobalOptions} = require("firebase-functions/v2");
-
-setGlobalOptions({region: "southamerica-east1"});
 
 /**
  * Executa export diário do Firestore para o bucket GCS.
