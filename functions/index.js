@@ -36,3 +36,6 @@ exports.joinWaitlist = waitlist.joinWaitlist;
 exports.createInput = adminHandler.createInput;
 
 exports.processInput = processInputHandler.processInput;
+
+const backupHandler = require("./handlers/backup");
+exports.backupFirestore = backupHandler.backupFirestore;
