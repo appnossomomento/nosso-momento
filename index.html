@@ -1974,9 +1974,12 @@ function triggerAchievementCelebration(notif) {
                         <span class="text-lg">CADASTRAR</span>
                         <i class="fas fa-arrow-right-long"></i>
                     </button>
-                    <p class="text-center mt-6 text-gray-400 text-sm">
-                        Ao continuar, você concorda com nossos <button type="button" class="text-pink-400 hover:underline" onclick="openLegalModal('terms')">Termos</button> e <button type="button" class="text-pink-400 hover:underline" onclick="openLegalModal('privacy')">Política de Privacidade</button>
-                    </p>
+                    <div class="flex items-start gap-3 mt-5">
+                        <input type="checkbox" id="aceitarTermos" class="mt-1 w-4 h-4 accent-pink-500 cursor-pointer flex-shrink-0" />
+                        <label for="aceitarTermos" class="text-gray-400 text-sm leading-relaxed cursor-pointer">
+                            Li e concordo com os <button type="button" class="text-pink-400 hover:underline" onclick="openLegalModal('terms')">Termos de Uso</button> e a <button type="button" class="text-pink-400 hover:underline" onclick="openLegalModal('privacy')">Política de Privacidade</button>, incluindo o uso de cookies para análise e marketing.
+                        </label>
+                    </div>
                 </div>
             </div>
         `;
@@ -4074,15 +4077,110 @@ function renderLegalModal() {
     const type = state.legalModalType || 'terms';
     const isTerms = type === 'terms';
     const title = isTerms ? 'Termos de Uso' : 'Política de Privacidade';
-    const content = isTerms
-        ? `Ao utilizar o Nosso Momento, você concorda em usar o app de forma responsável, respeitando seu par e as regras do serviço. Você é responsável pelas informações fornecidas e pelos conteúdos enviados.`
-        : `Nós coletamos apenas os dados necessários para oferecer a melhor experiência no app, como informações de conta, pareamento e interações. Seus dados não são vendidos e ficam protegidos pelos serviços do Firebase.`;
+
+    const termsContent = `
+<p class="font-semibold text-white mb-2">Versão 1.0 — Vigente a partir de 19/05/2026</p>
+
+<p class="mb-3">Bem-vindo ao <strong>Nosso Momento</strong>. Ao se cadastrar e utilizar o aplicativo, você declara que leu, compreendeu e concorda integralmente com estes Termos de Uso, em conformidade com a Lei Federal nº 12.965/2014 (Marco Civil da Internet) e a Lei Federal nº 13.709/2018 (LGPD).</p>
+
+<p class="font-semibold text-white mt-4 mb-1">1. Descrição do Serviço</p>
+<p class="mb-3">O Nosso Momento é um aplicativo web destinado a casais, que oferece funcionalidades de check-in emocional diário, catálogo de momentos a dois, desafios semanais, conquistas, memórias compartilhadas e notificações push. O serviço é disponibilizado exclusivamente via internet, em dispositivos compatíveis.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">2. Elegibilidade</p>
+<p class="mb-3">O uso do aplicativo é permitido apenas a maiores de 18 anos. Ao se cadastrar, você declara ter capacidade civil plena para aceitar estes termos. Contas de menores de idade serão encerradas imediatamente ao serem identificadas.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">3. Cadastro e Responsabilidades do Usuário</p>
+<p class="mb-3">Você é responsável pela veracidade e atualização das informações fornecidas no cadastro (nome, e-mail, telefone, sexo). Seu login e senha são pessoais e intransferíveis. O compartilhamento de credenciais é proibido, e o Nosso Momento não se responsabiliza por acessos indevidos decorrentes de negligência do usuário. Você se compromete a não utilizar o aplicativo para fins ilícitos, discriminatórios ou que violem direitos de terceiros.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">4. Propriedade Intelectual</p>
+<p class="mb-3">Todo o conteúdo do aplicativo — incluindo textos, design, ícones, funcionalidades e código-fonte — é propriedade do Nosso Momento e está protegido por lei. É vedada a reprodução, distribuição ou modificação sem autorização expressa e por escrito.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">5. Limitação de Responsabilidade</p>
+<p class="mb-3">O Nosso Momento não se responsabiliza por danos decorrentes de: (a) falhas de conexão ou dispositivos do usuário; (b) uso indevido das credenciais de acesso; (c) conteúdo enviado por outros usuários; (d) indisponibilidade temporária dos serviços de terceiros (Google Firebase, Vercel). O serviço é fornecido "no estado em que se encontra", sem garantias de funcionamento ininterrupto.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">6. Cookies e Rastreamento</p>
+<p class="mb-3">O Nosso Momento utiliza cookies e tecnologias similares para: (a) manter sua sessão autenticada; (b) analisar o uso do aplicativo via Google Analytics (GA4) e Meta Pixel (Facebook); (c) melhorar a experiência do usuário. Os dados coletados por essas ferramentas são pseudonimizados e utilizados de forma agregada para fins estatísticos e de marketing. Você pode gerenciar cookies nas configurações do seu navegador, mas isso pode afetar o funcionamento do app.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">7. Encerramento de Conta</p>
+<p class="mb-3">Você pode solicitar a exclusão completa da sua conta a qualquer momento, diretamente no aplicativo, em "Meu Perfil → Excluir minha conta". Todos os seus dados serão removidos conforme descrito na Política de Privacidade.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">8. Alterações nos Termos</p>
+<p class="mb-3">O Nosso Momento reserva-se o direito de modificar estes Termos a qualquer momento. Alterações relevantes serão comunicadas por e-mail ou notificação no app. O uso continuado do serviço após a comunicação implica aceitação das novas condições.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">9. Foro</p>
+<p class="mb-3">Eventuais disputas serão regidas pelas leis brasileiras e processadas no foro da comarca de São Paulo/SP, com renúncia a qualquer outro, por mais privilegiado que seja.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">10. Contato</p>
+<p>Dúvidas e solicitações: <span class="text-pink-400">contato@nossomomento.app</span></p>`;
+
+    const privacyContent = `
+<p class="font-semibold text-white mb-2">Versão 1.0 — Vigente a partir de 19/05/2026</p>
+
+<p class="mb-3">Esta Política de Privacidade descreve como o <strong>Nosso Momento</strong> coleta, usa, armazena e protege seus dados pessoais, em conformidade com a Lei Federal nº 13.709/2018 (LGPD) e seus princípios dispostos no art. 6º: finalidade, adequação, necessidade, livre acesso, qualidade dos dados, transparência, segurança, prevenção, não discriminação e responsabilização.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">1. Controlador dos Dados</p>
+<p class="mb-3"><strong>Nosso Momento App</strong> — contato@nossomomento.app. O controlador é a pessoa responsável pelas decisões sobre o tratamento dos seus dados pessoais.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">2. Dados Coletados e Finalidade</p>
+<p class="mb-2">Coletamos apenas os dados estritamente necessários para a prestação do serviço (princípio da necessidade — LGPD Art. 6º, III):</p>
+<ul class="list-disc pl-5 mb-3 space-y-1">
+  <li><strong>Nome e sexo:</strong> identificação e personalização da experiência</li>
+  <li><strong>E-mail:</strong> autenticação e comunicação com o usuário</li>
+  <li><strong>Telefone (11 dígitos):</strong> identificação para pareamento com o parceiro</li>
+  <li><strong>Foto de perfil:</strong> personalização da conta (opcional)</li>
+  <li><strong>Token FCM:</strong> envio de notificações push</li>
+  <li><strong>Dados de uso</strong> (check-ins, desafios, conquistas, memórias): funcionamento das funcionalidades do app</li>
+  <li><strong>Endereço IP e dados de dispositivo:</strong> segurança, registro de acesso (Marco Civil, Art. 15) e análise de desempenho</li>
+</ul>
+
+<p class="font-semibold text-white mt-4 mb-1">3. Base Legal para o Tratamento</p>
+<p class="mb-3">O tratamento dos seus dados é realizado com base no <strong>consentimento livre e informado</strong> (LGPD Art. 7º, I), manifestado no ato do cadastro. Dados de registro de acesso são tratados também para cumprimento de obrigação legal (LGPD Art. 7º, II, c/c Marco Civil Art. 15).</p>
+
+<p class="font-semibold text-white mt-4 mb-1">4. Operadores (Terceiros que Tratam Dados em Nosso Nome)</p>
+<ul class="list-disc pl-5 mb-3 space-y-1">
+  <li><strong>Google Firebase</strong> (Firestore, Auth, Storage, Cloud Functions, FCM) — armazenamento, autenticação e notificações</li>
+  <li><strong>Vercel Inc.</strong> — hospedagem e entrega do aplicativo web</li>
+  <li><strong>Google Analytics (GA4)</strong> — análise de uso anônima/pseudonimizada</li>
+  <li><strong>Meta Platforms (Facebook Pixel)</strong> — análise de conversão para campanhas de marketing</li>
+</ul>
+<p class="mb-3">Todos os operadores seguem padrões de segurança reconhecidos internacionalmente. Seus dados <strong>não são vendidos</strong> a terceiros.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">5. Cookies e Tecnologias de Rastreamento</p>
+<p class="mb-3">Utilizamos cookies e tecnologias similares (pixels, identificadores de sessão) para: (a) manter sua sessão autenticada; (b) coletar métricas de uso via Google Analytics; (c) medir eficácia de campanhas via Meta Pixel. Dados analíticos são coletados de forma pseudonimizada e não permitem sua identificação direta. Você pode desabilitar cookies nas configurações do navegador, mas funcionalidades essenciais do app podem ser afetadas.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">6. Retenção dos Dados</p>
+<p class="mb-3">Seus dados são mantidos enquanto sua conta estiver ativa. Após a exclusão da conta, os dados são removidos em até <strong>30 dias</strong>, exceto registros de acesso, que são mantidos por 6 meses conforme exigência legal (Marco Civil Art. 15). Dados anonimizados podem ser mantidos indefinidamente para fins estatísticos.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">7. Segurança</p>
+<p class="mb-3">Adotamos medidas técnicas e organizacionais para proteger seus dados: criptografia em trânsito (HTTPS/TLS), autenticação segura via Firebase Auth, regras de acesso ao banco de dados (Firestore Security Rules) e backup diário em ambiente isolado. Em caso de incidente de segurança que possa causar dano relevante, você e a ANPD serão comunicados em prazo adequado.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">8. Seus Direitos (LGPD Art. 18)</p>
+<ul class="list-disc pl-5 mb-3 space-y-1">
+  <li><strong>Confirmação e acesso:</strong> saber quais dados temos sobre você</li>
+  <li><strong>Retificação:</strong> corrigir dados incompletos ou incorretos</li>
+  <li><strong>Eliminação:</strong> solicitar a exclusão dos seus dados — disponível em "Meu Perfil → Excluir minha conta"</li>
+  <li><strong>Portabilidade:</strong> receber seus dados em formato estruturado</li>
+  <li><strong>Revogação do consentimento:</strong> a qualquer momento, sem ônus</li>
+  <li><strong>Oposição ao tratamento:</strong> em caso de descumprimento desta política</li>
+</ul>
+<p class="mb-3">Para exercer seus direitos, entre em contato: <span class="text-pink-400">contato@nossomomento.app</span>. Você também pode apresentar reclamação à <strong>ANPD</strong> (Autoridade Nacional de Proteção de Dados) caso entenda que seus direitos foram violados (LGPD Art. 18, § 1º).</p>
+
+<p class="font-semibold text-white mt-4 mb-1">9. Transferência Internacional de Dados</p>
+<p class="mb-3">Seus dados podem ser processados em servidores localizados fora do Brasil (EUA), operados pelo Google e Vercel, que adotam salvaguardas adequadas conforme LGPD Art. 33.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">10. Alterações nesta Política</p>
+<p class="mb-3">Esta Política pode ser atualizada a qualquer momento. Alterações relevantes serão comunicadas com antecedência mínima de 15 dias. A data de vigência sempre estará indicada no topo deste documento.</p>
+
+<p class="font-semibold text-white mt-4 mb-1">11. Contato e Encarregado (DPO)</p>
+<p>Para dúvidas, solicitações ou exercício de direitos: <span class="text-pink-400">contato@nossomomento.app</span></p>`;
+
+    const content = isTerms ? termsContent : privacyContent;
 
     return `
         <div class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onclick="closeLegalModal()"></div>
         <div class="fixed inset-0 z-50 flex items-center justify-center px-4" onclick="closeLegalModal()">
-            <div class="w-full max-w-md rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7" onclick="event.stopPropagation()">
-                <div class="flex items-start justify-between">
+            <div class="w-full max-w-lg rounded-3xl bg-[#120b16] text-white shadow-2xl border border-white/10 p-6 sm:p-7 flex flex-col max-h-[85vh]" onclick="event.stopPropagation()">
+                <div class="flex items-start justify-between flex-shrink-0">
                     <div>
                         <p class="text-xs uppercase tracking-widest text-white/60">Consentimento</p>
                         <h3 class="text-2xl font-semibold mt-1">${title}</h3>
@@ -4091,10 +4189,10 @@ function renderLegalModal() {
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4 text-sm text-white/80 leading-relaxed">
+                <div class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4 text-xs text-white/80 leading-relaxed overflow-y-auto flex-1">
                     ${content}
                 </div>
-                <div class="mt-6">
+                <div class="mt-4 flex-shrink-0">
                     <button onclick="closeLegalModal()" class="w-full rounded-xl bg-white/10 py-3 text-white/80 font-semibold">Entendi</button>
                 </div>
             </div>
@@ -5809,6 +5907,11 @@ const sexo = document.getElementById('registerSexo').value;
 // Validação de Frontend
 if (!nome || !email || !telefone || !senha || !sexo) {
     openSystemAlert('Por favor, preencha todos os campos.');
+    return;
+}
+const aceitarTermos = document.getElementById('aceitarTermos');
+if (!aceitarTermos || !aceitarTermos.checked) {
+    openSystemAlert('Para continuar, você precisa aceitar os Termos de Uso e a Política de Privacidade.');
     return;
 }
 if (telefone.length !== 11 || !/^\d+$/.test(telefone)) {
