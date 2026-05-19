@@ -40,6 +40,9 @@ exports.processInput = processInputHandler.processInput;
 const backupHandler = require("./handlers/backup");
 exports.backupFirestore = backupHandler.backupFirestore;
 
+const inviteHandler = require("./handlers/invite");
+exports.gerarConvite = inviteHandler.gerarConvite;
+
 const dailyHumorHandler = require("./handlers/dailyHumor");
 exports.lembreteHumorManha = dailyHumorHandler.lembreteHumorManha;
 exports.lembreteHumorAlmoco = dailyHumorHandler.lembreteHumorAlmoco;

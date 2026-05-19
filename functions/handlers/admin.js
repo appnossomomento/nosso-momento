@@ -68,6 +68,7 @@ exports.createInput = https.onRequest(async (req, res) => {
       "moment_complete",
       "profile_photo_upload",
       "moment_photo_upload",
+      "convite_aceitar",
     ];
     if (!input.type || !allowedTypes.includes(input.type)) {
       res.status(400).send({error: "unsupported_type"});
@@ -86,6 +87,9 @@ exports.createInput = https.onRequest(async (req, res) => {
       ],
       pairing_cancel: [
         "type", "fromUid", "requestId",
+      ],
+      convite_aceitar: [
+        "type", "fromUid", "token",
       ],
       pairing_unpair: [
         "type", "fromUid", "partnerUid", "partnerPhone", "pareamentoId",

@@ -741,6 +741,226 @@ exports.processInput = onDocumentCreated(
           const pairingCancelMsg =
         "processInput: pairing_cancel processado";
           console.log(pairingCancelMsg, inputId);
+        } else if (input.type === "convite_aceitar") {
+          // Aceita um convite gerado via gerarConvite (link compartilhável).
+          // Valida o token, cria o pareamento e marca o convite como usado.
+          const token = input.token;
+          const fromUid = input.fromUid;
+          if (!token || !fromUid) {
+            await inputRef.update({
+              error: "missing_convite_fields",
+              processed: false,
+            });
+            return;
+          }
+
+          let conviteAcceptedUids = null;
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const conviteRef = admin.firestore()
+                .collection("convites").doc(token);
+            const conviteSnap = await tx.get(conviteRef);
+
+            if (!conviteSnap.exists) {
+              tx.update(inputRef, {
+                error: "convite_not_found",
+                processed: false,
+              });
+              return;
+            }
+
+            const convite = conviteSnap.data();
+            if (convite.usado) {
+              tx.update(inputRef, {
+                error: "convite_already_used",
+                processed: false,
+              });
+              return;
+            }
+
+            const expiraEm = convite.expiraEm ?
+              convite.expiraEm.toDate() : new Date(0);
+            if (expiraEm < new Date()) {
+              tx.update(inputRef, {
+                error: "convite_expired",
+                processed: false,
+              });
+              return;
+            }
+
+            const senderUid = convite.senderUid;
+            if (senderUid === fromUid) {
+              tx.update(inputRef, {
+                error: "convite_self_invite",
+                processed: false,
+              });
+              return;
+            }
+
+            const senderRef = admin.firestore()
+                .collection("usuarios").doc(senderUid);
+            const receiverRef = admin.firestore()
+                .collection("usuarios").doc(fromUid);
+
+            const senderSnap = await tx.get(senderRef);
+            const receiverSnap = await tx.get(receiverRef);
+
+            if (!senderSnap.exists || !receiverSnap.exists) {
+              tx.update(inputRef, {
+                error: "usuario_nao_encontrado",
+                processed: false,
+              });
+              return;
+            }
+
+            const senderData = senderSnap.data();
+            const receiverData = receiverSnap.data();
+            const senderPhone = senderData.telefone || null;
+            const receiverPhone = receiverData.telefone || null;
+
+            // Campos legados + top-up de foguinhos
+            const MIN_FOGUINHOS = 10;
+            const senderLegacy = {
+              pareadoCom: receiverPhone,
+              pareadoUid: fromUid,
+            };
+            const receiverLegacy = {
+              pareadoCom: senderPhone,
+              pareadoUid: senderUid,
+            };
+            const sFog = Number(senderData.foguinhos);
+            if (!Number.isFinite(sFog) || sFog < MIN_FOGUINHOS) {
+              senderLegacy.foguinhos = MIN_FOGUINHOS;
+            }
+            const rFog = Number(receiverData.foguinhos);
+            if (!Number.isFinite(rFog) || rFog < MIN_FOGUINHOS) {
+              receiverLegacy.foguinhos = MIN_FOGUINHOS;
+            }
+            tx.update(senderRef, senderLegacy);
+            tx.update(receiverRef, receiverLegacy);
+
+            // Cria documento de pareamento
+            const telefones = [senderPhone, receiverPhone]
+                .map((t) => (t || "").replace(/\D/g, ""));
+            telefones.sort();
+            const idPareamento = telefones.join("_");
+            const sp4 = (senderPhone || "").slice(-4);
+            const rp4 = (receiverPhone || "").slice(-4);
+            const idAmigavel = sp4 + rp4;
+            const pareamentoRef = admin.firestore()
+                .collection("pareamentos").doc(idPareamento);
+            const nowISO = new Date().toISOString();
+            const emptyStreak = {
+              currentDailyStreak: 0,
+              bestDailyStreak: 0,
+              lastCheckInDate: null,
+            };
+            tx.set(pareamentoRef, {
+              pessoa1: telefones[0],
+              pessoa2: telefones[1],
+              pessoa1Uid: senderUid,
+              pessoa2Uid: fromUid,
+              dataPareamento: admin.firestore.FieldValue.serverTimestamp(),
+              idAmigavel,
+              foguinhos_pessoa1: 10,
+              foguinhos_pessoa2: 10,
+              streak_pessoa1: emptyStreak,
+              streak_pessoa2: emptyStreak,
+              desafiosConcluidos: 0,
+            }, {merge: true});
+
+            // pareamentosAtivos de ambos
+            const entryForSender = {
+              uid: fromUid,
+              nome: receiverData.nome || "",
+              apelido: receiverData.nome || "",
+              telefone: receiverPhone,
+              fotoUrl: receiverData.fotoUrl || "",
+              pareamentoId: idPareamento,
+              idAmigavel,
+              foguinhos: 10,
+              pareadoDesde: nowISO,
+            };
+            const entryForReceiver = {
+              uid: senderUid,
+              nome: senderData.nome || "",
+              apelido: senderData.nome || "",
+              telefone: senderPhone,
+              fotoUrl: senderData.fotoUrl || "",
+              pareamentoId: idPareamento,
+              idAmigavel,
+              foguinhos: 10,
+              pareadoDesde: nowISO,
+            };
+            tx.update(senderRef, {
+              pareamentosAtivos: admin.firestore.FieldValue.arrayUnion(
+                  entryForSender,
+              ),
+            });
+            tx.update(receiverRef, {
+              pareamentosAtivos: admin.firestore.FieldValue.arrayUnion(
+                  entryForReceiver,
+              ),
+            });
+
+            // Extrato de saldo inicial
+            const extRef1 = pareamentoRef.collection("extrato").doc();
+            tx.set(extRef1, {
+              tipo: "pareamento",
+              descricao: "Saldo inicial do pareamento",
+              valor: 10,
+              beneficiarioUid: senderUid,
+              autorUid: "system",
+              autorNome: "Sistema",
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              createdAtMs: Date.now(),
+            });
+            const extRef2 = pareamentoRef.collection("extrato").doc();
+            tx.set(extRef2, {
+              tipo: "pareamento",
+              descricao: "Saldo inicial do pareamento",
+              valor: 10,
+              beneficiarioUid: fromUid,
+              autorUid: "system",
+              autorNome: "Sistema",
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              createdAtMs: Date.now() + 1,
+            });
+
+            // Marca convite como usado
+            tx.update(conviteRef, {usado: true});
+
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+
+            conviteAcceptedUids = [senderUid, fromUid];
+          });
+
+          console.log("processInput: convite_aceitar processado", inputId);
+
+          if (Array.isArray(conviteAcceptedUids)) {
+            try {
+              await upsertWeeklyChallengeForPair({
+                db: admin.firestore(),
+                pairUids: conviteAcceptedUids,
+                pareamentoId: null,
+                nowMs: Date.now(),
+                forceReset: true,
+              });
+            } catch (err) {
+              console.error(
+                  "convite_aceitar: falha ao criar desafio semanal",
+                  err,
+              );
+            }
+          }
         } else if (input.type === "daily_check_in") {
           const fromUid = input.fromUid;
           const partnerUid = input.partnerUid;
