@@ -5967,6 +5967,18 @@ try {
     };
     state.conquistas = {};
     state.achievementStats = {};
+
+    // Se o usuário veio de um link de convite, aceita o pareamento automaticamente
+    let pendingConviteToken = null;
+    try { pendingConviteToken = sessionStorage.getItem('pendingConvite'); } catch (e) { /* noop */ }
+
+    if (pendingConviteToken && /^[a-f0-9]{40}$/.test(pendingConviteToken)) {
+        showToast('Cadastro realizado! Conectando com seu amor...', 'sucesso');
+        await aceitarConviteLink(pendingConviteToken);
+        // aceitarConviteLink já chama loadUserDataAndNavigate ao final
+        return;
+    }
+
     state.etapa = 'parear';
     renderApp();
     showToast('Cadastro realizado com sucesso! Você será redirecionado para o pareamento.', 'sucesso');
