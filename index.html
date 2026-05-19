@@ -1939,6 +1939,17 @@ function triggerAchievementCelebration(notif) {
     }
 
     function renderRegister() {
+        let conviteBanner = '';
+        try {
+            if (sessionStorage.getItem('pendingConvite')) {
+                conviteBanner = `
+                    <div class="flex items-center gap-3 mb-6 rounded-2xl px-4 py-3" style="background: rgba(255,80,100,0.15); border: 1px solid rgba(255,80,100,0.3);">
+                        <i class="fas fa-heart text-pink-400 text-lg flex-shrink-0"></i>
+                        <p class="text-sm text-pink-200 leading-snug">Você foi convidado! Crie sua conta para aceitar a conexão automaticamente.</p>
+                    </div>`;
+            }
+        } catch (e) { /* sessionStorage indisponível */ }
+
         appContainer.innerHTML = `
             <div class="auth-screen" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80'); background-size: cover; background-position: center;">
                 <div class="card relative p-10 w-full max-w-lg text-white overflow-hidden" style="border-radius: 24px;">
@@ -1949,6 +1960,7 @@ function triggerAchievementCelebration(notif) {
                         <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-red-500 mb-4" style="font-weight: 700;">CADASTRO</h2>
                         <p class="text-gray-300 tracking-wider">Crie sua conta para começar a apimentar!</p>
                     </div>
+                    ${conviteBanner}
                     <div class="space-y-5">
                         <div>
                             <input id="registerNome" placeholder="Seu nome" aria-label="Seu nome" class="w-full bg-gray-800 bg-opacity-50 border border-gray-700 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 rounded-xl py-4 px-5 text-gray-200 placeholder-gray-400 transition-all duration-300" />
@@ -2713,7 +2725,7 @@ if (firebase.messaging && firebase.messaging.isSupported && firebase.messaging.i
                 });
             } else {
                 await navigator.clipboard.writeText(shareUrl);
-                showToast('Link copiado! Envie para seu amor 💛', 'sucesso');
+                showToast('Link copiado! Envie para seu amor', 'sucesso');
             }
         } catch (err) {
             if (err.name !== 'AbortError') {
@@ -2721,7 +2733,7 @@ if (firebase.messaging && firebase.messaging.isSupported && firebase.messaging.i
                 showToast('Não foi possível gerar o link. Tente novamente.', 'erro');
             }
         } finally {
-            if (btn) { btn.disabled = false; btn.textContent = 'Convidar meu amor 💛'; }
+            if (btn) { btn.disabled = false; btn.textContent = 'Convidar meu amor'; }
         }
     }
 
@@ -4111,7 +4123,7 @@ function renderLegalModal() {
 <p class="mb-3">Eventuais disputas serão regidas pelas leis brasileiras e processadas no foro da comarca de São Paulo/SP, com renúncia a qualquer outro, por mais privilegiado que seja.</p>
 
 <p class="font-semibold text-white mt-4 mb-1">10. Contato</p>
-<p>Dúvidas e solicitações: <span class="text-pink-400">contato@nossomomento.app</span></p>`;
+<p>Dúvidas e solicitações: <span class="text-pink-400">faleconosco@nossomomento.app</span></p>`;
 
     const privacyContent = `
 <p class="font-semibold text-white mb-2">Versão 1.0 — Vigente a partir de 19/05/2026</p>
@@ -4119,7 +4131,7 @@ function renderLegalModal() {
 <p class="mb-3">Esta Política de Privacidade descreve como o <strong>Nosso Momento</strong> coleta, usa, armazena e protege seus dados pessoais, em conformidade com a Lei Federal nº 13.709/2018 (LGPD) e seus princípios dispostos no art. 6º: finalidade, adequação, necessidade, livre acesso, qualidade dos dados, transparência, segurança, prevenção, não discriminação e responsabilização.</p>
 
 <p class="font-semibold text-white mt-4 mb-1">1. Controlador dos Dados</p>
-<p class="mb-3"><strong>Nosso Momento App</strong> — contato@nossomomento.app. O controlador é a pessoa responsável pelas decisões sobre o tratamento dos seus dados pessoais.</p>
+<p class="mb-3"><strong>Nosso Momento App</strong> — faleconosco@nossomomento.app. O controlador é a pessoa responsável pelas decisões sobre o tratamento dos seus dados pessoais.</p>
 
 <p class="font-semibold text-white mt-4 mb-1">2. Dados Coletados e Finalidade</p>
 <p class="mb-2">Coletamos apenas os dados estritamente necessários para a prestação do serviço (princípio da necessidade — LGPD Art. 6º, III):</p>
@@ -4163,7 +4175,7 @@ function renderLegalModal() {
   <li><strong>Revogação do consentimento:</strong> a qualquer momento, sem ônus</li>
   <li><strong>Oposição ao tratamento:</strong> em caso de descumprimento desta política</li>
 </ul>
-<p class="mb-3">Para exercer seus direitos, entre em contato: <span class="text-pink-400">contato@nossomomento.app</span>. Você também pode apresentar reclamação à <strong>ANPD</strong> (Autoridade Nacional de Proteção de Dados) caso entenda que seus direitos foram violados (LGPD Art. 18, § 1º).</p>
+<p class="mb-3">Para exercer seus direitos, entre em contato: <span class="text-pink-400">faleconosco@nossomomento.app</span>. Você também pode apresentar reclamação à <strong>ANPD</strong> (Autoridade Nacional de Proteção de Dados) caso entenda que seus direitos foram violados (LGPD Art. 18, § 1º).</p>
 
 <p class="font-semibold text-white mt-4 mb-1">9. Transferência Internacional de Dados</p>
 <p class="mb-3">Seus dados podem ser processados em servidores localizados fora do Brasil (EUA), operados pelo Google e Vercel, que adotam salvaguardas adequadas conforme LGPD Art. 33.</p>
@@ -4172,7 +4184,7 @@ function renderLegalModal() {
 <p class="mb-3">Esta Política pode ser atualizada a qualquer momento. Alterações relevantes serão comunicadas com antecedência mínima de 15 dias. A data de vigência sempre estará indicada no topo deste documento.</p>
 
 <p class="font-semibold text-white mt-4 mb-1">11. Contato e Encarregado (DPO)</p>
-<p>Para dúvidas, solicitações ou exercício de direitos: <span class="text-pink-400">contato@nossomomento.app</span></p>`;
+<p>Para dúvidas, solicitações ou exercício de direitos: <span class="text-pink-400">faleconosco@nossomomento.app</span></p>`;
 
     const content = isTerms ? termsContent : privacyContent;
 
@@ -8706,7 +8718,6 @@ try {
                 // Limpa todo o estado do usuário ao deslogar
                 state.usuario = null;
                 state.pareado = false;
-                state.etapa = 'landing';
                 state.carrinho = [];
                 state.codigoUsuario = null;
                 state.codigoDigitando = false;
@@ -8722,6 +8733,13 @@ try {
                     state.showVipPopup = false;
                 state.pendingPartnerName = null;
                 state.conexaoAtiva = null;
+                // Se chegou via link de convite, redireciona direto para cadastro
+                try {
+                    const hasPendingConvite = !!sessionStorage.getItem('pendingConvite');
+                    state.etapa = (hasPendingConvite && REGISTRATION_ENABLED) ? 'register' : 'landing';
+                } catch (e) {
+                    state.etapa = 'landing';
+                }
                 renderApp();
             }
         });
