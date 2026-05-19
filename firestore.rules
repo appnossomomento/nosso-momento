@@ -31,7 +31,7 @@ service cloud.firestore {
 
     match /usuarios/{userId} {
       allow get: if isAuthenticated();
-      allow list: if isAuthenticated();
+      allow list: if false;
 
       allow create: if isOwner(userId)
         && request.resource.data.keys().hasOnly([

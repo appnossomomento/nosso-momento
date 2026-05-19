@@ -42,6 +42,7 @@ exports.backupFirestore = backupHandler.backupFirestore;
 
 const inviteHandler = require("./handlers/invite");
 exports.gerarConvite = inviteHandler.gerarConvite;
+exports.verificarTelefone = inviteHandler.verificarTelefone;
 
 const dailyHumorHandler = require("./handlers/dailyHumor");
 exports.lembreteHumorManha = dailyHumorHandler.lembreteHumorManha;

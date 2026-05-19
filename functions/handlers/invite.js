@@ -79,3 +79,66 @@ exports.gerarConvite = https.onRequest(async (req, res) => {
   const url = `${CONVITE_URL_BASE}?convite=${token}`;
   res.status(200).json({token, url});
 });
+
+/**
+ * Verifica se um usuário com o telefone informado existe no banco.
+ * Usado pelo frontend antes de enviar uma solicitação de pareamento,
+ * evitando que clientes consultem a coleção diretamente.
+ *
+ * POST /verificarTelefone
+ * Authorization: Bearer <idToken>
+ * Body: { telefone: "11999999999" }
+ * → 200 { existe: boolean }
+ */
+exports.verificarTelefone = https.onRequest(async (req, res) => {
+  setCorsHeaders(req, res);
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+
+  if (req.method !== "POST") {
+    res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (rateLimitHttp(req, res, {
+    keyPrefix: "verificarTelefone",
+    limit: 10,
+    windowMs: 60 * 1000,
+  })) {
+    return;
+  }
+
+  const authHeader =
+    req.get("Authorization") || req.get("authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ?
+    authHeader.split("Bearer ")[1] : null;
+
+  if (!idToken) {
+    res.status(401).send({error: "missing_id_token"});
+    return;
+  }
+
+  try {
+    await admin.auth().verifyIdToken(idToken);
+  } catch (_) {
+    res.status(401).send({error: "invalid_token"});
+    return;
+  }
+
+  const {telefone} = req.body || {};
+  if (!telefone || !/^\d{11}$/.test(telefone)) {
+    res.status(400).send({error: "invalid_telefone"});
+    return;
+  }
+
+  const db = admin.firestore();
+  const snap = await db.collection("usuarios")
+      .where("telefone", "==", telefone)
+      .limit(1)
+      .get();
+
+  res.status(200).json({existe: !snap.empty});
+});

@@ -2687,6 +2687,7 @@ if (firebase.messaging && firebase.messaging.isSupported && firebase.messaging.i
 }
 
     const GERAR_CONVITE_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/gerarConvite';
+    const VERIFICAR_TELEFONE_URL = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net/verificarTelefone';
 
     async function gerarConvite() {
         const currentUser = auth.currentUser;
@@ -2764,9 +2765,15 @@ if (codigoDigitado === state.usuario.telefone) {
 try {
     const btnEnviar = document.querySelector('[onclick="sendPairingRequest()"]');
     if (btnEnviar) { btnEnviar.disabled = true; btnEnviar.textContent = 'Verificando...'; }
-    const checkQuery = await db.collection('usuarios').where('telefone', '==', codigoDigitado).limit(1).get();
+    const idToken = await auth.currentUser.getIdToken();
+    const checkResp = await fetch(VERIFICAR_TELEFONE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+        body: JSON.stringify({ telefone: codigoDigitado }),
+    });
     if (btnEnviar) { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar solicitação'; }
-    if (checkQuery.empty) {
+    const checkData = await checkResp.json();
+    if (!checkData.existe) {
         const erroEl = document.getElementById('codigoParceiroErro');
         if (erroEl) {
             erroEl.textContent = 'Usuário não encontrado.';

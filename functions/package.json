@@ -4,6 +4,7 @@
   "scripts": {
     "lint": "eslint .",
     "test": "jest --testPathPattern='\\.(test)\\.js$' --forceExit",
+    "test:coverage": "jest --testPathPattern='\\.(test)\\.js$' --forceExit --coverage --coverageDirectory=coverage",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
