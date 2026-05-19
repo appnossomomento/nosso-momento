@@ -41,4 +41,6 @@ const backupHandler = require("./handlers/backup");
 exports.backupFirestore = backupHandler.backupFirestore;
 
 const dailyHumorHandler = require("./handlers/dailyHumor");
-exports.lembreteHumorDiario = dailyHumorHandler.lembreteHumorDiario;
+exports.lembreteHumorManha = dailyHumorHandler.lembreteHumorManha;
+exports.lembreteHumorAlmoco = dailyHumorHandler.lembreteHumorAlmoco;
+exports.lembreteHumorNoite = dailyHumorHandler.lembreteHumorNoite;
