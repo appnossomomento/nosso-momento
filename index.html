@@ -7982,10 +7982,14 @@ async function handleDarCheck(tarefaId, momentoNome, custoFoguinhos) {
 
     // Função para mudar a etapa da aplicação
     function changeStep(newStep) {
-// Bloqueia navegação para cadastro quando desativado
+// Bloqueia navegação para cadastro quando desativado (exceto via convite)
 if (!REGISTRATION_ENABLED && newStep === 'register') {
-    showToast('Cadastros estão fechados nesta fase.', 'aviso');
-    newStep = 'signIn';
+    let hasPendingConvite = false;
+    try { hasPendingConvite = !!sessionStorage.getItem('pendingConvite'); } catch (e) { /* noop */ }
+    if (!hasPendingConvite) {
+        showToast('Cadastros estão fechados nesta fase.', 'aviso');
+        newStep = 'signIn';
+    }
 }
 // Lógica de Navegação Simplificada
 // Se o usuário clicar no ícone da tela em que ele já está...
@@ -8735,8 +8739,9 @@ try {
                 state.conexaoAtiva = null;
                 // Se chegou via link de convite, redireciona direto para cadastro
                 try {
+                    // Convite via link permite cadastro mesmo com REGISTRATION_ENABLED = false
                     const hasPendingConvite = !!sessionStorage.getItem('pendingConvite');
-                    state.etapa = (hasPendingConvite && REGISTRATION_ENABLED) ? 'register' : 'landing';
+                    state.etapa = hasPendingConvite ? 'register' : 'landing';
                 } catch (e) {
                     state.etapa = 'landing';
                 }
