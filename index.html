@@ -5911,7 +5911,14 @@ if (!nome || !email || !telefone || !senha || !sexo) {
 }
 const aceitarTermos = document.getElementById('aceitarTermos');
 if (!aceitarTermos || !aceitarTermos.checked) {
-    openSystemAlert('Para continuar, você precisa aceitar os Termos de Uso e a Política de Privacidade.');
+    aceitarTermos.style.outline = '2px solid #f87171';
+    aceitarTermos.style.outlineOffset = '2px';
+    aceitarTermos.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    aceitarTermos.addEventListener('change', function clearOutline() {
+        aceitarTermos.style.outline = '';
+        aceitarTermos.style.outlineOffset = '';
+        aceitarTermos.removeEventListener('change', clearOutline);
+    });
     return;
 }
 if (telefone.length !== 11 || !/^\d+$/.test(telefone)) {
