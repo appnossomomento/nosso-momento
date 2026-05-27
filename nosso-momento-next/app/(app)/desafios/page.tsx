@@ -228,39 +228,35 @@ export default function DesafiosPage() {
                 );
                 const resumoConcluido = ch.status === 'finalizado'
                   ? (
-                    <p className="text-xs leading-relaxed">
-                      <span className="font-bold text-white">{nomeA}</span>
-                      <span className="text-white/55"> respondeu </span>
-                      <span className="font-extrabold bg-gradient-to-r from-[#ff2d3f] via-[#ff4f55] to-[#ff7947] bg-clip-text text-transparent">
-                        {respostaA ?? 'SEM RESPOSTA'}
-                      </span>
-                      <span className="text-white/55"> e </span>
-                      <span className="font-bold text-white">{nomeB}</span>
-                      <span className="text-white/55"> respondeu </span>
-                      <span className="font-extrabold bg-gradient-to-r from-[#ff2d3f] via-[#ff4f55] to-[#ff7947] bg-clip-text text-transparent">
-                        {respostaB ?? 'SEM RESPOSTA'}
-                      </span>
-                      <span className="text-white/55">. </span>
-                      <span className="font-semibold text-[#d4a017]">Ganharam +{recompensaBase} 🔥 foguinhos cada.</span>
-                    </p>
+                    <div className="space-y-0.5">
+                      <p className="text-xs leading-relaxed text-white/55">
+                        <span className="font-bold text-white">{nomeA}</span>
+                        <span> respondeu </span>
+                        <span className="font-extrabold text-[#ff2d3f]">{respostaA ?? 'SEM RESPOSTA'}</span>
+                        <span> e </span>
+                        <span className="font-bold text-white">{nomeB}</span>
+                        <span> respondeu </span>
+                        <span className="font-extrabold text-[#ff2d3f]">{respostaB ?? 'SEM RESPOSTA'}</span>
+                        <span>.</span>
+                      </p>
+                      <p className="text-xs leading-relaxed font-semibold text-[#d4a017]">Ganharam +{recompensaBase} 🔥 foguinhos cada.</p>
+                    </div>
                   )
                   : ch.status === 'finalizado_sem_recompensa'
                     ? (
-                      <p className="text-xs leading-relaxed">
-                        <span className="font-bold text-white">{nomeA}</span>
-                        <span className="text-white/55"> respondeu </span>
-                        <span className="font-extrabold bg-gradient-to-r from-[#ff2d3f] via-[#ff4f55] to-[#ff7947] bg-clip-text text-transparent">
-                          {respostaA ?? 'SEM RESPOSTA'}
-                        </span>
-                        <span className="text-white/55"> e </span>
-                        <span className="font-bold text-white">{nomeB}</span>
-                        <span className="text-white/55"> respondeu </span>
-                        <span className="font-extrabold bg-gradient-to-r from-[#ff2d3f] via-[#ff4f55] to-[#ff7947] bg-clip-text text-transparent">
-                          {respostaB ?? 'SEM RESPOSTA'}
-                        </span>
-                        <span className="text-white/55">. </span>
-                        <span className="font-semibold text-[#d4a017]">Perderam 1 🔥 foguinho cada.</span>
-                      </p>
+                      <div className="space-y-0.5">
+                        <p className="text-xs leading-relaxed text-white/55">
+                          <span className="font-bold text-white">{nomeA}</span>
+                          <span> respondeu </span>
+                          <span className="font-extrabold text-[#ff2d3f]">{respostaA ?? 'SEM RESPOSTA'}</span>
+                          <span> e </span>
+                          <span className="font-bold text-white">{nomeB}</span>
+                          <span> respondeu </span>
+                          <span className="font-extrabold text-[#ff2d3f]">{respostaB ?? 'SEM RESPOSTA'}</span>
+                          <span>.</span>
+                        </p>
+                        <p className="text-xs leading-relaxed font-semibold text-[#d4a017]">Perderam 1 🔥 foguinho cada.</p>
+                      </div>
                     )
                     : null;
                 return (
@@ -284,9 +280,11 @@ export default function DesafiosPage() {
                           : <p className="text-white/40 text-xs truncate">{ch.opcaoA} vs {ch.opcaoB}</p>
                       )}
                       {ch.tipo === 'pergunta' && ch.pergunta && (
-                        !resumoConcluido && minhaResposta
-                          ? <p className="text-white/40 text-xs truncate">R: {toUpperSafe(minhaResposta)}</p>
-                          : <p className="text-white/40 text-xs truncate">{ch.pergunta}</p>
+                        resumoConcluido
+                          ? null
+                          : minhaResposta
+                            ? <p className="text-white/40 text-xs truncate">R: {toUpperSafe(minhaResposta)}</p>
+                            : <p className="text-white/40 text-xs truncate">{ch.pergunta}</p>
                       )}
                       {ch.tipo === 'roleta' && (() => {
                         const respostasRoleta = ch.data['respostas'] as Record<string, number> | undefined;
