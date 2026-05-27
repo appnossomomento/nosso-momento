@@ -191,8 +191,8 @@ export default function DesafiosPage() {
                 const respostaParceiro = typeof respostaParceiroRaw === 'string' || typeof respostaParceiroRaw === 'number'
                   ? String(respostaParceiroRaw)
                   : null;
-                const toUpperSafe = (v: string) => v.toLocaleUpperCase('pt-BR');
-                const formatarResposta = (valor: string | null): string => {
+                const toUpperSafe = (v: unknown) => String(v).toLocaleUpperCase('pt-BR');
+                const formatarResposta = (valor: unknown): string => {
                   if (!valor) return 'sem resposta';
                   if (valor === '__TIMEOUT__' || valor === '__timeout__') return 'tempo esgotado';
                   if (valor === 'A') return toUpperSafe(ch.opcaoA ?? 'A');
@@ -204,19 +204,19 @@ export default function DesafiosPage() {
                   : minhaResposta === 'B'
                     ? toUpperSafe(ch.opcaoB ?? 'B')
                     : (minhaResposta ? toUpperSafe(minhaResposta) : null);
-                const respostaA = formatarResposta(
-                  (respostas?.[(ch.data['pairUids'] as string[] | undefined)?.[0] ?? ''] as string | undefined) ?? null,
+                const respostaA = ch.tipo === 'roleta' ? null : formatarResposta(
+                  respostas?.[(ch.data['pairUids'] as string[] | undefined)?.[0] ?? ''] ?? null,
                 );
-                const respostaB = formatarResposta(
-                  (respostas?.[(ch.data['pairUids'] as string[] | undefined)?.[1] ?? ''] as string | undefined) ?? null,
+                const respostaB = ch.tipo === 'roleta' ? null : formatarResposta(
+                  respostas?.[(ch.data['pairUids'] as string[] | undefined)?.[1] ?? ''] ?? null,
                 );
                 const recompensaBase = Number(
                   (ch.data['reward'] as number | undefined) ?? (ch.tipo === 'escolha' ? 2 : 1),
                 );
                 const resumoConcluido = ch.status === 'finalizado'
-                  ? `Usuário A respondeu ${respostaA} e Usuário B respondeu ${respostaB}. Ganharam +${recompensaBase} foguinho(s) cada.`
+                  ? `Usuário A respondeu ${respostaA ?? 'SEM RESPOSTA'} e Usuário B respondeu ${respostaB ?? 'SEM RESPOSTA'}. Ganharam +${recompensaBase} foguinho(s) cada.`
                   : ch.status === 'finalizado_sem_recompensa'
-                    ? `Usuário A respondeu ${respostaA} e Usuário B respondeu ${respostaB}. Perderam 1 foguinho cada.`
+                    ? `Usuário A respondeu ${respostaA ?? 'SEM RESPOSTA'} e Usuário B respondeu ${respostaB ?? 'SEM RESPOSTA'}. Perderam 1 foguinho cada.`
                     : null;
                 return (
                   <div
