@@ -183,6 +183,7 @@ export default function DesafiosPage() {
                   ch.status === 'finalizado' ||
                   ch.status === 'finalizado_sem_recompensa';
                 const respostas = ch.data['respostas'] as Record<string, unknown> | undefined;
+                const pairUids = (ch.data['pairUids'] as string[] | undefined) ?? [];
                 const minhaRespostaRaw = respostas?.[uid ?? ''];
                 const respostaParceiroRaw = respostas?.[pareadoUid ?? ''];
                 const minhaResposta = typeof minhaRespostaRaw === 'string' || typeof minhaRespostaRaw === 'number'
@@ -204,19 +205,63 @@ export default function DesafiosPage() {
                   : minhaResposta === 'B'
                     ? toUpperSafe(ch.opcaoB ?? 'B')
                     : (minhaResposta ? toUpperSafe(minhaResposta) : null);
+
+                const nomeDoUid = (targetUid: string | undefined): string => {
+                  if (!targetUid) return 'Usuário';
+                  if (targetUid === uid) return usuario?.nome ?? usuario?.apelido ?? 'Usuário';
+                  const parceiro = useAppStore.getState().parceirosAtivos.find((p) => p.uid === targetUid);
+                  if (parceiro?.nome) return parceiro.nome;
+                  if (targetUid === pareadoUid) return useAppStore.getState().parceiroNome ?? 'Parceiro';
+                  return 'Usuário';
+                };
+
+                const nomeA = nomeDoUid(pairUids[0]);
+                const nomeB = nomeDoUid(pairUids[1]);
                 const respostaA = ch.tipo === 'roleta' ? null : formatarResposta(
-                  respostas?.[(ch.data['pairUids'] as string[] | undefined)?.[0] ?? ''] ?? null,
+                  respostas?.[pairUids[0] ?? ''] ?? null,
                 );
                 const respostaB = ch.tipo === 'roleta' ? null : formatarResposta(
-                  respostas?.[(ch.data['pairUids'] as string[] | undefined)?.[1] ?? ''] ?? null,
+                  respostas?.[pairUids[1] ?? ''] ?? null,
                 );
                 const recompensaBase = Number(
                   (ch.data['reward'] as number | undefined) ?? (ch.tipo === 'escolha' ? 2 : 1),
                 );
                 const resumoConcluido = ch.status === 'finalizado'
-                  ? `Usuário A respondeu ${respostaA ?? 'SEM RESPOSTA'} e Usuário B respondeu ${respostaB ?? 'SEM RESPOSTA'}. Ganharam +${recompensaBase} foguinho(s) cada.`
+                  ? (
+                    <p className="text-xs leading-relaxed">
+                      <span className="font-bold text-white">{nomeA}</span>
+                      <span className="text-white/55"> respondeu </span>
+                      <span className="font-extrabold bg-gradient-to-r from-[#ff2d3f] via-[#ff4f55] to-[#ff7947] bg-clip-text text-transparent">
+                        {respostaA ?? 'SEM RESPOSTA'}
+                      </span>
+                      <span className="text-white/55"> e </span>
+                      <span className="font-bold text-white">{nomeB}</span>
+                      <span className="text-white/55"> respondeu </span>
+                      <span className="font-extrabold bg-gradient-to-r from-[#ff2d3f] via-[#ff4f55] to-[#ff7947] bg-clip-text text-transparent">
+                        {respostaB ?? 'SEM RESPOSTA'}
+                      </span>
+                      <span className="text-white/55">. </span>
+                      <span className="font-semibold text-[#d4a017]">Ganharam +{recompensaBase} 🔥 foguinhos cada.</span>
+                    </p>
+                  )
                   : ch.status === 'finalizado_sem_recompensa'
-                    ? `Usuário A respondeu ${respostaA ?? 'SEM RESPOSTA'} e Usuário B respondeu ${respostaB ?? 'SEM RESPOSTA'}. Perderam 1 foguinho cada.`
+                    ? (
+                      <p className="text-xs leading-relaxed">
+                        <span className="font-bold text-white">{nomeA}</span>
+                        <span className="text-white/55"> respondeu </span>
+                        <span className="font-extrabold bg-gradient-to-r from-[#ff2d3f] via-[#ff4f55] to-[#ff7947] bg-clip-text text-transparent">
+                          {respostaA ?? 'SEM RESPOSTA'}
+                        </span>
+                        <span className="text-white/55"> e </span>
+                        <span className="font-bold text-white">{nomeB}</span>
+                        <span className="text-white/55"> respondeu </span>
+                        <span className="font-extrabold bg-gradient-to-r from-[#ff2d3f] via-[#ff4f55] to-[#ff7947] bg-clip-text text-transparent">
+                          {respostaB ?? 'SEM RESPOSTA'}
+                        </span>
+                        <span className="text-white/55">. </span>
+                        <span className="font-semibold text-[#d4a017]">Perderam 1 🔥 foguinho cada.</span>
+                      </p>
+                    )
                     : null;
                 return (
                   <div
@@ -232,9 +277,7 @@ export default function DesafiosPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-semibold text-sm truncate">{ch.titulo}</p>
-                      {(ch.tipo === 'pergunta' || ch.tipo === 'escolha') && resumoConcluido && (
-                        <p className="text-white/40 text-xs truncate">{resumoConcluido}</p>
-                      )}
+                      {(ch.tipo === 'pergunta' || ch.tipo === 'escolha') && resumoConcluido}
                       {ch.tipo === 'escolha' && ch.opcaoA && (
                         !resumoConcluido && respostaEscolha
                           ? <p className="text-white/40 text-xs truncate">R: {respostaEscolha}</p>
