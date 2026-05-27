@@ -1,0 +1,155 @@
+// ── Tipos principais ──────────────────────────────────────────
+
+export interface Usuario {
+  uid: string;
+  email?: string;
+  nome?: string;
+  telefone?: string;
+  sexo?: string;
+  foguinhos?: number;
+  lastCheckInDate?: string | null;
+  pareadoCom?: string | null;
+  pareadoUid?: string | null;
+  pareadoDesde?: string | null;
+  catalogoPersonalizado?: Record<string, unknown>;
+  fotoUrl?: string;
+  apelido?: string;
+  vip?: boolean;
+  pareamentosAtivos?: Array<Record<string, unknown>>;
+  conquistas?: Record<string, boolean>;
+  achievementStats?: Record<string, number>;
+  createdAt?: unknown;
+  [key: string]: any;
+}
+
+export interface ParceiroData {
+  uid: string;
+  nome: string;
+  telefone?: string;
+  email?: string;
+  foguinhos?: number;
+  fotoUrl?: string;
+  apelido?: string;
+  sexo?: string;
+  pareadoCom?: string | null;
+  catalogoPersonalizado?: Record<string, { preco?: number; bloqueado?: boolean }>;
+  [key: string]: unknown;
+}
+
+export interface Pareamento {
+  uid: string;
+  nome: string;
+  fotoUrl?: string;
+  foguinhos?: number;
+  pareamentoId: string;
+}
+
+export interface Notificacao {
+  id: string;
+  tipo: string;
+  mensagem: string;
+  lida: boolean;
+  criadoEm: unknown;
+  [key: string]: unknown;
+}
+
+export interface Tarefa {
+  id: string;
+  tipo: string;
+  titulo?: string;
+  descricao?: string;
+  enviado?: boolean;
+  concluido?: boolean;
+  criadoEm?: unknown;
+  [key: string]: unknown;
+}
+
+export interface MomentoMestre {
+  id: string;
+  nome: string;
+  titulo?: string;
+  descricao?: string;
+  categoria: string;
+  targetGender?: string;
+  intensidade?: number;
+  img?: string;
+  foto?: string;
+  emoji?: string;
+}
+
+export interface DesafioSemanal {
+  id: string;
+  titulo: string;
+  descricao?: string;
+  deadline?: string;
+  [key: string]: unknown;
+}
+
+export interface Memoria {
+  id: string;
+  url: string;
+  thumbnailUrl?: string;
+  criadoEm?: unknown;
+  tipo?: string;
+  [key: string]: unknown;
+}
+
+export interface ClimaItem {
+  data: string;
+  label: string;
+  humor?: string | null;
+  partnerHumor?: string | null;
+  isHoje?: boolean;
+}
+
+export interface ConexaoAtiva {
+  uid: string;
+  nome: string;
+  fotoUrl?: string;
+  pareamentoId: string;
+  idAmigavel: string;
+  foguinhos?: number;
+}
+
+export interface CarrinhoItem {
+  id: string;
+  titulo: string;
+  preco?: number;
+  quantidade: number;
+  foto?: string;
+}
+
+export interface PendingChallenge {
+  id: string;
+  titulo: string;
+  descricao?: string;
+  deadline?: number;
+  tipo?: 'pergunta' | 'escolha' | 'roleta';
+  opcaoA?: string;
+  opcaoB?: string;
+  pergunta?: string;
+  penalty?: number;
+  rouletteOptions?: { valor: number; prob: number }[];
+  meuResultado?: number | null;
+  aguardandoParceiro?: boolean;
+  resultadoFinal?: number | null;
+  [key: string]: unknown;
+}
+
+export type LegalModalType = 'terms' | 'privacy';
+export type SystemModalType = 'alert' | 'confirm';
+export type Etapa =
+  | 'landing'
+  | 'signIn'
+  | 'register'
+  | 'dashboard'
+  | 'parear'
+  | 'pareamentos'
+  | 'notificacoes'
+  | 'meuPerfil'
+  | 'perfilParceiro'
+  | 'tarefas'
+  | 'memorias'
+  | 'loja'
+  | 'selecionarConexao'
+  | string;

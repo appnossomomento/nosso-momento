@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --footer-h: 48px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+/* ── Layout ────────────────────────────── */
+.screen {
+  min-height: calc(100dvh - var(--footer-h) - env(safe-area-inset-bottom));
+}
+
+.screen-pad {
+  padding-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
+}
+
+.memorias-screen {
+  min-height: 100dvh;
+  padding-bottom: calc(var(--footer-h) + env(safe-area-inset-bottom));
+  background-color: #141414;
+}
+
+.auth-screen {
+  height: 100dvh;
+  min-height: -webkit-fill-available;
+  display: grid;
+  place-items: center;
+  padding: 40px 16px;
+}
+
+.landing-screen {
+  height: 100dvh;
+  min-height: -webkit-fill-available;
+  display: grid;
+  place-items: center;
+  padding: 40px 16px;
+}
+
+/* ── Card ──────────────────────────────── */
+.card {
+  border-radius: 20px;
+  background: rgba(30, 30, 30, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ── Button ────────────────────────────── */
+.btn-red {
+  background: linear-gradient(135deg, #ff3547 0%, #ff6b7c 100%);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 10px 20px rgba(255, 53, 71, 0.3);
+  padding: 14px 24px;
+  border: none;
+  outline: none;
+  text-transform: uppercase;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+}
+
+.btn-red:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(255, 53, 71, 0.4);
+  background: linear-gradient(135deg, #ff4252 0%, #ff7b8a 100%);
+}
+
+/* ── Icon gradient ─────────────────────── */
+.icon-gradient {
+  background: linear-gradient(135deg, #ff2d3f 0%, #ff5565 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ── Bottom nav ────────────────────────── */
+.bottom-nav-bar {
+  background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(0, 0, 0, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--footer-h);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 100;
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.4);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.3s ease;
+  cursor: pointer;
+  flex-grow: 1;
+  height: 100%;
+}
+
+.bottom-nav-item.active {
+  color: #ff5565;
+}
+
+.bottom-nav-item-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, #ff3547 0%, #ff6b7c 100%);
+  color: #fff;
+  border-radius: 50%;
+  border: 3px solid #1f2937;
+  transform: translateY(-14px);
+  box-shadow: 0 -5px 15px rgba(255, 53, 71, 0.4);
+  transition: all 0.3s ease;
+}
+
+/* ── Inputs ────────────────────────────── */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='tel'],
+select {
+  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input::placeholder,
+select option {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+input:focus,
+select:focus {
+  border-color: #ff5565;
+  box-shadow: 0 0 0 2px rgba(255, 85, 101, 0.2);
+}
+
+/* ── Animations ────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ── Scrollbar ─────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ── Termômetro (humor check-in) ───────── */
+.termometro-btn {
+  background: #1f2024;
+  border: 2px solid #31333a;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.termometro-btn:hover:not(:disabled) {
+  border-color: #474a55;
+  background: #282a31;
+}
+.termometro-btn.active {
+  background: #ffffff;
+  border-color: #ff6b81;
+  box-shadow: 0 0 0 3px rgba(255, 107, 129, 0.28);
+}
+.termometro-btn:disabled:not(.active) {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
