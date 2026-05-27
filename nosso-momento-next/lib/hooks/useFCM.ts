@@ -14,6 +14,7 @@ import { trackGA, trackMeta } from '@/lib/analytics';
  */
 export async function requestFCMPermission(): Promise<string | null> {
   if (typeof window === 'undefined') return null;
+  if (!firebaseApp) return null;
   if (!('Notification' in window) || !('serviceWorker' in navigator)) return null;
 
   try {
@@ -53,6 +54,7 @@ export function useFCM() {
   // Foreground message handler — mostra toast quando app está aberto
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (!firebaseApp) return;
     try {
       const messaging = getMessaging(firebaseApp);
       const unsub = onMessage(messaging, (payload) => {

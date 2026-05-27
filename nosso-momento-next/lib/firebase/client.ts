@@ -1,7 +1,8 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, enableIndexedDbPersistence, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
+import type { FirebaseApp } from 'firebase/app';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
@@ -12,19 +13,31 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const hasValidClientConfig = Object.values(firebaseConfig).every(
+  (v) => typeof v === 'string' && v.trim() !== '' && v !== 'undefined',
+);
+const canInitializeFirebase = typeof window !== 'undefined' && hasValidClientConfig;
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+let app: FirebaseApp | null = null;
+if (canInitializeFirebase) {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+}
+
+export const auth = (app ? getAuth(app) : null) as Auth;
+export const db = (app ? getFirestore(app) : null) as Firestore;
+export const storage = (app ? getStorage(app) : null) as FirebaseStorage;
 
 // Habilita persistência offline (silencia erros esperados)
-if (typeof window !== 'undefined') {
+if (app && typeof window !== 'undefined') {
   enableIndexedDbPersistence(db).catch((err) => {
     if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
       console.warn('[Firestore] Offline persistence error:', err.code);
     }
   });
+}
+
+if (typeof window !== 'undefined' && !hasValidClientConfig) {
+  console.error('[Firebase] Configuração NEXT_PUBLIC_FIREBASE_* ausente/inválida no ambiente.');
 }
 
 export default app;
