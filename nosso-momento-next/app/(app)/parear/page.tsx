@@ -24,6 +24,13 @@ export default function ParearPage() {
   const isVip = usuario?.vip === true;
   const temConexoes = parceirosAtivos && parceirosAtivos.length > 0;
 
+  function handleContinuarSemParear() {
+    try {
+      localStorage.setItem('allowDashboardWithoutPairing', '1');
+    } catch (_) {}
+    router.push('/dashboard');
+  }
+
   function handleSelectConexao(partner: Pareamento) {
     const novaConexao: ConexaoAtiva = {
       uid: partner.uid,
@@ -294,7 +301,7 @@ export default function ParearPage() {
             </form>
 
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={handleContinuarSemParear}
               className="w-full text-center text-xs text-white/40 hover:text-white/60 transition py-2"
             >
               Continuar sem parear por enquanto

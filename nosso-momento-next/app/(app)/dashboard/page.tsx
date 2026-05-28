@@ -15,7 +15,11 @@ export default function DashboardPage() {
     if (!usuario) return; // ainda carregando
     const pareadoCom = usuario.pareadoCom;
     const isPareado = !!pareadoCom && !pareadoCom.startsWith('pending_') && pareadoCom !== 'none';
-    if (!isPareado) {
+    let allowWithoutPairing = false;
+    try {
+      allowWithoutPairing = localStorage.getItem('allowDashboardWithoutPairing') === '1';
+    } catch (_) {}
+    if (!isPareado && !allowWithoutPairing) {
       router.replace('/parear');
     }
   }, [usuario, router]);
