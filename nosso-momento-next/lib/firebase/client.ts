@@ -39,7 +39,7 @@ if (app && typeof window !== 'undefined') {
 
   if (process.env.NODE_ENV !== 'production' && debugToken) {
     // Ativa debug token para desenvolvimento local sem reCAPTCHA real.
-    (self as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+    (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
   }
 
   if (recaptchaKey) {
