@@ -179,6 +179,30 @@ exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
     return;
   }
 
+  // Validação de magic bytes: verifica a assinatura real do arquivo
+  // independente do contentType declarado pelo cliente (anti-polyglot attack).
+  const MAGIC = {
+    jpeg: [0xFF, 0xD8, 0xFF],
+    png: [0x89, 0x50, 0x4E, 0x47],
+    gif: [0x47, 0x49, 0x46],
+    webp: [0x52, 0x49, 0x46, 0x46], // RIFF....WEBP — verificado nos bytes 8-11
+  };
+  const b = buffer;
+  const isJpeg = b[0] === MAGIC.jpeg[0] &&
+                 b[1] === MAGIC.jpeg[1] && b[2] === MAGIC.jpeg[2];
+  const isPng = b[0] === MAGIC.png[0] && b[1] === MAGIC.png[1] &&
+                 b[2] === MAGIC.png[2] && b[3] === MAGIC.png[3];
+  const isGif = b[0] === MAGIC.gif[0] &&
+                b[1] === MAGIC.gif[1] && b[2] === MAGIC.gif[2];
+  const isWebp = b[0] === MAGIC.webp[0] && b[1] === MAGIC.webp[1] &&
+                 b[2] === MAGIC.webp[2] && b[3] === MAGIC.webp[3] &&
+                 b[8] === 0x57 && b[9] === 0x45 &&
+                 b[10] === 0x42 && b[11] === 0x50;
+  if (!isJpeg && !isPng && !isGif && !isWebp) {
+    res.status(400).send({error: "invalid_image_signature"});
+    return;
+  }
+
   const maxBytes = 5 * 1024 * 1024;
   if (buffer.length > maxBytes) {
     res.status(400).send({error: "image_too_large"});

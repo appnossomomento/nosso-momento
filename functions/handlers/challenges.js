@@ -5,52 +5,76 @@ const {admin} = require("../lib/config");
 const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
 const {
   upsertWeeklyChallengeForPair,
+  upsertPreferencesChallengeForPair,
+  upsertRouletteChallengeForPair,
+  expireActiveChallengesForPair,
   deleteCollectionInBatches,
   deleteWeeklyChallengeInputs,
 } = require("../lib/challenges");
 
-exports.rotateWeeklyChallenges = onSchedule({
-  schedule: "every 6 hours",
-  timeZone: "America/Sao_Paulo",
-}, async () => {
+// Shared handler for challenge rotation
+async function runChallengeRotation(tipo) {
   const db = admin.firestore();
   const nowMs = Date.now();
   const pareamentosSnap = await db.collection("pareamentos").get();
-  let created = 0;
-  let rotated = 0;
-  let skipped = 0;
+  let created = 0; let rotated = 0; let expired = 0;
 
-  for (const doc of pareamentosSnap.docs) {
-    const data = doc.data() || {};
+  for (const pareDoc of pareamentosSnap.docs) {
+    const data = pareDoc.data() || {};
     const uidA = data.pessoa1Uid || null;
     const uidB = data.pessoa2Uid || null;
-    if (!uidA || !uidB) {
-      continue;
-    }
+    if (!uidA || !uidB) continue;
 
-    const result = await upsertWeeklyChallengeForPair({
-      db,
-      pairUids: [uidA, uidB],
-      pareamentoId: doc.id,
-      nowMs,
+    // Expire the other two challenge types for this pair
+    await expireActiveChallengesForPair({
+      db, pairUids: [uidA, uidB], except: tipo,
     });
+    expired += 1;
 
-    if (result === "created") {
-      created += 1;
-    } else if (result === "rotated") {
-      rotated += 1;
-    } else {
-      skipped += 1;
+    // Create/reset the new challenge
+    let result;
+    if (tipo === "alma_gemea") {
+      result = await upsertWeeklyChallengeForPair({
+        db, pairUids: [uidA, uidB],
+        pareamentoId: pareDoc.id, nowMs, forceReset: true,
+      });
+    } else if (tipo === "preferencias") {
+      result = await upsertPreferencesChallengeForPair({
+        db, pairUids: [uidA, uidB],
+        pareamentoId: pareDoc.id, nowMs, forceReset: true,
+      });
+    } else if (tipo === "roleta") {
+      result = await upsertRouletteChallengeForPair({
+        db, pairUids: [uidA, uidB],
+        pareamentoId: pareDoc.id, nowMs, forceReset: true,
+      });
     }
+    if (result === "created") created += 1;
+    else rotated += 1;
   }
 
-  console.log("rotateWeeklyChallenges: done", {
-    total: pareamentosSnap.size,
-    created,
-    rotated,
-    skipped,
+  console.log(`runChallengeRotation(${tipo}): done`, {
+    total: pareamentosSnap.size, created, rotated, expired,
   });
-});
+}
+
+// Segunda-feira 20h → Perguntas (Alma Gêmea)
+exports.rotateWeeklyChallenges = onSchedule({
+  schedule: "0 20 * * 1",
+  timeZone: "America/Sao_Paulo",
+}, async () => runChallengeRotation("alma_gemea"));
+
+// Quarta-feira 20h → Preferências
+exports.startPreferenciasDesafio = onSchedule({
+  schedule: "0 20 * * 3",
+  timeZone: "America/Sao_Paulo",
+}, async () => runChallengeRotation("preferencias"));
+
+// Domingo 22h → Roleta
+exports.startRoletaDesafio = onSchedule({
+  schedule: "0 22 * * 0",
+  timeZone: "America/Sao_Paulo",
+}, async () => runChallengeRotation("roleta"));
 
 exports.resetWeeklyChallengesAdmin = https.onRequest(async (req, res) => {
   setCorsHeaders(req, res);

@@ -242,14 +242,6 @@ export default function PerfilPage() {
             <p className="text-xs text-white/50 mb-1">Telefone</p>
             <p className="text-sm">{usuario.telefone || '—'}</p>
           </div>
-
-          {/* Foguinhos */}
-          <div>
-            <p className="text-xs text-white/50 mb-1">Foguinhos</p>
-            <p className="text-sm font-bold text-yellow-400">
-              <i className="fas fa-fire mr-1" />{usuario.foguinhos ?? 0}
-            </p>
-          </div>
         </div>
 
         {/* Sair */}

@@ -25,3 +25,28 @@ jobs:
       - name: Run ESLint
         run: npm run lint
         working-directory: functions
+
+      - name: Audit dependencies (functions)
+        run: npm audit --omit=dev --audit-level=high
+        working-directory: functions
+
+  audit-next:
+    name: Audit dependencies (Next.js)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: nosso-momento-next/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: nosso-momento-next
+
+      - name: Audit dependencies (Next.js)
+        run: npm audit --omit=dev --audit-level=high
+        working-directory: nosso-momento-next

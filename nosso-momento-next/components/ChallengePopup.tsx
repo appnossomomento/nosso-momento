@@ -143,7 +143,13 @@ export default function ChallengePopup() {
     const submit = async () => {
       try {
         if (tipoAtual === 'pergunta') {
-          await sendInput('weekly_challenge_answer', { answer: '__TIMEOUT__', challengeId: idAtual, challengeDocId: idAtual });
+          const pareamentoIdAtual = useAppStore.getState().idPareamentoAmigavel;
+          await sendInput('weekly_challenge_answer', {
+            answer: '__TIMEOUT__',
+            challengeId: idAtual,
+            challengeDocId: idAtual,
+            ...(pareamentoIdAtual ? { pareamentoId: pareamentoIdAtual } : {}),
+          });
         } else if (tipoAtual === 'escolha') {
           await sendInput('preference_challenge_answer', { answer: '__TIMEOUT__', challengeId: idAtual, challengeDocId: idAtual });
         } else if (tipoAtual === 'roleta') {
@@ -172,10 +178,12 @@ export default function ChallengePopup() {
     if (enviando || !resposta.trim() || esgotado) return;
     setEnviando(true);
     try {
+      const pareamentoIdAtual = useAppStore.getState().idPareamentoAmigavel;
       await sendInput('weekly_challenge_answer', {
         answer: resposta.trim(),
         challengeId: pendingChallenge!.id,
         challengeDocId: pendingChallenge!.id,
+        ...(pareamentoIdAtual ? { pareamentoId: pareamentoIdAtual } : {}),
       });
       set({ desafiosPendentes: Math.max(0, (useAppStore.getState().desafiosPendentes || 1) - 1) });
       advanceQueue(set, () => router.push('/desafios'));

@@ -51,11 +51,16 @@ exports.handleMomentTaskUpdate = onDocumentUpdated(
             return;
           }
 
+          // Recompensa agora gerenciada pelo processInput (moment_complete).
+          // Se bonusGrantedAt já existe, o processInput já concedeu
+          // — evita dupla contagem.
+          if (taskData.bonusGrantedAt) {
+            return;
+          }
+
           const executeUid = taskData.executadoPorUid;
-          const rawIntensity = Number(taskData.custoFoguinhos);
-          const intensity = Number.isFinite(rawIntensity) ? rawIntensity : 0;
-          const baseReward = Math.round(intensity * 0.5);
-          const rewardAmount = intensity > 0 ? Math.max(1, baseReward) : 0;
+          // Sem recompensa por esta rota (fallback legacy sem foto).
+          const rewardAmount = 0;
 
           if (!executeUid || rewardAmount <= 0) {
             tx.update(taskRef, {

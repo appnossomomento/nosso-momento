@@ -5,7 +5,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { useState } from 'react';
 import { useAppStore } from '@/lib/store/appStore';
-import { callFunction, FUNCTIONS } from '@/lib/firebase/functions';
+import { sendInput } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
 import { openSystemConfirm } from '@/components/ui/Modal';
 import type { CarrinhoItem } from '@/lib/types';
@@ -13,7 +13,7 @@ import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import { trackGA, trackMeta } from '@/lib/analytics';
 
 export default function LojaPage() {
-  const { momentosMestres, parceiroData, pareado, carrinho, showCartSidebar, set } = useAppStore();
+  const { momentosMestres, parceiroData, pareado, carrinho, showCartSidebar, set, idPareamentoAmigavel, pareadoUid } = useAppStore();
   const usuario = useAppStore((s) => s.usuario);
   const [filtro, setFiltro] = useState<string | null>(null);
 
@@ -57,7 +57,11 @@ export default function LojaPage() {
     if (!carrinho.length) { showToast('Carrinho vazio.', 'aviso'); return; }
     openSystemConfirm('Confirmar pedido?', async () => {
       try {
-        await callFunction(FUNCTIONS.createInput, { tipo: 'finalizar_pedido', itens: carrinho });
+        await sendInput('moment_redeem', {
+          partnerUid: pareadoUid,
+          pareamentoId: idPareamentoAmigavel,
+          items: carrinho,
+        });
         trackGA('purchase', { currency: 'BRL', value: totalCarrinho });
         trackMeta('Purchase', { currency: 'BRL', value: totalCarrinho });
         set({ carrinho: [], showCartSidebar: false });

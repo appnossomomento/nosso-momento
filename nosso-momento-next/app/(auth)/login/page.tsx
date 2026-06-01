@@ -24,8 +24,13 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      // Seta cookie antes do redirect para o middleware reconhecer a sessão
-      document.cookie = 'auth-session=1; path=/; max-age=86400; SameSite=Lax';
+      // Cria sessão server-side via API Route (cookie HttpOnly+Secure, não forgeable).
+      const idToken = await userCredential.user.getIdToken();
+      await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
 
       trackGA('login', { method: 'Email' });
       trackMeta('Login');

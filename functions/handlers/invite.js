@@ -3,7 +3,9 @@
 
 const https = require("firebase-functions/v2/https");
 const {admin} = require("../lib/config");
-const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {
+  setCorsHeaders, rateLimitHttp, rateLimitFirestore,
+} = require("../lib/http");
 const crypto = require("crypto");
 
 const CONVITE_URL_BASE = "https://nossomomento.app";
@@ -88,7 +90,12 @@ exports.gerarConvite = https.onRequest(async (req, res) => {
  * POST /verificarTelefone
  * Authorization: Bearer <idToken>
  * Body: { telefone: "11999999999" }
- * → 200 { existe: boolean }
+ * → 202 { ok: true } sempre (resposta neutra, anti-enumeracao
+ * de telefones)
+ *
+ * SEGURANCA: nunca retorna se o numero existe ou nao. O cliente deve prosseguir
+ * para a solicitacao de pareamento mesmo sem confirmacao previa, e o backend
+ * (processInput) rejeita a solicitacao se o destinatario nao for encontrado.
  */
 exports.verificarTelefone = https.onRequest(async (req, res) => {
   setCorsHeaders(req, res);
@@ -103,9 +110,10 @@ exports.verificarTelefone = https.onRequest(async (req, res) => {
     return;
   }
 
-  if (rateLimitHttp(req, res, {
+  // Rate limit centralizado: 3 tentativas por minuto por IP (Firestore-backed).
+  if (await rateLimitFirestore(req, res, {
     keyPrefix: "verificarTelefone",
-    limit: 10,
+    limit: 3,
     windowMs: 60 * 1000,
   })) {
     return;
@@ -134,11 +142,8 @@ exports.verificarTelefone = https.onRequest(async (req, res) => {
     return;
   }
 
-  const db = admin.firestore();
-  const snap = await db.collection("usuarios")
-      .where("telefone", "==", telefone)
-      .limit(1)
-      .get();
-
-  res.status(200).json({existe: !snap.empty});
+  // Resposta sempre neutra: nao vaza se o numero esta cadastrado.
+  // A validacao real acontece dentro de processInput (Admin SDK), onde
+  // a solicitacao de pareamento e rejeitada se o destinatario nao existe.
+  res.status(202).json({ok: true});
 });

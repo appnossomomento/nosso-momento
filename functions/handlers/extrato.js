@@ -42,7 +42,10 @@ exports.getExtrato = onRequest(async (req, res) => {
   const limitNum = Number(rawLimit);
   const limit = Number.isFinite(limitNum) ?
     Math.min(Math.max(limitNum, 1), 100) : 20;
-  const rawStartAfter = req.body && req.body.startAfterMs;
+  const rawStartAfter = req.body &&
+    (req.body.startAfterMs !== undefined ?
+      req.body.startAfterMs :
+      req.body.afterMs);
   const startAfterMs = Number(rawStartAfter);
   const useStartAfter = Number.isFinite(startAfterMs);
 
@@ -65,24 +68,52 @@ exports.getExtrato = onRequest(async (req, res) => {
       return;
     }
 
-    let query = admin.firestore()
+    const baseQuery = admin.firestore()
         .collection("pareamentos").doc(pareamentoId)
         .collection("extrato")
         .orderBy("createdAtMs", "desc");
 
-    if (useStartAfter) {
-      query = query.where("createdAtMs", "<", startAfterMs);
+    const batchSize = Math.min(Math.max(limit * 3, 30), 100);
+    const maxScans = 10;
+    const collected = [];
+    let cursorMs = useStartAfter ? startAfterMs : null;
+    let hasMore = false;
+
+    for (let i = 0; i < maxScans && collected.length < (limit + 1); i++) {
+      let pageQuery = baseQuery;
+      if (Number.isFinite(cursorMs)) {
+        pageQuery = pageQuery.where("createdAtMs", "<", cursorMs);
+      }
+
+      const snapshot = await pageQuery.limit(batchSize).get();
+      if (snapshot.empty) {
+        break;
+      }
+
+      const docs = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
+      for (const item of docs) {
+        if (item.beneficiarioUid === uid) {
+          collected.push(item);
+          if (collected.length >= (limit + 1)) break;
+        }
+      }
+
+      const lastDoc = docs[docs.length - 1];
+      cursorMs = Number(lastDoc && lastDoc.createdAtMs);
+      if (!Number.isFinite(cursorMs) || docs.length < batchSize) {
+        break;
+      }
     }
 
-    const snapshot = await query.limit(limit + 1).get();
-    const docs = snapshot.docs.map((doc) => ({id: doc.id, ...doc.data()}));
-    const hasMore = docs.length > limit;
-    const items = docs.slice(0, limit);
+    hasMore = collected.length > limit;
+    const items = collected.slice(0, limit);
 
     items.forEach((item) => {
       if (item.timestamp &&
           typeof item.timestamp.toMillis === "function") {
         item.timestampMs = item.timestamp.toMillis();
+      } else if (Number.isFinite(Number(item.createdAtMs))) {
+        item.timestampMs = Number(item.createdAtMs);
       }
       delete item.timestamp;
     });

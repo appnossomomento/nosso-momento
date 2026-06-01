@@ -98,6 +98,7 @@ export default function MomentosPage() {
       await sendInput('moment_complete', {
         pareamentoId: idPareamentoAmigavel,
         tarefaId: realizandoMomento.id,
+        comFoto: !!realizandoFoto,
       });
       trackGA('complete_moment');
       trackMeta('CompleteMoment');
@@ -246,6 +247,19 @@ export default function MomentosPage() {
             {/* Content */}
             <div className="p-5 space-y-4">
               <p className="text-white/50 text-sm text-center">Quer registrar uma memória deste momento?</p>
+
+              {/* Incentivo: foto = foguinhos */}
+              <div
+                className="flex items-center gap-2 rounded-xl px-3 py-2"
+                style={{ background: realizandoFoto ? 'rgba(34,197,94,0.10)' : 'rgba(255,45,63,0.08)', border: `1px solid ${realizandoFoto ? 'rgba(34,197,94,0.25)' : 'rgba(255,45,63,0.18)'}` }}
+              >
+                <span className="text-base">{realizandoFoto ? '✅' : '📸'}</span>
+                <p className="text-xs leading-snug" style={{ color: realizandoFoto ? 'rgb(134,239,172)' : 'rgba(255,255,255,0.55)' }}>
+                  {realizandoFoto
+                    ? <><strong className="text-green-400">+2 🔥 foguinhos</strong> serão adicionados ao confirmar!</>
+                    : <>Adicione uma foto e ganhe <strong style={{ color: 'rgba(255,100,100,0.9)' }}>+2 🔥 foguinhos</strong> de recompensa.</>}
+                </p>
+              </div>
 
               {/* Área de foto */}
               <button

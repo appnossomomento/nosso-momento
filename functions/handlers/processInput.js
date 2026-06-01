@@ -1,4 +1,4 @@
-/* eslint-disable require-jsdoc */
+/* eslint-disable require-jsdoc, max-len */
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {admin} = require("../lib/config");
 const {areUsersPaired} = require("../lib/pairing");
@@ -13,7 +13,11 @@ const {
   normalizeChallengeAnswer,
   parsePayloadJson,
 } = require("../lib/normalize");
-const {upsertWeeklyChallengeForPair} = require("../lib/challenges");
+const {
+  upsertWeeklyChallengeForPair,
+  pickRouletteValue,
+  ROULETTE_OPTIONS,
+} = require("../lib/challenges");
 
 // Processa documentos criados em 'inputs/{inputId}'
 // e aplica a ação no usuário destino
@@ -1571,6 +1575,8 @@ exports.processInput = onDocumentCreated(
         } else if (input.type === "weekly_challenge_answer") {
           const challengeDocId = input.challengeDocId || null;
           const responderUid = input.responderUid || input.fromUid || null;
+          const challengePareamentoId = input.pareamentoId ?
+            String(input.pareamentoId) : null;
           if (!challengeDocId || !responderUid) {
             await inputRef.update({
               error: "missing_challenge_answer_info",
@@ -1587,11 +1593,23 @@ exports.processInput = onDocumentCreated(
               .firestore()
               .collection("usuarios")
               .doc(responderUid);
+          const challengePareamentoRef = challengePareamentoId ?
+            admin.firestore()
+                .collection("pareamentos")
+                .doc(challengePareamentoId) : null;
 
           await admin.firestore().runTransaction(async (tx) => {
             const inSnap = await tx.get(inputRef);
             if (!inSnap.exists) throw new Error("input não existe");
             if (inSnap.data().processed) return;
+
+            let challengePareamentoData = null;
+            if (challengePareamentoRef) {
+              const cpSnap = await tx.get(challengePareamentoRef);
+              if (cpSnap.exists) {
+                challengePareamentoData = cpSnap.data();
+              }
+            }
 
             const responderSnap = await tx.get(responderRef);
             if (!responderSnap.exists) {
@@ -1606,17 +1624,10 @@ exports.processInput = onDocumentCreated(
             let partnerUid = responderData.pareadoUid || null;
 
             // Fallback multi-conexão: resolve via pareamentoId
-            if (!partnerUid && input.pareamentoId) {
-              const cpRef = admin.firestore()
-                  .collection("pareamentos")
-                  .doc(String(input.pareamentoId));
-              const cpSnap = await tx.get(cpRef);
-              if (cpSnap.exists) {
-                const cpData = cpSnap.data();
-                partnerUid = cpData.pessoa1Uid === responderUid ?
-                    cpData.pessoa2Uid :
-                    cpData.pessoa1Uid;
-              }
+            if (!partnerUid && challengePareamentoData) {
+              partnerUid = challengePareamentoData.pessoa1Uid === responderUid ?
+                challengePareamentoData.pessoa2Uid :
+                challengePareamentoData.pessoa1Uid;
             }
 
             if (!partnerUid) {
@@ -1689,10 +1700,13 @@ exports.processInput = onDocumentCreated(
             const answerB = respostas[pairUids[1]] || "";
             if (answerA && answerB) {
               concluido = true;
-              if (answerA === answerB) {
+              const TIMEOUT_SENTINEL = "__timeout__";
+              const bothTimeout =
+                answerA === TIMEOUT_SENTINEL && answerB === TIMEOUT_SENTINEL;
+              if (answerA === answerB && !bothTimeout) {
                 status = "finalizado";
                 if (!rewarded) {
-                  const reward = Number(challengeData.reward || 1);
+                  const reward = Number(challengeData.reward || 2);
                   if (reward > 0) {
                     tx.update(responderRef, {
                       foguinhos: admin.firestore.FieldValue.increment(reward),
@@ -1702,62 +1716,60 @@ exports.processInput = onDocumentCreated(
                     });
 
                     // --- Multi-conexão: credita no doc de pareamento ---
-                    const challengePareamentoId =
-                      input.pareamentoId || null;
-                    if (challengePareamentoId) {
-                      const cpRef = admin.firestore()
-                          .collection("pareamentos")
-                          .doc(challengePareamentoId);
-                      const cpSnap = await tx.get(cpRef);
-                      if (cpSnap.exists) {
-                        const cpData = cpSnap.data();
-                        const field1 = cpData.pessoa1Uid === responderUid ?
+                    if (challengePareamentoRef && challengePareamentoData) {
+                      const field1 =
+                        challengePareamentoData.pessoa1Uid === responderUid ?
                             "foguinhos_pessoa1" : "foguinhos_pessoa2";
-                        const field2 = cpData.pessoa1Uid === partnerUid ?
+                      const field2 =
+                        challengePareamentoData.pessoa1Uid === partnerUid ?
                             "foguinhos_pessoa1" : "foguinhos_pessoa2";
-                        tx.update(cpRef, {
-                          [field1]: admin.firestore.FieldValue.increment(
-                              reward),
-                          [field2]: admin.firestore.FieldValue.increment(
-                              reward),
-                          desafiosConcluidos:
-                            admin.firestore.FieldValue.increment(1),
-                        });
+                      tx.update(challengePareamentoRef, {
+                        [field1]: admin.firestore.FieldValue.increment(reward),
+                        [field2]: admin.firestore.FieldValue.increment(reward),
+                        desafiosConcluidos:
+                          admin.firestore.FieldValue.increment(1),
+                      });
 
-                        // --- Extrato: desafio semanal ---
-                        const extratoRef1 = cpRef
-                            .collection("extrato").doc();
-                        tx.set(extratoRef1, {
-                          tipo: "desafio",
-                          descricao: "Desafio semanal: respostas iguais!",
-                          valor: reward,
-                          beneficiarioUid: responderUid,
-                          autorUid: responderUid,
-                          autorNome: input.responderName || "Parceiro",
-                          timestamp:
-                            admin.firestore.FieldValue.serverTimestamp(),
-                          createdAtMs: Date.now(),
-                        });
-                        const extratoRef2 = cpRef
-                            .collection("extrato").doc();
-                        tx.set(extratoRef2, {
-                          tipo: "desafio",
-                          descricao: "Desafio semanal: respostas iguais!",
-                          valor: reward,
-                          beneficiarioUid: partnerUid,
-                          autorUid: partnerUid,
-                          autorNome: "",
-                          timestamp:
-                            admin.firestore.FieldValue.serverTimestamp(),
-                          createdAtMs: Date.now(),
-                        });
-                      }
+                      // --- Extrato: desafio semanal ---
+                      const extratoRef1 = challengePareamentoRef
+                          .collection("extrato").doc();
+                      tx.set(extratoRef1, {
+                        tipo: "desafio",
+                        descricao: "Desafio semanal: respostas iguais!",
+                        valor: reward,
+                        beneficiarioUid: responderUid,
+                        autorUid: responderUid,
+                        autorNome: input.responderName || "Parceiro",
+                        timestamp:
+                          admin.firestore.FieldValue.serverTimestamp(),
+                        createdAtMs: Date.now(),
+                      });
+                      const extratoRef2 = challengePareamentoRef
+                          .collection("extrato").doc();
+                      tx.set(extratoRef2, {
+                        tipo: "desafio",
+                        descricao: "Desafio semanal: respostas iguais!",
+                        valor: reward,
+                        beneficiarioUid: partnerUid,
+                        autorUid: partnerUid,
+                        autorNome: "",
+                        timestamp:
+                          admin.firestore.FieldValue.serverTimestamp(),
+                        createdAtMs: Date.now(),
+                      });
                     }
                   }
                   rewarded = true;
                 }
               } else {
                 status = "finalizado_sem_recompensa";
+                // -1 de penalidade (respostas diferentes ou timeout)
+                tx.update(responderRef, {
+                  foguinhos: admin.firestore.FieldValue.increment(-1),
+                });
+                tx.update(partnerRef, {
+                  foguinhos: admin.firestore.FieldValue.increment(-1),
+                });
                 rewarded = false;
               }
               completedAt = nowTs;
@@ -1767,7 +1779,7 @@ exports.processInput = onDocumentCreated(
             const responderName = input.responderName || "Seu parceiro";
             if (concluido) {
               if (status === "finalizado") {
-                const rewardN = Number(challengeData.reward || 1);
+                const rewardN = Number(challengeData.reward || 2);
                 const notifR = admin.firestore()
                     .collection("notificacoes").doc();
                 tx.set(notifR, {
@@ -1786,7 +1798,7 @@ exports.processInput = onDocumentCreated(
                     .collection("notificacoes").doc();
                 tx.set(notifP, {
                   userId: partnerUid,
-                  titulo: "Vocês acertaram juntos! 🏆",
+                  titulo: "Voc\u00eas acertaram juntos! \uD83C\uDFC6",
                   mensagem: `+${rewardN} foguinho(s) para` +
                     ` cada um. Continuem assim! 🔥`,
                   icone: "fa-trophy",
@@ -1907,23 +1919,113 @@ exports.processInput = onDocumentCreated(
           );
         } else if (input.type === "moment_complete") {
           const fromUid = input.fromUid;
+          const tarefaId = typeof input.tarefaId === "string" ?
+            input.tarefaId.trim() : "";
+          const comFoto = input.comFoto === true;
+          const FOTO_REWARD = 2; // foguinhos concedidos por completar com foto
+
           if (!fromUid) {
             await inputRef.update({error: "missing_uid", processed: false});
             return;
           }
+          if (!tarefaId) {
+            await inputRef.update({error: "missing_tarefaId", processed: false});
+            return;
+          }
+
           const mcUserRef = admin.firestore()
               .collection("usuarios").doc(fromUid);
+          const tarefaRef = admin.firestore()
+              .collection("tarefasMomentos").doc(tarefaId);
+
           await admin.firestore().runTransaction(async (tx) => {
             const inSnap = await tx.get(inputRef);
             if (!inSnap.exists) throw new Error("input não existe");
             if (inSnap.data().processed) return;
+
             const userSnap = await tx.get(mcUserRef);
+            const tarefaSnap = await tx.get(tarefaRef);
+
             if (!userSnap.exists) {
               tx.update(inputRef, {
                 error: "user_not_found", processed: false,
               });
               return;
             }
+
+            // Valida que a tarefa existe e pertence ao usuário
+            if (!tarefaSnap.exists) {
+              tx.update(inputRef, {
+                error: "tarefa_not_found", processed: false,
+              });
+              return;
+            }
+            const tarefaData = tarefaSnap.data();
+            if (tarefaData.executadoPorUid !== fromUid) {
+              tx.update(inputRef, {
+                error: "tarefa_wrong_user", processed: false,
+              });
+              return;
+            }
+            if (tarefaData.status !== "Pendente") {
+              // Já foi concluída — idempotente
+              tx.update(inputRef, {processed: true,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                processedBy: "functions.processInput"});
+              return;
+            }
+
+            // Atualiza a tarefa para "Realizado".
+            // bonusGrantedAt sinaliza ao handleMomentTaskUpdate que o bônus
+            // já foi (ou não será) concedido, evitando dupla contagem.
+            tx.update(tarefaRef, {
+              status: "Realizado",
+              dataConclusao: admin.firestore.FieldValue.serverTimestamp(),
+              comFoto,
+              bonusGrantedAt: admin.firestore.FieldValue.serverTimestamp(),
+              bonusAmount: comFoto ? FOTO_REWARD : 0,
+            });
+
+            // Concede 2 foguinhos apenas se o momento foi realizado com foto
+            if (comFoto) {
+              const userData = userSnap.data();
+              const pareamentoId = input.pareamentoId || null;
+
+              tx.update(mcUserRef, {
+                foguinhos: admin.firestore.FieldValue.increment(FOTO_REWARD),
+              });
+
+              // Extrato
+              if (pareamentoId) {
+                const extratoRef = admin.firestore()
+                    .collection("pareamentos").doc(pareamentoId)
+                    .collection("extrato").doc();
+                tx.set(extratoRef, {
+                  tipo: "bonus",
+                  descricao: `Bônus: realizou "${tarefaData.momentoNome || "momento"}" com foto`,
+                  valor: FOTO_REWARD,
+                  beneficiarioUid: fromUid,
+                  autorUid: fromUid,
+                  autorNome: userData.nome || "Parceiro",
+                  timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                  createdAtMs: Date.now(),
+                });
+              }
+
+              // Notificação
+              const notifRef = admin.firestore().collection("notificacoes").doc();
+              tx.set(notifRef, {
+                userId: fromUid,
+                titulo: "Momento realizado! 🔥",
+                mensagem: `Você ganhou ${FOTO_REWARD} foguinhos por registrar "${tarefaData.momentoNome || "o momento"}" com foto!`,
+                icone: "fa-fire",
+                tipo: "moment_completion",
+                lida: false,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+
+            // Atualiza achievementStats independente de foto
             const userData = userSnap.data();
             const existingStats = userData.achievementStats || {};
             const updatedStats = {
@@ -1948,7 +2050,8 @@ exports.processInput = onDocumentCreated(
               processedBy: "functions.processInput",
             });
           });
-          console.log("processInput: moment_complete processado", inputId);
+          console.log("processInput: moment_complete processado", inputId,
+              comFoto ? `(+${2} foguinhos com foto)` : "(sem foto, sem bônus)");
         } else if (input.type === "profile_photo_upload") {
           const fromUid = input.fromUid;
           if (!fromUid) {
@@ -2549,6 +2652,397 @@ exports.processInput = onDocumentCreated(
           });
 
           console.log("processInput: clima_update processado", inputId);
+        } else if (input.type === "preference_challenge_answer") {
+          const pChDocId = input.challengeDocId || null;
+          const pChUid = input.responderUid || input.fromUid || null;
+          const pChPareamentoId = input.pareamentoId ?
+            String(input.pareamentoId) : null;
+          if (!pChDocId || !pChUid) {
+            await inputRef.update({
+              error: "missing_challenge_answer_info", processed: false,
+            });
+            return;
+          }
+          const pChRef = admin.firestore()
+              .collection("weeklyChallenges").doc(pChDocId);
+          const pChUserRef = admin.firestore()
+              .collection("usuarios").doc(pChUid);
+          const pChPareamentoRef = pChPareamentoId ?
+            admin.firestore()
+                .collection("pareamentos")
+                .doc(pChPareamentoId) : null;
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            let pChPareamentoData = null;
+            if (pChPareamentoRef) {
+              const cpS = await tx.get(pChPareamentoRef);
+              if (cpS.exists) {
+                pChPareamentoData = cpS.data();
+              }
+            }
+
+            const pChUserSnap = await tx.get(pChUserRef);
+            if (!pChUserSnap.exists) {
+              tx.update(inputRef, {error: "responder_not_found", processed: false});
+              return;
+            }
+            const pChUserData = pChUserSnap.data();
+            let pChPartnerUid = pChUserData.pareadoUid || null;
+            if (!pChPartnerUid && pChPareamentoData) {
+              pChPartnerUid = pChPareamentoData.pessoa1Uid === pChUid ?
+                pChPareamentoData.pessoa2Uid : pChPareamentoData.pessoa1Uid;
+            }
+            if (!pChPartnerUid) {
+              tx.update(inputRef, {error: "partner_not_found", processed: false});
+              return;
+            }
+            const pChPartnerRef = admin.firestore()
+                .collection("usuarios").doc(pChPartnerUid);
+            const pChPartnerSnap = await tx.get(pChPartnerRef);
+            if (!pChPartnerSnap.exists) {
+              tx.update(inputRef, {error: "partner_not_found", processed: false});
+              return;
+            }
+            if (!areUsersPaired(pChUserData, pChPartnerSnap.data(),
+                pChUid, pChPartnerUid)) {
+              tx.update(inputRef, {error: "usuarios_nao_pareados", processed: false});
+              return;
+            }
+            const pChSnap = await tx.get(pChRef);
+            const nowTs = admin.firestore.Timestamp.now();
+            const pChData = pChSnap.exists ? pChSnap.data() : {};
+            const pChPairUids = Array.isArray(pChData.pairUids) &&
+              pChData.pairUids.length === 2 ?
+              [...pChData.pairUids] : [pChUid, pChPartnerUid].sort();
+            const pChRespostas = Object.assign({}, pChData.respostas || {});
+            pChRespostas[pChUid] = String(input.answer || "").trim().toUpperCase();
+            const pChRespondeuEm = Object.assign({}, pChData.respondeuEm || {});
+            pChRespondeuEm[pChUid] = nowTs;
+            let pChStatus = pChData.status || "pendente";
+            let pChConcluido = false;
+            let pChRewarded = !!pChData.rewarded;
+            let pChCompletedAt = pChData.completedAt || null;
+            const pChA = pChRespostas[pChPairUids[0]] || "";
+            const pChB = pChRespostas[pChPairUids[1]] || "";
+            if (pChA && pChB) {
+              pChConcluido = true;
+              const PCH_TIMEOUT = "__TIMEOUT__";
+              const pChBothTimeout =
+                pChA === PCH_TIMEOUT && pChB === PCH_TIMEOUT;
+              const pChReward = Number(pChData.reward || 2);
+              if (pChA === pChB && !pChBothTimeout) {
+                pChStatus = "finalizado";
+                if (!pChRewarded) {
+                  tx.update(pChUserRef, {
+                    foguinhos: admin.firestore.FieldValue.increment(pChReward),
+                  });
+                  tx.update(pChPartnerRef, {
+                    foguinhos: admin.firestore.FieldValue.increment(pChReward),
+                  });
+                  if (pChPareamentoRef && pChPareamentoData) {
+                    const f1 = pChPareamentoData.pessoa1Uid === pChUid ?
+                      "foguinhos_pessoa1" : "foguinhos_pessoa2";
+                    const f2 = pChPareamentoData.pessoa1Uid === pChPartnerUid ?
+                      "foguinhos_pessoa1" : "foguinhos_pessoa2";
+                    tx.update(pChPareamentoRef, {
+                      [f1]: admin.firestore.FieldValue.increment(pChReward),
+                      [f2]: admin.firestore.FieldValue.increment(pChReward),
+                      desafiosConcluidos: admin.firestore.FieldValue.increment(1),
+                    });
+                    tx.set(pChPareamentoRef.collection("extrato").doc(), {
+                      tipo: "desafio",
+                      descricao: "Prefer\u00eancias: escolha igual!",
+                      valor: pChReward, beneficiarioUid: pChUid,
+                      autorUid: pChUid,
+                      autorNome: input.responderName || "Parceiro",
+                      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                      createdAtMs: Date.now(),
+                    });
+                    tx.set(pChPareamentoRef.collection("extrato").doc(), {
+                      tipo: "desafio",
+                      descricao: "Prefer\u00eancias: escolha igual!",
+                      valor: pChReward, beneficiarioUid: pChPartnerUid,
+                      autorUid: pChPartnerUid, autorNome: "",
+                      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                      createdAtMs: Date.now(),
+                    });
+                  }
+                  pChRewarded = true;
+                }
+              } else {
+                // Respostas diferentes ou timeout — sem prêmio
+                pChStatus = "finalizado_sem_recompensa";
+                pChRewarded = false;
+              }
+              if (pChA === pChB && !pChBothTimeout) {
+                tx.set(admin.firestore().collection("notificacoes").doc(), {
+                  userId: pChUid, titulo: "Mesma prefer\u00eancia! \uD83C\uDF89",
+                  mensagem: `+${pChReward} foguinho(s)! Sintonia total!`,
+                  icone: "fa-trophy", tipo: "desafio",
+                  redirectTo: "achievementsPopup", lida: false,
+                  timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                tx.set(admin.firestore().collection("notificacoes").doc(), {
+                  userId: pChPartnerUid, titulo: "Mesma prefer\u00eancia! \uD83C\uDF89",
+                  mensagem: `+${pChReward} foguinho(s)! Sintonia total!`,
+                  icone: "fa-trophy", tipo: "desafio",
+                  redirectTo: "achievementsPopup", lida: false,
+                  timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                });
+              } else {
+                pChStatus = "finalizado_sem_recompensa";
+                tx.update(pChUserRef, {
+                  foguinhos: admin.firestore.FieldValue.increment(-1),
+                });
+                tx.update(pChPartnerRef, {
+                  foguinhos: admin.firestore.FieldValue.increment(-1),
+                });
+                pChRewarded = false;
+                tx.set(admin.firestore().collection("notificacoes").doc(), {
+                  userId: pChUid, titulo: "Prefer\u00eancias diferentes \uD83D\uDE05",
+                  mensagem: "Escolhas diferentes. -1 foguinho para cada um.",
+                  icone: "fa-trophy", tipo: "desafio",
+                  redirectTo: "achievementsPopup", lida: false,
+                  timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                tx.set(admin.firestore().collection("notificacoes").doc(), {
+                  userId: pChPartnerUid, titulo: "Prefer\u00eancias diferentes \uD83D\uDE05",
+                  mensagem: "Escolhas diferentes. -1 foguinho para cada um.",
+                  icone: "fa-trophy", tipo: "desafio",
+                  redirectTo: "achievementsPopup", lida: false,
+                  timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                });
+              }
+              pChCompletedAt = nowTs;
+            } else {
+              tx.set(admin.firestore().collection("notificacoes").doc(), {
+                userId: pChPartnerUid,
+                titulo: `${input.responderName || "Seu parceiro"} j\u00e1 escolheu! \u23F3`,
+                mensagem: "Agora s\u00f3 falta voc\u00ea. Corre l\u00e1!",
+                icone: "fa-trophy", tipo: "desafio",
+                redirectTo: "achievementsPopup", lida: false,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+            const pChBase = {
+              id: pChDocId,
+              challengeId: pChData.challengeId || "preferencias",
+              pairUids: pChPairUids, respostas: pChRespostas,
+              respondeuEm: pChRespondeuEm, status: pChStatus,
+              concluido: pChConcluido, rewarded: pChRewarded,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            };
+            if (pChCompletedAt) pChBase.completedAt = pChCompletedAt;
+            tx.set(pChRef, pChBase, {merge: true});
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+          console.log("processInput: preference_challenge_answer processado", inputId);
+        } else if (input.type === "roulette_spin") {
+          const rolDocId = input.challengeDocId || null;
+          const spinnerUid = input.responderUid || input.fromUid || null;
+          if (!rolDocId || !spinnerUid) {
+            await inputRef.update({
+              error: "missing_roulette_spin_info", processed: false,
+            });
+            return;
+          }
+          const rolRef = admin.firestore()
+              .collection("weeklyChallenges").doc(rolDocId);
+          const rolSpinnerRef = admin.firestore()
+              .collection("usuarios").doc(spinnerUid);
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            // Lê o doc da roleta logo no início — usado como fallback
+            // para resolução de parceiro e verificação de pareamento
+            const rolSnap = await tx.get(rolRef);
+            const nowTs = admin.firestore.Timestamp.now();
+            const rolData = rolSnap.exists ? rolSnap.data() : {};
+
+            // Se já foi concluído, marca como processado e encerra
+            if (rolData.status === "concluido" || rolData.rewarded) {
+              tx.update(inputRef, {processed: true,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                processedBy: "functions.processInput"});
+              return;
+            }
+
+            const rolSpinnerSnap = await tx.get(rolSpinnerRef);
+            if (!rolSpinnerSnap.exists) {
+              console.error("roulette_spin: spinner_not_found", spinnerUid, rolDocId);
+              tx.update(inputRef, {error: "spinner_not_found", processed: false});
+              return;
+            }
+            const rolSpinnerData = rolSpinnerSnap.data();
+
+            // Resolução do parceiro: pareadoUid → pareamentos → pairUids do doc
+            let rolPartnerUid = rolSpinnerData.pareadoUid || null;
+            if (!rolPartnerUid && input.pareamentoId) {
+              const cpR = admin.firestore()
+                  .collection("pareamentos").doc(String(input.pareamentoId));
+              const cpS = await tx.get(cpR);
+              if (cpS.exists) {
+                const cpD = cpS.data();
+                rolPartnerUid = cpD.pessoa1Uid === spinnerUid ?
+                    cpD.pessoa2Uid : cpD.pessoa1Uid;
+              }
+            }
+            // Fallback: usa pairUids do doc da roleta (o primeiro giro já validou)
+            if (!rolPartnerUid && Array.isArray(rolData.pairUids) &&
+                rolData.pairUids.length === 2) {
+              rolPartnerUid = rolData.pairUids.find((u) => u !== spinnerUid) || null;
+              if (rolPartnerUid) {
+                console.warn("roulette_spin: parceiro resolvido via pairUids do doc",
+                    {spinnerUid, rolPartnerUid, rolDocId});
+              }
+            }
+            if (!rolPartnerUid) {
+              console.error("roulette_spin: partner_not_found", {spinnerUid, rolDocId,
+                pareadoUid: rolSpinnerData.pareadoUid, pareamentoId: input.pareamentoId});
+              tx.update(inputRef, {error: "partner_not_found", processed: false});
+              return;
+            }
+
+            const rolPartnerRef = admin.firestore()
+                .collection("usuarios").doc(rolPartnerUid);
+            const rolPartnerSnap = await tx.get(rolPartnerRef);
+            if (!rolPartnerSnap.exists) {
+              console.error("roulette_spin: partner doc not_found", rolPartnerUid);
+              tx.update(inputRef, {error: "partner_not_found", processed: false});
+              return;
+            }
+
+            // Verifica pareamento — pula checagem se o parceiro já girou (o primeiro
+            // giro já passou por areUsersPaired; confiamos no doc existente)
+            const respostasExistentes = Object.assign({}, rolData.respostas || {});
+            const parceirojáGirou = Object.keys(respostasExistentes)
+                .some((u) => u !== spinnerUid);
+            if (!parceirojáGirou &&
+                !areUsersPaired(rolSpinnerData, rolPartnerSnap.data(),
+                    spinnerUid, rolPartnerUid)) {
+              console.error("roulette_spin: usuarios_nao_pareados", {spinnerUid, rolPartnerUid});
+              tx.update(inputRef, {error: "usuarios_nao_pareados", processed: false});
+              return;
+            }
+
+            const rolPairUids = Array.isArray(rolData.pairUids) &&
+              rolData.pairUids.length === 2 ?
+              [...rolData.pairUids] : [spinnerUid, rolPartnerUid].sort();
+            const rolRespostas = Object.assign({}, rolData.respostas || {});
+            if (rolRespostas[spinnerUid] !== undefined) {
+              tx.update(inputRef, {processed: true,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                processedBy: "functions.processInput"});
+              return;
+            }
+            const spinResult = pickRouletteValue(ROULETTE_OPTIONS);
+            rolRespostas[spinnerUid] = spinResult;
+            const rolRespondeuEm = Object.assign({}, rolData.respondeuEm || {});
+            rolRespondeuEm[spinnerUid] = nowTs;
+            const valorA = rolRespostas[rolPairUids[0]];
+            const valorB = rolRespostas[rolPairUids[1]];
+            const bothSpun = valorA !== undefined && valorB !== undefined;
+            let rolStatus = "pendente";
+            let rolConcluido = false;
+            let rolRewarded = false;
+            if (bothSpun) {
+              const soma = Number(valorA) + Number(valorB);
+              let cpR3 = null;
+              let cpD3 = null;
+              if (input.pareamentoId) {
+                cpR3 = admin.firestore()
+                    .collection("pareamentos").doc(String(input.pareamentoId));
+                const cpS3 = await tx.get(cpR3);
+                if (cpS3.exists) cpD3 = cpS3.data();
+              }
+              rolStatus = "concluido";
+              rolConcluido = true;
+              rolRewarded = true;
+              if (soma !== 0) {
+                tx.update(rolSpinnerRef, {
+                  foguinhos: admin.firestore.FieldValue.increment(soma),
+                });
+                tx.update(rolPartnerRef, {
+                  foguinhos: admin.firestore.FieldValue.increment(soma),
+                });
+              }
+              if (cpR3 && cpD3) {
+                if (soma !== 0) {
+                  const f1 = cpD3.pessoa1Uid === spinnerUid ?
+                      "foguinhos_pessoa1" : "foguinhos_pessoa2";
+                  const f2 = cpD3.pessoa1Uid === rolPartnerUid ?
+                      "foguinhos_pessoa1" : "foguinhos_pessoa2";
+                  tx.update(cpR3, {
+                    [f1]: admin.firestore.FieldValue.increment(soma),
+                    [f2]: admin.firestore.FieldValue.increment(soma),
+                  });
+                }
+                const somaLabel = soma >= 0 ? `+${soma}` : `${soma}`;
+                tx.set(cpR3.collection("extrato").doc(), {
+                  tipo: "desafio",
+                  descricao: `Roleta \uD83C\uDFB0: ${somaLabel} foguinho(s) para cada um`,
+                  valor: soma, beneficiarioUid: spinnerUid,
+                  autorUid: spinnerUid, autorNome: "Roleta",
+                  timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                  createdAtMs: Date.now(),
+                });
+                tx.set(cpR3.collection("extrato").doc(), {
+                  tipo: "desafio",
+                  descricao: `Roleta \uD83C\uDFB0: ${somaLabel} foguinho(s) para cada um`,
+                  valor: soma, beneficiarioUid: rolPartnerUid,
+                  autorUid: rolPartnerUid, autorNome: "Roleta",
+                  timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                  createdAtMs: Date.now(),
+                });
+              }
+              const somaLabel = soma >= 0 ? `+${soma}` : `${soma}`;
+              tx.set(admin.firestore().collection("notificacoes").doc(), {
+                userId: spinnerUid, titulo: "Roleta conclu\u00edda! \uD83C\uDFB0",
+                mensagem: `${somaLabel} foguinho(s) para cada um!`,
+                icone: "fa-dice", tipo: "desafio",
+                redirectTo: "achievementsPopup", lida: false,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              });
+              tx.set(admin.firestore().collection("notificacoes").doc(), {
+                userId: rolPartnerUid, titulo: "Roleta conclu\u00edda! \uD83C\uDFB0",
+                mensagem: `${somaLabel} foguinho(s) para cada um!`,
+                icone: "fa-dice", tipo: "desafio",
+                redirectTo: "achievementsPopup", lida: false,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            } else {
+              tx.set(admin.firestore().collection("notificacoes").doc(), {
+                userId: rolPartnerUid,
+                titulo: "Seu parceiro girou a roleta! \uD83C\uDFB0",
+                mensagem: "Agora \u00e9 a sua vez. Gire e descubra!",
+                icone: "fa-dice", tipo: "desafio",
+                redirectTo: "achievementsPopup", lida: false,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+            tx.set(rolRef, {
+              id: rolDocId, pairUids: rolPairUids,
+              respostas: rolRespostas, respondeuEm: rolRespondeuEm,
+              status: rolStatus, concluido: rolConcluido, rewarded: rolRewarded,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              ...(bothSpun ? {completedAt: nowTs} : {}),
+            }, {merge: true});
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+          console.log("processInput: roulette_spin processado", inputId);
         } else {
           console.log("processInput: tipo não suportado", input.type);
           await inputRef.update({error: "unsupported_type", processed: false});

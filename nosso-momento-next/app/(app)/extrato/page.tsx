@@ -60,7 +60,7 @@ export default function ExtratoPage() {
     try {
       const result = await callFunction<{ items: ExtratoItem[]; hasMore: boolean }>(
         FUNCTIONS.getExtrato,
-        { pareamentoId: idPareamentoAmigavel, afterMs: ultimo?.timestampMs }
+        { pareamentoId: idPareamentoAmigavel, startAfterMs: ultimo?.timestampMs }
       );
       set({
         extratoItems: [...items, ...(result.items ?? [])],

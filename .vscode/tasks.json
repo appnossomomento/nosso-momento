@@ -1,0 +1,153 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "git-status-check",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"status",
+				"--short"
+			]
+		},
+		{
+			"label": "git-add-hotfix",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"nosso-momento-next/app/(app)/desafios/page.tsx"
+			]
+		},
+		{
+			"label": "git-add-hotfix-quoted",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"\"nosso-momento-next/app/(app)/desafios/page.tsx\""
+			]
+		},
+		{
+			"label": "git-add-hotfix-stopparse",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"--%",
+				"nosso-momento-next/app/(app)/desafios/page.tsx"
+			]
+		},
+		{
+			"label": "git-commit-hotfix",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"fix: evitar crash em desafios ao formatar resposta"
+			]
+		},
+		{
+			"label": "git-push-master",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"push",
+				"origin",
+				"master"
+			]
+		},
+		{
+			"label": "git-add-desafios-style",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"--%",
+				"nosso-momento-next/app/(app)/desafios/page.tsx"
+			]
+		},
+		{
+			"label": "git-commit-desafios-style",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"feat: estilizar resumo concluido com nomes reais no desafio semanal"
+			]
+		},
+		{
+			"label": "git-push-master-desafios-style",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"push",
+				"origin",
+				"master"
+			]
+		},
+		{
+			"label": "git-add-desafios-3-ajustes",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"--%",
+				"nosso-momento-next/app/(app)/desafios/page.tsx"
+			]
+		},
+		{
+			"label": "git-commit-desafios-3-ajustes",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"refactor: ajustar resumo concluido de desafios conforme layout"
+			]
+		},
+		{
+			"label": "git-push-master-desafios-3-ajustes",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"push",
+				"origin",
+				"master"
+			]
+		},
+		{
+			"label": "git-add-parear-dashboard-fix",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"add",
+				"--%",
+				"nosso-momento-next/app/(app)/parear/page.tsx",
+				"nosso-momento-next/app/(app)/dashboard/page.tsx"
+			]
+		},
+		{
+			"label": "git-commit-parear-dashboard-fix",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"commit",
+				"-m",
+				"fix: permitir dashboard ao continuar sem parear"
+			]
+		},
+		{
+			"label": "git-push-master-parear-dashboard-fix",
+			"type": "shell",
+			"command": "git",
+			"args": [
+				"push",
+				"origin",
+				"master"
+			]
+		}
+	]
+}

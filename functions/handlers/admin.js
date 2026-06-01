@@ -64,6 +64,8 @@ exports.createInput = https.onRequest(async (req, res) => {
       "weekly_challenge_upsert",
       "weekly_challenge_answer",
       "weekly_challenge_timeout",
+      "preference_challenge_answer",
+      "roulette_spin",
       "catalog_update",
       "moment_complete",
       "profile_photo_upload",
@@ -124,11 +126,20 @@ exports.createInput = https.onRequest(async (req, res) => {
         "type", "fromUid", "partnerUid", "pareamentoId",
         "challengeId", "payloadJson",
       ],
+      preference_challenge_answer: [
+        "type", "fromUid", "partnerUid", "pareamentoId",
+        "challengeId", "challengeDocId",
+        "responderUid", "responderName", "answer",
+      ],
+      roulette_spin: [
+        "type", "fromUid", "partnerUid", "pareamentoId",
+        "challengeId", "challengeDocId", "responderUid",
+      ],
       catalog_update: [
         "type", "fromUid", "partnerUids",
       ],
       moment_complete: [
-        "type", "fromUid", "pareamentoId",
+        "type", "fromUid", "pareamentoId", "tarefaId", "comFoto",
       ],
       profile_photo_upload: [
         "type", "fromUid",

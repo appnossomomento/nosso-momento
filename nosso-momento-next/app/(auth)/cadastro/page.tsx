@@ -59,8 +59,13 @@ export default function CadastroPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
-      // Seta cookie antes de qualquer redirect para o middleware reconhecer a sessão
-      document.cookie = 'auth-session=1; path=/; max-age=86400; SameSite=Lax';
+      // Cria sessão server-side via API Route (cookie HttpOnly+Secure, não forgeable).
+      const idToken = await user.getIdToken();
+      await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
 
       trackGA('sign_up', { method: 'Email' });
       trackMeta('CompleteRegistration');

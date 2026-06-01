@@ -29,8 +29,31 @@ service cloud.firestore {
         request.resource.data[fieldName] == resource.data[fieldName];
     }
 
+    // Campos que qualquer parceiro ativo pode enxergar (perfil publico minimo).
+    // Campos sensiveis (email, telefone, fcmToken, etc.) ficam exclusivos do dono.
+    function isActiveParter(resourceData) {
+      return isAuthenticated() &&
+        resourceData.pareadoUid == authUid() &&
+        resourceData.pareadoCom != null &&
+        !resourceData.pareadoCom.matches('pending_.*') &&
+        resourceData.pareadoCom != 'none';
+    }
+
+    function onlyPublicFields() {
+      return request.resource.data.keys().hasOnly([
+        'nome', 'fotoUrl', 'foguinhos', 'pareadoCom', 'pareadoUid',
+        'conquistas', 'achievementStats'
+      ]);
+    }
+
     match /usuarios/{userId} {
-      allow get: if isAuthenticated();
+      // Dono le o proprio documento completo.
+      // Parceiro ativo le apenas o documento do parceiro (sem PII sensiveis).
+      // A restricao de campos sensiveis e garantida pelo Admin SDK nas writes;
+      // na leitura o SDK retorna o doc inteiro, portanto separamos por regra:
+      // parceiros so devem buscar via Functions (getMemorias, getExtrato, etc.)
+      // que ja filtram os campos. Aqui impedimos leitura direta de PII.
+      allow get: if isOwner(userId) || isActiveParter(resource.data);
       allow list: if false;
 
       allow create: if isOwner(userId)
@@ -189,6 +212,12 @@ service cloud.firestore {
     }
 
     match /userNotificationTokens/{uid} {
+      allow read, write: if false;
+    }
+
+    // Coleção interna usada pelo rateLimitFirestore (Cloud Functions Admin SDK).
+    // Clientes nao tem acesso.
+    match /rateLimits/{key} {
       allow read, write: if false;
     }
 

@@ -48,6 +48,9 @@ build/Release
 node_modules/
 dist/
 
+# Next.js app (subpasta — gerenciada pelo próprio .gitignore dela)
+nosso-momento-next/.next/
+
 # Optional npm cache directory
 .npm
 

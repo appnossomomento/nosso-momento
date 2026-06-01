@@ -17,14 +17,25 @@ export function useAuth() {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
-        // Usuário deslogado — limpa cookie e reset state
-        document.cookie = 'auth-session=; path=/; max-age=0; SameSite=Lax';
+        // Usuário deslogado — destroi o cookie de sessão server-side e limpa state.
+        await fetch('/api/auth/session', { method: 'DELETE' }).catch(() => {});
         reset();
         return;
       }
 
-      // Seta cookie de sessão para o middleware poder verificar auth
-      document.cookie = 'auth-session=1; path=/; max-age=86400; SameSite=Lax';
+      try {
+        // Obtém o idToken atual (renovado automaticamente pelo SDK se expirado).
+        const idToken = await firebaseUser.getIdToken();
+
+        // Envia o idToken para a API Route que emite o cookie HttpOnly seguro.
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        });
+      } catch (err) {
+        console.error('[useAuth] falha ao criar sessão server-side:', err);
+      }
 
       // Ouvinte em tempo real do documento do usuário no Firestore
       const userRef = doc(db, 'usuarios', firebaseUser.uid);

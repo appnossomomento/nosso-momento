@@ -1,0 +1,192 @@
+{
+  "pair": {
+    "pareamentoId": "21232323232_21977776666",
+    "uidA": "vj8AhmOTpSaycndKsnBi4f7y90s1",
+    "uidB": "gWblxQ28Z2cobZU7TJgtRZplXn63"
+  },
+  "resultados": [
+    {
+      "tipo": "alma_gemea",
+      "inputIds": [
+        "jFbbcpRFo8YeAar7sDpa",
+        "DER6H8RH7vLQUeX8xood"
+      ],
+      "inputErrors": [],
+      "challenge": {
+        "status": "finalizado",
+        "concluido": true,
+        "rewarded": true,
+        "reward": 2
+      },
+      "saldo": {
+        "before": {
+          "pessoa1": 14,
+          "pessoa2": 14,
+          "desafiosConcluidos": 4
+        },
+        "after": {
+          "pessoa1": 16,
+          "pessoa2": 16,
+          "desafiosConcluidos": 5
+        },
+        "delta": {
+          "pessoa1": 2,
+          "pessoa2": 2,
+          "desafiosConcluidos": 1
+        }
+      },
+      "extrato": [
+        {
+          "descricao": "Desafio semanal: respostas iguais!",
+          "valor": 2,
+          "beneficiarioUid": "gWblxQ28Z2cobZU7TJgtRZplXn63",
+          "tipo": "desafio",
+          "createdAtMs": 1779996062207
+        },
+        {
+          "descricao": "Desafio semanal: respostas iguais!",
+          "valor": 2,
+          "beneficiarioUid": "vj8AhmOTpSaycndKsnBi4f7y90s1",
+          "tipo": "desafio",
+          "createdAtMs": 1779996062207
+        }
+      ]
+    },
+    {
+      "tipo": "preferencias",
+      "inputIds": [
+        "4QNwdZsDlbAV4xnkgjCV",
+        "6GDJQcsPbmUypS3ihOIM"
+      ],
+      "inputErrors": [],
+      "challenge": {
+        "status": "finalizado",
+        "concluido": true,
+        "rewarded": true,
+        "reward": 2
+      },
+      "saldo": {
+        "before": {
+          "pessoa1": 16,
+          "pessoa2": 16,
+          "desafiosConcluidos": 5
+        },
+        "after": {
+          "pessoa1": 18,
+          "pessoa2": 18,
+          "desafiosConcluidos": 6
+        },
+        "delta": {
+          "pessoa1": 2,
+          "pessoa2": 2,
+          "desafiosConcluidos": 1
+        }
+      },
+      "extrato": [
+        {
+          "descricao": "Preferências: escolha igual!",
+          "valor": 2,
+          "beneficiarioUid": "vj8AhmOTpSaycndKsnBi4f7y90s1",
+          "tipo": "desafio",
+          "createdAtMs": 1779996066032
+        },
+        {
+          "descricao": "Preferências: escolha igual!",
+          "valor": 2,
+          "beneficiarioUid": "gWblxQ28Z2cobZU7TJgtRZplXn63",
+          "tipo": "desafio",
+          "createdAtMs": 1779996066031
+        },
+        {
+          "descricao": "Desafio semanal: respostas iguais!",
+          "valor": 2,
+          "beneficiarioUid": "gWblxQ28Z2cobZU7TJgtRZplXn63",
+          "tipo": "desafio",
+          "createdAtMs": 1779996062207
+        },
+        {
+          "descricao": "Desafio semanal: respostas iguais!",
+          "valor": 2,
+          "beneficiarioUid": "vj8AhmOTpSaycndKsnBi4f7y90s1",
+          "tipo": "desafio",
+          "createdAtMs": 1779996062207
+        }
+      ]
+    },
+    {
+      "tipo": "roleta",
+      "inputIds": [
+        "Alwy0LFbPxZQcAvuwLDT",
+        "eM6ytCbUHA2boiUMJxXj"
+      ],
+      "inputErrors": [],
+      "challenge": {
+        "status": "concluido",
+        "concluido": true,
+        "rewarded": true,
+        "reward": 0
+      },
+      "saldo": {
+        "before": {
+          "pessoa1": 18,
+          "pessoa2": 18,
+          "desafiosConcluidos": 6
+        },
+        "after": {
+          "pessoa1": 17,
+          "pessoa2": 17,
+          "desafiosConcluidos": 6
+        },
+        "delta": {
+          "pessoa1": -1,
+          "pessoa2": -1,
+          "desafiosConcluidos": 0
+        }
+      },
+      "extrato": [
+        {
+          "descricao": "Roleta 🎰: -1 foguinho(s) para cada um",
+          "valor": -1,
+          "beneficiarioUid": "vj8AhmOTpSaycndKsnBi4f7y90s1",
+          "tipo": "desafio",
+          "createdAtMs": 1779996070587
+        },
+        {
+          "descricao": "Roleta 🎰: -1 foguinho(s) para cada um",
+          "valor": -1,
+          "beneficiarioUid": "gWblxQ28Z2cobZU7TJgtRZplXn63",
+          "tipo": "desafio",
+          "createdAtMs": 1779996070586
+        },
+        {
+          "descricao": "Preferências: escolha igual!",
+          "valor": 2,
+          "beneficiarioUid": "vj8AhmOTpSaycndKsnBi4f7y90s1",
+          "tipo": "desafio",
+          "createdAtMs": 1779996066032
+        },
+        {
+          "descricao": "Preferências: escolha igual!",
+          "valor": 2,
+          "beneficiarioUid": "gWblxQ28Z2cobZU7TJgtRZplXn63",
+          "tipo": "desafio",
+          "createdAtMs": 1779996066031
+        },
+        {
+          "descricao": "Desafio semanal: respostas iguais!",
+          "valor": 2,
+          "beneficiarioUid": "gWblxQ28Z2cobZU7TJgtRZplXn63",
+          "tipo": "desafio",
+          "createdAtMs": 1779996062207
+        },
+        {
+          "descricao": "Desafio semanal: respostas iguais!",
+          "valor": 2,
+          "beneficiarioUid": "vj8AhmOTpSaycndKsnBi4f7y90s1",
+          "tipo": "desafio",
+          "createdAtMs": 1779996062207
+        }
+      ]
+    }
+  ]
+}

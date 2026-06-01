@@ -32,6 +32,10 @@ jobs:
         run: npm test --if-present
         working-directory: functions
 
+      - name: Audit dependencies (functions)
+        run: npm audit --omit=dev --audit-level=high
+        working-directory: functions
+
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:

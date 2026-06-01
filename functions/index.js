@@ -29,6 +29,8 @@ exports.propagateProfileChange = profile.propagateProfileChange;
 exports.checkMonthlyMilestones = milestones.checkMonthlyMilestones;
 
 exports.rotateWeeklyChallenges = challenges.rotateWeeklyChallenges;
+exports.startPreferenciasDesafio = challenges.startPreferenciasDesafio;
+exports.startRoletaDesafio = challenges.startRoletaDesafio;
 exports.resetWeeklyChallengesAdmin = challenges.resetWeeklyChallengesAdmin;
 
 exports.joinWaitlist = waitlist.joinWaitlist;
