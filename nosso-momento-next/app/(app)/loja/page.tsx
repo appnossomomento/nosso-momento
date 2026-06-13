@@ -45,9 +45,9 @@ export default function LojaPage() {
   const momentosFiltrados = filtro ? momentosParaParceiro.filter((m) => m.categoria === filtro) : momentosParaParceiro;
   const totalCarrinho = carrinho.reduce((s, c) => s + (Number((c as CarrinhoItem & { custoFoguinhos?: number }).custoFoguinhos) || 0), 0);
 
-  function adicionarAoCarrinho(item: { id: string; nome: string; img?: string; custoFoguinhos: number }) {
+  function adicionarAoCarrinho(item: { id: string; nome: string; img?: string; custoFoguinhos: number; categoria?: string; emoji?: string }) {
     if (carrinho.find((c) => c.id === item.id)) { showToast('Já está no carrinho.', 'aviso'); return; }
-    set({ carrinho: [...carrinho, { id: item.id, titulo: item.nome, foto: item.img, quantidade: 1, custoFoguinhos: item.custoFoguinhos } as CarrinhoItem], showCartSidebar: true });
+    set({ carrinho: [...carrinho, { id: item.id, titulo: item.nome, foto: item.img, quantidade: 1, custoFoguinhos: item.custoFoguinhos, categoria: item.categoria || '', emoji: item.emoji || '' } as CarrinhoItem], showCartSidebar: true });
     showToast('Adicionado ao carrinho!', 'sucesso');
     trackGA('add_to_cart', { items: [{ item_id: item.id, item_name: item.nome }] });
     trackMeta('AddToCart', { content_ids: [item.id], content_name: item.nome });
@@ -57,15 +57,32 @@ export default function LojaPage() {
     if (!carrinho.length) { showToast('Carrinho vazio.', 'aviso'); return; }
     openSystemConfirm('Confirmar pedido?', async () => {
       try {
+        const itemsPayload = carrinho.map((c) => ({
+          id: c.id,
+          momentoMestreId: c.id,
+          nome: (c as CarrinhoItem & { custoFoguinhos?: number; categoria?: string; emoji?: string }).titulo,
+          custoFoguinhos: (c as CarrinhoItem & { custoFoguinhos?: number }).custoFoguinhos ?? 0,
+          img: (c as CarrinhoItem & { foto?: string }).foto || '',
+          categoria: (c as CarrinhoItem & { categoria?: string }).categoria || '',
+          emoji: (c as CarrinhoItem & { emoji?: string }).emoji || '',
+        }));
         await sendInput('moment_redeem', {
           partnerUid: pareadoUid,
           pareamentoId: idPareamentoAmigavel,
-          items: carrinho,
+          items: itemsPayload,
+          totalFoguinhos: totalCarrinho,
         });
         trackGA('purchase', { currency: 'BRL', value: totalCarrinho });
         trackMeta('Purchase', { currency: 'BRL', value: totalCarrinho });
+        // Débito otimista: reflete o custo imediatamente no store enquanto o
+        // onSnapshot do usuário não chega com o valor atualizado pelo backend.
+        if (usuario) {
+          set({
+            usuario: { ...usuario, foguinhos: Math.max(0, foguinhos - totalCarrinho) },
+          });
+        }
         set({ carrinho: [], showCartSidebar: false });
-        showToast('Pedido enviado!', 'sucesso');
+        showToast('Momentos resgatados! Veja em Momentos 🔥', 'sucesso');
       } catch { showToast('Erro ao finalizar pedido.', 'erro'); }
     });
   }
@@ -140,7 +157,7 @@ export default function LojaPage() {
                     <div className="flex items-center justify-between mt-3">
                       <span className="text-amber-300 text-sm font-medium flex items-center gap-1"><i className="fas fa-fire" /> {preco} foguinhos</span>
                       <button
-                        onClick={() => !bloqueado && adicionarAoCarrinho({ id: m.id, nome: m.nome ?? '', img: m.img ? String(m.img) : undefined, custoFoguinhos: preco })}
+                        onClick={() => !bloqueado && adicionarAoCarrinho({ id: m.id, nome: m.nome ?? '', img: m.img ? String(m.img) : undefined, custoFoguinhos: preco, categoria: m.categoria, emoji: m.emoji })}
                         disabled={bloqueado || semSaldo}
                         className={clsx('text-xs px-3 py-2 rounded-lg font-semibold transition', bloqueado ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : semSaldo ? 'bg-white/10 text-white/40 cursor-not-allowed' : 'bg-gradient-to-r from-pink-500 to-red-500 text-white')}
                       >

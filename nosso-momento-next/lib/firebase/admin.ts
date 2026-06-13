@@ -26,5 +26,28 @@ function initAdmin(): admin.app.App {
   });
 }
 
-export const adminApp = initAdmin();
-export const adminAuth = admin.auth(adminApp);
+export function getAdminApp(): admin.app.App {
+  return initAdmin();
+}
+
+export function getAdminAuth(): admin.auth.Auth {
+  return admin.auth(initAdmin());
+}
+
+// Aliases mantidos para compatibilidade — inicializam apenas quando acessados (lazy via getter)
+let _adminApp: admin.app.App | null = null;
+let _adminAuth: admin.auth.Auth | null = null;
+
+export const adminApp = new Proxy({} as admin.app.App, {
+  get(_target, prop) {
+    if (!_adminApp) _adminApp = initAdmin();
+    return (_adminApp as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
+
+export const adminAuth = new Proxy({} as admin.auth.Auth, {
+  get(_target, prop) {
+    if (!_adminAuth) _adminAuth = admin.auth(initAdmin());
+    return (_adminAuth as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});

@@ -20,6 +20,7 @@ import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import AchievementCelebration from '@/components/AchievementCelebration';
 import InstagramModal from '@/components/InstagramModal';
 import { usePareamentoListeners } from '@/lib/hooks/usePareamentoListeners';
+import { useNotificacoes } from '@/lib/hooks/useNotificacoes';
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   useAuth();
@@ -29,6 +30,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   useMomentosMestres();
   useClimaData();
   usePareamentoListeners();
+  useNotificacoes();
 
   return (
     <>

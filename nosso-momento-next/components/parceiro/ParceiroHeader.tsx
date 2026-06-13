@@ -17,9 +17,10 @@ export default function ParceiroHeader({ showCart = false, variant = 'black' }: 
 
   const foto = parceiroData?.fotoUrl ?? null;
   const nome = parceiroNome ?? parceiroData?.nome ?? 'Parceiro';
-  // Foguinhos individualizados por par (atualizado em tempo real via usePareamentoListeners)
+  // usuario.foguinhos é a fonte primária (inclui recompensas de conclusão de momentos);
+  // parAtivo.foguinhos (campo do doc pareamento) é usado apenas como fallback.
   const parAtivo = parceirosAtivos.find((p) => p.uid === pareadoUid);
-  const foguinhos = Number(parAtivo?.foguinhos ?? usuario?.foguinhos ?? 0);
+  const foguinhos = Number(usuario?.foguinhos ?? parAtivo?.foguinhos ?? 0);
   const cartCount = carrinho.length;
 
   const isGradient = variant === 'gradient';

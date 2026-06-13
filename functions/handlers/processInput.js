@@ -1164,26 +1164,18 @@ exports.processInput = onDocumentCreated(
             const totalCost = sanitizedItems.reduce(
                 (sum, item) => sum + item.custoFoguinhos, 0);
 
-            // --- Multi-conexão: lê pareamento para saldo per-conexão ---
+            // Usa usuario.foguinhos como única fonte de verdade para validação.
+            // Os campos foguinhos_pessoaX do pareamento não são mantidos em
+            // sincronia com achievement rewards e não são usados na UI.
+            const saldoAtual = senderData.foguinhos || 0;
+
+            // Ainda precisa de pareamentoRef para criar o extrato de resgate.
             let pareamentoRef = null;
             let pareamentoSnap = null;
-            let pData = null;
-            let isSenderPessoa1 = false;
-            let foguinhosField = "";
-            let saldoAtual = senderData.foguinhos || 0;
-
             if (pareamentoId) {
               pareamentoRef = admin.firestore()
                   .collection("pareamentos").doc(pareamentoId);
               pareamentoSnap = await tx.get(pareamentoRef);
-              if (pareamentoSnap.exists) {
-                pData = pareamentoSnap.data();
-                isSenderPessoa1 = pData.pessoa1Uid === fromUid;
-                foguinhosField = isSenderPessoa1 ?
-                    "foguinhos_pessoa1" : "foguinhos_pessoa2";
-                // Usa saldo per-conexão como fonte de verdade
-                saldoAtual = pData[foguinhosField] || 0;
-              }
             }
 
             if (totalCost <= 0 || totalCost > saldoAtual) {
@@ -1227,13 +1219,7 @@ exports.processInput = onDocumentCreated(
               achievementStats: updatedStats,
             });
 
-            // --- Multi-conexão: deduz foguinhos do doc de pareamento ---
             if (pareamentoRef && pareamentoSnap && pareamentoSnap.exists) {
-              tx.update(pareamentoRef, {
-                [foguinhosField]:
-                  admin.firestore.FieldValue.increment(-totalCost),
-              });
-
               // --- Extrato: resgate de momento ---
               const itensNomes = sanitizedItems
                   .map((i) => i.nome).slice(0, 2).join(", ");
@@ -1267,6 +1253,7 @@ exports.processInput = onDocumentCreated(
               tx.set(tarefaRef, {
                 momentoNome: item.nome,
                 momentoEmoji: item.emoji || "",
+                momentoImg: item.img || "",
                 momentoCategoria: item.categoria || "Geral",
                 custoFoguinhos: item.custoFoguinhos,
                 status: "Pendente",
@@ -1929,7 +1916,9 @@ exports.processInput = onDocumentCreated(
             return;
           }
           if (!tarefaId) {
-            await inputRef.update({error: "missing_tarefaId", processed: false});
+            await inputRef.update({
+              error: "missing_tarefaId", processed: false,
+            });
             return;
           }
 
@@ -1939,6 +1928,7 @@ exports.processInput = onDocumentCreated(
               .collection("tarefasMomentos").doc(tarefaId);
 
           await admin.firestore().runTransaction(async (tx) => {
+            // Todos os reads devem ocorrer ANTES de qualquer write.
             const inSnap = await tx.get(inputRef);
             if (!inSnap.exists) throw new Error("input não existe");
             if (inSnap.data().processed) return;
@@ -1961,7 +1951,9 @@ exports.processInput = onDocumentCreated(
               return;
             }
             const tarefaData = tarefaSnap.data();
-            if (tarefaData.executadoPorUid !== fromUid) {
+            // Quem marca como feito é quem resgatou (resgatadoPorUid = User A),
+            // não o executor (executadoPorUid = User B).
+            if (tarefaData.resgatadoPorUid !== fromUid) {
               tx.update(inputRef, {
                 error: "tarefa_wrong_user", processed: false,
               });
@@ -2002,6 +1994,7 @@ exports.processInput = onDocumentCreated(
                     .collection("extrato").doc();
                 tx.set(extratoRef, {
                   tipo: "bonus",
+                  // eslint-disable-next-line max-len
                   descricao: `Bônus: realizou "${tarefaData.momentoNome || "momento"}" com foto`,
                   valor: FOTO_REWARD,
                   beneficiarioUid: fromUid,
@@ -2013,10 +2006,12 @@ exports.processInput = onDocumentCreated(
               }
 
               // Notificação
+              // eslint-disable-next-line max-len
               const notifRef = admin.firestore().collection("notificacoes").doc();
               tx.set(notifRef, {
                 userId: fromUid,
                 titulo: "Momento realizado! 🔥",
+                // eslint-disable-next-line max-len
                 mensagem: `Você ganhou ${FOTO_REWARD} foguinhos por registrar "${tarefaData.momentoNome || "o momento"}" com foto!`,
                 icone: "fa-fire",
                 tipo: "moment_completion",
@@ -2684,6 +2679,7 @@ exports.processInput = onDocumentCreated(
               }
             }
 
+            /* eslint-disable max-len */
             const pChUserSnap = await tx.get(pChUserRef);
             if (!pChUserSnap.exists) {
               tx.update(inputRef, {error: "responder_not_found", processed: false});
@@ -3042,6 +3038,7 @@ exports.processInput = onDocumentCreated(
               processedBy: "functions.processInput",
             });
           });
+          /* eslint-enable max-len */
           console.log("processInput: roulette_spin processado", inputId);
         } else {
           console.log("processInput: tipo não suportado", input.type);

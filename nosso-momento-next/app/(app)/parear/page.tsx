@@ -64,8 +64,8 @@ export default function ParearPage() {
   async function handleParear(e: FormEvent) {
     e.preventDefault();
     const telNumero = telefone.replace(/\D/g, '');
-    if (telNumero.length < 10) {
-      openSystemAlert('Digite um telefone válido com DDD (ex: 11999991111).');
+    if (telNumero.length !== 11) {
+      openSystemAlert('Digite um celular válido com DDD (11 dígitos, ex: 11999991111).');
       return;
     }
     if (!apelido.trim()) {
@@ -74,12 +74,13 @@ export default function ParearPage() {
     }
     setLoading(true);
     try {
-      // Pré-verifica se o número existe antes de enviar a solicitação
-      const check = await callFunction<{ existe: boolean }>(FUNCTIONS.verificarTelefone, {
+      // Rate-limit check (CF retorna { ok: true } de forma neutra por segurança;
+      // a validação real acontece de forma assíncrona no processInput)
+      const check = await callFunction<{ ok: boolean }>(FUNCTIONS.verificarTelefone, {
         telefone: telNumero,
       });
-      if (!check.existe) {
-        openSystemAlert('Número não encontrado. Peça para seu parceiro se cadastrar primeiro no Nosso Momento.');
+      if (!check.ok) {
+        openSystemAlert('Não foi possível verificar o número. Tente novamente.');
         return;
       }
       await sendInput('pairing_request', {
@@ -93,8 +94,15 @@ export default function ParearPage() {
       trackMeta('InitiatePairing');
       setTelefone('');
       setApelido('');
-    } catch (_) {
-      openSystemAlert('Não foi possível verificar o número. Tente novamente.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('429')) {
+        openSystemAlert('Muitas tentativas. Aguarde um momento e tente novamente.');
+      } else if (msg.includes('401') || msg.includes('autenticado')) {
+        openSystemAlert('Sessão expirada. Faça login novamente.');
+      } else {
+        openSystemAlert('Não foi possível enviar a solicitação. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }

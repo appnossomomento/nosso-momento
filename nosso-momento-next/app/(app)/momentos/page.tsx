@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '@/lib/firebase/client';
+import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import { sendInput, callFunction, FUNCTIONS } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
@@ -12,9 +11,24 @@ import clsx from 'clsx';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import { trackGA, trackMeta } from '@/lib/analytics';
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove o prefixo "data:<mime>;base64," para enviar apenas os bytes
+      resolve(result.split(',')[1] ?? result);
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
 interface TarefaMomento {
   id: string;
   momentoNome: string;
+  momentoImg?: string;
+  momentoEmoji?: string;
   status: string;
   dataResgate: { seconds: number } | null;
   fromUid?: string;
@@ -88,36 +102,43 @@ export default function MomentosPage() {
     if (!realizandoMomento || realizandoEnviando) return;
     setRealizandoEnviando(true);
     try {
-      let fotoUrl: string | null = null;
-      if (realizandoFoto && uid) {
-        const sRef = storageRef(storage, `memorias/${idPareamentoAmigavel}/${Date.now()}_${realizandoFoto.name}`);
-        const snap = await uploadBytes(sRef, realizandoFoto);
-        fotoUrl = await getDownloadURL(snap.ref);
+      // Converte a foto para base64 — o Admin SDK na CF faz o upload no Storage.
+      // O client nunca escreve diretamente no Storage.
+      let fotoBase64: string | null = null;
+      let fotoContentType: string | null = null;
+      let fotoFileName: string | null = null;
+      if (realizandoFoto) {
+        fotoBase64 = await fileToBase64(realizandoFoto);
+        fotoContentType = realizandoFoto.type || 'image/jpeg';
+        fotoFileName = realizandoFoto.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       }
 
       await sendInput('moment_complete', {
         pareamentoId: idPareamentoAmigavel,
         tarefaId: realizandoMomento.id,
-        comFoto: !!realizandoFoto,
+        comFoto: !!fotoBase64,
       });
       trackGA('complete_moment');
       trackMeta('CompleteMoment');
 
-      if (fotoUrl) {
+      if (fotoBase64) {
+        // Campos exatos esperados pela CF createMemoriaPhoto:
+        // tarefaId (obrigatório), base64 (obrigatório), contentType, fileName
         await callFunction(FUNCTIONS.createMemoriaPhoto, {
-          pareamentoId: idPareamentoAmigavel,
-          fotoUrl,
-          momentoNome: realizandoMomento.momentoNome,
-          categoria: 'Lovezin',
+          tarefaId: realizandoMomento.id,
+          base64: fotoBase64,
+          contentType: fotoContentType,
+          fileName: fotoFileName,
         });
       }
 
       setMomentos((prev) =>
         prev.map((m) => (m.id === realizandoMomento.id ? { ...m, status: 'realizado' } : m))
       );
-      showToast(fotoUrl ? '🔥 Momento realizado e memória registrada!' : '🔥 Momento marcado como realizado!', 'sucesso');
+      showToast(fotoBase64 ? '🔥 Momento realizado e memória registrada!' : '🔥 Momento marcado como realizado!', 'sucesso');
       fecharConfirmacao();
-    } catch {
+    } catch (err) {
+      console.error('[MomentosPage] confirmarRealizado erro:', err);
       showToast('Erro ao confirmar momento.', 'erro');
     } finally {
       setRealizandoEnviando(false);
@@ -172,14 +193,30 @@ export default function MomentosPage() {
                 const dataStr = m.dataResgate
                   ? formatDateRelative(new Date(m.dataResgate.seconds * 1000))
                   : null;
-                const realizado = m.status === 'realizado';
+                const realizado = m.status === 'realizado' || m.status === 'Realizado';
                 return (
                   <div
                     key={m.id}
                     className="rounded-xl bg-white/8 border border-white/10 px-4 py-3 flex items-center gap-3"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center shrink-0">
-                      <i className={clsx('fas text-base text-white', realizado ? 'fa-fire' : 'fa-clock')} />
+                    {/* Thumbnail: imagem do catálogo → emoji → ícone de status */}
+                    <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
+                      {m.momentoImg ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={m.momentoImg}
+                          alt={m.momentoNome}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : m.momentoEmoji ? (
+                        <div className="w-full h-full bg-gradient-to-br from-red-500/20 to-pink-500/20 flex items-center justify-center text-xl">
+                          {m.momentoEmoji}
+                        </div>
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
+                          <i className={clsx('fas text-base text-white', realizado ? 'fa-fire' : 'fa-clock')} />
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white leading-snug">{m.momentoNome}</p>

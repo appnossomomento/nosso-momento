@@ -87,7 +87,7 @@ export default function ParceiroPage() {
   const nome = parceiroData.nome || 'Parceiro';
   const foto = parceiroData.fotoUrl;
   const parAtivo = parceirosAtivos.find((p) => p.uid === (pareadoUid || parceiroData.uid));
-  const foguinhosHeader = Number(parAtivo?.foguinhos ?? usuario?.foguinhos ?? 0);
+  const foguinhosHeader = Number(usuario?.foguinhos ?? parAtivo?.foguinhos ?? 0);
   const jaFezClima = !!climaHoje;
   const partnerTriste = climaPartnerHoje?.humor === 'triste';
   const meuFoto = usuario?.fotoUrl ?? '/assets/icons/iconprincipal.png';
@@ -160,9 +160,19 @@ export default function ParceiroPage() {
             partnerPhone: parceiroData.telefone,
             pareamentoId: (parceiroData as Record<string, unknown>).pareamentoId,
           });
-          set({ pareado: false, parceiroData: null, parceiroNome: null, pareadoUid: null });
+          // Navega primeiro para evitar flash da tela vazia de /parceiro,
+          // depois limpa o store (incluindo usuario.pareadoUid para que
+          // useParceiroData não re-subscribe ao parceiro antigo)
+          router.replace('/parear');
+          set({
+            pareado: false,
+            parceiroData: null,
+            parceiroNome: null,
+            pareadoUid: null,
+            conexaoAtiva: null,
+            usuario: usuario ? { ...usuario, pareadoUid: undefined, pareadoCom: undefined } : usuario,
+          });
           showToast('Pareamento desfeito.', 'sucesso');
-          router.push('/parear');
         } catch {
           showToast('Erro ao desfazer pareamento.', 'erro');
         }

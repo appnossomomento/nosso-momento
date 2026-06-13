@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import { callFunction, FUNCTIONS } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
@@ -35,8 +37,8 @@ export default function MemoriasPage() {
     set,
     usuario,
     parceiroNome,
-    achievementStats,
   } = useAppStore();
+  const uid = usuario?.uid ?? null;
 
   const [month, setMonth] = useState(() => {
     const now = new Date();
@@ -44,12 +46,23 @@ export default function MemoriasPage() {
   });
   const [categoria, setCategoria] = useState<string>('Todos');
   const [carregado, setCarregado] = useState(false);
+  const [foguinhosGastosMes, setFoguinhosGastosMes] = useState(0);
+  const [momentosResgatadosMes, setMomentosResgatadosMes] = useState(0);
+  const [realizacoesMes, setRealizacoesMes] = useState(0);
 
   const carregar = useCallback(async (m: Date) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7272/ingest/83e50209-6d21-4dd0-8385-b07915002739',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6284f7'},body:JSON.stringify({sessionId:'6284f7',location:'memorias/page.tsx:carregar-entry',message:'carregar called',data:{idPareamentoAmigavel,month:m.toISOString()},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     if (!idPareamentoAmigavel) return;
     set({ memoriasLoading: true });
+    const { startMs, endMs } = getMonthRange(m);
+    // #region agent log
+    fetch('http://127.0.0.1:7272/ingest/83e50209-6d21-4dd0-8385-b07915002739',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6284f7'},body:JSON.stringify({sessionId:'6284f7',location:'memorias/page.tsx:month-range',message:'month range computed',data:{startMs,endMs,startDate:new Date(startMs).toISOString(),endDate:new Date(endMs).toISOString()},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
+
+    // Fotos do mês via CF
     try {
-      const { startMs, endMs } = getMonthRange(m);
       const response = await callFunction<{ items: unknown[]; hasMore: boolean }>(
         FUNCTIONS.getMemorias,
         { limit: 200, startMs, endMs, pareamentoId: idPareamentoAmigavel }
@@ -64,7 +77,70 @@ export default function MemoriasPage() {
       set({ memoriasLoading: false });
       setCarregado(true);
     }
-  }, [idPareamentoAmigavel, set]);
+
+    // Query única: tasks resgatados pelo usuário atual (satisfaz a security rule de list)
+    // → filtra idPareamento e mês client-side
+    if (!uid) return;
+    try {
+      const q = query(
+        collection(db, 'tarefasMomentos'),
+        where('resgatadoPorUid', '==', uid),
+        limit(500)
+      );
+      const snap = await getDocs(q);
+      // #region agent log
+      const sampleDoc = snap.docs[0]?.data();
+      fetch('http://127.0.0.1:7272/ingest/83e50209-6d21-4dd0-8385-b07915002739',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6284f7'},body:JSON.stringify({sessionId:'6284f7',location:'memorias/page.tsx:query-result',message:'tarefasMomentos query done',data:{docsCount:snap.size,uid,idPareamentoAmigavel,sampleIdPareamento:sampleDoc?.idPareamento,sampleResgatadoPorUid:sampleDoc?.resgatadoPorUid,sampleDataResgate:sampleDoc?.dataResgate,sampleStatus:sampleDoc?.status,sampleCustoFoguinhos:sampleDoc?.custoFoguinhos},timestamp:Date.now(),hypothesisId:'B-C'})}).catch(()=>{});
+      // #endregion
+
+      function tsToMs(ts: unknown): number | null {
+        if (!ts) return null;
+        if (typeof (ts as { toMillis?: () => number }).toMillis === 'function') {
+          return (ts as { toMillis: () => number }).toMillis();
+        }
+        const n = Number(ts);
+        return isNaN(n) ? null : n;
+      }
+
+      let gastos = 0;
+      let resgates = 0;
+      let realizacoes = 0;
+
+      for (const doc of snap.docs) {
+        const data = doc.data();
+
+        // Ignora tarefas de outro pareamento
+        if (data.idPareamento !== idPareamentoAmigavel) continue;
+
+        // Foguinhos gastos e momentos resgatados: filtrado por dataResgate
+        const resgateMs = tsToMs(data.dataResgate);
+        if (resgateMs !== null && resgateMs >= startMs && resgateMs <= endMs) {
+          resgates += 1;
+          gastos += Number(data.custoFoguinhos ?? 0);
+        }
+
+        // Realizações: filtrado por dataConclusao (status pode ser maiúsculo ou minúsculo)
+        const statusStr = String(data.status ?? '').toLowerCase();
+        if (statusStr === 'realizado') {
+          const conclusaoMs = tsToMs(data.dataConclusao);
+          if (conclusaoMs !== null && conclusaoMs >= startMs && conclusaoMs <= endMs) {
+            realizacoes += 1;
+          }
+        }
+      }
+
+      // #region agent log
+      fetch('http://127.0.0.1:7272/ingest/83e50209-6d21-4dd0-8385-b07915002739',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6284f7'},body:JSON.stringify({sessionId:'6284f7',location:'memorias/page.tsx:stats-computed',message:'stats computed',data:{gastos,resgates,realizacoes,startMs,endMs},timestamp:Date.now(),hypothesisId:'C-D'})}).catch(()=>{});
+      // #endregion
+      setFoguinhosGastosMes(gastos);
+      setMomentosResgatadosMes(resgates);
+      setRealizacoesMes(realizacoes);
+    } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7272/ingest/83e50209-6d21-4dd0-8385-b07915002739',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6284f7'},body:JSON.stringify({sessionId:'6284f7',location:'memorias/page.tsx:query-catch',message:'query threw exception',data:{err:String(err)},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
+    }
+  }, [idPareamentoAmigavel, uid, set]);
 
   useEffect(() => {
     carregar(month);
@@ -83,16 +159,14 @@ export default function MemoriasPage() {
         return cat === categoria;
       });
 
-  // Bio stats
-  const stats = (achievementStats ?? {}) as Record<string, unknown>;
-  const foguinhosGastos = (stats.totalFoguinhosGastos as number) ?? 0;
-  const momentosResgatados = ((stats.momentsRedeemed as { total?: number } | undefined)?.total) ?? 0;
-  const realizacoes = (stats.momentosCompletados as number) ?? 0;
-
+  // Bio stats — os 3 indicadores são mensais
+  // realizações = max(tarefas com status Realizado, fotos do mês)
+  // o max() garante que completions pré-fix (foto sem status Realizado) também sejam contadas
+  const realizacoesExibir = Math.max(realizacoesMes, memoriasItems.length);
   const bioStats = [
-    { icon: '🔥', value: foguinhosGastos, label: 'foguinhos gastos' },
-    { icon: '💏', value: momentosResgatados, label: 'momentos resgatados' },
-    { icon: '✅', value: realizacoes, label: 'realizações' },
+    { icon: '🔥', value: foguinhosGastosMes, label: 'foguinhos gastos' },
+    { icon: '💏', value: momentosResgatadosMes, label: 'momentos resgatados' },
+    { icon: '✅', value: realizacoesExibir, label: 'realizações' },
   ];
 
   const nomesCasal = [usuario?.nome, parceiroNome].filter(Boolean).join(' e ');

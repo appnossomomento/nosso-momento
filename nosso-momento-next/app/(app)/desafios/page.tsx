@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -127,6 +127,25 @@ export default function DesafiosPage() {
     return () => unsubs.forEach((fn) => fn());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, pareadoUid]);
+
+  // Remove desafios expirados do estado quando o prazo passa, sem depender de
+  // um novo snapshot do Firestore (que só dispara se o documento mudar).
+  useEffect(() => {
+    if (!activeDesafios.length) return;
+    const now = Date.now();
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (const ch of activeDesafios) {
+      const ms = ch.deadline - now;
+      if (ms > 0) {
+        timers.push(
+          setTimeout(() => {
+            setActiveDesafios((prev) => prev.filter((c) => c.docId !== ch.docId));
+          }, ms + 200)
+        );
+      }
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [activeDesafios]);
 
   function handleResponder(ch: ActiveChallenge) {
     const challenge = {
