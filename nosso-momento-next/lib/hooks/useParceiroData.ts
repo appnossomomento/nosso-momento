@@ -56,6 +56,9 @@ export function useParceiroData() {
       },
       (err) => {
         console.error('[useParceiroData] erro ao escutar parceiro:', err);
+        if (err.code === 'permission-denied') {
+          set({ parceiroData: null, parceiroNome: null, pareado: false, idPareamentoAmigavel: null, pareadoUid: null });
+        }
       }
     );
 
