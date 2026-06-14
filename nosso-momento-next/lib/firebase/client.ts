@@ -42,9 +42,11 @@ if (app && typeof window !== 'undefined') {
     (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
   }
 
-  if (recaptchaKey) {
+  const isDevWithDebugToken = process.env.NODE_ENV !== 'production' && !!debugToken;
+  if (recaptchaKey || isDevWithDebugToken) {
+    // Em dev com debug token, o Firebase ignora o provider e usa o debug token setado acima.
     appCheck = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(recaptchaKey),
+      provider: new ReCaptchaV3Provider(recaptchaKey || 'debug-placeholder'),
       isTokenAutoRefreshEnabled: true,
     });
   } else if (process.env.NODE_ENV !== 'production') {

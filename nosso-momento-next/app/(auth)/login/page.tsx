@@ -2,7 +2,6 @@
 
 import { useState, FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
@@ -10,7 +9,6 @@ import { openSystemAlert } from '@/components/ui/Modal';
 import { trackGA, trackMeta } from '@/lib/analytics';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +22,6 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      // Cria sessão server-side via API Route (cookie HttpOnly+Secure, não forgeable).
       const idToken = await userCredential.user.getIdToken();
       await fetch('/api/auth/session', {
         method: 'POST',
@@ -35,12 +32,10 @@ export default function LoginPage() {
       trackGA('login', { method: 'Email' });
       trackMeta('Login');
 
-      // Roteamento inteligente: usuário não pareado vai para /parear
       const userSnap = await getDoc(doc(db, 'usuarios', userCredential.user.uid));
       const pareadoCom = userSnap.data()?.pareadoCom as string | null | undefined;
       const isPareado = !!pareadoCom && !pareadoCom.startsWith('pending_') && pareadoCom !== 'none';
-
-      router.push(isPareado ? '/dashboard' : '/parear');
+      window.location.href = isPareado ? '/dashboard' : '/parear';
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       const messages: Record<string, string> = {

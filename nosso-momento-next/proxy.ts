@@ -22,13 +22,18 @@ export function proxy(request: NextRequest) {
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
   const isAuthPage = AUTH_ONLY.some((p) => pathname.startsWith(p));
 
-  if (isProtected && !isLoggedIn) {
+  // Em dev local o Admin SDK costuma não estar configurado, então /api/auth/session
+  // retorna 401 e o cookie __session nunca é criado. A autenticação real é client-side
+  // (Firebase Auth + guard no layout). Pular o gate de cookie evita redirect para /login.
+  const skipCookieGate = process.env.NODE_ENV !== 'production';
+
+  if (!skipCookieGate && isProtected && !isLoggedIn) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = '/login';
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isAuthPage && isLoggedIn) {
+  if (!skipCookieGate && isAuthPage && isLoggedIn) {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = '/dashboard';
     return NextResponse.redirect(dashboardUrl);

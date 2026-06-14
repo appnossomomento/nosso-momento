@@ -3,8 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import clsx from 'clsx';
 
@@ -20,15 +18,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const usuario = useAppStore((s) => s.usuario);
+  const authInitialized = useAppStore((s) => s.authInitialized);
   const pareado = useAppStore((s) => s.pareado);
   const desafiosPendentes = useAppStore((s) => s.desafiosPendentes);
 
+  // Redireciona para /login apenas depois que o Firebase confirmou o estado de auth.
+  // Usar authInitialized evita redirect prematuro durante inicialização (hard navigation).
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (!user) router.replace('/login');
-    });
-    return () => unsub();
-  }, [router]);
+    if (authInitialized && !usuario) {
+      router.replace('/login');
+    }
+  }, [authInitialized, usuario, router]);
 
   if (!usuario) {
     return (

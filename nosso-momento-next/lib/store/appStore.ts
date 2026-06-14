@@ -20,6 +20,7 @@ import type {
 interface AppState {
   // Auth / usuário
   usuario: Usuario | null;
+  authInitialized: boolean;
 
   // Pareamento
   pareado: boolean;
@@ -145,6 +146,7 @@ interface AppState {
 
 const initialState: Omit<AppState, 'set' | 'reset'> = {
   usuario: null,
+  authInitialized: false,
   pareado: false,
   parceiroData: null,
   idPareamentoAmigavel: null,
