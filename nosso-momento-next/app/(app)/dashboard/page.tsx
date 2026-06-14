@@ -1,28 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store/appStore';
 
 export default function DashboardPage() {
-  const router = useRouter();
   const { usuario, notificacoesTarefasNaoLidas, notificacoesPresentesNaoLidas, notificacoesConquistasNaoLidas, parceirosAtivos } = useAppStore();
 
-  // Redireciona para /parear se o usuário não tiver parceiro ativo
-  useEffect(() => {
-    if (!usuario) return; // ainda carregando
-    const pareadoCom = usuario.pareadoCom;
-    const isPareado = !!pareadoCom && !pareadoCom.startsWith('pending_') && pareadoCom !== 'none';
-    let allowWithoutPairing = false;
-    try {
-      allowWithoutPairing = localStorage.getItem('allowDashboardWithoutPairing') === '1';
-    } catch (_) {}
-    if (!isPareado && !allowWithoutPairing) {
-      router.replace('/parear');
-    }
-  }, [usuario, router]);
+  // Usuários não pareados podem ver o dashboard livremente.
+  // O redirecionamento para /parear acontece apenas no login (login/page.tsx).
 
   const pendingCount =
     (notificacoesTarefasNaoLidas ?? 0) +

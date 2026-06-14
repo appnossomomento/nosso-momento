@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
@@ -30,6 +31,7 @@ function mesesJuntos(pareadoDesde: string | null | undefined): number {
 }
 
 export default function MemoriasPage() {
+  const router = useRouter();
   const {
     memoriasItems,
     memoriasLoading,
@@ -39,6 +41,14 @@ export default function MemoriasPage() {
     parceiroNome,
   } = useAppStore();
   const uid = usuario?.uid ?? null;
+
+  // Redireciona para /parear se o usuário não tiver pareamento ativo
+  useEffect(() => {
+    if (!usuario) return;
+    const pareadoCom = usuario.pareadoCom;
+    const isPareado = !!pareadoCom && !pareadoCom.startsWith('pending_') && pareadoCom !== 'none';
+    if (!isPareado) router.replace('/parear');
+  }, [usuario, router]);
 
   const [month, setMonth] = useState(() => {
     const now = new Date();
