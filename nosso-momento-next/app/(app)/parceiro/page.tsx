@@ -71,6 +71,17 @@ export default function ParceiroPage() {
   const [submetendo, setSubmetendo] = useState(false);
   useWeeklyChallenge();
 
+  // Ainda carregando: o usuário tem pareadoUid mas o snapshot do parceiro ainda não chegou
+  const pareadoUidAtual = pareadoUid ?? usuario?.pareadoUid ?? null;
+  if (!parceiroData && pareadoUidAtual) {
+    return (
+      <div className="screen screen-pad bg-black text-white flex flex-col items-center justify-center text-center px-8">
+        <div className="text-3xl mb-3 animate-spin">💫</div>
+        <p className="text-gray-400 text-sm">Carregando parceiro...</p>
+      </div>
+    );
+  }
+
   if (!pareado || !parceiroData) {
     return (
       <div className="screen screen-pad bg-black text-white flex flex-col items-center justify-center text-center px-8">
