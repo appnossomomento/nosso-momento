@@ -41,14 +41,21 @@ if (app && typeof window !== 'undefined') {
       ? String((self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN ?? '').trim()
       : '';
 
-  if (process.env.NODE_ENV !== 'production' && debugToken) {
-    // Ativa debug token para desenvolvimento local sem reCAPTCHA real.
-    (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+  const isDev = process.env.NODE_ENV !== 'production';
+  if (isDev) {
+    const win = self as unknown as Record<string, unknown>;
+    if (debugToken) {
+      // Token já registrado no Firebase (E2E ou dev estável).
+      win.FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+    } else if (!win.FIREBASE_APPCHECK_DEBUG_TOKEN) {
+      // true → Firebase imprime o UUID no console na primeira execução local.
+      win.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    }
   }
 
-  const isDevWithDebugToken = process.env.NODE_ENV !== 'production' && !!debugToken;
+  const isDevWithDebugToken = isDev && (!!debugToken || (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN === true);
   const hasDebugToken = isDevWithDebugToken || injectedDebugToken.length > 0;
-  if (recaptchaKey || hasDebugToken) {
+  if (recaptchaKey || hasDebugToken || isDev) {
     // Em dev/E2E com debug token, o Firebase ignora o provider e usa o debug token setado acima.
     appCheck = initializeAppCheck(app, {
       provider: new ReCaptchaV3Provider(recaptchaKey || 'debug-placeholder'),
