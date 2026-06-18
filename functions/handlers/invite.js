@@ -6,6 +6,7 @@ const {admin} = require("../lib/config");
 const {
   setCorsHeaders, rateLimitHttp, rateLimitFirestore,
 } = require("../lib/http");
+const {requireAppCheck} = require("../lib/appCheck");
 const crypto = require("crypto");
 
 const CONVITE_URL_BASE = "https://nossomomento.app";
@@ -30,6 +31,10 @@ exports.gerarConvite = https.onRequest(async (req, res) => {
 
   if (req.method !== "POST") {
     res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (await requireAppCheck(req, res)) {
     return;
   }
 
@@ -107,6 +112,10 @@ exports.verificarTelefone = https.onRequest(async (req, res) => {
 
   if (req.method !== "POST") {
     res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (await requireAppCheck(req, res)) {
     return;
   }
 

@@ -2,6 +2,7 @@
 const {onRequest} = require("firebase-functions/v2/https");
 const {admin} = require("../lib/config");
 const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {requireAppCheck} = require("../lib/appCheck");
 
 exports.getExtrato = onRequest(async (req, res) => {
   setCorsHeaders(req, res);
@@ -11,6 +12,9 @@ exports.getExtrato = onRequest(async (req, res) => {
   }
   if (req.method !== "POST") {
     res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+  if (await requireAppCheck(req, res)) {
     return;
   }
   if (rateLimitHttp(req, res, {

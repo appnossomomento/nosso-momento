@@ -3,6 +3,7 @@ const https = require("firebase-functions/v2/https");
 const crypto = require("crypto");
 const {admin} = require("../lib/config");
 const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {requireAppCheck} = require("../lib/appCheck");
 const {buildMemoriaDescricao} = require("../lib/normalize");
 
 exports.getMemorias = https.onRequest(async (req, res) => {
@@ -15,6 +16,10 @@ exports.getMemorias = https.onRequest(async (req, res) => {
 
   if (req.method !== "POST") {
     res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (await requireAppCheck(req, res)) {
     return;
   }
 
@@ -129,6 +134,10 @@ exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
 
   if (req.method !== "POST") {
     res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (await requireAppCheck(req, res)) {
     return;
   }
 
@@ -326,6 +335,10 @@ exports.deleteMemoria = https.onRequest(async (req, res) => {
 
   if (req.method !== "POST") {
     res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (await requireAppCheck(req, res)) {
     return;
   }
 

@@ -2,6 +2,7 @@
 const https = require("firebase-functions/v2/https");
 const {admin} = require("../lib/config");
 const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {requireAppCheck} = require("../lib/appCheck");
 
 exports.createInput = https.onRequest(async (req, res) => {
   setCorsHeaders(req, res);
@@ -17,6 +18,10 @@ exports.createInput = https.onRequest(async (req, res) => {
     return;
   }
 
+  if (await requireAppCheck(req, res)) {
+    return;
+  }
+
   if (rateLimitHttp(req, res, {
     keyPrefix: "createInput",
     limit: 60,
@@ -24,6 +29,7 @@ exports.createInput = https.onRequest(async (req, res) => {
   })) {
     return;
   }
+
   const authHeader = req.get("Authorization") || req.get("authorization") || "";
   let idToken = null;
   if (authHeader && authHeader.startsWith("Bearer ")) {

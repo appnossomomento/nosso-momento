@@ -14,12 +14,6 @@ service cloud.firestore {
       return isAuthenticated() && authUid() == userId;
     }
 
-    function isPartner(resourceData) {
-      return isAuthenticated() &&
-        resourceData.pareadoUid != null &&
-        resourceData.pareadoUid == authUid();
-    }
-
     function hasField(data, fieldName) {
       return data.keys().hasAny([fieldName]);
     }
@@ -29,31 +23,9 @@ service cloud.firestore {
         request.resource.data[fieldName] == resource.data[fieldName];
     }
 
-    // Campos que qualquer parceiro ativo pode enxergar (perfil publico minimo).
-    // Campos sensiveis (email, telefone, fcmToken, etc.) ficam exclusivos do dono.
-    function isActiveParter(resourceData) {
-      return isAuthenticated() &&
-        resourceData.pareadoUid == authUid() &&
-        resourceData.pareadoCom != null &&
-        !resourceData.pareadoCom.matches('pending_.*') &&
-        resourceData.pareadoCom != 'none';
-    }
-
-    function onlyPublicFields() {
-      return request.resource.data.keys().hasOnly([
-        'nome', 'fotoUrl', 'foguinhos', 'pareadoCom', 'pareadoUid',
-        'conquistas', 'achievementStats'
-      ]);
-    }
-
     match /usuarios/{userId} {
-      // Dono le o proprio documento completo.
-      // Parceiro ativo le apenas o documento do parceiro (sem PII sensiveis).
-      // A restricao de campos sensiveis e garantida pelo Admin SDK nas writes;
-      // na leitura o SDK retorna o doc inteiro, portanto separamos por regra:
-      // parceiros so devem buscar via Functions (getMemorias, getExtrato, etc.)
-      // que ja filtram os campos. Aqui impedimos leitura direta de PII.
-      allow get: if isOwner(userId) || isActiveParter(resource.data);
+      // Apenas o dono lê o documento completo. Parceiros usam getParceiroPerfil (CF).
+      allow get: if isOwner(userId);
       allow list: if false;
 
       allow create: if isOwner(userId)
@@ -65,6 +37,8 @@ service cloud.firestore {
         ])
         && request.resource.data.foguinhos is int
         && request.resource.data.foguinhos == 10
+        && (!('vip' in request.resource.data) || request.resource.data.vip == false)
+        && (!('pareamentosAtivos' in request.resource.data) || request.resource.data.pareamentosAtivos.size() == 0)
         && (!('pareadoUid' in request.resource.data) || request.resource.data.pareadoUid == null)
         && (!('pareadoCom' in request.resource.data) || request.resource.data.pareadoCom == null)
         && (!('lastCheckInDate' in request.resource.data) || request.resource.data.lastCheckInDate == null)
@@ -84,6 +58,8 @@ service cloud.firestore {
         && fieldUnchanged('telefone')
         && fieldUnchanged('lastCheckInDate')
   && fieldUnchanged('fcmToken')
+  && fieldUnchanged('vip')
+  && fieldUnchanged('pareamentosAtivos')
   && fieldUnchanged('conquistas')
   && fieldUnchanged('achievementStats')
   && (hasField(request.resource.data, 'catalogoPersonalizado') || !hasField(resource.data, 'catalogoPersonalizado'))

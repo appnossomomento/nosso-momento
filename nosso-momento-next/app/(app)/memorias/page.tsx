@@ -61,15 +61,9 @@ export default function MemoriasPage() {
   const [realizacoesMes, setRealizacoesMes] = useState(0);
 
   const carregar = useCallback(async (m: Date) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7272/ingest/83e50209-6d21-4dd0-8385-b07915002739',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6284f7'},body:JSON.stringify({sessionId:'6284f7',location:'memorias/page.tsx:carregar-entry',message:'carregar called',data:{idPareamentoAmigavel,month:m.toISOString()},timestamp:Date.now(),hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     if (!idPareamentoAmigavel) return;
     set({ memoriasLoading: true });
     const { startMs, endMs } = getMonthRange(m);
-    // #region agent log
-    fetch('http://127.0.0.1:7272/ingest/83e50209-6d21-4dd0-8385-b07915002739',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6284f7'},body:JSON.stringify({sessionId:'6284f7',location:'memorias/page.tsx:month-range',message:'month range computed',data:{startMs,endMs,startDate:new Date(startMs).toISOString(),endDate:new Date(endMs).toISOString()},timestamp:Date.now(),hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
 
     // Fotos do mês via CF
     try {
@@ -98,10 +92,6 @@ export default function MemoriasPage() {
         limit(500)
       );
       const snap = await getDocs(q);
-      // #region agent log
-      const sampleDoc = snap.docs[0]?.data();
-      fetch('http://127.0.0.1:7272/ingest/83e50209-6d21-4dd0-8385-b07915002739',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6284f7'},body:JSON.stringify({sessionId:'6284f7',location:'memorias/page.tsx:query-result',message:'tarefasMomentos query done',data:{docsCount:snap.size,uid,idPareamentoAmigavel,sampleIdPareamento:sampleDoc?.idPareamento,sampleResgatadoPorUid:sampleDoc?.resgatadoPorUid,sampleDataResgate:sampleDoc?.dataResgate,sampleStatus:sampleDoc?.status,sampleCustoFoguinhos:sampleDoc?.custoFoguinhos},timestamp:Date.now(),hypothesisId:'B-C'})}).catch(()=>{});
-      // #endregion
 
       function tsToMs(ts: unknown): number | null {
         if (!ts) return null;
@@ -139,16 +129,11 @@ export default function MemoriasPage() {
         }
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7272/ingest/83e50209-6d21-4dd0-8385-b07915002739',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6284f7'},body:JSON.stringify({sessionId:'6284f7',location:'memorias/page.tsx:stats-computed',message:'stats computed',data:{gastos,resgates,realizacoes,startMs,endMs},timestamp:Date.now(),hypothesisId:'C-D'})}).catch(()=>{});
-      // #endregion
       setFoguinhosGastosMes(gastos);
       setMomentosResgatadosMes(resgates);
       setRealizacoesMes(realizacoes);
-    } catch (err) {
-      // #region agent log
-      fetch('http://127.0.0.1:7272/ingest/83e50209-6d21-4dd0-8385-b07915002739',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6284f7'},body:JSON.stringify({sessionId:'6284f7',location:'memorias/page.tsx:query-catch',message:'query threw exception',data:{err:String(err)},timestamp:Date.now(),hypothesisId:'E'})}).catch(()=>{});
-      // #endregion
+    } catch {
+      // stats mensais são opcionais — a grade de fotos já carregou via CF
     }
   }, [idPareamentoAmigavel, uid, set]);
 

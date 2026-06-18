@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store/appStore';
 import { sendInput } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
@@ -11,11 +11,16 @@ import { openSystemConfirm } from '@/components/ui/Modal';
 import type { CarrinhoItem } from '@/lib/types';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import { trackGA, trackMeta } from '@/lib/analytics';
+import { refreshParceiroPerfil } from '@/lib/services/parceiroPerfil';
 
 export default function LojaPage() {
   const { momentosMestres, parceiroData, pareado, carrinho, showCartSidebar, set, idPareamentoAmigavel, pareadoUid } = useAppStore();
   const usuario = useAppStore((s) => s.usuario);
   const [filtro, setFiltro] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pareadoUid) void refreshParceiroPerfil(pareadoUid);
+  }, [pareadoUid]);
 
   if (!pareado || !parceiroData) {
     return (

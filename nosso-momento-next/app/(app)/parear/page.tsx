@@ -1,26 +1,20 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { callFunction, sendInput, FUNCTIONS } from '@/lib/firebase/functions';
 import { useAppStore } from '@/lib/store/appStore';
+import { setParceiroAtivo } from '@/lib/utils/setParceiroAtivo';
 import { trackGA, trackMeta } from '@/lib/analytics';
 import { openSystemAlert } from '@/components/ui/Modal';
 import { showToast } from '@/components/ui/Toast';
-import type { Pareamento, ConexaoAtiva } from '@/lib/types';
+import type { Pareamento } from '@/lib/types';
 
 export default function ParearPage() {
   const router = useRouter();
-  const { usuario, parceirosAtivos, conexaoAtiva, pareado, parceiroData, set } = useAppStore();
+  const { usuario, parceirosAtivos, conexaoAtiva, set } = useAppStore();
 
-  // Quando o store já tem parceiro carregado (race condition no carregamento inicial),
-  // redireciona imediatamente para /parceiro sem mostrar esta tela.
-  useEffect(() => {
-    if (pareado && parceiroData) {
-      router.replace('/parceiro');
-    }
-  }, [pareado, parceiroData, router]);
   const [telefone, setTelefone] = useState('');
   const [apelido, setApelido] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,24 +34,7 @@ export default function ParearPage() {
   }
 
   function handleSelectConexao(partner: Pareamento) {
-    const novaConexao: ConexaoAtiva = {
-      uid: partner.uid,
-      nome: partner.nome,
-      fotoUrl: partner.fotoUrl ?? '',
-      pareamentoId: partner.pareamentoId,
-      idAmigavel: partner.pareamentoId ?? '',
-      foguinhos: partner.foguinhos ?? 0,
-    };
-    set({
-      conexaoAtiva: novaConexao,
-      pareadoUid: partner.uid,
-      idPareamentoAmigavel: partner.pareamentoId,
-      pareado: true,
-      usuario: usuario ? { ...usuario, pareadoUid: partner.uid } : usuario,
-    });
-    try {
-      localStorage.setItem(`conexaoAtivaUid:${usuario?.uid}`, partner.uid);
-    } catch (_) {}
+    setParceiroAtivo(partner);
     router.push('/parceiro');
   }
 

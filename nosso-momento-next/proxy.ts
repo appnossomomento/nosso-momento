@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { hasAdminCredentials, isValidSessionCookie } from '@/lib/auth/session';
 
 // Rotas que requerem autenticação
 const PROTECTED_PREFIXES = ['/dashboard', '/parear', '/parceiro', '/desafios', '/memorias', '/perfil', '/loja', '/momentos', '/extrato', '/notificacoes', '/personalizar', '/clima'];
@@ -7,30 +8,34 @@ const PROTECTED_PREFIXES = ['/dashboard', '/parear', '/parceiro', '/desafios', '
 // Rotas que só devem ser acessadas por não-autenticados
 const AUTH_ONLY = ['/login', '/cadastro', '/recuperar-senha'];
 
-export function proxy(request: NextRequest) {
+async function sessionIsValid(rawValue: string, useCryptoVerify: boolean): Promise<boolean> {
+  if (!rawValue) return false;
+  if (useCryptoVerify) {
+    return isValidSessionCookie(rawValue);
+  }
+  return rawValue.split('.').length === 3 && rawValue.length > 50;
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Lê o cookie de sessão emitido pela API Route /api/auth/session (HttpOnly, server-signed).
-  // O cookie __session contém o Firebase Session Cookie (JWT opaco assinado pelo Google).
-  // O middleware verifica apenas a presença e formato mínimo (3 segmentos JWT-like);
-  // a validação criptográfica completa ocorre nas API Routes/Server Components via Admin SDK.
   const sessionCookie = request.cookies.get('__session');
   const rawValue = sessionCookie?.value ?? '';
-  // Um Firebase Session Cookie é um JWT: 3 segmentos Base64url separados por '.'.
-  const isLoggedIn = rawValue.split('.').length === 3 && rawValue.length > 50;
 
   const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
   const isAuthPage = AUTH_ONLY.some((p) => pathname.startsWith(p));
 
-  // Em dev local o Admin SDK costuma não estar configurado, então /api/auth/session
-  // retorna 401 e o cookie __session nunca é criado. A autenticação real é client-side
-  // (Firebase Auth + guard no layout). Pular o gate de cookie evita redirect para /login.
+  // Dev: gate desligado (Firebase client-side + layout). Produção: verifySessionCookie via Admin SDK.
   const skipCookieGate = process.env.NODE_ENV !== 'production';
+  const useCryptoVerify = !skipCookieGate && hasAdminCredentials();
+  const isLoggedIn = await sessionIsValid(rawValue, useCryptoVerify);
 
   if (!skipCookieGate && isProtected && !isLoggedIn) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = '/login';
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    if (rawValue) response.cookies.delete('__session');
+    return response;
   }
 
   if (!skipCookieGate && isAuthPage && isLoggedIn) {

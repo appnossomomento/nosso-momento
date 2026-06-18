@@ -74,3 +74,6 @@ nosso-momento-next/.next/
 
 .vercel
 .env*.local
+
+.vercel
+.env*.local

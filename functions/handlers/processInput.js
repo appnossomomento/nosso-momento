@@ -9,10 +9,13 @@ const {
   toSaoPauloDateStr,
 } = require("../lib/time");
 const {
-  sanitizeMomentItems,
   normalizeChallengeAnswer,
   parsePayloadJson,
 } = require("../lib/normalize");
+const {
+  sanitizeMomentRedeemItems,
+  resolveRedeemItems,
+} = require("../lib/momentPricing");
 const {
   upsertWeeklyChallengeForPair,
   pickRouletteValue,
@@ -1116,15 +1119,38 @@ exports.processInput = onDocumentCreated(
           const fromUid = input.fromUid;
           const partnerUid = input.partnerUid;
           const pareamentoId = input.pareamentoId || null;
-          const sanitizedItems = sanitizeMomentItems(input.items);
+          const sanitizedRaw = sanitizeMomentRedeemItems(input.items);
 
-          if (!fromUid || !partnerUid || sanitizedItems.length === 0) {
+          if (!fromUid || !partnerUid || sanitizedRaw.length === 0) {
             await inputRef.update({
               error: "missing_redeem_info",
               processed: false,
             });
             return;
           }
+
+          const partnerSnap = await admin
+              .firestore()
+              .collection("usuarios")
+              .doc(partnerUid)
+              .get();
+          const priced = await resolveRedeemItems(
+              sanitizedRaw,
+              partnerSnap.exists ? partnerSnap.data() : null,
+              pareamentoId,
+              admin.firestore(),
+          );
+
+          if (!priced.ok) {
+            await inputRef.update({
+              error: priced.error,
+              processed: false,
+            });
+            return;
+          }
+
+          const sanitizedItems = priced.items;
+          const totalCostPrecalculated = priced.totalCost;
 
           await admin.firestore().runTransaction(async (tx) => {
             const inSnap = await tx.get(inputRef);
@@ -1161,8 +1187,7 @@ exports.processInput = onDocumentCreated(
               return;
             }
 
-            const totalCost = sanitizedItems.reduce(
-                (sum, item) => sum + item.custoFoguinhos, 0);
+            const totalCost = totalCostPrecalculated;
 
             // Usa usuario.foguinhos como única fonte de verdade para validação.
             // Os campos foguinhos_pessoaX do pareamento não são mantidos em
@@ -2174,8 +2199,27 @@ exports.processInput = onDocumentCreated(
             }
 
             const meuNome = senderSnap.data().nome || "Seu parceiro";
+            const senderData = senderSnap.data();
 
             for (const partnerUid of partnerUids) {
+              if (partnerUid === fromUid) continue;
+
+              const partnerRef = admin
+                  .firestore()
+                  .collection("usuarios")
+                  .doc(partnerUid);
+              const partnerSnap = await tx.get(partnerRef);
+              if (!partnerSnap.exists) continue;
+
+              if (!areUsersPaired(
+                  senderData,
+                  partnerSnap.data(),
+                  fromUid,
+                  partnerUid,
+              )) {
+                continue;
+              }
+
               const notifRef = admin
                   .firestore()
                   .collection("notificacoes")

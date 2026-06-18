@@ -3,6 +3,7 @@ const {onSchedule} = require("firebase-functions/v2/scheduler");
 const https = require("firebase-functions/v2/https");
 const {admin} = require("../lib/config");
 const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {requireAppCheck} = require("../lib/appCheck");
 const {
   upsertWeeklyChallengeForPair,
   upsertPreferencesChallengeForPair,
@@ -85,6 +86,10 @@ exports.resetWeeklyChallengesAdmin = https.onRequest(async (req, res) => {
   }
   if (req.method !== "POST") {
     res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+
+  if (await requireAppCheck(req, res)) {
     return;
   }
 

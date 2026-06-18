@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "node node_modules/@playwright/test/cli.js test e2e/jornada-novo-usuario.spec.ts",
+    "test:e2e:nav": "node node_modules/@playwright/test/cli.js test e2e/nav-switch-parceiro.spec.ts",
+    "test:e2e:resgate": "node node_modules/@playwright/test/cli.js test e2e/jornada-resgate-momentos.spec.ts",
+    "test:e2e:all": "node node_modules/@playwright/test/cli.js test e2e/",
+    "test:e2e:headed": "node node_modules/@playwright/test/cli.js test e2e/jornada-novo-usuario.spec.ts --headed",
+    "test:e2e:install": "node node_modules/@playwright/test/cli.js install chromium"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -18,6 +24,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

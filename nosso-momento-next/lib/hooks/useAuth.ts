@@ -6,6 +6,7 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import type { Pareamento, Usuario } from '@/lib/types';
+import { restoreParceiroAtivo, syncParceiroAtivoComLista, clearRestoreSuppression, isRestoreSuppressed } from '@/lib/utils/setParceiroAtivo';
 
 /**
  * Inicializa o listener de autenticação Firebase.
@@ -26,6 +27,7 @@ export function useAuth() {
       if (!firebaseUser) {
         // Usuário deslogado — destroi o cookie de sessão server-side e limpa state.
         await fetch('/api/auth/session', { method: 'DELETE' }).catch(() => {});
+        clearRestoreSuppression();
         reset();
         set({ authInitialized: true });
         return;
@@ -57,6 +59,7 @@ export function useAuth() {
           ? ({ ...(rawData as Omit<Usuario, 'uid'>), uid: firebaseUser.uid, email: firebaseUser.email ?? rawData.email ?? '' } as Usuario)
           : ({ uid: firebaseUser.uid, email: firebaseUser.email ?? '', nome: '', telefone: '', sexo: '', foguinhos: 0, lastCheckInDate: null, pareadoCom: null, catalogoPersonalizado: {} } as Usuario);
         set({ usuario: baseUser, parceirosAtivos, authInitialized: true });
+        restoreParceiroAtivo(firebaseUser.uid, parceirosAtivos);
       }).catch(() => {
         // Se getDoc falhar, ainda marca auth pronto com usuario mínimo (evita redirect indevido)
         set({
@@ -80,14 +83,19 @@ export function useAuth() {
           const rawData = snap.data();
           const data = rawData as Omit<Usuario, 'uid'>;
           const parceirosAtivos = (rawData.pareamentosAtivos as Pareamento[] | undefined) ?? [];
+          const storeState = useAppStore.getState();
+          const manterDespareado =
+            isRestoreSuppressed(firebaseUser.uid) && storeState.pareadoUid === null;
           set({
             usuario: {
               ...data,
               uid: firebaseUser.uid,
               email: firebaseUser.email ?? data.email ?? '',
+              ...(manterDespareado ? { pareadoUid: undefined, pareadoCom: undefined } : {}),
             },
             parceirosAtivos,
           });
+          syncParceiroAtivoComLista(firebaseUser.uid, parceirosAtivos);
         } else {
           // Documento não existe no Firestore
           set({

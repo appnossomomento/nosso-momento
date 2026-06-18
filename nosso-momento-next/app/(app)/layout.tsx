@@ -19,7 +19,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const usuario = useAppStore((s) => s.usuario);
   const authInitialized = useAppStore((s) => s.authInitialized);
-  const pareado = useAppStore((s) => s.pareado);
   const desafiosPendentes = useAppStore((s) => s.desafiosPendentes);
 
   // Redireciona para /login apenas depois que o Firebase confirmou o estado de auth.
@@ -49,8 +48,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <nav className="bottom-nav-bar">
         {NAV_ITEMS.map((item) => {
           if (item.center) {
-            const centerHref = pareado ? '/parceiro' : '/parear';
-            const centerActive = pathname === '/parceiro' || pathname === '/parear';
+            const centerHref = '/parceiro';
+            const centerActive = pathname === '/parceiro';
             return (
               <Link key="center" href={centerHref} className="flex items-center justify-center flex-grow">
                 <div className={clsx('bottom-nav-item-center', centerActive && 'ring-2 ring-white/30')} style={{ position: 'relative' }}>

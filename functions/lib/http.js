@@ -4,13 +4,15 @@ const admin = require("firebase-admin");
 
 function setCorsHeaders(req, res) {
   const origin = req.get("Origin") || req.get("origin") || "";
-  if (ALLOWED_ORIGINS.includes(origin)) {
+  const isLocalDev =
+    /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  if (ALLOWED_ORIGINS.includes(origin) || isLocalDev) {
     res.set("Access-Control-Allow-Origin", origin);
   }
   res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.set(
       "Access-Control-Allow-Headers",
-      "Authorization, Content-Type",
+      "Authorization, Content-Type, X-Firebase-AppCheck",
   );
   res.set("Vary", "Origin");
 }

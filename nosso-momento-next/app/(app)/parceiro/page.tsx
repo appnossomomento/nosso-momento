@@ -7,6 +7,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { useAppStore } from '@/lib/store/appStore';
 import { sendInput } from '@/lib/firebase/functions';
+import { clearParceiroAtivoPersistido, setParceiroAtivo } from '@/lib/utils/setParceiroAtivo';
 import { showToast } from '@/components/ui/Toast';
 import { openSystemConfirm } from '@/components/ui/Modal';
 import { useWeeklyChallenge } from '@/lib/hooks/useWeeklyChallenge';
@@ -58,7 +59,6 @@ export default function ParceiroPage() {
   const {
     parceiroData,
     pareado,
-    parceiroNome,
     usuario,
     pareadoUid,
     parceirosAtivos,
@@ -87,9 +87,9 @@ export default function ParceiroPage() {
       <div className="screen screen-pad bg-black text-white flex flex-col items-center justify-center text-center px-8">
         <i className="fas fa-heart text-red-400 text-5xl mb-6" />
         <h2 className="text-xl font-bold mb-2">Nenhuma conexão ativa</h2>
-        <p className="text-white/50 text-sm mb-6">Pareie com seu parceiro para acessar esta área.</p>
+        <p className="text-white/50 text-sm mb-6">Conecte-se com alguém para acessar esta área.</p>
         <Link href="/parear" className="btn-red px-8 py-3 rounded-xl text-sm font-semibold">
-          Parear agora
+          Ir para Pareamentos
         </Link>
       </div>
     );
@@ -165,15 +165,26 @@ export default function ParceiroPage() {
       'Tem certeza que quer desfazer o pareamento?',
       async () => {
         if (!parceiroData) return;
+        const partnerUid = parceiroData.uid;
         try {
           await sendInput('pairing_unpair', {
             partnerUid: parceiroData.uid,
             partnerPhone: parceiroData.telefone,
             pareamentoId: (parceiroData as Record<string, unknown>).pareamentoId,
           });
-          // Navega primeiro para evitar flash da tela vazia de /parceiro,
-          // depois limpa o store (incluindo usuario.pareadoUid para que
-          // useParceiroData não re-subscribe ao parceiro antigo)
+
+          const remaining = parceirosAtivos.filter((p) => p.uid !== partnerUid);
+
+          if (usuario?.uid) clearParceiroAtivoPersistido(usuario.uid);
+
+          if (remaining.length > 0) {
+            const next = remaining[0];
+            setParceiroAtivo(next);
+            router.replace('/parceiro');
+            showToast('Pareamento desfeito.', 'sucesso');
+            return;
+          }
+
           router.replace('/parear');
           set({
             pareado: false,
@@ -181,10 +192,14 @@ export default function ParceiroPage() {
             parceiroNome: null,
             pareadoUid: null,
             conexaoAtiva: null,
-            usuario: usuario ? { ...usuario, pareadoUid: undefined, pareadoCom: undefined } : usuario,
+            parceirosAtivos: [],
+            usuario: usuario
+              ? { ...usuario, pareadoUid: undefined, pareadoCom: undefined, pareamentosAtivos: [] }
+              : usuario,
           });
           showToast('Pareamento desfeito.', 'sucesso');
-        } catch {
+        } catch (err) {
+          console.error('[parceiro] pairing_unpair falhou:', err);
           showToast('Erro ao desfazer pareamento.', 'erro');
         }
       },
@@ -207,7 +222,12 @@ export default function ParceiroPage() {
         >
           <i className="fas fa-arrow-left text-white text-sm" />
         </button>
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <button
+          type="button"
+          onClick={() => router.push('/parear')}
+          className="flex items-center gap-2 flex-1 min-w-0 text-left"
+          aria-label="Escolher conexão"
+        >
           <div
             className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
             style={{ border: '2px solid rgba(255,255,255,0.40)', background: 'rgba(0,0,0,0.20)' }}
@@ -219,7 +239,8 @@ export default function ParceiroPage() {
             )}
           </div>
           <p className="text-sm font-bold text-white truncate">{nome}</p>
-        </div>
+          <i className="fas fa-chevron-down text-white/70 text-xs flex-shrink-0" />
+        </button>
         <div
           className="flex items-center gap-1.5 flex-shrink-0"
           style={{ background: 'rgba(0,0,0,0.20)', borderRadius: 20, padding: '4px 10px' }}

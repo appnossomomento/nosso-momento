@@ -1,16 +1,36 @@
-import { auth } from './client';
+import { auth, appCheck } from './client';
+import { getToken } from 'firebase/app-check';
 
-const BASE = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net';
+const REMOTE_BASE = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net';
+
+/** Em dev local usa proxy Next.js (/api/cf) para evitar CORS em portas != 3000. */
+function cfUrl(path: string): string {
+  if (process.env.NODE_ENV === 'development') {
+    return `/api/cf/${path}`;
+  }
+  return `${REMOTE_BASE}/${path}`;
+}
+
+async function appCheckHeaders(): Promise<Record<string, string>> {
+  if (!appCheck) return {};
+  try {
+    const result = await getToken(appCheck, false);
+    return result.token ? { 'X-Firebase-AppCheck': result.token } : {};
+  } catch {
+    return {};
+  }
+}
 
 export const FUNCTIONS = {
-  createInput: `${BASE}/createInput`,
-  setNotificationToken: `${BASE}/setNotificationToken`,
-  getMemorias: `${BASE}/getMemorias`,
-  createMemoriaPhoto: `${BASE}/createMemoriaPhoto`,
-  deleteMemoria: `${BASE}/deleteMemoria`,
-  getExtrato: `${BASE}/getExtrato`,
-  gerarConvite: `${BASE}/gerarConvite`,
-  verificarTelefone: `${BASE}/verificarTelefone`,
+  createInput: cfUrl('createInput'),
+  setNotificationToken: cfUrl('setNotificationToken'),
+  getMemorias: cfUrl('getMemorias'),
+  createMemoriaPhoto: cfUrl('createMemoriaPhoto'),
+  deleteMemoria: cfUrl('deleteMemoria'),
+  getExtrato: cfUrl('getExtrato'),
+  getParceiroPerfil: cfUrl('getParceiroPerfil'),
+  gerarConvite: cfUrl('gerarConvite'),
+  verificarTelefone: cfUrl('verificarTelefone'),
 } as const;
 
 /**
@@ -41,12 +61,14 @@ export async function callFunction<T = unknown>(
   if (!user) throw new Error('Usuário não autenticado');
 
   const token = await user.getIdToken();
+  const appCheckHdr = await appCheckHeaders();
 
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
+      ...appCheckHdr,
     },
     body: JSON.stringify(body),
   });

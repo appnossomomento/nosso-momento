@@ -46,6 +46,9 @@ const inviteHandler = require("./handlers/invite");
 exports.gerarConvite = inviteHandler.gerarConvite;
 exports.verificarTelefone = inviteHandler.verificarTelefone;
 
+const partnerHandler = require("./handlers/partner");
+exports.getParceiroPerfil = partnerHandler.getParceiroPerfil;
+
 const dailyHumorHandler = require("./handlers/dailyHumor");
 exports.lembreteHumorManha = dailyHumorHandler.lembreteHumorManha;
 exports.lembreteHumorAlmoco = dailyHumorHandler.lembreteHumorAlmoco;
