@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
+import { db, waitForAppCheckToken } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import { sendInput } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
@@ -98,6 +98,14 @@ function advanceQueue(set: (p: object) => void, onQueueFinished?: () => void) {
 
 const CHALLENGE_SECONDS = 60;
 
+async function submitChallengeInput(
+  type: string,
+  fields: Record<string, unknown> = {},
+): Promise<{ ok: boolean; id: string }> {
+  await waitForAppCheckToken(12000);
+  return sendInput(type, fields);
+}
+
 export default function ChallengePopup() {
   const router = useRouter();
   const { showChallengePopup, pendingChallenge, idPareamentoAmigavel, set } = useAppStore();
@@ -144,17 +152,17 @@ export default function ChallengePopup() {
       try {
         if (tipoAtual === 'pergunta') {
           const pareamentoIdAtual = useAppStore.getState().idPareamentoAmigavel;
-          await sendInput('weekly_challenge_answer', {
+          await submitChallengeInput('weekly_challenge_answer', {
             answer: '__TIMEOUT__',
             challengeId: idAtual,
             challengeDocId: idAtual,
             ...(pareamentoIdAtual ? { pareamentoId: pareamentoIdAtual } : {}),
           });
         } else if (tipoAtual === 'escolha') {
-          await sendInput('preference_challenge_answer', { answer: '__TIMEOUT__', challengeId: idAtual, challengeDocId: idAtual });
+          await submitChallengeInput('preference_challenge_answer', { answer: '__TIMEOUT__', challengeId: idAtual, challengeDocId: idAtual });
         } else if (tipoAtual === 'roleta') {
           const pareamentoIdAtual = useAppStore.getState().idPareamentoAmigavel;
-          await sendInput('roulette_spin', {
+          await submitChallengeInput('roulette_spin', {
             challengeId: idAtual,
             challengeDocId: idAtual,
             ...(pareamentoIdAtual ? { pareamentoId: pareamentoIdAtual } : {}),
@@ -179,7 +187,7 @@ export default function ChallengePopup() {
     setEnviando(true);
     try {
       const pareamentoIdAtual = useAppStore.getState().idPareamentoAmigavel;
-      await sendInput('weekly_challenge_answer', {
+      await submitChallengeInput('weekly_challenge_answer', {
         answer: resposta.trim(),
         challengeId: pendingChallenge!.id,
         challengeDocId: pendingChallenge!.id,
@@ -200,7 +208,7 @@ export default function ChallengePopup() {
     if (enviando || !selectedOption || esgotado) return;
     setEnviando(true);
     try {
-      await sendInput('preference_challenge_answer', {
+      await submitChallengeInput('preference_challenge_answer', {
         answer: selectedOption,
         challengeId: pendingChallenge!.id,
         challengeDocId: pendingChallenge!.id,
@@ -232,7 +240,7 @@ export default function ChallengePopup() {
     setWheelRotation(newRotation);
     setSpinning(true);
     try {
-      await sendInput('roulette_spin', {
+      await submitChallengeInput('roulette_spin', {
         challengeId,
         challengeDocId: challengeId,
         ...(idPareamentoAmigavel ? { pareamentoId: idPareamentoAmigavel } : {}),

@@ -56,6 +56,8 @@ function classifyEntry(
 
   if (raw.type === 'console') {
     if (raw.message.includes('permission-denied')) return 'critical';
+    if (raw.message.includes('missing_app_check')) return 'critical';
+    if (raw.message.includes('Erro ao enviar resposta')) return 'critical';
     if (raw.message.toLowerCase().includes('error')) return 'warning';
     return 'warning';
   }

@@ -10,7 +10,10 @@ import {
   dismissAlertIfPresent,
   garantirUsuarioADespareado,
   dismissPwaPromptIfPresent,
+  responderDesafioSeAparecer,
+  dismissChallengePopupIfPresent,
 } from './helpers/auth';
+import { createE2eContext } from './helpers/context';
 
 const collector = new LogCollector();
 let reportPaths: { json: string; md: string } | null = null;
@@ -34,47 +37,15 @@ async function gerarConviteUsuarioA(page: Page): Promise<string> {
   return conviteUrl;
 }
 
-async function responderDesafioSeAparecer(page: Page): Promise<void> {
-  const popup = page.locator('text=Desafio da Semana');
-  const visible = await popup.isVisible({ timeout: 20_000 }).catch(() => false);
-  if (!visible) return;
-
-  const perguntaInput = page.getByPlaceholder('Sua resposta...');
-  if (await perguntaInput.isVisible({ timeout: 2_000 }).catch(() => false)) {
-    await perguntaInput.fill('TESTE');
-    await page.getByRole('button', { name: /Enviar Resposta/i }).click();
-    await page.waitForTimeout(2_000);
-    return;
-  }
-
-  const escolhaButtons = page.locator('.grid.grid-cols-2 button');
-  if (await escolhaButtons.first().isVisible({ timeout: 2_000 }).catch(() => false)) {
-    await escolhaButtons.first().click();
-    await page.getByRole('button', { name: /Confirmar Escolha/i }).click();
-    await page.waitForTimeout(2_000);
-    return;
-  }
-
-  const girar = page.getByRole('button', { name: /Girar Roleta/i });
-  if (await girar.isVisible({ timeout: 2_000 }).catch(() => false)) {
-    await girar.click();
-    const fechar = page.getByRole('button', { name: /^Fechar$/i });
-    await fechar.waitFor({ state: 'visible', timeout: 20_000 }).catch(() => {});
-    if (await fechar.isVisible().catch(() => false)) {
-      await fechar.click();
-    }
-    return;
-  }
-
-  await page.waitForTimeout(1_000);
-}
-
 async function registrarClima(page: Page): Promise<void> {
   await page.goto('/parceiro');
   await page.waitForLoadState('domcontentloaded');
-  const humorBtn = page.locator('.termometro-btn').first();
-  if (await humorBtn.isEnabled({ timeout: 10_000 }).catch(() => false)) {
-    await humorBtn.click();
+  await dismissPwaPromptIfPresent(page);
+  await dismissChallengePopupIfPresent(page);
+
+  const humorBtn = page.locator('.termometro-btn, button').filter({ hasText: /Muito Feliz|Feliz|Normal|Triste/ }).first();
+  if (await humorBtn.isVisible({ timeout: 10_000 }).catch(() => false)) {
+    await humorBtn.click({ force: true });
     await page.waitForTimeout(1_500);
   }
 }
@@ -144,6 +115,7 @@ test.describe.serial('Jornada completa — novo usuário via convite', () => {
     pairingOk: false,
     lojaResgateOk: false,
     momentoCompletoOk: false,
+    desafioOk: false,
   };
 
   test.beforeAll(async ({ browser: b }) => {
@@ -176,7 +148,7 @@ test.describe.serial('Jornada completa — novo usuário via convite', () => {
   test('Fase 1 — Usuário A faz login e gera convite', async () => {
     test.setTimeout(240_000);
     const { email, password } = getUserACredentials();
-    const contextA = await browser.newContext();
+    const contextA = await createE2eContext(browser);
     const pageA = await contextA.newPage();
     attachCollector(pageA, 'UsuarioA');
 
@@ -190,7 +162,7 @@ test.describe.serial('Jornada completa — novo usuário via convite', () => {
   test('Fase 2 — Usuário B aceita convite, cadastra e pareia', async () => {
     expect(conviteUrl).toMatch(/\/convite\//);
 
-    const contextB = await browser.newContext();
+    const contextB = await createE2eContext(browser);
     const pageB = await contextB.newPage();
     attachCollector(pageB, 'UsuarioB');
 
@@ -206,13 +178,18 @@ test.describe.serial('Jornada completa — novo usuário via convite', () => {
 
   test('Fase 3 — Pós-pareamento: desafio, clima, loja, momentos', async () => {
     test.setTimeout(300_000);
-    const contextB = await browser.newContext();
+    const contextB = await createE2eContext(browser);
     const pageB = await contextB.newPage();
     attachCollector(pageB, 'UsuarioB-pos');
 
     await login(pageB, userB.email, userB.senha);
+    await pageB.waitForURL(/\/(dashboard|parceiro|parear)/, { timeout: 90_000 });
+    await dismissPwaPromptIfPresent(pageB);
 
     await responderDesafioSeAparecer(pageB);
+    await dismissPwaPromptIfPresent(pageB);
+    await dismissChallengePopupIfPresent(pageB);
+    journeyMeta.desafioOk = true;
     await registrarClima(pageB);
 
     const resgatou = await resgatarMomentoLoja(pageB);
@@ -228,7 +205,7 @@ test.describe.serial('Jornada completa — novo usuário via convite', () => {
   });
 
   test('Fase 4 — Smoke das rotas principais (Usuário B)', async () => {
-    const contextB = await browser.newContext();
+    const contextB = await createE2eContext(browser);
     const pageB = await contextB.newPage();
     attachCollector(pageB, 'UsuarioB-smoke');
 

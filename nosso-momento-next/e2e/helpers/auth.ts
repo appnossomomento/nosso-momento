@@ -138,6 +138,63 @@ async function ensureParceiroPageReady(page: Page): Promise<void> {
   await dismissPwaPromptIfPresent(page);
 }
 
+export async function responderDesafioSeAparecer(page: Page): Promise<void> {
+  for (let round = 0; round < 6; round++) {
+    await dismissPwaPromptIfPresent(page);
+
+    const overlay = page.locator('div.fixed.inset-0').filter({ hasText: 'Desafio da Semana' }).first();
+    if (!(await overlay.isVisible({ timeout: 12_000 }).catch(() => false))) {
+      await page.waitForTimeout(2000);
+      continue;
+    }
+
+    const perguntaInput = overlay.getByPlaceholder('Sua resposta...');
+    if (await perguntaInput.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await perguntaInput.fill('TESTE E2E');
+      await page.waitForTimeout(800);
+      const enviar = overlay.getByRole('button', { name: /Enviar Resposta/i });
+      await expect(enviar).toBeEnabled({ timeout: 30_000 });
+      await enviar.click({ force: true });
+      const sucesso = page.getByText('Resposta enviada');
+      const erro = page.getByText('Erro ao enviar resposta');
+      await expect(sucesso.or(erro)).toBeVisible({ timeout: 30_000 });
+      if (await erro.isVisible().catch(() => false)) {
+        throw new Error('Falha ao enviar desafio alma gêmea (createInput / App Check)');
+      }
+      await overlay.waitFor({ state: 'hidden', timeout: 25_000 }).catch(() => {});
+      await dismissPwaPromptIfPresent(page);
+      return;
+    }
+
+    const escolha = overlay.locator('.grid.grid-cols-2 button').first();
+    if (await escolha.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await escolha.click();
+      const confirmar = overlay.getByRole('button', { name: /Confirmar Escolha/i });
+      await expect(confirmar).toBeEnabled({ timeout: 15_000 });
+      await confirmar.click({ force: true });
+      await overlay.waitFor({ state: 'hidden', timeout: 25_000 }).catch(() => {});
+      await dismissPwaPromptIfPresent(page);
+      return;
+    }
+
+    const girar = overlay.getByRole('button', { name: /Girar Roleta/i });
+    if (await girar.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await expect(girar).toBeEnabled({ timeout: 15_000 });
+      await girar.click({ force: true });
+      const fechar = overlay.getByRole('button', { name: /^Fechar$/i });
+      await fechar.waitFor({ state: 'visible', timeout: 25_000 }).catch(() => {});
+      if (await fechar.isVisible().catch(() => false)) {
+        await fechar.click({ force: true });
+      }
+      await overlay.waitFor({ state: 'hidden', timeout: 25_000 }).catch(() => {});
+      await dismissPwaPromptIfPresent(page);
+      return;
+    }
+
+    await page.waitForTimeout(1500);
+  }
+}
+
 export async function dismissChallengePopupIfPresent(page: Page): Promise<void> {
   const overlay = page.locator('div.fixed.inset-0').filter({ hasText: 'Desafio da Semana' }).first();
   if (!(await overlay.isVisible({ timeout: 2_000 }).catch(() => false))) return;
