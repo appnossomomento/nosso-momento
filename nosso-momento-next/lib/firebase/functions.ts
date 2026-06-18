@@ -1,5 +1,4 @@
-import { auth, appCheck } from './client';
-import { getToken } from 'firebase/app-check';
+import { auth, getAppCheckToken } from './client';
 
 const REMOTE_BASE = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net';
 
@@ -11,14 +10,9 @@ function cfUrl(path: string): string {
   return `${REMOTE_BASE}/${path}`;
 }
 
-async function appCheckHeaders(): Promise<Record<string, string>> {
-  if (!appCheck) return {};
-  try {
-    const result = await getToken(appCheck, false);
-    return result.token ? { 'X-Firebase-AppCheck': result.token } : {};
-  } catch {
-    return {};
-  }
+async function appCheckHeaders(force = false): Promise<Record<string, string>> {
+  const token = await getAppCheckToken(force);
+  return token ? { 'X-Firebase-AppCheck': token } : {};
 }
 
 export const FUNCTIONS = {
@@ -61,17 +55,35 @@ export async function callFunction<T = unknown>(
   if (!user) throw new Error('Usuário não autenticado');
 
   const token = await user.getIdToken();
-  const appCheckHdr = await appCheckHeaders();
+  let appCheckHdr = await appCheckHeaders(false);
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      ...appCheckHdr,
-    },
-    body: JSON.stringify(body),
-  });
+  const doFetch = (headers: Record<string, string>) =>
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...headers,
+      },
+      body: JSON.stringify(body),
+    });
+
+  let res = await doFetch(appCheckHdr);
+
+  if (!res.ok && res.status === 401) {
+    const text = await res.text().catch(() => '');
+    if (text.includes('missing_app_check') || text.includes('invalid_app_check')) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      appCheckHdr = await appCheckHeaders(true);
+      res = await doFetch(appCheckHdr);
+      if (!res.ok) {
+        const retryText = await res.text().catch(() => '');
+        throw new Error(`[${res.status}] ${retryText || res.statusText}`);
+      }
+      return res.json() as Promise<T>;
+    }
+    throw new Error(`[${res.status}] ${text || res.statusText}`);
+  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');

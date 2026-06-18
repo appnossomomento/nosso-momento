@@ -80,13 +80,52 @@ if (typeof window !== 'undefined' && !hasValidClientConfig) {
 }
 
 /** Garante token App Check antes de leituras Firestore (enforcement no Console). */
-export async function ensureAppCheckReady(): Promise<void> {
-  if (!appCheck) return;
-  try {
-    await getToken(appCheck, false);
-  } catch (err) {
-    console.warn('[AppCheck] falha ao obter token:', err);
+let inflightAppCheckToken: Promise<string | null> | null = null;
+let cachedAppCheckToken: { value: string; expiresAt: number } | null = null;
+
+export async function getAppCheckToken(force = false): Promise<string | null> {
+  if (!appCheck) return null;
+
+  if (!force && cachedAppCheckToken && cachedAppCheckToken.expiresAt > Date.now()) {
+    return cachedAppCheckToken.value;
   }
+
+  if (!force && inflightAppCheckToken) {
+    return inflightAppCheckToken;
+  }
+
+  inflightAppCheckToken = (async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const result = await getToken(appCheck!, force || attempt > 0);
+        const token = result.token || null;
+        if (token) {
+          cachedAppCheckToken = { value: token, expiresAt: Date.now() + 50 * 60 * 1000 };
+        }
+        return token;
+      } catch (err) {
+        const code = String((err as { code?: string }).code ?? '');
+        const throttled = code.includes('throttled') || code.includes('initial-throttle');
+        if (throttled && attempt < 2) {
+          await new Promise((resolve) => setTimeout(resolve, 2000 * (attempt + 1)));
+          continue;
+        }
+        console.warn('[AppCheck] falha ao obter token:', err);
+        return null;
+      }
+    }
+    return null;
+  })();
+
+  try {
+    return await inflightAppCheckToken;
+  } finally {
+    inflightAppCheckToken = null;
+  }
+}
+
+export async function ensureAppCheckReady(): Promise<void> {
+  await getAppCheckToken(false);
 }
 
 export default app;
