@@ -45,7 +45,7 @@ export function useParceiroData() {
     const parEntry = parceirosAtivos.find((p) => p.uid === pareadoUid);
 
     (async () => {
-      await waitForAppCheckToken(10000);
+      await waitForAppCheckToken(process.env.NODE_ENV === 'development' ? 2000 : 10000);
 
       for (let attempt = 0; attempt < 3; attempt++) {
         if (cancelled) return;

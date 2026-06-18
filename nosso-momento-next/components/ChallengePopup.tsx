@@ -102,7 +102,7 @@ async function submitChallengeInput(
   type: string,
   fields: Record<string, unknown> = {},
 ): Promise<{ ok: boolean; id: string }> {
-  await waitForAppCheckToken(12000);
+  await waitForAppCheckToken(process.env.NODE_ENV === 'development' ? 3000 : 12000);
   return sendInput(type, fields);
 }
 

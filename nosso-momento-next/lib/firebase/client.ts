@@ -77,6 +77,10 @@ if (typeof window !== 'undefined' && !hasValidClientConfig) {
 let inflightAppCheckToken: Promise<string | null> | null = null;
 let cachedAppCheckToken: { value: string; expiresAt: number } | null = null;
 
+const isDevEnv = process.env.NODE_ENV === 'development';
+const APP_CHECK_WAIT_MS = isDevEnv ? 2500 : 10000;
+const APP_CHECK_RETRY_ATTEMPTS = isDevEnv ? 2 : 4;
+
 export async function getAppCheckToken(force = false): Promise<string | null> {
   if (!appCheck) return null;
 
@@ -91,7 +95,7 @@ export async function getAppCheckToken(force = false): Promise<string | null> {
   }
 
   inflightAppCheckToken = (async () => {
-    for (let attempt = 0; attempt < 4; attempt++) {
+    for (let attempt = 0; attempt < APP_CHECK_RETRY_ATTEMPTS; attempt++) {
       try {
         const result = await getToken(appCheck!, force || attempt > 0);
         const token = result.token || null;
@@ -102,15 +106,18 @@ export async function getAppCheckToken(force = false): Promise<string | null> {
       } catch (err) {
         const code = String((err as { code?: string }).code ?? '');
         const throttled = code.includes('throttled') || code.includes('initial-throttle');
-        if (throttled && attempt < 3) {
-          await new Promise((resolve) => setTimeout(resolve, 2500 * (attempt + 1)));
+        const retryDelay = isDevEnv ? 800 : 2500;
+        if (throttled && attempt < APP_CHECK_RETRY_ATTEMPTS - 1) {
+          await new Promise((resolve) => setTimeout(resolve, retryDelay * (attempt + 1)));
           continue;
         }
-        if (attempt < 3) {
-          await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+        if (attempt < APP_CHECK_RETRY_ATTEMPTS - 1) {
+          await new Promise((resolve) => setTimeout(resolve, (isDevEnv ? 500 : 1500) * (attempt + 1)));
           continue;
         }
-        console.warn('[AppCheck] falha ao obter token:', err);
+        if (!isDevEnv) {
+          console.warn('[AppCheck] falha ao obter token:', err);
+        }
         return null;
       }
     }
@@ -125,14 +132,15 @@ export async function getAppCheckToken(force = false): Promise<string | null> {
 }
 
 /** Aguarda token App Check por até maxMs (útil antes de CFs com enforce). */
-export async function waitForAppCheckToken(maxMs = 10000): Promise<string | null> {
+export async function waitForAppCheckToken(maxMs = APP_CHECK_WAIT_MS): Promise<string | null> {
   const deadline = Date.now() + maxMs;
+  const pollMs = isDevEnv ? 500 : 2000;
   let force = false;
   while (Date.now() < deadline) {
     const token = await getAppCheckToken(force);
     if (token) return token;
     force = true;
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, pollMs));
   }
   return null;
 }
