@@ -36,6 +36,10 @@ export let appCheck: AppCheck | null = null;
 if (app && typeof window !== 'undefined') {
   const recaptchaKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   const debugToken = process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN;
+  const injectedDebugToken =
+    typeof window !== 'undefined'
+      ? String((self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN ?? '').trim()
+      : '';
 
   if (process.env.NODE_ENV !== 'production' && debugToken) {
     // Ativa debug token para desenvolvimento local sem reCAPTCHA real.
@@ -43,8 +47,9 @@ if (app && typeof window !== 'undefined') {
   }
 
   const isDevWithDebugToken = process.env.NODE_ENV !== 'production' && !!debugToken;
-  if (recaptchaKey || isDevWithDebugToken) {
-    // Em dev com debug token, o Firebase ignora o provider e usa o debug token setado acima.
+  const hasDebugToken = isDevWithDebugToken || injectedDebugToken.length > 0;
+  if (recaptchaKey || hasDebugToken) {
+    // Em dev/E2E com debug token, o Firebase ignora o provider e usa o debug token setado acima.
     appCheck = initializeAppCheck(app, {
       provider: new ReCaptchaV3Provider(recaptchaKey || 'debug-placeholder'),
       isTokenAutoRefreshEnabled: true,

@@ -111,6 +111,33 @@ async function irParaParceiro(page: Page): Promise<void> {
   }
 }
 
+/** Garante /parceiro sem popup de desafio bloqueando (pode haver fila de desafios). */
+async function ensureParceiroPageReady(page: Page): Promise<void> {
+  for (let i = 0; i < 4; i++) {
+    if (!page.url().includes('/parceiro')) {
+      await page.goto('/parceiro', { waitUntil: 'domcontentloaded' });
+    }
+    await dismissPwaPromptIfPresent(page);
+
+    const overlay = page.locator('div.fixed.inset-0').filter({ hasText: 'Desafio da Semana' }).first();
+    if (await overlay.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await dismissChallengePopupIfPresent(page);
+      await page.waitForTimeout(800);
+      continue;
+    }
+
+    const desfazer = page.getByRole('button', { name: /Desfazer Pareamento/i });
+    if (await desfazer.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      return;
+    }
+
+    await page.waitForTimeout(500);
+  }
+
+  await page.goto('/parceiro', { waitUntil: 'domcontentloaded' });
+  await dismissPwaPromptIfPresent(page);
+}
+
 export async function dismissChallengePopupIfPresent(page: Page): Promise<void> {
   const overlay = page.locator('div.fixed.inset-0').filter({ hasText: 'Desafio da Semana' }).first();
   if (!(await overlay.isVisible({ timeout: 2_000 }).catch(() => false))) return;
@@ -119,6 +146,10 @@ export async function dismissChallengePopupIfPresent(page: Page): Promise<void> 
   if (await fechar.isVisible({ timeout: 1_000 }).catch(() => false)) {
     await fechar.click({ force: true });
     await overlay.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {});
+    if (!page.url().includes('/parceiro')) {
+      await page.goto('/parceiro', { waitUntil: 'domcontentloaded' });
+      await dismissPwaPromptIfPresent(page);
+    }
     return;
   }
 
@@ -131,6 +162,10 @@ export async function dismissChallengePopupIfPresent(page: Page): Promise<void> 
     if (await fechar.isVisible().catch(() => false)) {
       await fechar.click({ force: true });
       await overlay.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {});
+    }
+    if (!page.url().includes('/parceiro')) {
+      await page.goto('/parceiro', { waitUntil: 'domcontentloaded' });
+      await dismissPwaPromptIfPresent(page);
     }
     return;
   }
@@ -150,6 +185,10 @@ export async function dismissChallengePopupIfPresent(page: Page): Promise<void> 
     if (await overlay.isVisible().catch(() => false) && (await fechar.isVisible().catch(() => false))) {
       await fechar.click({ force: true });
     }
+    if (!page.url().includes('/parceiro')) {
+      await page.goto('/parceiro', { waitUntil: 'domcontentloaded' });
+      await dismissPwaPromptIfPresent(page);
+    }
     return;
   }
 
@@ -161,6 +200,10 @@ export async function dismissChallengePopupIfPresent(page: Page): Promise<void> 
       await confirmar.click({ force: true });
     }
     await overlay.waitFor({ state: 'hidden', timeout: 15_000 }).catch(() => {});
+    if (!page.url().includes('/parceiro')) {
+      await page.goto('/parceiro', { waitUntil: 'domcontentloaded' });
+      await dismissPwaPromptIfPresent(page);
+    }
   }
 }
 
@@ -177,7 +220,7 @@ export async function garantirUsuarioADespareado(page: Page): Promise<void> {
   if (await conviteBtn.isVisible({ timeout: 10_000 }).catch(() => false)) return;
 
   for (let attempt = 0; attempt < 2; attempt++) {
-    await irParaParceiro(page);
+    await ensureParceiroPageReady(page);
 
     const desfazerBtn = page.getByRole('button', { name: /Desfazer Pareamento/i });
     try {
@@ -190,21 +233,14 @@ export async function garantirUsuarioADespareado(page: Page): Promise<void> {
 
     await desfazerBtn.scrollIntoViewIfNeeded();
     await expect(desfazerBtn).toBeVisible({ timeout: 10_000 });
-    await dismissPwaPromptIfPresent(page);
-    await dismissChallengePopupIfPresent(page);
 
     const modalMsg = page.getByText(/Tem certeza que quer desfazer o pareamento/i);
     for (let clickAttempt = 0; clickAttempt < 3; clickAttempt++) {
-      if (!page.url().includes('/parceiro')) await irParaParceiro(page);
+      await ensureParceiroPageReady(page);
       await dismissPwaPromptIfPresent(page);
-      await dismissChallengePopupIfPresent(page);
-      if (!page.url().includes('/parceiro')) await irParaParceiro(page);
       const btn = page.getByRole('button', { name: /Desfazer Pareamento/i });
       await expect(btn).toBeVisible({ timeout: 10_000 });
-      const challengeOverlay = page.locator('div.fixed.inset-0').filter({ hasText: 'Desafio da Semana' });
-      if (await challengeOverlay.isVisible().catch(() => false)) {
-        await dismissChallengePopupIfPresent(page);
-      }
+      await btn.scrollIntoViewIfNeeded();
       await btn.click({ force: true });
       if (await modalMsg.isVisible({ timeout: 2_000 }).catch(() => false)) break;
       await page.waitForTimeout(600);

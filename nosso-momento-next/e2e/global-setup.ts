@@ -26,4 +26,9 @@ function parseEnvFile(filePath: string): void {
 export default function globalSetup(): void {
   const root = path.join(__dirname, '..');
   parseEnvFile(path.join(root, '.env.e2e.local'));
+  parseEnvFile(path.join(root, '.env.local'));
+
+  const hasDebug =
+    !!(process.env.E2E_APPCHECK_DEBUG_TOKEN || process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN);
+  console.log(`[e2e] App Check debug token: ${hasDebug ? 'configurado' : 'AUSENTE (E2E em prod com enforce vai falhar)'}`);
 }

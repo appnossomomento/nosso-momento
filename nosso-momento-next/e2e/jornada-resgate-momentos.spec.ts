@@ -11,6 +11,7 @@ import {
   dismissChallengePopupIfPresent,
   garantirUsuarioADespareado,
 } from './helpers/auth';
+import { createE2eContext } from './helpers/context';
 import {
   resgatarMomentoNaLoja,
   aguardarMomentoPendenteEnviados,
@@ -54,7 +55,7 @@ test.describe.serial('Jornada — resgate e realização de momentos', () => {
   test('Fase 1 — Parear Usuário A com Usuário B (setup)', async () => {
     test.setTimeout(240_000);
     const { email, password } = getUserACredentials();
-    const contextA = await browser.newContext();
+    const contextA = await createE2eContext(browser);
     const pageA = await contextA.newPage();
     collector.attach(pageA, 'UsuarioA-setup');
 
@@ -78,7 +79,7 @@ test.describe.serial('Jornada — resgate e realização de momentos', () => {
     test.setTimeout(120_000);
     expect(conviteUrl).toMatch(/\/convite\//);
 
-    const contextB = await browser.newContext();
+    const contextB = await createE2eContext(browser);
     const pageB = await contextB.newPage();
     collector.attach(pageB, 'UsuarioB-parear');
 
@@ -94,7 +95,7 @@ test.describe.serial('Jornada — resgate e realização de momentos', () => {
 
   test('Fase 3 — Resgatar, aguardar pendente e realizar momento', async () => {
     test.setTimeout(300_000);
-    const contextB = await browser.newContext();
+    const contextB = await createE2eContext(browser);
     const pageB = await contextB.newPage();
     collector.attach(pageB, 'UsuarioB-resgate-realizar');
 
