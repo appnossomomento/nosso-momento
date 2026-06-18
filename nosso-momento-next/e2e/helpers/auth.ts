@@ -140,13 +140,13 @@ export async function dismissChallengePopupIfPresent(page: Page): Promise<void> 
     if (await perguntaInput.isEnabled().catch(() => false)) {
       await perguntaInput.fill('TESTE');
       const enviar = overlay.getByRole('button', { name: /Enviar Resposta/i });
-      if (await enviar.isEnabled({ timeout: 3_000 }).catch(() => false)) {
+      if (await enviar.isEnabled({ timeout: 8_000 }).catch(() => false)) {
         await enviar.click({ force: true });
       } else {
         await perguntaInput.press('Enter');
       }
     }
-    await overlay.waitFor({ state: 'hidden', timeout: 15_000 }).catch(() => {});
+    await overlay.waitFor({ state: 'hidden', timeout: 20_000 }).catch(() => {});
     if (await overlay.isVisible().catch(() => false) && (await fechar.isVisible().catch(() => false))) {
       await fechar.click({ force: true });
     }
@@ -201,6 +201,10 @@ export async function garantirUsuarioADespareado(page: Page): Promise<void> {
       if (!page.url().includes('/parceiro')) await irParaParceiro(page);
       const btn = page.getByRole('button', { name: /Desfazer Pareamento/i });
       await expect(btn).toBeVisible({ timeout: 10_000 });
+      const challengeOverlay = page.locator('div.fixed.inset-0').filter({ hasText: 'Desafio da Semana' });
+      if (await challengeOverlay.isVisible().catch(() => false)) {
+        await dismissChallengePopupIfPresent(page);
+      }
       await btn.click({ force: true });
       if (await modalMsg.isVisible({ timeout: 2_000 }).catch(() => false)) break;
       await page.waitForTimeout(600);
