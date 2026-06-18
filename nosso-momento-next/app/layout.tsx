@@ -6,7 +6,13 @@ import AuthProvider from '@/components/AuthProvider';
 export const metadata: Metadata = {
   title: 'Nosso Momento',
   description: 'Apimente a relação. Deixe tudo mais gostoso!',
-  icons: { apple: '/assets/icons/iconprincipal.png' },
+  icons: {
+    icon: [
+      { url: '/assets/icons/iconprincipal.png', type: 'image/png' },
+      { url: '/assets/icons/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/assets/icons/apple-touch-icon-180x180.png',
+  },
   manifest: '/manifest.json',
 };
 
