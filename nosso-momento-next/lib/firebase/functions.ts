@@ -1,4 +1,4 @@
-import { auth, getAppCheckToken } from './client';
+import { auth, getAppCheckToken, waitForAppCheckToken } from './client';
 
 const REMOTE_BASE = 'https://southamerica-east1-nosso-momento-app.cloudfunctions.net';
 
@@ -11,7 +11,9 @@ function cfUrl(path: string): string {
 }
 
 async function appCheckHeaders(force = false): Promise<Record<string, string>> {
-  const token = await getAppCheckToken(force);
+  const token = force
+    ? await getAppCheckToken(true)
+    : (await waitForAppCheckToken(8000)) ?? (await getAppCheckToken(false));
   return token ? { 'X-Firebase-AppCheck': token } : {};
 }
 
@@ -73,14 +75,14 @@ export async function callFunction<T = unknown>(
   if (!res.ok && res.status === 401) {
     const text = await res.text().catch(() => '');
     if (text.includes('missing_app_check') || text.includes('invalid_app_check')) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      appCheckHdr = await appCheckHeaders(true);
-      res = await doFetch(appCheckHdr);
-      if (!res.ok) {
-        const retryText = await res.text().catch(() => '');
-        throw new Error(`[${res.status}] ${retryText || res.statusText}`);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 2500 * (attempt + 1)));
+        appCheckHdr = await appCheckHeaders(true);
+        res = await doFetch(appCheckHdr);
+        if (res.ok) return res.json() as Promise<T>;
       }
-      return res.json() as Promise<T>;
+      const retryText = await res.text().catch(() => '');
+      throw new Error(`[${res.status}] ${retryText || res.statusText}`);
     }
     throw new Error(`[${res.status}] ${text || res.statusText}`);
   }

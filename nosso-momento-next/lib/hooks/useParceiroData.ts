@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useAppStore } from '@/lib/store/appStore';
 import { applyParceiroPerfilToStore, fetchParceiroPerfil } from '@/lib/services/parceiroPerfil';
+import { waitForAppCheckToken } from '@/lib/firebase/client';
 import type { ParceiroData } from '@/lib/types';
 
 function buildParceiroFromLista(pareadoUid: string): ParceiroData | null {
@@ -22,18 +23,21 @@ function buildParceiroFromLista(pareadoUid: string): ParceiroData | null {
  */
 export function useParceiroData() {
   const pareadoUid = useAppStore((s) => s.pareadoUid);
+  const authInitialized = useAppStore((s) => s.authInitialized);
   const parceirosAtivos = useAppStore((s) => s.parceirosAtivos);
   const { set } = useAppStore();
 
   useEffect(() => {
-    if (!pareadoUid) {
-      set({
-        parceiroData: null,
-        parceiroNome: null,
-        pareado: false,
-        idPareamentoAmigavel: null,
-        parceiroTelefone: null,
-      });
+    if (!authInitialized || !pareadoUid) {
+      if (!pareadoUid) {
+        set({
+          parceiroData: null,
+          parceiroNome: null,
+          pareado: false,
+          idPareamentoAmigavel: null,
+          parceiroTelefone: null,
+        });
+      }
       return;
     }
 
@@ -41,11 +45,26 @@ export function useParceiroData() {
     const parEntry = parceirosAtivos.find((p) => p.uid === pareadoUid);
 
     (async () => {
-      try {
-        const profile = await fetchParceiroPerfil(pareadoUid);
+      await waitForAppCheckToken(10000);
+
+      for (let attempt = 0; attempt < 3; attempt++) {
         if (cancelled) return;
-        applyParceiroPerfilToStore(profile, parEntry?.foguinhos);
-      } catch (err) {
+        try {
+          const profile = await fetchParceiroPerfil(pareadoUid);
+          if (cancelled) return;
+          applyParceiroPerfilToStore(profile, parEntry?.foguinhos);
+          return;
+        } catch (err) {
+          const msg = String(err);
+          const appCheckErr = msg.includes('missing_app_check') || msg.includes('invalid_app_check');
+          if (appCheckErr && attempt < 2) {
+            await waitForAppCheckToken(5000);
+            continue;
+          }
+          throw err;
+        }
+      }
+    })().catch((err) => {
         console.error('[useParceiroData] erro ao carregar parceiro:', err);
         if (cancelled) return;
 
@@ -71,13 +90,12 @@ export function useParceiroData() {
           parceiroTelefone: null,
           pareadoUid: null,
         });
-      }
-    })();
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [pareadoUid, set]);
+  }, [pareadoUid, authInitialized, set]);
 
   // Mescla foguinhos atualizados de parceirosAtivos no parceiroData exibido.
   useEffect(() => {
