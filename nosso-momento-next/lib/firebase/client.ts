@@ -2,7 +2,7 @@ import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, enableIndexedDbPersistence, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
-import { initializeAppCheck, ReCaptchaV3Provider, type AppCheck } from 'firebase/app-check';
+import { initializeAppCheck, ReCaptchaV3Provider, getToken, type AppCheck } from 'firebase/app-check';
 import type { FirebaseApp } from 'firebase/app';
 
 const firebaseConfig = {
@@ -77,6 +77,16 @@ if (app && typeof window !== 'undefined') {
 
 if (typeof window !== 'undefined' && !hasValidClientConfig) {
   console.error('[Firebase] Configuração NEXT_PUBLIC_FIREBASE_* ausente/inválida no ambiente.');
+}
+
+/** Garante token App Check antes de leituras Firestore (enforcement no Console). */
+export async function ensureAppCheckReady(): Promise<void> {
+  if (!appCheck) return;
+  try {
+    await getToken(appCheck, false);
+  } catch (err) {
+    console.warn('[AppCheck] falha ao obter token:', err);
+  }
 }
 
 export default app;

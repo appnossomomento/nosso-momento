@@ -4,7 +4,7 @@ import { useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/client';
+import { auth, db, ensureAppCheckReady } from '@/lib/firebase/client';
 import { openSystemAlert } from '@/components/ui/Modal';
 import { trackGA, trackMeta } from '@/lib/analytics';
 
@@ -32,6 +32,7 @@ export default function LoginPage() {
       trackGA('login', { method: 'Email' });
       trackMeta('Login');
 
+      await ensureAppCheckReady();
       const userSnap = await getDoc(doc(db, 'usuarios', userCredential.user.uid));
       const pareadoCom = userSnap.data()?.pareadoCom as string | null | undefined;
       const isPareado = !!pareadoCom && !pareadoCom.startsWith('pending_') && pareadoCom !== 'none';

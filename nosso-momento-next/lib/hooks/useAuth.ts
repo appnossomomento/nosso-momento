@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/client';
+import { auth, db, ensureAppCheckReady } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import type { Pareamento, Usuario } from '@/lib/types';
 import { restoreParceiroAtivo, syncParceiroAtivoComLista, clearRestoreSuppression, isRestoreSuppressed } from '@/lib/utils/setParceiroAtivo';
@@ -46,6 +46,8 @@ export function useAuth() {
       } catch (err) {
         console.error('[useAuth] falha ao criar sessão server-side:', err);
       }
+
+      await ensureAppCheckReady();
 
       // Ouvinte em tempo real do documento do usuário no Firestore
       const userRef = doc(db, 'usuarios', firebaseUser.uid);
