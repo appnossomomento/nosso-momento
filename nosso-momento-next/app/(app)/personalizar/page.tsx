@@ -9,6 +9,7 @@ import { showToast } from '@/components/ui/Toast';
 import clsx from 'clsx';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import { trackGA } from '@/lib/analytics';
+import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
 
 type CatalogoCfg = { preco?: number; bloqueado?: boolean };
 
@@ -43,10 +44,9 @@ export default function PersonalizarPage() {
     );
   }
 
-  const meuSexo = usuario?.sexo ?? 'Unisex';
-  // Momentos que meu parceiro pode comprar para mim (filtrados pelo MEU sexo)
-  const momentosParaMim = momentosMestres.filter(
-    (m) => m.targetGender === meuSexo || m.targetGender === 'Unisex'
+  const meuCatalogo = getCatalogFilterGender(usuario ?? undefined);
+  const momentosParaMim = momentosMestres.filter((m) =>
+    momentMatchesCatalogFilter(m.targetGender, meuCatalogo),
   );
   const categorias = [...new Set(momentosParaMim.map((m) => m.categoria))];
   const momentosFiltrados = filtro ? momentosParaMim.filter((m) => m.categoria === filtro) : momentosParaMim;

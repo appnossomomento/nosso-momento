@@ -9,6 +9,8 @@ export interface ParceiroPerfilResponse {
   fotoUrl?: string;
   foguinhos?: number;
   sexo?: string;
+  anatomia?: string;
+  apelidoReal?: string;
   catalogoPersonalizado?: Record<string, { preco?: number; bloqueado?: boolean }>;
   pareamentoId?: string;
 }
@@ -28,7 +30,9 @@ export function applyParceiroPerfilToStore(
     telefone: profile.telefone,
     fotoUrl: profile.fotoUrl,
     foguinhos: profile.foguinhos ?? foguinhosFallback,
-    sexo: profile.sexo,
+    sexo: profile.anatomia ?? profile.sexo,
+    anatomia: profile.anatomia ?? profile.sexo,
+    apelidoReal: profile.apelidoReal,
     catalogoPersonalizado: profile.catalogoPersonalizado ?? {},
     pareamentoId: profile.pareamentoId,
   };

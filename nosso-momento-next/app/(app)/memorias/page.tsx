@@ -10,6 +10,7 @@ import { showToast } from '@/components/ui/Toast';
 import Image from 'next/image';
 import clsx from 'clsx';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
+import { montarNomesCasal } from '@/lib/utils/displayName';
 
 const CATEGORIAS = ['Todos', 'Lovezin', 'Sair da Rotina', 'Quentes'] as const;
 
@@ -39,6 +40,7 @@ export default function MemoriasPage() {
     set,
     usuario,
     parceiroNome,
+    parceiroData,
   } = useAppStore();
   const uid = usuario?.uid ?? null;
 
@@ -164,7 +166,10 @@ export default function MemoriasPage() {
     { icon: '✅', value: realizacoesExibir, label: 'realizações' },
   ];
 
-  const nomesCasal = [usuario?.nome, parceiroNome].filter(Boolean).join(' e ');
+  const nomesCasal = montarNomesCasal(usuario, {
+    apelidoReal: parceiroData?.apelidoReal,
+    nome: parceiroNome ?? parceiroData?.nome,
+  });
   const meses = mesesJuntos(usuario?.pareadoDesde);
 
   // Foto de perfil: foto aleatória de "Sair da Rotina" do mês, estabilizada por useMemo

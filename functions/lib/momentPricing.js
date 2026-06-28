@@ -66,11 +66,30 @@ function computeMasterPrice(mestreData, catalogCfg) {
   return defaultPrice > 0 && defaultPrice <= MAX_PRICE ? defaultPrice : 0;
 }
 
+function normalizeCatalogGender(value) {
+  if (!value || typeof value !== "string") return "unisex";
+  const v = value.trim().toLowerCase();
+  if (v === "masculino" || v === "m") return "masculino";
+  if (v === "feminino" || v === "f") return "feminino";
+  if (v === "unisex") return "unisex";
+  return v;
+}
+
+function getPartnerCatalogGender(partnerData) {
+  const raw = (partnerData && partnerData.anatomia) ||
+    (partnerData && partnerData.sexo) ||
+    "unisex";
+  return normalizeCatalogGender(raw);
+}
+
 function momentMatchesPartnerGender(mestreData, partnerSexo) {
-  const target = mestreData.targetGender || "Unisex";
-  if (target === "Unisex") return true;
-  const sexo = partnerSexo || "Unisex";
-  return target === sexo;
+  const target = normalizeCatalogGender(
+      mestreData.targetGender || "Unisex",
+  );
+  if (target === "unisex") return true;
+  const receptor = getPartnerCatalogGender({sexo: partnerSexo, anatomia: partnerSexo});
+  if (receptor === "unisex") return true;
+  return target === receptor;
 }
 
 /**
@@ -84,7 +103,7 @@ function resolveMasterMomentItem(item, mestreData, partnerData) {
   const nome = mestreData.nome || item.nome;
   if (!nome) return {ok: false, error: "momento_invalido"};
 
-  if (!momentMatchesPartnerGender(mestreData, partnerData.sexo)) {
+  if (!momentMatchesPartnerGender(mestreData, partnerData.anatomia || partnerData.sexo)) {
     return {ok: false, error: "momento_genero_invalido"};
   }
 

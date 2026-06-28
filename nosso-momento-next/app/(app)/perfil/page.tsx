@@ -12,12 +12,23 @@ import { openSystemAlert, openSystemConfirm } from '@/components/ui/Modal';
 import { showToast } from '@/components/ui/Toast';
 import { requestFCMPermission } from '@/lib/hooks/useFCM';
 import { callFunction, FUNCTIONS } from '@/lib/firebase/functions';
+import DarkSelect from '@/components/ui/DarkSelect';
+import { validateApelidoReal, APELIDO_REAL_MAX_LENGTH } from '@/lib/utils/validations';
+import { CATALOGO_LOJA_OPTIONS } from '@/lib/types/profileEnums';
+import { nomeParaCard } from '@/lib/utils/displayName';
+import { getCatalogFilterGender } from '@/lib/utils/profile';
 
 export default function PerfilPage() {
   const router = useRouter();
   const { usuario, reset, set, fcmToken } = useAppStore();
   const [editandoNome, setEditandoNome] = useState(false);
   const [novoNome, setNovoNome] = useState(usuario?.nome ?? '');
+  const [editandoApelido, setEditandoApelido] = useState(false);
+  const [novoApelido, setNovoApelido] = useState(usuario?.apelidoReal ?? '');
+  const [editandoCatalogo, setEditandoCatalogo] = useState(false);
+  const [novoCatalogo, setNovoCatalogo] = useState(
+    () => getCatalogFilterGender(usuario ?? undefined) === 'feminino' ? 'feminino' : 'masculino',
+  );
   const [salvando, setSalvando] = useState(false);
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -33,10 +44,47 @@ export default function PerfilPage() {
     setSalvando(true);
     try {
       await updateDoc(doc(db, 'usuarios', usuario!.uid), { nome: novoNome.trim() });
+      set({ usuario: { ...usuario!, nome: novoNome.trim() } });
       showToast('Nome atualizado!', 'sucesso');
       setEditandoNome(false);
     } catch (_) {
       openSystemAlert('Erro ao atualizar o nome. Tente novamente.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function handleSalvarApelido() {
+    const err = validateApelidoReal(novoApelido);
+    if (err) { openSystemAlert(err); return; }
+    setSalvando(true);
+    try {
+      const trimmed = novoApelido.trim();
+      const payload = trimmed ? { apelidoReal: trimmed } : { apelidoReal: '' };
+      await updateDoc(doc(db, 'usuarios', usuario!.uid), payload);
+      set({ usuario: { ...usuario!, apelidoReal: trimmed || undefined } });
+      showToast('Apelido no card atualizado!', 'sucesso');
+      setEditandoApelido(false);
+    } catch {
+      openSystemAlert('Erro ao atualizar o apelido. Tente novamente.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function handleSalvarCatalogo() {
+    if (!novoCatalogo) { openSystemAlert('Selecione uma opção.'); return; }
+    setSalvando(true);
+    try {
+      await updateDoc(doc(db, 'usuarios', usuario!.uid), {
+        anatomia: novoCatalogo,
+        sexo: novoCatalogo,
+      });
+      set({ usuario: { ...usuario!, anatomia: novoCatalogo, sexo: novoCatalogo } });
+      showToast('Personalização da loja atualizada!', 'sucesso');
+      setEditandoCatalogo(false);
+    } catch {
+      openSystemAlert('Erro ao atualizar. Tente novamente.');
     } finally {
       setSalvando(false);
     }
@@ -229,6 +277,94 @@ export default function PerfilPage() {
                 <p className="text-sm font-medium">{usuario.nome || '—'}</p>
                 <button
                   onClick={() => { setEditandoNome(true); setNovoNome(usuario.nome ?? ''); }}
+                  className="text-pink-400 text-xs hover:text-pink-300 transition"
+                >
+                  <i className="fas fa-pen mr-1" />Editar
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Apelido no card */}
+          <div>
+            <p className="text-xs text-white/50 mb-1">Apelido no card</p>
+            {editandoApelido ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={novoApelido}
+                  maxLength={APELIDO_REAL_MAX_LENGTH}
+                  onChange={(e) => setNovoApelido(e.target.value)}
+                  className="w-full text-sm"
+                  style={{ padding: '8px 12px' }}
+                  placeholder="Como aparece no card de memórias"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button onClick={handleSalvarApelido} disabled={salvando}
+                    className="btn-red px-4 py-2 rounded-xl text-xs disabled:opacity-60">
+                    {salvando ? '...' : 'Salvar'}
+                  </button>
+                  <button
+                    onClick={() => { setEditandoApelido(false); setNovoApelido(usuario.apelidoReal ?? ''); }}
+                    className="px-3 py-2 rounded-xl text-xs border border-white/20 text-white/60"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">
+                  {usuario.apelidoReal || nomeParaCard({ nome: usuario.nome }) || '—'}
+                  {!usuario.apelidoReal && (
+                    <span className="text-white/40 text-xs ml-1">(primeiro nome)</span>
+                  )}
+                </p>
+                <button
+                  onClick={() => { setEditandoApelido(true); setNovoApelido(usuario.apelidoReal ?? ''); }}
+                  className="text-pink-400 text-xs hover:text-pink-300 transition"
+                >
+                  <i className="fas fa-pen mr-1" />Editar
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Personalização da loja */}
+          <div>
+            <p className="text-xs text-white/50 mb-1">Personalização da loja</p>
+            {editandoCatalogo ? (
+              <div className="space-y-2">
+                <DarkSelect value={novoCatalogo} onChange={(e) => setNovoCatalogo(e.target.value)}>
+                  {CATALOGO_LOJA_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </DarkSelect>
+                <div className="flex gap-2">
+                  <button onClick={handleSalvarCatalogo} disabled={salvando}
+                    className="btn-red px-4 py-2 rounded-xl text-xs disabled:opacity-60">
+                    {salvando ? '...' : 'Salvar'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditandoCatalogo(false);
+                      const cur = getCatalogFilterGender(usuario);
+                      setNovoCatalogo(cur === 'feminino' ? 'feminino' : 'masculino');
+                    }}
+                    className="px-3 py-2 rounded-xl text-xs border border-white/20 text-white/60"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">
+                  {getCatalogFilterGender(usuario) === 'feminino' ? 'Momentos femininos' : 'Momentos masculinos'}
+                </p>
+                <button
+                  onClick={() => setEditandoCatalogo(true)}
                   className="text-pink-400 text-xs hover:text-pink-300 transition"
                 >
                   <i className="fas fa-pen mr-1" />Editar

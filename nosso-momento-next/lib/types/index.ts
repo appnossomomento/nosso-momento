@@ -13,7 +13,23 @@ export interface Usuario {
   pareadoDesde?: string | null;
   catalogoPersonalizado?: Record<string, unknown>;
   fotoUrl?: string;
+  /** Apelido curto do próprio usuário (card Stories). Distinto de pareamentosAtivos[].apelido */
+  apelidoReal?: string;
+  /** @deprecated raiz — usar pareamentosAtivos[].apelido para apelido ao parceiro */
   apelido?: string;
+  /** masculino | feminino — filtro catálogo loja (alias legado: sexo) */
+  anatomia?: string;
+  sobrenome?: string;
+  idade?: number;
+  anoNascimento?: number;
+  estado?: string;
+  cidade?: string;
+  genero?: string;
+  generoOutro?: string;
+  orientacaoSexual?: string;
+  orientacaoSexualOutro?: string;
+  estadoCivil?: string;
+  tempoRelacionamento?: string | null;
   vip?: boolean;
   pareamentosAtivos?: Array<Record<string, unknown>>;
   conquistas?: Record<string, boolean>;
@@ -29,7 +45,8 @@ export interface ParceiroData {
   email?: string;
   foguinhos?: number;
   fotoUrl?: string;
-  apelido?: string;
+  apelidoReal?: string;
+  anatomia?: string;
   sexo?: string;
   pareadoCom?: string | null;
   catalogoPersonalizado?: Record<string, { preco?: number; bloqueado?: boolean }>;

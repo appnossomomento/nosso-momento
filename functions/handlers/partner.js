@@ -7,13 +7,20 @@ const {areUsersPaired} = require("../lib/pairing");
 
 function pickPublicPartnerProfile(partnerUid, data, pareamentoId) {
   const catalogo = data.catalogoPersonalizado;
+  const anatomia = typeof data.anatomia === "string" && data.anatomia.trim() ?
+    data.anatomia.trim() :
+    (typeof data.sexo === "string" ? data.sexo : undefined);
   return {
     uid: partnerUid,
     nome: typeof data.nome === "string" ? data.nome : "",
     telefone: typeof data.telefone === "string" ? data.telefone : undefined,
     fotoUrl: typeof data.fotoUrl === "string" ? data.fotoUrl : undefined,
     foguinhos: typeof data.foguinhos === "number" ? data.foguinhos : undefined,
-    sexo: typeof data.sexo === "string" ? data.sexo : undefined,
+    sexo: anatomia,
+    anatomia: anatomia,
+    apelidoReal: typeof data.apelidoReal === "string" ?
+      data.apelidoReal.trim() || undefined :
+      undefined,
     catalogoPersonalizado:
       catalogo && typeof catalogo === "object" ? catalogo : {},
     pareamentoId: pareamentoId || undefined,

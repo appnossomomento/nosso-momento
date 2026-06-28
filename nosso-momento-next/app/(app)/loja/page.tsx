@@ -12,6 +12,7 @@ import type { CarrinhoItem } from '@/lib/types';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import { trackGA, trackMeta } from '@/lib/analytics';
 import { refreshParceiroPerfil } from '@/lib/services/parceiroPerfil';
+import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
 
 export default function LojaPage() {
   const { momentosMestres, parceiroData, pareado, carrinho, showCartSidebar, set, idPareamentoAmigavel, pareadoUid } = useAppStore();
@@ -44,8 +45,10 @@ export default function LojaPage() {
 
   const foguinhos = Number(usuario?.foguinhos ?? 0);
   const catalogoParceiro = parceiroData.catalogoPersonalizado ?? {};
-  const partnerGender = parceiroData.sexo ?? 'Unisex';
-  const momentosParaParceiro = momentosMestres.filter((m) => m.targetGender === partnerGender || m.targetGender === 'Unisex');
+  const partnerGender = getCatalogFilterGender(parceiroData);
+  const momentosParaParceiro = momentosMestres.filter((m) =>
+    momentMatchesCatalogFilter(m.targetGender, partnerGender),
+  );
   const categorias = [...new Set(momentosParaParceiro.map((m) => m.categoria))];
   const momentosFiltrados = filtro ? momentosParaParceiro.filter((m) => m.categoria === filtro) : momentosParaParceiro;
   const totalCarrinho = carrinho.reduce((s, c) => s + (Number((c as CarrinhoItem & { custoFoguinhos?: number }).custoFoguinhos) || 0), 0);

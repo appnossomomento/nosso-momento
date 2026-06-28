@@ -59,12 +59,25 @@ export async function login(page: Page, email: string, password: string): Promis
 }
 
 export async function preencherCadastro(page: Page, user: UserBCredentials): Promise<void> {
-  await page.getByPlaceholder('Nome completo').fill(user.nome);
+  const parts = user.nome.trim().split(/\s+/);
+  const primeiro = parts[0] ?? user.nome;
+  const ultimo = parts.slice(1).join(' ') || 'E2E';
+
+  await page.getByPlaceholder('Nome').fill(primeiro);
+  await page.getByPlaceholder('Último nome').fill(ultimo);
   await page.getByPlaceholder('Email').fill(user.email);
   await page.getByPlaceholder(/Telefone/i).fill(user.telefone);
-  await page.getByPlaceholder(/Senha/i).fill(user.senha);
-  await page.locator('select').selectOption(user.sexo);
+  await page.getByPlaceholder(/Senha/i).first().fill(user.senha);
   await page.locator('#aceitarTermos').check();
+  await page.getByRole('button', { name: /Continuar/i }).click();
+
+  await page.getByPlaceholder('Idade').fill('25');
+  await page.locator('select').nth(0).selectOption('SP');
+  await page.getByPlaceholder('Cidade').fill('São Paulo');
+  await page.locator('select').nth(1).selectOption('homem');
+  await page.locator('select').nth(2).selectOption('heterossexual');
+  await page.locator('select').nth(3).selectOption('solteiro');
+
   await page.getByRole('button', { name: /CRIAR CONTA/i }).click();
 }
 

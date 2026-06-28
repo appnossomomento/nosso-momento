@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAppStore } from '@/lib/store/appStore';
+import { montarNomesCasal } from '@/lib/utils/displayName';
 
 function mesesJuntos(pareadoDesde: string | null | undefined): number {
   if (!pareadoDesde) return 0;
@@ -56,6 +57,37 @@ function drawImageCover(
 }
 
 type SetFn = (s: Record<string, unknown>) => void;
+
+/** Desenha texto em uma única linha, reduzindo fonte se necessário. */
+function drawSingleLineText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  baseFontSize = 42,
+  minFontSize = 36,
+) {
+  let fontSize = baseFontSize;
+  const family = '-apple-system, BlinkMacSystemFont, sans-serif';
+  while (fontSize >= minFontSize) {
+    ctx.font = `bold ${fontSize}px ${family}`;
+    if (ctx.measureText(text).width <= maxWidth) break;
+    fontSize -= 2;
+  }
+  if (fontSize < minFontSize) {
+    fontSize = minFontSize;
+    ctx.font = `bold ${fontSize}px ${family}`;
+    let display = text;
+    while (display.length > 1 && ctx.measureText(`${display}…`).width > maxWidth) {
+      display = display.slice(0, -1);
+    }
+    if (display !== text) display = `${display}…`;
+    ctx.fillText(display, x, y);
+    return;
+  }
+  ctx.fillText(text, x, y);
+}
 
 async function generateStoriesCard(params: {
   nomesCasal: string;
@@ -165,15 +197,9 @@ async function generateStoriesCard(params: {
   const iW = cardX + cardW - iX - 44;
   ctx.textAlign = 'left';
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 46px -apple-system, BlinkMacSystemFont, sans-serif';
-  const words = (nomesCasal || 'Nosso Momento').split(' ');
-  let line = ''; let ty = cardY + 108;
-  for (const word of words) {
-    const test = line ? `${line} ${word}` : word;
-    if (ctx.measureText(test).width > iW) { ctx.fillText(line, iX, ty); line = word; ty += 54; }
-    else { line = test; }
-  }
-  ctx.fillText(line, iX, ty);
+  const coupleLabel = nomesCasal || 'Nosso Momento';
+  let ty = cardY + 108;
+  drawSingleLineText(ctx, coupleLabel, iX, ty, iW);
 
   ctx.fillStyle = 'rgba(255,255,255,0.44)';
   ctx.font = '28px -apple-system, BlinkMacSystemFont, sans-serif';
@@ -268,6 +294,7 @@ export default function ShareModal() {
     memoriasItems,
     usuario,
     parceiroNome,
+    parceiroData,
     achievementStats,
     set,
   } = useAppStore();
@@ -277,7 +304,10 @@ export default function ShareModal() {
     const stats = (achievementStats ?? {}) as Record<string, unknown>;
     const monthDate = memoriasMonth ? new Date(memoriasMonth) : new Date();
     generateStoriesCard({
-      nomesCasal: [usuario?.nome, parceiroNome].filter(Boolean).join(' e '),
+      nomesCasal: montarNomesCasal(usuario, {
+        apelidoReal: parceiroData?.apelidoReal,
+        nome: parceiroNome ?? parceiroData?.nome,
+      }),
       mesLabel: monthDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
       mesNome: monthDate.toLocaleDateString('pt-BR', { month: 'long' }),
       meses: mesesJuntos(usuario?.pareadoDesde),
