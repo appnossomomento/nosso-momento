@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
-import firebaseApp from '@/lib/firebase/client';
-import { callFunction, FUNCTIONS } from '@/lib/firebase/functions';
-import { useAppStore } from '@/lib/store/appStore';
+import { getMessaging, isSupported, onMessage } from 'firebase/messaging';
 import { showToast } from '@/components/ui/Toast';
+import { revokeLocalFCM, syncFCMTokenSilently } from '@/lib/utils/fcmClient';
+import firebaseApp from '@/lib/firebase/client';
+import { useAppStore } from '@/lib/store/appStore';
 import { trackGA, trackMeta } from '@/lib/analytics';
 import { resolveNotificationTarget } from '@/lib/utils/notificationRedirect';
 
@@ -29,25 +29,20 @@ export async function requestFCMPermission(): Promise<string | null> {
       return null;
     }
 
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-    const messaging = getMessaging(firebaseApp);
-    const token = await getToken(messaging, {
-      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration: registration,
-    });
-
+    const token = await syncFCMTokenSilently();
     if (!token) {
       showToast('Não foi possível ativar notificações.', 'aviso');
       return null;
     }
 
-    await callFunction(FUNCTIONS.setNotificationToken, { token });
     return token;
   } catch (err) {
     console.error('Erro FCM:', err);
     return null;
   }
 }
+
+export { revokeLocalFCM, syncFCMTokenSilently };
 
 /**
  * Foreground push + clique em notificação. Não registra token automaticamente.
@@ -57,6 +52,23 @@ export function useFCM() {
   const usuario = useAppStore((s) => s.usuario);
   const fcmToken = useAppStore((s) => s.fcmToken);
   const set = useAppStore((s) => s.set);
+  const syncedUidRef = useRef<string | null>(null);
+
+  // Re-sincroniza token no login se permissão já foi concedida (best-effort, uma vez por sessão)
+  useEffect(() => {
+    if (!usuario?.uid) {
+      syncedUidRef.current = null;
+      return;
+    }
+    if (!usuario.notificationsEnabled) return;
+    if (typeof window === 'undefined' || Notification.permission !== 'granted') return;
+    if (syncedUidRef.current === usuario.uid) return;
+    syncedUidRef.current = usuario.uid;
+
+    void syncFCMTokenSilently().then((token) => {
+      if (token) set({ fcmToken: token });
+    });
+  }, [usuario?.uid, usuario?.notificationsEnabled, set]);
 
   const navigateFromNotification = useCallback(
     (redirectTo?: string | null, tipo?: string | null) => {

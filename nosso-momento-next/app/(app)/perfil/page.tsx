@@ -10,7 +10,7 @@ import { auth, db, storage } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import { openSystemAlert, openSystemConfirm } from '@/components/ui/Modal';
 import { showToast } from '@/components/ui/Toast';
-import { requestFCMPermission } from '@/lib/hooks/useFCM';
+import { requestFCMPermission, revokeLocalFCM } from '@/lib/hooks/useFCM';
 import { callFunction, FUNCTIONS } from '@/lib/firebase/functions';
 import DarkSelect from '@/components/ui/DarkSelect';
 import { validateApelidoReal, APELIDO_REAL_MAX_LENGTH } from '@/lib/utils/validations';
@@ -142,8 +142,8 @@ export default function PerfilPage() {
     setTogglingNotif(true);
     try {
       if (notifAtivas) {
-        // Desativar
         await callFunction(FUNCTIONS.setNotificationToken, { revoke: true, token: fcmToken ?? undefined });
+        await revokeLocalFCM();
         set({ fcmToken: null, usuario: usuario ? { ...usuario, notificationsEnabled: false } : usuario });
         showToast('Notificações desativadas.', 'sucesso');
       } else {

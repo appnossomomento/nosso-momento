@@ -50,6 +50,19 @@ exports.enviarNotificacaoPush = onDocumentCreated(
       }
 
       if (!tokens.length) {
+        const userData = userDoc.data() || {};
+        if (
+          typeof userData.fcmToken === "string" &&
+          userData.fcmToken.length > 0
+        ) {
+          tokens = [userData.fcmToken];
+          console.log(
+              `Usuário ${userId} usando fcmToken legado.`,
+          );
+        }
+      }
+
+      if (!tokens.length) {
         console.log(
             `Usuário ${userId} não possui tokens de notificação válidos.`,
         );
@@ -100,12 +113,27 @@ exports.enviarNotificacaoPush = onDocumentCreated(
         });
 
         if (invalidTokens.length) {
-          await tokensDoc.ref.update({
-            tokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          }).catch((updateErr) => {
-            console.error("Falha ao remover tokens inválidos:", updateErr);
-          });
+          if (tokensDoc.exists) {
+            await tokensDoc.ref.update({
+              tokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }).catch((updateErr) => {
+              console.error("Falha ao remover tokens inválidos:", updateErr);
+            });
+          }
+
+          const userData = userDoc.data() || {};
+          if (
+            typeof userData.fcmToken === "string" &&
+            invalidTokens.includes(userData.fcmToken)
+          ) {
+            await userDoc.ref.update({
+              fcmToken: admin.firestore.FieldValue.delete(),
+              notificationsEnabled: false,
+            }).catch((updateErr) => {
+              console.error("Falha ao limpar fcmToken legado:", updateErr);
+            });
+          }
         }
       } catch (error) {
         console.error("Erro ao enviar notificação Push:", error);
