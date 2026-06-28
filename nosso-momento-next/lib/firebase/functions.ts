@@ -10,11 +10,9 @@ function cfUrl(path: string): string {
   return `${REMOTE_BASE}/${path}`;
 }
 
-async function appCheckHeaders(force = false): Promise<Record<string, string>> {
-  const waitMs = process.env.NODE_ENV === 'development' ? 2000 : 8000;
-  const token = force
-    ? await getAppCheckToken(true)
-    : (await waitForAppCheckToken(waitMs)) ?? (await getAppCheckToken(false));
+async function appCheckHeaders(): Promise<Record<string, string>> {
+  const waitMs = process.env.NODE_ENV === 'development' ? 2000 : 6000;
+  const token = (await waitForAppCheckToken(waitMs)) ?? (await getAppCheckToken(false));
   return token ? { 'X-Firebase-AppCheck': token } : {};
 }
 
@@ -58,7 +56,7 @@ export async function callFunction<T = unknown>(
   if (!user) throw new Error('Usuário não autenticado');
 
   const token = await user.getIdToken();
-  let appCheckHdr = await appCheckHeaders(false);
+  let appCheckHdr = await appCheckHeaders();
 
   const doFetch = (headers: Record<string, string>) =>
     fetch(url, {
@@ -78,7 +76,7 @@ export async function callFunction<T = unknown>(
     if (text.includes('missing_app_check') || text.includes('invalid_app_check')) {
       for (let attempt = 0; attempt < 3; attempt++) {
         await new Promise((resolve) => setTimeout(resolve, 2500 * (attempt + 1)));
-        appCheckHdr = await appCheckHeaders(true);
+        appCheckHdr = await appCheckHeaders();
         res = await doFetch(appCheckHdr);
         if (res.ok) return res.json() as Promise<T>;
       }

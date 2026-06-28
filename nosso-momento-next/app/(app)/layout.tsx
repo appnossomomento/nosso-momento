@@ -29,12 +29,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [authInitialized, usuario, router]);
 
-  if (!usuario) {
+  if (!authInitialized || !usuario) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
         <div className="text-center">
           <div className="text-3xl mb-3 animate-spin">💫</div>
-          <p className="text-gray-400 text-sm">Carregando...</p>
+          <p className="text-gray-400 text-sm">
+            {!authInitialized ? 'Carregando...' : 'Redirecionando...'}
+          </p>
         </div>
       </div>
     );

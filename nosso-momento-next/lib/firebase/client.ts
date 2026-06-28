@@ -76,17 +76,43 @@ if (typeof window !== 'undefined' && !hasValidClientConfig) {
 /** Garante token App Check antes de leituras Firestore (enforcement no Console). */
 let inflightAppCheckToken: Promise<string | null> | null = null;
 let cachedAppCheckToken: { value: string; expiresAt: number } | null = null;
+/** Evita rajadas de exchangeRecaptchaV3Token após 400/throttle do Firebase. */
+let appCheckBackoffUntil = 0;
 
 const isDevEnv = process.env.NODE_ENV === 'development';
-const APP_CHECK_WAIT_MS = isDevEnv ? 2500 : 10000;
-const APP_CHECK_RETRY_ATTEMPTS = isDevEnv ? 2 : 4;
+const APP_CHECK_WAIT_MS = isDevEnv ? 2500 : 6000;
+
+function parseAppCheckBackoffMs(err: unknown): number {
+  const message = String((err as { message?: string }).message ?? err ?? '');
+  const match = message.match(/after\s+(\d+)m:(\d+)s/i);
+  if (match) {
+    return (Number(match[1]) * 60 + Number(match[2])) * 1000 + 500;
+  }
+  return isDevEnv ? 3_000 : 15_000;
+}
+
+function isAppCheckThrottleError(err: unknown): boolean {
+  const code = String((err as { code?: string }).code ?? '');
+  const message = String((err as { message?: string }).message ?? '');
+  return (
+    code.includes('throttled') ||
+    code.includes('initial-throttle') ||
+    message.includes('400 error') ||
+    message.includes('exchangeRecaptchaV3Token')
+  );
+}
 
 export async function getAppCheckToken(force = false): Promise<string | null> {
   if (!appCheck) return null;
 
+  const now = Date.now();
+  if (!force && now < appCheckBackoffUntil) {
+    return cachedAppCheckToken?.value ?? null;
+  }
+
   if (force) {
     cachedAppCheckToken = null;
-  } else if (cachedAppCheckToken && cachedAppCheckToken.expiresAt > Date.now()) {
+  } else if (cachedAppCheckToken && cachedAppCheckToken.expiresAt > now) {
     return cachedAppCheckToken.value;
   }
 
@@ -95,33 +121,23 @@ export async function getAppCheckToken(force = false): Promise<string | null> {
   }
 
   inflightAppCheckToken = (async () => {
-    for (let attempt = 0; attempt < APP_CHECK_RETRY_ATTEMPTS; attempt++) {
-      try {
-        const result = await getToken(appCheck!, force || attempt > 0);
-        const token = result.token || null;
-        if (token) {
-          cachedAppCheckToken = { value: token, expiresAt: Date.now() + 50 * 60 * 1000 };
-        }
-        return token;
-      } catch (err) {
-        const code = String((err as { code?: string }).code ?? '');
-        const throttled = code.includes('throttled') || code.includes('initial-throttle');
-        const retryDelay = isDevEnv ? 800 : 2500;
-        if (throttled && attempt < APP_CHECK_RETRY_ATTEMPTS - 1) {
-          await new Promise((resolve) => setTimeout(resolve, retryDelay * (attempt + 1)));
-          continue;
-        }
-        if (attempt < APP_CHECK_RETRY_ATTEMPTS - 1) {
-          await new Promise((resolve) => setTimeout(resolve, (isDevEnv ? 500 : 1500) * (attempt + 1)));
-          continue;
-        }
-        if (!isDevEnv) {
-          console.warn('[AppCheck] falha ao obter token:', err);
-        }
-        return null;
+    try {
+      const result = await getToken(appCheck!, false);
+      const token = result.token || null;
+      if (token) {
+        appCheckBackoffUntil = 0;
+        cachedAppCheckToken = { value: token, expiresAt: Date.now() + 50 * 60 * 1000 };
       }
+      return token;
+    } catch (err) {
+      if (isAppCheckThrottleError(err)) {
+        appCheckBackoffUntil = Date.now() + parseAppCheckBackoffMs(err);
+      }
+      if (!isDevEnv) {
+        console.warn('[AppCheck] falha ao obter token:', err);
+      }
+      return null;
     }
-    return null;
   })();
 
   try {
@@ -134,19 +150,22 @@ export async function getAppCheckToken(force = false): Promise<string | null> {
 /** Aguarda token App Check por até maxMs (útil antes de CFs com enforce). */
 export async function waitForAppCheckToken(maxMs = APP_CHECK_WAIT_MS): Promise<string | null> {
   const deadline = Date.now() + maxMs;
-  const pollMs = isDevEnv ? 500 : 2000;
-  let force = false;
+  const pollMs = isDevEnv ? 500 : 1500;
   while (Date.now() < deadline) {
-    const token = await getAppCheckToken(force);
+    const token = await getAppCheckToken(false);
     if (token) return token;
-    force = true;
+    if (Date.now() < appCheckBackoffUntil) break;
     await new Promise((resolve) => setTimeout(resolve, pollMs));
   }
-  return null;
+  return cachedAppCheckToken?.value ?? null;
 }
 
-export async function ensureAppCheckReady(): Promise<void> {
-  await getAppCheckToken(false);
+/** Best-effort — não bloqueia login/navegação. */
+export async function ensureAppCheckReady(maxMs = isDevEnv ? 1500 : 2000): Promise<void> {
+  await Promise.race([
+    getAppCheckToken(false),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), maxMs)),
+  ]);
 }
 
 export default app;

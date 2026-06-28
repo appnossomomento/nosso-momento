@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db, ensureAppCheckReady } from '@/lib/firebase/client';
+import { auth, db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import type { Pareamento, Usuario } from '@/lib/types';
 import { restoreParceiroAtivo, syncParceiroAtivoComLista, clearRestoreSuppression, isRestoreSuppressed } from '@/lib/utils/setParceiroAtivo';
@@ -33,28 +33,47 @@ export function useAuth() {
         return;
       }
 
-      try {
-        // Obtém o idToken atual (renovado automaticamente pelo SDK se expirado).
-        const idToken = await firebaseUser.getIdToken();
-
-        // Envia o idToken para a API Route que emite o cookie HttpOnly seguro.
-        await fetch('/api/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken }),
-        });
-      } catch (err) {
-        console.error('[useAuth] falha ao criar sessão server-side:', err);
-      }
-
-      await ensureAppCheckReady();
+      // Sessão server-side e App Check em paralelo — não bloqueiam leitura do usuário.
+      void (async () => {
+        try {
+          const idToken = await firebaseUser.getIdToken();
+          await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken }),
+          });
+        } catch (err) {
+          console.error('[useAuth] falha ao criar sessão server-side:', err);
+        }
+      })();
 
       // Ouvinte em tempo real do documento do usuário no Firestore
       const userRef = doc(db, 'usuarios', firebaseUser.uid);
 
+      const authReadyTimeout = window.setTimeout(() => {
+        const state = useAppStore.getState();
+        if (!state.authInitialized) {
+          set({
+            authInitialized: true,
+            usuario: {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email ?? '',
+              nome: '',
+              telefone: '',
+              sexo: '',
+              foguinhos: 0,
+              lastCheckInDate: null,
+              pareadoCom: null,
+              catalogoPersonalizado: {},
+            },
+          });
+        }
+      }, 8000);
+
       // getDoc como bootstrap imediato — seta usuario e authInitialized juntos (atomicamente)
       // para evitar que o layout redirecione para /login enquanto usuario ainda é null.
       getDoc(userRef).then((snap) => {
+        window.clearTimeout(authReadyTimeout);
         const rawData = snap.exists() ? snap.data() : null;
         const parceirosAtivos = (rawData?.pareamentosAtivos as Pareamento[] | undefined) ?? [];
         const baseUser = rawData
@@ -63,6 +82,7 @@ export function useAuth() {
         set({ usuario: baseUser, parceirosAtivos, authInitialized: true });
         restoreParceiroAtivo(firebaseUser.uid, parceirosAtivos);
       }).catch(() => {
+        window.clearTimeout(authReadyTimeout);
         // Se getDoc falhar, ainda marca auth pronto com usuario mínimo (evita redirect indevido)
         set({
           authInitialized: true,
