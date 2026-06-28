@@ -71,6 +71,9 @@ exports.enviarNotificacaoPush = onDocumentCreated(
       if (novaNotificacao.icone) {
         dataPayload.iconClass = String(novaNotificacao.icone);
       }
+      if (novaNotificacao.redirectTo) {
+        dataPayload.redirectTo = String(novaNotificacao.redirectTo);
+      }
 
       const message = {
         tokens,

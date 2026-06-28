@@ -276,19 +276,23 @@ export default function CadastroPage() {
     >
       <div className="card relative text-white" style={{ width: '92vw', maxWidth: 480, padding: '24px 24px 32px' }}>
         {!hasPendingConvite && step === 1 && (
-          <Link href="/" className="absolute top-5 left-5 text-gray-400 hover:text-white transition" aria-label="Voltar">
-            <i className="fas fa-arrow-left" />
-          </Link>
+          <div className="mb-3">
+            <Link href="/" className="inline-flex items-center text-gray-400 hover:text-white transition" aria-label="Voltar">
+              <i className="fas fa-arrow-left" />
+            </Link>
+          </div>
         )}
         {step === 2 && (
-          <button
-            type="button"
-            onClick={() => setStep(1)}
-            className="absolute top-5 left-5 text-gray-400 hover:text-white transition"
-            aria-label="Voltar"
-          >
-            <i className="fas fa-arrow-left" />
-          </button>
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="inline-flex items-center text-gray-400 hover:text-white transition"
+              aria-label="Voltar"
+            >
+              <i className="fas fa-arrow-left" />
+            </button>
+          </div>
         )}
 
         {hasPendingConvite && (

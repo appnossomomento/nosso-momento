@@ -21,6 +21,7 @@ import AchievementCelebration from '@/components/AchievementCelebration';
 import InstagramModal from '@/components/InstagramModal';
 import { usePareamentoListeners } from '@/lib/hooks/usePareamentoListeners';
 import { useNotificacoes } from '@/lib/hooks/useNotificacoes';
+import { useFCM } from '@/lib/hooks/useFCM';
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   useAuth();
@@ -31,6 +32,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   useClimaData();
   usePareamentoListeners();
   useNotificacoes();
+  useFCM();
 
   return (
     <>
