@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FormEvent, useRef } from 'react';
+import { useState, FormEvent, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -15,7 +15,7 @@ import {
   validateSenha,
   validateEmail,
   validateApelidoReal,
-  validateIdade,
+  validateDataNascimento,
   validateCidade,
   validateEstado,
   validateGeneroOutro,
@@ -31,6 +31,7 @@ import {
   CATALOGO_LOJA_OPTIONS,
 } from '@/lib/types/profileEnums';
 import { ESTADOS_BR } from '@/lib/data/estados';
+import { MESES_NASCIMENTO, buildAnoNascimentoOptions, buildDiaOptions } from '@/lib/data/meses';
 import {
   generoNeedsCatalogoChoice,
   resolveAnatomiaFromCadastro,
@@ -57,7 +58,9 @@ export default function CadastroPage() {
   const [aceitouTermos, setAceitouTermos] = useState(false);
 
   // Etapa 2
-  const [idade, setIdade] = useState('');
+  const [diaNascimento, setDiaNascimento] = useState('');
+  const [mesNascimento, setMesNascimento] = useState('');
+  const [anoNascimento, setAnoNascimento] = useState('');
   const [estado, setEstado] = useState('');
   const [cidade, setCidade] = useState('');
   const [genero, setGenero] = useState('');
@@ -78,6 +81,20 @@ export default function CadastroPage() {
 
   const precisaCatalogo = genero ? generoNeedsCatalogoChoice(genero) : false;
   const precisaTempoRel = estadoCivil === 'namorando' || estadoCivil === 'casado';
+
+  const diaOptions = useMemo(
+    () => buildDiaOptions(mesNascimento, anoNascimento),
+    [mesNascimento, anoNascimento],
+  );
+  const anoOptions = useMemo(() => buildAnoNascimentoOptions(), []);
+
+  function clampDiaIfNeeded(nextMes: string, nextAno: string, currentDia: string) {
+    if (!currentDia || !nextMes || !nextAno) return currentDia;
+    const max = buildDiaOptions(nextMes, nextAno).length;
+    const d = parseInt(currentDia, 10);
+    if (d > max) return String(max);
+    return currentDia;
+  }
 
   function openLegalModal(type: LegalModalType) {
     set({ showLegalModal: true, legalModalType: type });
@@ -108,9 +125,8 @@ export default function CadastroPage() {
   }
 
   function validateStep2(): boolean {
-    const idadeNum = parseInt(idade, 10);
-    const idadeErr = validateIdade(idadeNum);
-    if (idadeErr) { openSystemAlert(idadeErr); return false; }
+    const nasc = validateDataNascimento(diaNascimento, mesNascimento, anoNascimento);
+    if (!nasc.ok) { openSystemAlert(nasc.error); return false; }
     const ufErr = validateEstado(estado);
     if (ufErr) { openSystemAlert(ufErr); return false; }
     const cidadeErr = validateCidade(cidade);
@@ -152,6 +168,12 @@ export default function CadastroPage() {
     e.preventDefault();
     if (!validateStep2()) return;
 
+    const nasc = validateDataNascimento(diaNascimento, mesNascimento, anoNascimento);
+    if (!nasc.ok) {
+      openSystemAlert(nasc.error);
+      return;
+    }
+
     let anatomia: 'masculino' | 'feminino';
     try {
       anatomia = resolveAnatomiaFromCadastro(genero, catalogoLoja);
@@ -174,7 +196,7 @@ export default function CadastroPage() {
       trackGA('sign_up', { method: 'Email' });
       trackMeta('CompleteRegistration');
 
-      const idadeNum = parseInt(idade, 10);
+      const idadeNum = nasc.value.idade;
       const nomeCompleto = `${nome.trim()} ${sobrenome.trim()}`;
       const userDoc: Record<string, unknown> = {
         nome: nomeCompleto,
@@ -184,8 +206,11 @@ export default function CadastroPage() {
         genero,
         anatomia,
         sexo: anatomia,
+        dataNascimento: nasc.value.dataNascimento,
+        diaNascimento: nasc.value.diaNascimento,
+        mesNascimento: nasc.value.mesNascimento,
+        anoNascimento: nasc.value.anoNascimento,
         idade: idadeNum,
-        anoNascimento: new Date().getFullYear() - idadeNum,
         estado,
         cidade: cidade.trim(),
         orientacaoSexual,
@@ -350,8 +375,49 @@ export default function CadastroPage() {
           </form>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3">
-            <input type="number" placeholder="Idade" value={idade} min={18} max={120}
-              onChange={(e) => setIdade(e.target.value.replace(/\D/g, '').slice(0, 3))} inputMode="numeric" />
+            <div>
+              <p className="text-xs text-gray-400 mb-2 px-1">Data de nascimento</p>
+              <div className="grid grid-cols-3 gap-2">
+                <DarkSelect
+                  placeholder="Dia"
+                  value={diaNascimento}
+                  onChange={(e) => setDiaNascimento(e.target.value)}
+                  aria-label="Dia de nascimento"
+                >
+                  {diaOptions.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </DarkSelect>
+                <DarkSelect
+                  placeholder="Mês"
+                  value={mesNascimento}
+                  onChange={(e) => {
+                    const nextMes = e.target.value;
+                    setMesNascimento(nextMes);
+                    setDiaNascimento((d) => clampDiaIfNeeded(nextMes, anoNascimento, d));
+                  }}
+                  aria-label="Mês de nascimento"
+                >
+                  {MESES_NASCIMENTO.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </DarkSelect>
+                <DarkSelect
+                  placeholder="Ano"
+                  value={anoNascimento}
+                  onChange={(e) => {
+                    const nextAno = e.target.value;
+                    setAnoNascimento(nextAno);
+                    setDiaNascimento((d) => clampDiaIfNeeded(mesNascimento, nextAno, d));
+                  }}
+                  aria-label="Ano de nascimento"
+                >
+                  {anoOptions.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </DarkSelect>
+              </div>
+            </div>
 
             <DarkSelect placeholder="Estado" value={estado} onChange={(e) => setEstado(e.target.value)}>
               {ESTADOS_BR.map(({ uf, nome: nomeUf }) => (

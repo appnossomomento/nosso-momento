@@ -71,12 +71,14 @@ export async function preencherCadastro(page: Page, user: UserBCredentials): Pro
   await page.locator('#aceitarTermos').check();
   await page.getByRole('button', { name: /Continuar/i }).click();
 
-  await page.getByPlaceholder('Idade').fill('25');
-  await page.locator('select').nth(0).selectOption('SP');
+  await page.locator('select').nth(0).selectOption('15');
+  await page.locator('select').nth(1).selectOption('6');
+  await page.locator('select').nth(2).selectOption('1998');
+  await page.locator('select').nth(3).selectOption('SP');
   await page.getByPlaceholder('Cidade').fill('São Paulo');
-  await page.locator('select').nth(1).selectOption('homem');
-  await page.locator('select').nth(2).selectOption('heterossexual');
-  await page.locator('select').nth(3).selectOption('solteiro');
+  await page.locator('select').nth(4).selectOption('homem');
+  await page.locator('select').nth(5).selectOption('heterossexual');
+  await page.locator('select').nth(6).selectOption('solteiro');
 
   await page.getByRole('button', { name: /CRIAR CONTA/i }).click();
 }

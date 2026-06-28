@@ -44,6 +44,69 @@ export function validateIdade(idade: number): string | null {
   return null;
 }
 
+export type DataNascimentoValidada = {
+  dataNascimento: string;
+  diaNascimento: number;
+  mesNascimento: number;
+  anoNascimento: number;
+  idade: number;
+};
+
+/** Valida dia/mês/ano e exige 18+ na data de hoje. */
+export function validateDataNascimento(
+  dia: string,
+  mes: string,
+  ano: string,
+): { ok: true; value: DataNascimentoValidada } | { ok: false; error: string } {
+  if (!dia || !mes || !ano) {
+    return { ok: false, error: 'Selecione sua data de nascimento completa.' };
+  }
+
+  const d = parseInt(dia, 10);
+  const m = parseInt(mes, 10);
+  const y = parseInt(ano, 10);
+
+  if (!Number.isFinite(d) || !Number.isFinite(m) || !Number.isFinite(y)) {
+    return { ok: false, error: 'Data de nascimento inválida.' };
+  }
+
+  if (m < 1 || m > 12) return { ok: false, error: 'Mês inválido.' };
+
+  const maxDia = new Date(y, m, 0).getDate();
+  if (d < 1 || d > maxDia) return { ok: false, error: 'Dia inválido para o mês selecionado.' };
+
+  const birth = new Date(y, m - 1, d);
+  if (
+    birth.getFullYear() !== y ||
+    birth.getMonth() !== m - 1 ||
+    birth.getDate() !== d
+  ) {
+    return { ok: false, error: 'Data de nascimento inválida.' };
+  }
+
+  const today = new Date();
+  let idade = today.getFullYear() - y;
+  const aniversarioEsteAno = new Date(today.getFullYear(), m - 1, d);
+  if (today < aniversarioEsteAno) idade -= 1;
+
+  const idadeErr = validateIdade(idade);
+  if (idadeErr) return { ok: false, error: idadeErr };
+
+  const mm = String(m).padStart(2, '0');
+  const dd = String(d).padStart(2, '0');
+
+  return {
+    ok: true,
+    value: {
+      dataNascimento: `${y}-${mm}-${dd}`,
+      diaNascimento: d,
+      mesNascimento: m,
+      anoNascimento: y,
+      idade,
+    },
+  };
+}
+
 export function validateCidade(cidade: string): string | null {
   if (!cidade.trim() || cidade.trim().length < 2) return 'Informe uma cidade válida.';
   return null;

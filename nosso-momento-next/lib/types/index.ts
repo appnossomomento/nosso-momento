@@ -21,6 +21,9 @@ export interface Usuario {
   anatomia?: string;
   sobrenome?: string;
   idade?: number;
+  dataNascimento?: string;
+  diaNascimento?: number;
+  mesNascimento?: number;
   anoNascimento?: number;
   estado?: string;
   cidade?: string;
