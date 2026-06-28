@@ -186,10 +186,13 @@ export default function MemoriasPage() {
     ) || null;
   }, [memoriasItems]);
 
-  // Sincroniza fotoPerfil com o store para o ShareModal acessar
+  // Sincroniza fotoPerfil e mês selecionado com o store para o ShareModal
   useEffect(() => {
-    set({ memoriasShareLastPhoto: fotoPerfil });
-  }, [fotoPerfil, set]);
+    set({
+      memoriasShareLastPhoto: fotoPerfil,
+      memoriasMonth: month.toISOString(),
+    });
+  }, [fotoPerfil, month, set]);
 
   return (
     <div className="screen bg-black text-white pb-24">

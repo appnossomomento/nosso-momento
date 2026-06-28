@@ -60,6 +60,7 @@ type SetFn = (s: Record<string, unknown>) => void;
 async function generateStoriesCard(params: {
   nomesCasal: string;
   mesLabel: string;
+  mesNome: string;
   meses: number;
   foguinhosGastos: number;
   momentosResgatados: number;
@@ -69,7 +70,7 @@ async function generateStoriesCard(params: {
   set: SetFn;
 }) {
   const {
-    nomesCasal, mesLabel, meses,
+    nomesCasal, mesLabel, mesNome, meses,
     foguinhosGastos, momentosResgatados, realizacoes,
     photoSrc, memoriasItems, set,
   } = params;
@@ -203,8 +204,12 @@ async function generateStoriesCard(params: {
   ctx.strokeStyle = dg; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(cardX + 44, divY); ctx.lineTo(cardX + cardW - 44, divY); ctx.stroke();
 
-  ctx.fillStyle = 'rgba(255,255,255,0.28)'; ctx.font = '28px -apple-system';
-  ctx.textAlign = 'center'; ctx.fillText('âŠž', 540, divY + 46); ctx.textAlign = 'left';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,65,85,0.95)';
+  ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, sans-serif';
+  const tituloMes = `Nossos momentos de ${mesNome}`;
+  ctx.fillText(tituloMes, 540, divY + 46);
+  ctx.textAlign = 'left';
 
   // â”€â”€ PHOTO GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const gridStartY = divY + 74;
@@ -259,6 +264,7 @@ export default function ShareModal() {
     memoriasSharePreviewUrl,
     memoriasShareGenerating,
     memoriasShareLastPhoto,
+    memoriasMonth,
     memoriasItems,
     usuario,
     parceiroNome,
@@ -269,9 +275,11 @@ export default function ShareModal() {
   useEffect(() => {
     if (!memoriasShareGenerating || !memoriasSharePreviewOpen) return;
     const stats = (achievementStats ?? {}) as Record<string, unknown>;
+    const monthDate = memoriasMonth ? new Date(memoriasMonth) : new Date();
     generateStoriesCard({
       nomesCasal: [usuario?.nome, parceiroNome].filter(Boolean).join(' e '),
-      mesLabel: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+      mesLabel: monthDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+      mesNome: monthDate.toLocaleDateString('pt-BR', { month: 'long' }),
       meses: mesesJuntos(usuario?.pareadoDesde),
       foguinhosGastos: (stats.totalFoguinhosGastos as number) ?? 0,
       momentosResgatados: ((stats.momentsRedeemed as { total?: number } | undefined)?.total) ?? 0,
