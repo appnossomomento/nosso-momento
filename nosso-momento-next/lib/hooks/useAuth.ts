@@ -7,6 +7,7 @@ import { auth, db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import type { Pareamento, Usuario } from '@/lib/types';
 import { restoreParceiroAtivo, syncParceiroAtivoComLista, clearRestoreSuppression, isRestoreSuppressed } from '@/lib/utils/setParceiroAtivo';
+import { bootstrapUsuarioFromSnap } from '@/lib/auth/postLogin';
 
 /**
  * Inicializa o listener de autenticação Firebase.
@@ -74,13 +75,7 @@ export function useAuth() {
       // para evitar que o layout redirecione para /login enquanto usuario ainda é null.
       getDoc(userRef).then((snap) => {
         window.clearTimeout(authReadyTimeout);
-        const rawData = snap.exists() ? snap.data() : null;
-        const parceirosAtivos = (rawData?.pareamentosAtivos as Pareamento[] | undefined) ?? [];
-        const baseUser = rawData
-          ? ({ ...(rawData as Omit<Usuario, 'uid'>), uid: firebaseUser.uid, email: firebaseUser.email ?? rawData.email ?? '' } as Usuario)
-          : ({ uid: firebaseUser.uid, email: firebaseUser.email ?? '', nome: '', telefone: '', sexo: '', foguinhos: 0, lastCheckInDate: null, pareadoCom: null, catalogoPersonalizado: {} } as Usuario);
-        set({ usuario: baseUser, parceirosAtivos, authInitialized: true });
-        restoreParceiroAtivo(firebaseUser.uid, parceirosAtivos);
+        bootstrapUsuarioFromSnap(firebaseUser, snap);
       }).catch(() => {
         window.clearTimeout(authReadyTimeout);
         // Se getDoc falhar, ainda marca auth pronto com usuario mínimo (evita redirect indevido)

@@ -1,17 +1,29 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/client';
+import { auth, db, getAppCheckToken } from '@/lib/firebase/client';
+import {
+  bootstrapUsuarioFromSnap,
+  createSessionCookie,
+  isUsuarioPareado,
+} from '@/lib/auth/postLogin';
 import { openSystemAlert } from '@/components/ui/Modal';
 import { trackGA, trackMeta } from '@/lib/analytics';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Pré-aquece App Check/reCAPTCHA enquanto o usuário preenche o formulário.
+  useEffect(() => {
+    void getAppCheckToken(false);
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -22,20 +34,22 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await userCredential.user.getIdToken();
-      await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
+      const { user } = userCredential;
+      const idToken = await user.getIdToken();
+      const userRef = doc(db, 'usuarios', user.uid);
+
+      const [, userSnap] = await Promise.all([
+        createSessionCookie(idToken),
+        getDoc(userRef),
+      ]);
+
+      bootstrapUsuarioFromSnap(user, userSnap);
 
       trackGA('login', { method: 'Email' });
       trackMeta('Login');
 
-      const userSnap = await getDoc(doc(db, 'usuarios', userCredential.user.uid));
       const pareadoCom = userSnap.data()?.pareadoCom as string | null | undefined;
-      const isPareado = !!pareadoCom && !pareadoCom.startsWith('pending_') && pareadoCom !== 'none';
-      window.location.href = isPareado ? '/dashboard' : '/parear';
+      router.replace(isUsuarioPareado(pareadoCom) ? '/dashboard' : '/parear');
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       const messages: Record<string, string> = {
@@ -43,9 +57,9 @@ export default function LoginPage() {
         'auth/wrong-password': 'Senha incorreta.',
         'auth/invalid-email': 'Email inválido.',
         'auth/invalid-credential': 'Credenciais inválidas. Verifique seu email e senha.',
+        session_failed: 'Não foi possível iniciar a sessão. Tente novamente.',
       };
       openSystemAlert(messages[code ?? ''] ?? 'Erro ao fazer login. Verifique seu email e senha.');
-    } finally {
       setLoading(false);
     }
   }
