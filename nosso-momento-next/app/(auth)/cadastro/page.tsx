@@ -37,11 +37,14 @@ import {
   suggestCatalogoFromGenero,
 } from '@/lib/utils/profile';
 import { trackGA, trackMeta } from '@/lib/analytics';
+import { useAppStore } from '@/lib/store/appStore';
+import type { LegalModalType } from '@/lib/types';
 
 const INITIAL_FOGUINHOS = 10;
 
 export default function CadastroPage() {
   const router = useRouter();
+  const { set } = useAppStore();
   const [step, setStep] = useState<1 | 2>(1);
 
   // Etapa 1
@@ -75,6 +78,10 @@ export default function CadastroPage() {
 
   const precisaCatalogo = genero ? generoNeedsCatalogoChoice(genero) : false;
   const precisaTempoRel = estadoCivil === 'namorando' || estadoCivil === 'casado';
+
+  function openLegalModal(type: LegalModalType) {
+    set({ showLegalModal: true, legalModalType: type });
+  }
 
   function validateStep1(): boolean {
     if (!nome.trim() || !sobrenome.trim() || !email.trim() || !telefone || !senha) {
@@ -318,7 +325,22 @@ export default function CadastroPage() {
                 style={{ width: 18, height: 18, minWidth: 18, marginTop: 2, cursor: 'pointer', accentColor: '#ff5565' }}
               />
               <label htmlFor="aceitarTermos" className="text-xs text-gray-300 leading-relaxed cursor-pointer">
-                Li e concordo com os Termos de Uso e a Política de Privacidade
+                Li e concordo com os{' '}
+                <button
+                  type="button"
+                  className="text-pink-400 underline hover:text-pink-300"
+                  onClick={(e) => { e.preventDefault(); openLegalModal('terms'); }}
+                >
+                  Termos de Uso
+                </button>
+                {' '}e a{' '}
+                <button
+                  type="button"
+                  className="text-pink-400 underline hover:text-pink-300"
+                  onClick={(e) => { e.preventDefault(); openLegalModal('privacy'); }}
+                >
+                  Política de Privacidade
+                </button>
               </label>
             </div>
 
