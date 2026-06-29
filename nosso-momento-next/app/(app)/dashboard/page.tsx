@@ -40,7 +40,7 @@ export default function DashboardPage() {
               <VipStarBadge
                 size="sm"
                 borderClassName="border-white"
-                className="bottom-1 right-1 translate-x-1/2 translate-y-1/2"
+                className="bottom-0 right-0 translate-x-[18%] translate-y-[18%]"
               />
             )}
           </div>
