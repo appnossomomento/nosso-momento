@@ -2,6 +2,10 @@
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {admin} = require("../lib/config");
 const {areUsersPaired} = require("../lib/pairing");
+const {MAX_CONEXOES_VIP} = require("../lib/constants");
+const {
+  wouldExceedConnectionLimit,
+} = require("../lib/connections");
 const {grantAchievementsInTransaction} = require("../lib/achievements");
 const {
   isSameCalendarDay,
@@ -235,6 +239,29 @@ exports.processInput = onDocumentCreated(
             return;
           }
 
+          if (senderIsVip && wouldExceedConnectionLimit(
+              senderData, toUid, MAX_CONEXOES_VIP,
+          )) {
+            try {
+              if (toPhone) {
+                const pendingVal = `pending_${toPhone}`;
+                if (senderData.pareadoCom === pendingVal) {
+                  await admin.firestore()
+                      .collection("usuarios")
+                      .doc(fromUid)
+                      .update({pareadoCom: admin.firestore.FieldValue.delete()});
+                }
+              }
+            } catch (cleanErr) {
+              console.error("Erro limpando sender pending:", cleanErr);
+            }
+            await inputRef.update({
+              error: "max_connections_reached",
+              processed: true,
+            });
+            return;
+          }
+
           if (!receiverData) {
             const receiverDoc = await admin
                 .firestore()
@@ -283,6 +310,36 @@ exports.processInput = onDocumentCreated(
             }
             await inputRef.update({
               error: "receiver_already_paired",
+              processed: true,
+            });
+            return;
+          }
+
+          if (receiverIsVip && wouldExceedConnectionLimit(
+              receiverData, fromUid, MAX_CONEXOES_VIP,
+          )) {
+            try {
+              if (toPhone) {
+                const pendingVal = `pending_${toPhone}`;
+                const senderRef = admin.firestore()
+                    .collection("usuarios")
+                    .doc(fromUid);
+                const freshSender = await senderRef.get();
+                if (freshSender.exists) {
+                  const sd = freshSender.data() || {};
+                  if (sd.pareadoCom === pendingVal) {
+                    await senderRef.update({
+                      pareadoCom:
+                        admin.firestore.FieldValue.delete(),
+                    });
+                  }
+                }
+              }
+            } catch (cleanErr) {
+              console.error("Erro limpando sender pending:", cleanErr);
+            }
+            await inputRef.update({
+              error: "max_connections_reached",
               processed: true,
             });
             return;
@@ -445,6 +502,42 @@ exports.processInput = onDocumentCreated(
 
               const senderData = senderSnap.data();
               const receiverData = receiverSnap.data();
+
+              if (!senderData.vip && senderData.pareadoUid &&
+                  senderData.pareadoUid !== fromUid) {
+                tx.update(inputRef, {
+                  error: "sender_already_paired",
+                  processed: true,
+                });
+                return;
+              }
+              if (senderData.vip && wouldExceedConnectionLimit(
+                  senderData, fromUid, MAX_CONEXOES_VIP,
+              )) {
+                tx.update(inputRef, {
+                  error: "max_connections_reached",
+                  processed: true,
+                });
+                return;
+              }
+              if (!receiverData.vip && receiverData.pareadoUid &&
+                  receiverData.pareadoUid !== senderUid) {
+                tx.update(inputRef, {
+                  error: "receiver_already_paired",
+                  processed: true,
+                });
+                return;
+              }
+              if (receiverData.vip && wouldExceedConnectionLimit(
+                  receiverData, senderUid, MAX_CONEXOES_VIP,
+              )) {
+                tx.update(inputRef, {
+                  error: "max_connections_reached",
+                  processed: true,
+                });
+                return;
+              }
+
               const resolvedReceiverPhone =
                 receiverPhone ||
                 receiverData.telefone ||
@@ -828,6 +921,41 @@ exports.processInput = onDocumentCreated(
             const receiverData = receiverSnap.data();
             const senderPhone = senderData.telefone || null;
             const receiverPhone = receiverData.telefone || null;
+
+            if (!senderData.vip && senderData.pareadoUid &&
+                senderData.pareadoUid !== fromUid) {
+              tx.update(inputRef, {
+                error: "sender_already_paired",
+                processed: true,
+              });
+              return;
+            }
+            if (senderData.vip && wouldExceedConnectionLimit(
+                senderData, fromUid, MAX_CONEXOES_VIP,
+            )) {
+              tx.update(inputRef, {
+                error: "max_connections_reached",
+                processed: true,
+              });
+              return;
+            }
+            if (!receiverData.vip && receiverData.pareadoUid &&
+                receiverData.pareadoUid !== senderUid) {
+              tx.update(inputRef, {
+                error: "receiver_already_paired",
+                processed: true,
+              });
+              return;
+            }
+            if (receiverData.vip && wouldExceedConnectionLimit(
+                receiverData, senderUid, MAX_CONEXOES_VIP,
+            )) {
+              tx.update(inputRef, {
+                error: "max_connections_reached",
+                processed: true,
+              });
+              return;
+            }
 
             // Campos legados + top-up de foguinhos
             const MIN_FOGUINHOS = 10;

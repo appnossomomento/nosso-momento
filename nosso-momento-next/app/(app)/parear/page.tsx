@@ -11,6 +11,7 @@ import { openSystemAlert } from '@/components/ui/Modal';
 import OverlayModal from '@/components/ui/OverlayModal';
 import { showToast } from '@/components/ui/Toast';
 import type { Pareamento } from '@/lib/types';
+import { MAX_CONEXOES_VIP, getConnectionLimit } from '@/lib/constants';
 
 export default function ParearPage() {
   const router = useRouter();
@@ -26,6 +27,33 @@ export default function ParearPage() {
   const meuTelefone = usuario?.telefone ?? '(sem telefone cadastrado)';
   const isVip = usuario?.vip === true;
   const temConexoes = parceirosAtivos && parceirosAtivos.length > 0;
+  const conexaoCount = parceirosAtivos?.length ?? 0;
+  const limiteConexoes = getConnectionLimit(isVip);
+  const atMaxConnections = conexaoCount >= limiteConexoes;
+
+  function handleNovaConexao() {
+    if (!isVip && temConexoes) {
+      set({ showVipPopup: true });
+      return;
+    }
+    if (isVip && atMaxConnections) {
+      openSystemAlert('Limite de 5 conexões atingido.');
+      return;
+    }
+    setShowAddModal(true);
+  }
+
+  function guardLimiteConexoes(): boolean {
+    if (!isVip && temConexoes) {
+      set({ showVipPopup: true });
+      return false;
+    }
+    if (isVip && atMaxConnections) {
+      openSystemAlert('Limite de 5 conexões atingido.');
+      return false;
+    }
+    return true;
+  }
 
   function handleContinuarSemParear() {
     try {
@@ -39,16 +67,9 @@ export default function ParearPage() {
     router.push('/parceiro');
   }
 
-  function handleNovaConexao() {
-    if (!isVip && temConexoes) {
-      set({ showVipPopup: true });
-      return;
-    }
-    setShowAddModal(true);
-  }
-
   async function handleParear(e: FormEvent) {
     e.preventDefault();
+    if (!guardLimiteConexoes()) return;
     const telNumero = telefone.replace(/\D/g, '');
     if (telNumero.length !== 11) {
       openSystemAlert('Digite um celular válido com DDD (11 dígitos, ex: 11999991111).');
@@ -95,6 +116,7 @@ export default function ParearPage() {
   }
 
   async function handleGerarConvite() {
+    if (!guardLimiteConexoes()) return;
     setGerandoConvite(true);
     try {
       const result = await callFunction<{ token: string; url: string }>(FUNCTIONS.gerarConvite, {});
@@ -147,16 +169,23 @@ export default function ParearPage() {
             {/* Cabeçalho com badge */}
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-white/80">Minhas Conexões</p>
-              <span
-                className="text-[10px] font-bold px-2.5 py-1 rounded-full"
-                style={
-                  isVip
-                    ? { background: 'linear-gradient(135deg,#7c3aed,#a855f7)', color: '#fff' }
-                    : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.55)' }
-                }
-              >
-                {isVip ? '✦ POLIAMOR' : 'MONOGAMIA'}
-              </span>
+              <div className="flex items-center gap-2">
+                {isVip && (
+                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/70">
+                    {conexaoCount}/{MAX_CONEXOES_VIP}
+                  </span>
+                )}
+                <span
+                  className="text-[10px] font-bold px-2.5 py-1 rounded-full"
+                  style={
+                    isVip
+                      ? { background: 'linear-gradient(135deg,#7c3aed,#a855f7)', color: '#fff' }
+                      : { background: 'rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.55)' }
+                  }
+                >
+                  {isVip ? '✦ POLIAMOR' : 'MONOGAMIA'}
+                </span>
+              </div>
             </div>
 
             {/* Cards de parceiros */}
@@ -213,18 +242,44 @@ export default function ParearPage() {
               );
             })}
 
+            {/* Slots bloqueados (free) */}
+            {!isVip && temConexoes &&
+              Array.from({ length: MAX_CONEXOES_VIP - 1 }, (_, i) => i + 2).map((slot) => (
+                <div
+                  key={`locked-${slot}`}
+                  className="w-full rounded-2xl p-4 flex items-center gap-3 opacity-50"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.08)' }}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                    <i className="fas fa-lock text-white/30 text-sm" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm text-white/40">Conexão {slot}</p>
+                    <p className="text-xs text-white/25">Disponível no plano VIP</p>
+                  </div>
+                  <i className="fas fa-crown text-yellow-400/40 text-sm ml-auto" />
+                </div>
+              ))}
+
             {/* Botão adicionar nova conexão */}
             <button
               onClick={handleNovaConexao}
-              className="w-full rounded-2xl p-4 flex items-center gap-3 transition"
+              disabled={isVip && atMaxConnections}
+              className="w-full rounded-2xl p-4 flex items-center gap-3 transition disabled:opacity-40"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.15)' }}
             >
               <div className="w-10 h-10 rounded-xl bg-pink-500/15 flex items-center justify-center">
-                <i className="fas fa-plus text-pink-400" />
+                <i className={`fas ${isVip && atMaxConnections ? 'fa-ban' : 'fa-plus'} text-pink-400`} />
               </div>
               <div className="text-left">
                 <p className="text-sm font-semibold text-white/70">Nova Conexão</p>
-                <p className="text-xs text-white/40">{isVip ? 'Adicionar parceiro' : 'Requer plano VIP'}</p>
+                <p className="text-xs text-white/40">
+                  {isVip
+                    ? atMaxConnections
+                      ? 'Limite de 5 conexões atingido'
+                      : 'Adicionar parceiro'
+                    : 'Requer plano VIP'}
+                </p>
               </div>
               {!isVip && (
                 <i className="fas fa-crown text-yellow-400/60 text-sm ml-auto" />
