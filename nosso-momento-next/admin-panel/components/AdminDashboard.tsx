@@ -12,6 +12,7 @@ import AdminSectionViews from '@/admin-panel/views/AdminSectionViews';
 const VALID_SECTIONS = new Set(ADMIN_SECTIONS.map((s) => s.id));
 
 function parseSection(raw: string | null): AdminSectionId {
+  if (raw === 'genero') return 'pessoas';
   if (raw && VALID_SECTIONS.has(raw as AdminSectionId)) return raw as AdminSectionId;
   return 'geral';
 }

@@ -1,3 +1,5 @@
+import type { LojaMetrics } from '@/admin-panel/lib/aggregateLojaMetrics';
+
 export type LabelCount = { label: string; count: number };
 
 export type RecentSignup = {
@@ -24,12 +26,12 @@ export type AdminMetrics = {
   activeByDay: { date: string; count: number }[];
   byEstado: LabelCount[];
   byCidade: LabelCount[];
-  byGenero: LabelCount[];
+  /** Anatomia normalizada — apenas Masculino e Feminino */
   byAnatomia: LabelCount[];
-  byEstadoCivil: LabelCount[];
   byOrientacao: LabelCount[];
+  byEstadoCivil: LabelCount[];
   byFaixaEtaria: LabelCount[];
-  generoPareado: { genero: string; pareado: number; solteiro: number }[];
+  loja: LojaMetrics;
   recentSignups: RecentSignup[];
 };
 

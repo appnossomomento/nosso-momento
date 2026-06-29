@@ -81,36 +81,28 @@ function GeolocalizadaView({ m }: { m: AdminMetrics }) {
   );
 }
 
-function GeneroView({ m }: { m: AdminMetrics }) {
-  const naoInformado = m.byGenero.find((g) => g.label === 'Não informado')?.count ?? 0;
+function PessoasView({ m }: { m: AdminMetrics }) {
+  const anatomiaItems = m.byAnatomia.filter((a) => a.label === 'Masculino' || a.label === 'Feminino');
+  const totalAnatomia = anatomiaItems.reduce((s, i) => s + i.count, 0);
+
   return (
     <div className="space-y-6">
       <p className="text-xs text-white/35">{SNAPSHOT_NOTE}</p>
-      <div className="grid md:grid-cols-3 gap-3">
-        <KpiCard label="Categorias" value={m.byGenero.length} accent="#a78bfa" />
-        <KpiCard label="Maior grupo" value={m.byGenero[0]?.label ?? '—'} accent="#ff5565" />
-        <KpiCard label="Não informado" value={naoInformado} accent="#38bdf8" />
+      <div className="grid md:grid-cols-2 gap-3">
+        <KpiCard label="Masculino" value={anatomiaItems.find((a) => a.label === 'Masculino')?.count ?? 0} accent="#38bdf8" />
+        <KpiCard label="Feminino" value={anatomiaItems.find((a) => a.label === 'Feminino')?.count ?? 0} accent="#f472b6" />
       </div>
       <div className="grid lg:grid-cols-2 gap-4">
-        <ChartCard title="Distribuição por gênero">
-          <DonutChart items={m.byGenero} />
+        <ChartCard title="Anatomia (catálogo loja)" note="Apenas Masculino e Feminino — valores duplicados foram unificados.">
+          <DonutChart items={anatomiaItems} centerLabel={totalAnatomia ? String(totalAnatomia) : undefined} />
         </ChartCard>
-        <ChartCard title="Ranking">
-          <BarChartSimple title="" items={m.byGenero} />
+        <ChartCard title="Orientação sexual">
+          <DonutChart items={m.byOrientacao} />
         </ChartCard>
       </div>
-      {m.generoPareado.length > 0 && (
-        <ChartCard title="Gênero × pareamento">
-          <DataTable
-            columns={[
-              { key: 'genero', header: 'Gênero' },
-              { key: 'pareado', header: 'Pareados' },
-              { key: 'solteiro', header: 'Solteiros' },
-            ]}
-            rows={m.generoPareado}
-          />
-        </ChartCard>
-      )}
+      <ChartCard title="Orientação sexual — ranking">
+        <BarChartSimple title="" items={m.byOrientacao} />
+      </ChartCard>
     </div>
   );
 }
@@ -161,13 +153,10 @@ function DemograficaView({ m }: { m: AdminMetrics }) {
         <ChartCard title="Estado civil">
           <DonutChart items={m.byEstadoCivil} />
         </ChartCard>
-        <ChartCard title="Orientação sexual">
-          <BarChartSimple title="" items={m.byOrientacao} />
+        <ChartCard title="Faixa etária">
+          <BarChartSimple title="" items={m.byFaixaEtaria} />
         </ChartCard>
       </div>
-      <ChartCard title="Faixa etária">
-        <BarChartSimple title="" items={m.byFaixaEtaria} />
-      </ChartCard>
     </div>
   );
 }
@@ -201,17 +190,59 @@ function EngajamentoView({ m }: { m: AdminMetrics }) {
 }
 
 function LojaView({ m }: { m: AdminMetrics }) {
+  const { loja } = m;
+  const realizadosTotal = loja.realizadosComFotoInPeriod + loja.realizadosSemFotoInPeriod;
+  const periodNote = `Métricas temporais filtradas pelos últimos ${m.periodDays} dias. Pendentes = snapshot atual.`;
+
   return (
     <div className="space-y-6">
-      <p className="text-xs text-white/35">{SNAPSHOT_NOTE}</p>
+      <p className="text-xs text-white/35">{periodNote}</p>
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+        <KpiCard label={`Resgatados (${m.periodDays}d)`} value={loja.resgatadosInPeriod} accent="#ff5565" />
+        <KpiCard label="Pendentes (agora)" value={loja.pendentesTotal} accent="#fbbf24" hint="Status Pendente" />
+        <KpiCard label="Finalizados c/ foto" value={loja.realizadosComFotoInPeriod} accent="#34d399" />
+        <KpiCard label="Finalizados s/ foto" value={loja.realizadosSemFotoInPeriod} accent="#38bdf8" />
+        <KpiCard label="Memórias criadas" value={loja.memoriasCriadasInPeriod} accent="#f472b6" hint="Fotos enviadas" />
+      </div>
       <div className="grid lg:grid-cols-2 gap-4">
-        <ChartCard title="Anatomia (catálogo loja)">
-          <DonutChart items={m.byAnatomia} />
+        <ChartCard title={`Resgates por dia (${m.periodDays}d)`}>
+          <LineAreaChart data={loja.resgatadosByDay} color="#ff5565" />
         </ChartCard>
-        <ChartCard title="Ranking anatomia">
-          <BarChartSimple title="" items={m.byAnatomia} />
+        <ChartCard title={`Realizações por dia (${m.periodDays}d)`}>
+          <LineAreaChart data={loja.realizadosByDay} color="#34d399" />
         </ChartCard>
       </div>
+      {realizadosTotal > 0 && (
+        <ChartCard title={`Finalizados no período (${realizadosTotal})`}>
+          <DonutChart
+            items={[
+              { label: 'Com foto', count: loja.realizadosComFotoInPeriod },
+              { label: 'Sem foto', count: loja.realizadosSemFotoInPeriod },
+            ]}
+          />
+        </ChartCard>
+      )}
+      {loja.memoriasByDay.length > 0 && (
+        <ChartCard title={`Memórias criadas por dia (${m.periodDays}d)`}>
+          <LineAreaChart data={loja.memoriasByDay} color="#f472b6" />
+        </ChartCard>
+      )}
+      <ChartCard title="Indicadores ainda não rastreados no backend">
+        <ul className="text-xs text-white/50 space-y-2 list-disc pl-4">
+          <li>
+            <strong className="text-white/70">Carrinhos abandonados</strong> — o carrinho vive apenas no navegador
+            (Zustand); não há evento persistido no Firestore.
+          </li>
+          <li>
+            <strong className="text-white/70">Compartilhamento de memórias</strong> — usa <code className="text-white/60">navigator.share</code> no
+            cliente; sem contador no backend.
+          </li>
+          <li>
+            <strong className="text-white/70">Curtidas de memórias</strong> — feature ainda não implementada no
+            Firestore.
+          </li>
+        </ul>
+      </ChartCard>
     </div>
   );
 }
@@ -304,8 +335,8 @@ export default function AdminSectionViews({ section, metrics, onExport }: Props)
       return <GeralView m={metrics} />;
     case 'geolocalizada':
       return <GeolocalizadaView m={metrics} />;
-    case 'genero':
-      return <GeneroView m={metrics} />;
+    case 'pessoas':
+      return <PessoasView m={metrics} />;
     case 'pareamento':
       return <PareamentoView m={metrics} />;
     case 'demografica':

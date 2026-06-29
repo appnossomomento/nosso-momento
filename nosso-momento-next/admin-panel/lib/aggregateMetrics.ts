@@ -1,5 +1,7 @@
 import type { Firestore } from 'firebase-admin/firestore';
 import type { AdminMetrics, AdminUserRow, RecentSignup } from '../types';
+import { aggregateLojaMetrics } from './aggregateLojaMetrics';
+import { mergeAnatomiaCounts, normalizeOrientacao } from './normalizeLabels';
 
 function toDate(value: unknown): Date | null {
   if (!value) return null;
@@ -87,9 +89,10 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
   const prevPeriodStart = now - periodDays * 2 * 24 * 60 * 60 * 1000;
   const activeStart = now - 7 * 24 * 60 * 60 * 1000;
 
-  const [usersSnap, pareamentosSnap] = await Promise.all([
+  const [usersSnap, pareamentosSnap, loja] = await Promise.all([
     db.collection('usuarios').get(),
     db.collection('pareamentos').get(),
+    aggregateLojaMetrics(db, periodStart),
   ]);
 
   let signupsInPeriod = 0;
@@ -100,14 +103,12 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
 
   const byEstado: Record<string, number> = {};
   const byCidade: Record<string, number> = {};
-  const byGenero: Record<string, number> = {};
   const byAnatomia: Record<string, number> = {};
   const byEstadoCivil: Record<string, number> = {};
   const byOrientacao: Record<string, number> = {};
   const byFaixaEtaria: Record<string, number> = {};
   const signupsDayMap: Record<string, number> = {};
   const activeDayMap: Record<string, number> = {};
-  const generoPareadoMap: Record<string, { pareado: number; solteiro: number }> = {};
   const recentSignups: RecentSignup[] = [];
 
   for (const doc of usersSnap.docs) {
@@ -115,7 +116,6 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
     const created = toDate(d.createdAt);
     const lastCheck = toDate(d.lastCheckInDate);
     const pareado = isPareado(d);
-    const genero = String(d.genero ?? d.sexo ?? '').trim() || 'Não informado';
     const estado = String(d.estado ?? '').trim();
     const cidade = String(d.cidade ?? '').trim();
     const cidadeKey = cidade && estado ? `${cidade} (${estado})` : cidade || 'Não informado';
@@ -147,15 +147,13 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
 
     bump(byEstado, estado);
     bump(byCidade, cidadeKey);
-    bump(byGenero, genero);
-    bump(byAnatomia, String(d.anatomia ?? d.sexo ?? ''));
+    mergeAnatomiaCounts(byAnatomia, d.anatomia, d.sexo);
     bump(byEstadoCivil, String(d.estadoCivil ?? ''));
-    bump(byOrientacao, String(d.orientacaoSexual ?? ''));
+    bump(
+      byOrientacao,
+      normalizeOrientacao(d.orientacaoSexual, d.orientacaoSexualOutro),
+    );
     bump(byFaixaEtaria, faixaEtaria(d.dataNascimento));
-
-    if (!generoPareadoMap[genero]) generoPareadoMap[genero] = { pareado: 0, solteiro: 0 };
-    if (pareado) generoPareadoMap[genero].pareado += 1;
-    else generoPareadoMap[genero].solteiro += 1;
   }
 
   recentSignups.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -187,10 +185,6 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
         ? 100
         : null;
 
-  const generoPareado = Object.entries(generoPareadoMap)
-    .map(([genero, v]) => ({ genero, pareado: v.pareado, solteiro: v.solteiro }))
-    .sort((a, b) => b.pareado + b.solteiro - (a.pareado + a.solteiro));
-
   return {
     generatedAt: new Date().toISOString(),
     periodDays,
@@ -209,12 +203,11 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
     activeByDay,
     byEstado: toSortedList(byEstado),
     byCidade: toSortedList(byCidade),
-    byGenero: toSortedList(byGenero),
     byAnatomia: toSortedList(byAnatomia),
     byEstadoCivil: toSortedList(byEstadoCivil),
     byOrientacao: toSortedList(byOrientacao),
     byFaixaEtaria: toSortedList(byFaixaEtaria),
-    generoPareado,
+    loja,
     recentSignups: recentSignups.slice(0, 20),
   };
 }

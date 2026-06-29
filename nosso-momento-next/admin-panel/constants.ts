@@ -1,7 +1,7 @@
 export type AdminSectionId =
   | 'geral'
   | 'geolocalizada'
-  | 'genero'
+  | 'pessoas'
   | 'pareamento'
   | 'demografica'
   | 'engajamento'
@@ -12,7 +12,7 @@ export type AdminSectionId =
 export const ADMIN_SECTIONS: { id: AdminSectionId; label: string; icon: string }[] = [
   { id: 'geral', label: 'Visão Geral', icon: '◉' },
   { id: 'geolocalizada', label: 'Geolocalizada', icon: '⌖' },
-  { id: 'genero', label: 'Gênero', icon: '♀♂' },
+  { id: 'pessoas', label: 'Pessoas', icon: '♀♂' },
   { id: 'pareamento', label: 'Pareamento', icon: '♥' },
   { id: 'demografica', label: 'Demográfica', icon: '▤' },
   { id: 'engajamento', label: 'Engajamento', icon: '↗' },
