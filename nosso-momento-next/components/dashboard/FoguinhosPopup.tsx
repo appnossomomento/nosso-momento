@@ -1,10 +1,10 @@
 'use client';
 
 import { useAppStore } from '@/lib/store/appStore';
+import OverlayModal from '@/components/ui/OverlayModal';
 
 export default function FoguinhosPopup() {
   const { showFoguinhosPopup, usuario, parceirosAtivos, notificacoes, set } = useAppStore();
-  if (!showFoguinhosPopup) return null;
 
   const presentes = notificacoes.filter((n) => (n as Record<string, unknown>).icone === 'fa-gift');
   const totalFoguinhos = usuario?.foguinhos ?? 0;
@@ -14,12 +14,13 @@ export default function FoguinhosPopup() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={close}>
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-[#0f0b14] border border-white/10 p-6 shadow-2xl text-white max-h-[85vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <OverlayModal
+      open={showFoguinhosPopup}
+      onClose={close}
+      scrollPanel={false}
+      panelClassName="bg-[#0f0b14] border border-white/10 p-6 text-white"
+      ariaLabel="Saldo de foguinhos"
+    >
         {/* Header */}
         <div className="flex items-center justify-between mb-4 shrink-0">
           <div>
@@ -87,7 +88,6 @@ export default function FoguinhosPopup() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </OverlayModal>
   );
 }

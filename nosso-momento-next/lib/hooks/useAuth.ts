@@ -8,6 +8,7 @@ import { useAppStore } from '@/lib/store/appStore';
 import type { Pareamento, Usuario } from '@/lib/types';
 import { restoreParceiroAtivo, syncParceiroAtivoComLista, clearRestoreSuppression, isRestoreSuppressed } from '@/lib/utils/setParceiroAtivo';
 import { bootstrapUsuarioFromSnap } from '@/lib/auth/postLogin';
+import { recordDailyAppOpen } from '@/lib/auth/recordDailyAppOpen';
 
 /**
  * Inicializa o listener de autenticação Firebase.
@@ -43,6 +44,7 @@ export function useAuth() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ idToken }),
           });
+          recordDailyAppOpen();
         } catch (err) {
           console.error('[useAuth] falha ao criar sessão server-side:', err);
         }

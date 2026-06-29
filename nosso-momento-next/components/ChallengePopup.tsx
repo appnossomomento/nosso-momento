@@ -7,6 +7,7 @@ import { db, waitForAppCheckToken } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import { sendInput } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
+import OverlayModal from '@/components/ui/OverlayModal';
 import { formatSeconds } from '@/lib/utils/formatDate';
 
 const ROULETTE_OPTIONS = [
@@ -292,14 +293,19 @@ export default function ChallengePopup() {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4"
-      style={{ background: 'rgba(0,0,0,0.85)' }}
+    <OverlayModal
+      open={showChallengePopup && !!pendingChallenge}
+      onClose={() => {}}
+      dismissOnBackdrop={false}
+      backdropClassName="bg-black/85"
+      maxWidth="max-w-sm"
+      scrollPanel={false}
+      panelClassName="overflow-hidden border border-[rgba(255,45,63,0.20)]"
+      ariaLabel="Desafio da semana"
     >
-      {/* Card */}
       <div
-        className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
-        style={{ background: '#080808', border: '1px solid rgba(255,45,63,0.20)' }}
+        className="overflow-hidden shadow-2xl"
+        style={{ background: '#080808' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header gradient */}
@@ -514,7 +520,7 @@ export default function ChallengePopup() {
 
         </div>
       </div>
-    </div>
+    </OverlayModal>
   );
 }
 

@@ -31,6 +31,14 @@ export function pct(part: number, total: number): number {
   return Math.round((part / total) * 1000) / 10;
 }
 
+export function formatTelefoneBr(telefone: string): string {
+  const digits = telefone.replace(/\D/g, '');
+  if (digits.length === 11) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+  return digits || '—';
+}
+
 export function maskEmail(email: string): string {
   const [local, domain] = email.split('@');
   if (!local || !domain) return '***';

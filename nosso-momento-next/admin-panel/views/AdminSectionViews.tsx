@@ -10,7 +10,8 @@ import BarChartSimple from '@/admin-panel/components/BarChartSimple';
 import ProgressRing from '@/admin-panel/components/ProgressRing';
 import GeoMapBr from '@/admin-panel/components/GeoMapBr';
 import DataTable from '@/admin-panel/components/DataTable';
-import { maskEmail, pct, rollupMonthly, rollupWeekly, withPercent } from '@/admin-panel/lib/chartUtils';
+import { formatTelefoneBr, pct, rollupMonthly, rollupWeekly, withPercent } from '@/admin-panel/lib/chartUtils';
+import VipsView from '@/admin-panel/views/VipsView';
 
 const SNAPSHOT_NOTE = 'Distribuição acumulada — base total de usuários cadastrados.';
 
@@ -29,7 +30,7 @@ function GeralView({ m }: { m: AdminMetrics }) {
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <ChartCard title={`Cadastros por dia (${m.periodDays}d)`}>
-            <LineAreaChart data={m.signupsByDay} />
+            <LineAreaChart data={m.signupsByDay} color="#ff5565" gradientId="signupsDaily" />
           </ChartCard>
         </div>
         <ChartCard title="Indicadores">
@@ -40,13 +41,18 @@ function GeralView({ m }: { m: AdminMetrics }) {
           </div>
         </ChartCard>
       </div>
-      <ChartCard title="Cadastros por semana">
-        <BarChartSimple
-          title=""
-          items={rollupWeekly(m.signupsByDay)}
-          maxItems={20}
-        />
-      </ChartCard>
+      <div className="grid lg:grid-cols-2 gap-4">
+        <ChartCard title={`Logins diários (${m.periodDays}d)`} note="Usuários únicos que abriram o app no dia.">
+          <LineAreaChart data={m.loginsByDay} color="#fb923c" gradientId="loginsDaily" />
+        </ChartCard>
+        <ChartCard title="Cadastros por semana">
+          <BarChartSimple
+            title=""
+            items={rollupWeekly(m.signupsByDay)}
+            maxItems={20}
+          />
+        </ChartCard>
+      </div>
     </div>
   );
 }
@@ -146,6 +152,8 @@ function PareamentoView({ m }: { m: AdminMetrics }) {
 }
 
 function DemograficaView({ m }: { m: AdminMetrics }) {
+  const tempoTotal = m.byTempoRelacionamento.reduce((s, i) => s + i.count, 0);
+
   return (
     <div className="space-y-6">
       <p className="text-xs text-white/35">{SNAPSHOT_NOTE}</p>
@@ -157,6 +165,19 @@ function DemograficaView({ m }: { m: AdminMetrics }) {
           <BarChartSimple title="" items={m.byFaixaEtaria} />
         </ChartCard>
       </div>
+      <ChartCard
+        title="Tempo de relacionamento"
+        note="Apenas usuários namorando ou casados — informado no cadastro."
+      >
+        {tempoTotal > 0 ? (
+          <div className="grid lg:grid-cols-2 gap-4 items-center">
+            <DonutChart items={m.byTempoRelacionamento} centerLabel={String(tempoTotal)} />
+            <BarChartSimple title="" items={m.byTempoRelacionamento} />
+          </div>
+        ) : (
+          <p className="text-xs text-white/40 py-6 text-center">Sem dados ainda (namorando/casado).</p>
+        )}
+      </ChartCard>
     </div>
   );
 }
@@ -265,15 +286,22 @@ function CadastrosView({ m }: { m: AdminMetrics }) {
         </ChartCard>
       )}
       {m.recentSignups.length > 0 && (
-        <ChartCard title="Últimos cadastros">
+        <ChartCard title="Últimos cadastros" note="Emails completos — uso interno restrito (allowlist admin).">
           <DataTable
             columns={[
+              { key: 'email', header: 'Email' },
+              { key: 'nome', header: 'Nome' },
               {
-                key: 'email',
-                header: 'Email',
-                render: (r) => maskEmail(String(r.email)),
+                key: 'telefone',
+                header: 'Telefone',
+                render: (r) => formatTelefoneBr(String(r.telefone)),
               },
               { key: 'estado', header: 'UF' },
+              {
+                key: 'vip',
+                header: 'VIP',
+                render: (r) => (r.vip ? 'Sim' : '—'),
+              },
               {
                 key: 'createdAt',
                 header: 'Data',
@@ -325,11 +353,16 @@ function ExportacaoView({ m, onExport }: { m: AdminMetrics; onExport: () => void
 
 type Props = {
   section: AdminSectionId;
-  metrics: AdminMetrics;
+  metrics: AdminMetrics | null;
   onExport: () => void;
 };
 
 export default function AdminSectionViews({ section, metrics, onExport }: Props) {
+  if (section === 'vips') {
+    return <VipsView />;
+  }
+  if (!metrics) return null;
+
   switch (section) {
     case 'geral':
       return <GeralView m={metrics} />;

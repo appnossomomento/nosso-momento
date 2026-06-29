@@ -1,7 +1,7 @@
 import type { Firestore } from 'firebase-admin/firestore';
 import type { AdminMetrics, AdminUserRow, RecentSignup } from '../types';
 import { aggregateLojaMetrics } from './aggregateLojaMetrics';
-import { mergeAnatomiaCounts, normalizeOrientacao } from './normalizeLabels';
+import { mergeAnatomiaCounts, normalizeOrientacao, normalizeTempoRelacionamento, sortByTempoRelOrder } from './normalizeLabels';
 
 function toDate(value: unknown): Date | null {
   if (!value) return null;
@@ -79,6 +79,7 @@ export async function fetchAllUsers(db: Firestore): Promise<AdminUserRow[]> {
       lastCheckIn: lastCheck ? lastCheck.toISOString() : '',
       pareado: isPareado(d),
       notificationsEnabled: d.notificationsEnabled === true,
+      vip: d.vip === true,
     };
   });
 }
@@ -89,9 +90,10 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
   const prevPeriodStart = now - periodDays * 2 * 24 * 60 * 60 * 1000;
   const activeStart = now - 7 * 24 * 60 * 60 * 1000;
 
-  const [usersSnap, pareamentosSnap, loja] = await Promise.all([
+  const [usersSnap, pareamentosSnap, loginsSnap, loja] = await Promise.all([
     db.collection('usuarios').get(),
     db.collection('pareamentos').get(),
+    db.collection('analytics_daily_logins').get(),
     aggregateLojaMetrics(db, periodStart),
   ]);
 
@@ -107,6 +109,7 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
   const byEstadoCivil: Record<string, number> = {};
   const byOrientacao: Record<string, number> = {};
   const byFaixaEtaria: Record<string, number> = {};
+  const byTempoRelacionamento: Record<string, number> = {};
   const signupsDayMap: Record<string, number> = {};
   const activeDayMap: Record<string, number> = {};
   const recentSignups: RecentSignup[] = [];
@@ -127,7 +130,10 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
         bump(signupsDayMap, fmtDay(created));
         recentSignups.push({
           email: String(d.email ?? ''),
+          nome: String(d.nome ?? ''),
+          telefone: String(d.telefone ?? '').trim(),
           estado: estado || '—',
+          vip: d.vip === true,
           createdAt: created.toISOString(),
         });
       } else if (ts >= prevPeriodStart && ts < periodStart) {
@@ -154,6 +160,11 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
       normalizeOrientacao(d.orientacaoSexual, d.orientacaoSexualOutro),
     );
     bump(byFaixaEtaria, faixaEtaria(d.dataNascimento));
+
+    const estadoCivil = String(d.estadoCivil ?? '').toLowerCase();
+    if (estadoCivil === 'namorando' || estadoCivil === 'casado') {
+      bump(byTempoRelacionamento, normalizeTempoRelacionamento(d.tempoRelacionamento));
+    }
   }
 
   recentSignups.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -178,6 +189,15 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
     .map(([date, count]) => ({ date, count }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
+  const periodStartDay = fmtDay(new Date(periodStart));
+  const loginsByDay = loginsSnap.docs
+    .filter((doc) => doc.id >= periodStartDay)
+    .map((doc) => ({
+      date: doc.id,
+      count: typeof doc.data().loginCount === 'number' ? doc.data().loginCount : 0,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
   const signupsGrowthPct =
     signupsPrevPeriod > 0
       ? Math.round(((signupsInPeriod - signupsPrevPeriod) / signupsPrevPeriod) * 1000) / 10
@@ -199,6 +219,7 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
       notificationsEnabled,
     },
     signupsByDay,
+    loginsByDay,
     pareamentosByDay,
     activeByDay,
     byEstado: toSortedList(byEstado),
@@ -207,6 +228,7 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
     byEstadoCivil: toSortedList(byEstadoCivil),
     byOrientacao: toSortedList(byOrientacao),
     byFaixaEtaria: toSortedList(byFaixaEtaria),
+    byTempoRelacionamento: sortByTempoRelOrder(toSortedList(byTempoRelacionamento)),
     loja,
     recentSignups: recentSignups.slice(0, 20),
   };
@@ -226,6 +248,7 @@ export function usersToCsv(rows: AdminUserRow[]): string {
     'lastCheckIn',
     'pareado',
     'notificationsEnabled',
+    'vip',
   ];
   const escape = (v: string | boolean) => {
     const s = String(v);
@@ -250,6 +273,7 @@ export function usersToCsv(rows: AdminUserRow[]): string {
         row.lastCheckIn,
         row.pareado,
         row.notificationsEnabled,
+        row.vip,
       ]
         .map(escape)
         .join(','),

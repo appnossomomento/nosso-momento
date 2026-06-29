@@ -4,20 +4,21 @@ import Image from 'next/image';
 import { useAppStore } from '@/lib/store/appStore';
 import { callFunction, FUNCTIONS } from '@/lib/firebase/functions';
 import { openSystemConfirm } from '@/components/ui/Modal';
+import OverlayModal from '@/components/ui/OverlayModal';
 import { showToast } from '@/components/ui/Toast';
 
 export default function MemoriaViewer() {
   const { showMemoriasViewer, memoriasItems, memoriasViewerIndex, set } = useAppStore();
-  if (!showMemoriasViewer) return null;
 
   const items = memoriasItems;
   const idx = memoriasViewerIndex ?? 0;
   const item = items[idx];
-  if (!item) return null;
 
   function close() {
     set({ showMemoriasViewer: false, memoriasViewerIndex: null });
   }
+
+  if (!showMemoriasViewer || !item) return null;
 
   function navigate(dir: -1 | 1) {
     const next = idx + dir;
@@ -54,11 +55,13 @@ export default function MemoriaViewer() {
   const imgUrl = String(item.fotoUrl ?? item.url ?? '');
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center px-4" onClick={close}>
-      <div
-        className="w-full max-w-md bg-white rounded-3xl p-5 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <OverlayModal
+      open
+      onClose={close}
+      maxWidth="max-w-md"
+      panelClassName="bg-white p-5"
+      ariaLabel="Visualizar memória"
+    >
         {/* Imagem com navegação */}
         <div className="relative">
           <div className="w-full aspect-[3/4] overflow-hidden rounded-2xl bg-gray-100">
@@ -118,7 +121,6 @@ export default function MemoriaViewer() {
             <i className="fas fa-trash" />
           </button>
         </div>
-      </div>
-    </div>
+    </OverlayModal>
   );
 }

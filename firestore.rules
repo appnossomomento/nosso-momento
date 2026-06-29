@@ -209,6 +209,14 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Logins diários agregados — escrita via Admin SDK (API /api/auth/app-open).
+    match /analytics_daily_logins/{date} {
+      allow read, write: if false;
+      match /users/{uid} {
+        allow read, write: if false;
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

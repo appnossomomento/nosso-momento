@@ -1,23 +1,22 @@
 'use client';
 
 import { useAppStore } from '@/lib/store/appStore';
+import OverlayModal from '@/components/ui/OverlayModal';
 
 export default function VipPopup() {
   const { showVipPopup, set } = useAppStore();
 
-  if (!showVipPopup) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-5"
-      style={{ background: 'rgba(0,0,0,0.85)' }}
-      onClick={() => set({ showVipPopup: false })}
+    <OverlayModal
+      open={showVipPopup}
+      onClose={() => set({ showVipPopup: false })}
+      backdropClassName="bg-black/85"
+      maxWidth="max-w-sm"
+      scrollPanel={false}
+      panelClassName="overflow-hidden border border-[rgba(255,45,63,0.20)]"
+      ariaLabel="Acesso VIP"
     >
-      <div
-        className="w-full max-w-sm rounded-3xl overflow-hidden"
-        style={{ background: '#080808', border: '1px solid rgba(255,45,63,0.20)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div style={{ background: '#080808' }}>
         {/* Header */}
         <div
           className="px-6 py-5 flex items-center gap-4"
@@ -37,7 +36,6 @@ export default function VipPopup() {
 
         {/* Conteúdo */}
         <div className="px-6 py-5 space-y-4">
-          {/* Card info */}
           <div
             className="rounded-2xl p-4 space-y-3"
             style={{ background: '#111', border: '1px solid rgba(255,45,63,0.22)' }}
@@ -61,7 +59,6 @@ export default function VipPopup() {
             </ul>
           </div>
 
-          {/* Contato */}
           <div
             className="rounded-2xl p-4"
             style={{ background: '#111', border: '1px solid rgba(255,45,63,0.22)' }}
@@ -75,7 +72,6 @@ export default function VipPopup() {
             </a>
           </div>
 
-          {/* Botão */}
           <button
             onClick={() => set({ showVipPopup: false })}
             className="w-full py-3 rounded-2xl text-sm font-semibold text-white transition"
@@ -85,6 +81,6 @@ export default function VipPopup() {
           </button>
         </div>
       </div>
-    </div>
+    </OverlayModal>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useAppStore } from '@/lib/store/appStore';
 import clsx from 'clsx';
+import OverlayModal from '@/components/ui/OverlayModal';
 
 interface Achievement {
   id: string;
@@ -53,7 +54,6 @@ const TABS = [
 
 export default function AchievementsPopup() {
   const { showAchievementsPopup, usuario, conquistasCategoria, desafiosTab, set } = useAppStore();
-  if (!showAchievementsPopup) return null;
 
   const conquistas = usuario?.conquistas ?? {};
   const categoria = (conquistasCategoria as Achievement['categoria']) ?? 'engajamento';
@@ -70,12 +70,13 @@ export default function AchievementsPopup() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={close}>
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-[#0f0b14] border border-white/10 p-6 shadow-2xl text-white max-h-[90vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <OverlayModal
+      open={showAchievementsPopup}
+      onClose={close}
+      scrollPanel={false}
+      panelClassName="bg-[#0f0b14] border border-white/10 p-6 text-white"
+      ariaLabel="Conquistas"
+    >
         {/* Header */}
         <div className="flex items-center justify-between mb-1 shrink-0">
           <div>
@@ -179,7 +180,6 @@ export default function AchievementsPopup() {
             })
           )}
         </div>
-      </div>
-    </div>
+    </OverlayModal>
   );
 }

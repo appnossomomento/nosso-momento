@@ -7,6 +7,7 @@ export type AdminSectionId =
   | 'engajamento'
   | 'loja'
   | 'cadastros'
+  | 'vips'
   | 'exportacao';
 
 export const ADMIN_SECTIONS: { id: AdminSectionId; label: string; icon: string }[] = [
@@ -18,6 +19,7 @@ export const ADMIN_SECTIONS: { id: AdminSectionId; label: string; icon: string }
   { id: 'engajamento', label: 'Engajamento', icon: '↗' },
   { id: 'loja', label: 'Loja', icon: '◈' },
   { id: 'cadastros', label: 'Cadastros', icon: '+' },
+  { id: 'vips', label: 'VIPs', icon: '★' },
   { id: 'exportacao', label: 'Exportação', icon: '↓' },
 ];
 

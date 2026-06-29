@@ -9,6 +9,7 @@ import { showToast } from '@/components/ui/Toast';
 import { formatDateRelative } from '@/lib/utils/formatDate';
 import clsx from 'clsx';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
+import OverlayModal from '@/components/ui/OverlayModal';
 import { trackGA, trackMeta } from '@/lib/analytics';
 
 function fileToBase64(file: File): Promise<string> {
@@ -245,17 +246,16 @@ export default function MomentosPage() {
       </section>
 
       {/* ── Modal: Registrar memória ao concluir momento ── */}
-      {realizandoMomento && (
-        <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0"
-          style={{ background: 'rgba(0,0,0,0.85)' }}
-          onClick={fecharConfirmacao}
-        >
-          <div
-            className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
-            style={{ background: '#080808', border: '1px solid rgba(255,45,63,0.20)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
+      <OverlayModal
+        open={!!realizandoMomento}
+        onClose={fecharConfirmacao}
+        backdropClassName="bg-black/85"
+        maxWidth="max-w-sm"
+        scrollPanel={false}
+        panelClassName="overflow-hidden border border-[rgba(255,45,63,0.20)]"
+        ariaLabel="Registrar memória do momento"
+      >
+        <div className="overflow-hidden" style={{ background: '#080808' }}>
             {/* Header gradient */}
             <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg,#ff2d3f 0%,#ff5565 100%)' }}>
               <div className="flex items-center justify-between">
@@ -356,9 +356,8 @@ export default function MomentosPage() {
                 Cancelar
               </button>
             </div>
-          </div>
         </div>
-      )}
+      </OverlayModal>
     </div>
   );
 }

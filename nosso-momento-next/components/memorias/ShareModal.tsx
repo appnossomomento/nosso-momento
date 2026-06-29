@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAppStore } from '@/lib/store/appStore';
+import OverlayModal from '@/components/ui/OverlayModal';
 import { montarNomesCasal } from '@/lib/utils/displayName';
 
 function mesesJuntos(pareadoDesde: string | null | undefined): number {
@@ -368,12 +369,16 @@ export default function ShareModal() {
   // â”€â”€ Picker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (memoriasShareModalOpen) {
     return (
-      <div className="fixed inset-0 bg-black/85 z-50 flex items-end sm:items-center justify-center px-4 pb-6 sm:pb-0" onClick={closePicker}>
-        <div
-          className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
-          style={{ background: '#080808', border: '1px solid rgba(255,45,63,0.20)' }}
-          onClick={(e) => e.stopPropagation()}
-        >
+      <OverlayModal
+        open
+        onClose={closePicker}
+        backdropClassName="bg-black/85"
+        maxWidth="max-w-sm"
+        scrollPanel={false}
+        panelClassName="overflow-hidden border border-[rgba(255,45,63,0.20)]"
+        ariaLabel="Compartilhar memórias"
+      >
+        <div className="overflow-hidden shadow-2xl" style={{ background: '#080808' }}>
           {/* Header gradient */}
           <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg,#ff2d3f 0%,#ff5565 100%)' }}>
             <div className="flex items-center gap-3">
@@ -423,18 +428,22 @@ export default function ShareModal() {
             </button>
           </div>
         </div>
-      </div>
+      </OverlayModal>
     );
   }
 
-  // â”€â”€ Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Preview ──
   return (
-    <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center px-4" onClick={closePreview}>
-      <div
-        className="w-full rounded-3xl overflow-hidden shadow-2xl"
-        style={{ maxHeight: '92vh', maxWidth: '400px', background: '#080808', border: '1px solid rgba(255,45,63,0.18)' }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <OverlayModal
+      open
+      onClose={closePreview}
+      backdropClassName="bg-black/85"
+      maxWidth="max-w-[400px]"
+      scrollPanel={false}
+      panelClassName="overflow-hidden border border-[rgba(255,45,63,0.18)]"
+      ariaLabel="Preview stories memórias"
+    >
+      <div className="overflow-hidden shadow-2xl" style={{ background: '#080808' }}>
         {/* Header gradient */}
         <div
           className="px-5 py-4 flex items-center justify-between"
@@ -499,6 +508,6 @@ export default function ShareModal() {
           </div>
         </div>
       </div>
-    </div>
+    </OverlayModal>
   );
 }

@@ -8,6 +8,7 @@ import { useAppStore } from '@/lib/store/appStore';
 import { setParceiroAtivo } from '@/lib/utils/setParceiroAtivo';
 import { trackGA, trackMeta } from '@/lib/analytics';
 import { openSystemAlert } from '@/components/ui/Modal';
+import OverlayModal from '@/components/ui/OverlayModal';
 import { showToast } from '@/components/ui/Toast';
 import type { Pareamento } from '@/lib/types';
 
@@ -304,17 +305,14 @@ export default function ParearPage() {
       </section>
 
       {/* ── Popup: Nova Conexão (VIP) ── */}
-      {showAddModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
-          style={{ background: 'rgba(0,0,0,0.75)' }}
-          onClick={() => setShowAddModal(false)}
-        >
-          <div
-            className="w-full max-w-lg rounded-t-3xl overflow-hidden"
-            style={{ background: '#0d0d0d', border: '1px solid rgba(255,255,255,0.08)', maxHeight: '90vh', overflowY: 'auto' }}
-            onClick={(e) => e.stopPropagation()}
-          >
+      <OverlayModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        backdropClassName="bg-black/75"
+        scrollPanel={false}
+        panelClassName="bg-[#0d0d0d] border border-white/[0.08] overflow-y-auto"
+        ariaLabel="Nova conexão VIP"
+      >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5" style={{ background: 'linear-gradient(135deg,#ff2d3f 0%,#ff5565 100%)' }}>
               <div className="flex items-center gap-3">
@@ -395,9 +393,7 @@ export default function ParearPage() {
                 </button>
               </form>
             </div>
-          </div>
-        </div>
-      )}
+      </OverlayModal>
     </div>
   );
 }

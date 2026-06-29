@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import OverlayModal from '@/components/ui/OverlayModal';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -101,19 +102,15 @@ export default function PwaInstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
-      style={{ animation: 'pwaFadeIn 0.25s ease-out' }}
-      onClick={dismissSession}
+    <OverlayModal
+      open={visible}
+      onClose={dismissSession}
+      zIndex={9998}
+      backdropClassName="bg-black/80 backdrop-blur-sm"
+      maxWidth="max-w-md"
+      panelClassName="text-white border border-white/10 p-6 pb-8 bg-[#1a1025] animate-[pwaModalIn_0.3s_ease-out]"
+      ariaLabel="Instalar aplicativo"
     >
-      <div
-        className="w-full max-w-md rounded-3xl text-white shadow-2xl border border-white/10 p-6 pb-8"
-        style={{ background: '#1a1025', animation: 'pwaSlideUp 0.3s ease-out' }}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Instalar aplicativo"
-      >
         {/* Header */}
         <div className="flex items-start justify-between mb-5">
           <div className="flex items-center gap-3">
@@ -204,18 +201,13 @@ export default function PwaInstallPrompt() {
             Agora não
           </button>
         </div>
-      </div>
 
       <style>{`
-        @keyframes pwaSlideUp {
-          from { transform: translateY(40px); opacity: 0; }
-          to   { transform: translateY(0);    opacity: 1; }
-        }
-        @keyframes pwaFadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
+        @keyframes pwaModalIn {
+          from { transform: scale(0.96); opacity: 0; }
+          to   { transform: scale(1);    opacity: 1; }
         }
       `}</style>
-    </div>
+    </OverlayModal>
   );
 }

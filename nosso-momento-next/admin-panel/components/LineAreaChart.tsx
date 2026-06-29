@@ -17,9 +17,15 @@ type Props = {
   data: Point[];
   color?: string;
   labelKey?: string;
+  gradientId?: string;
 };
 
-export default function LineAreaChart({ data, color = '#ff5565', labelKey = 'count' }: Props) {
+export default function LineAreaChart({
+  data,
+  color = '#ff5565',
+  labelKey = 'count',
+  gradientId = 'areaGrad',
+}: Props) {
   if (!data.length) return <EmptyState />;
 
   const chartData = data.map((d) => ({
@@ -32,7 +38,7 @@ export default function LineAreaChart({ data, color = '#ff5565', labelKey = 'cou
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
           <defs>
-            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.4} />
               <stop offset="100%" stopColor={color} stopOpacity={0} />
             </linearGradient>
@@ -50,7 +56,7 @@ export default function LineAreaChart({ data, color = '#ff5565', labelKey = 'cou
             }}
             labelFormatter={(_, payload) => payload?.[0]?.payload?.date ?? ''}
           />
-          <Area type="monotone" dataKey={labelKey} stroke={color} fill="url(#areaGrad)" strokeWidth={2} />
+          <Area type="monotone" dataKey={labelKey} stroke={color} fill={`url(#${gradientId})`} strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

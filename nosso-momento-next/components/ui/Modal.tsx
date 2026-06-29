@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppStore } from '@/lib/store/appStore';
-import clsx from 'clsx';
+import OverlayModal from '@/components/ui/OverlayModal';
 
 export default function Modal() {
   const {
@@ -14,8 +14,6 @@ export default function Modal() {
     set,
   } = useAppStore();
 
-  if (!showSystemModal) return null;
-
   const close = () => set({ showSystemModal: false, systemModalOnConfirm: null });
   const confirm = () => {
     systemModalOnConfirm?.();
@@ -23,8 +21,14 @@ export default function Modal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[9000] flex items-center justify-center bg-black/70 px-4">
-      <div className="card w-full max-w-sm p-6 text-white">
+    <OverlayModal
+      open={showSystemModal}
+      onClose={close}
+      zIndex={9000}
+      maxWidth="max-w-sm"
+      panelClassName="card p-6 text-white"
+      ariaLabel="Mensagem do sistema"
+    >
         <p className="text-center text-sm leading-relaxed whitespace-pre-wrap mb-6">
           {systemModalMessage}
         </p>
@@ -44,8 +48,7 @@ export default function Modal() {
             {systemModalConfirmText}
           </button>
         </div>
-      </div>
-    </div>
+    </OverlayModal>
   );
 }
 
