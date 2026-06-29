@@ -246,8 +246,9 @@ export default function MomentosPage() {
       </section>
 
       {/* ── Modal: Registrar memória ao concluir momento ── */}
+      {realizandoMomento && (
       <OverlayModal
-        open={!!realizandoMomento}
+        open
         onClose={fecharConfirmacao}
         backdropClassName="bg-black/85"
         maxWidth="max-w-sm"
@@ -358,6 +359,7 @@ export default function MomentosPage() {
             </div>
         </div>
       </OverlayModal>
+      )}
     </div>
   );
 }
