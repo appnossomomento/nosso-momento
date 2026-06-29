@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { signOut, updateProfile, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -381,6 +382,17 @@ export default function PerfilPage() {
             {isVip && <VipStatusInline />}
           </div>
         </div>
+
+        <Link
+          href="/parear"
+          className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 flex items-center justify-between text-sm font-medium hover:bg-white/10 transition"
+        >
+          <span className="text-white/80">
+            <i className="fas fa-heart mr-2 icon-gradient" />
+            Pareamentos
+          </span>
+          <i className="fas fa-chevron-right text-white/30 text-xs" />
+        </Link>
 
         {/* Sair */}
         <button

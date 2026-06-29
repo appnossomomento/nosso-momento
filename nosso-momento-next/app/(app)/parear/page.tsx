@@ -2,16 +2,113 @@
 
 import { useState, FormEvent } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { callFunction, sendInput, FUNCTIONS } from '@/lib/firebase/functions';
 import { useAppStore } from '@/lib/store/appStore';
 import { setParceiroAtivo } from '@/lib/utils/setParceiroAtivo';
 import { trackGA, trackMeta } from '@/lib/analytics';
 import { openSystemAlert } from '@/components/ui/Modal';
-import OverlayModal from '@/components/ui/OverlayModal';
 import { showToast } from '@/components/ui/Toast';
 import type { Pareamento } from '@/lib/types';
 import { MAX_CONEXOES_VIP, getConnectionLimit } from '@/lib/constants';
+
+function ParearFormSection({
+  meuTelefone,
+  telefone,
+  setTelefone,
+  apelido,
+  setApelido,
+  loading,
+  gerandoConvite,
+  conviteUrl,
+  onGerarConvite,
+  onSubmit,
+  showContinuarSemParear,
+  onContinuarSemParear,
+}: {
+  meuTelefone: string;
+  telefone: string;
+  setTelefone: (v: string) => void;
+  apelido: string;
+  setApelido: (v: string) => void;
+  loading: boolean;
+  gerandoConvite: boolean;
+  conviteUrl: string;
+  onGerarConvite: () => void;
+  onSubmit: (e: FormEvent) => void;
+  showContinuarSemParear?: boolean;
+  onContinuarSemParear?: () => void;
+}) {
+  return (
+    <>
+      <div className="rounded-2xl bg-white/10 p-5">
+        <p className="text-xs text-white/60 mb-1">Seu número (compartilhe com seu parceiro)</p>
+        <p className="text-lg font-bold tracking-wide text-pink-400">{meuTelefone}</p>
+      </div>
+
+      <button
+        type="button"
+        onClick={onGerarConvite}
+        disabled={gerandoConvite}
+        className="rounded-2xl bg-white/10 p-5 w-full text-left hover:bg-white/20 transition disabled:opacity-60"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center">
+            <i className="fas fa-link text-pink-400" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold">Convide seu amor</p>
+            <p className="text-xs text-white/60">{gerandoConvite ? 'Gerando...' : 'Gerar e copiar link de convite'}</p>
+          </div>
+        </div>
+      </button>
+
+      {conviteUrl && (
+        <div className="rounded-2xl bg-pink-500/10 border border-pink-500/20 p-4">
+          <p className="text-xs text-pink-400 font-semibold mb-1">Link gerado (copiado!):</p>
+          <p className="text-xs text-white/70 break-all">{conviteUrl}</p>
+        </div>
+      )}
+
+      <form onSubmit={onSubmit} className="rounded-2xl bg-white/10 p-5 space-y-3">
+        <p className="text-sm font-semibold">Parear pelo número do parceiro</p>
+        <input
+          type="tel"
+          placeholder="Telefone do parceiro (ex: 11999991111)"
+          value={telefone}
+          onChange={(e) => setTelefone(e.target.value)}
+          maxLength={14}
+          inputMode="numeric"
+        />
+        <input
+          type="text"
+          placeholder="Apelido carinhoso (ex: Meu amor, Fofinha...)"
+          value={apelido}
+          onChange={(e) => setApelido(e.target.value)}
+          maxLength={30}
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-red w-full py-3 rounded-xl text-sm disabled:opacity-60"
+        >
+          {loading ? 'Enviando...' : 'SOLICITAR PAREAMENTO'}
+        </button>
+      </form>
+
+      {showContinuarSemParear && onContinuarSemParear && (
+        <button
+          type="button"
+          onClick={onContinuarSemParear}
+          className="w-full text-center text-xs text-white/40 hover:text-white/60 transition py-2"
+        >
+          Continuar sem parear por enquanto
+        </button>
+      )}
+    </>
+  );
+}
 
 export default function ParearPage() {
   const router = useRouter();
@@ -22,7 +119,6 @@ export default function ParearPage() {
   const [loading, setLoading] = useState(false);
   const [conviteUrl, setConviteUrl] = useState('');
   const [gerandoConvite, setGerandoConvite] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
 
   const meuTelefone = usuario?.telefone ?? '(sem telefone cadastrado)';
   const isVip = usuario?.vip === true;
@@ -30,6 +126,7 @@ export default function ParearPage() {
   const conexaoCount = parceirosAtivos?.length ?? 0;
   const limiteConexoes = getConnectionLimit(isVip);
   const atMaxConnections = conexaoCount >= limiteConexoes;
+  const showAdicionarSection = !temConexoes || (isVip && !atMaxConnections);
 
   function handleNovaConexao() {
     if (!isVip && temConexoes) {
@@ -40,7 +137,7 @@ export default function ParearPage() {
       openSystemAlert('Limite de 5 conexões atingido.');
       return;
     }
-    setShowAddModal(true);
+    document.getElementById('adicionar-conexao')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function guardLimiteConexoes(): boolean {
@@ -81,8 +178,6 @@ export default function ParearPage() {
     }
     setLoading(true);
     try {
-      // Rate-limit check (CF retorna { ok: true } de forma neutra por segurança;
-      // a validação real acontece de forma assíncrona no processInput)
       const check = await callFunction<{ ok: boolean }>(FUNCTIONS.verificarTelefone, {
         telefone: telNumero,
       });
@@ -146,27 +241,36 @@ export default function ParearPage() {
     }
   }
 
+  const formProps = {
+    meuTelefone,
+    telefone,
+    setTelefone,
+    apelido,
+    setApelido,
+    loading,
+    gerandoConvite,
+    conviteUrl,
+    onGerarConvite: handleGerarConvite,
+    onSubmit: handleParear,
+  };
+
   return (
     <div className="screen screen-pad bg-black text-white">
-      {/* Header */}
       <section className="px-0 pt-11 pb-6" style={{ background: 'linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%)' }}>
         <div className="flex flex-col items-center text-center -mt-3">
           <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mb-3">
             <i className="fas fa-heart text-2xl text-white" />
           </div>
-          <h2 className="text-xl font-semibold">Pareamento</h2>
-          <p className="text-sm text-white/80">
-            {isVip ? 'Modo Poliamor ativo' : 'Conecte-se com seu parceiro'}
+          <h2 className="text-xl font-semibold">Pareamentos</h2>
+          <p className="text-sm text-white/80 px-6">
+            {isVip ? 'Gerencie até 5 conexões' : 'Conecte-se com seu parceiro'}
           </p>
         </div>
       </section>
 
       <section className="px-5 pt-4 pb-8 space-y-4">
-
-        {/* ── Minhas Conexões (só aparece se já tiver conexões) ── */}
         {temConexoes && (
           <div className="space-y-3">
-            {/* Cabeçalho com badge */}
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-white/80">Minhas Conexões</p>
               <div className="flex items-center gap-2">
@@ -188,7 +292,6 @@ export default function ParearPage() {
               </div>
             </div>
 
-            {/* Cards de parceiros */}
             {parceirosAtivos.map((p) => {
               const isAtivo = conexaoAtiva?.uid === p.uid;
               return (
@@ -202,7 +305,6 @@ export default function ParearPage() {
                       : { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)' }
                   }
                 >
-                  {/* Foto */}
                   <div className="relative flex-shrink-0">
                     {p.fotoUrl ? (
                       <Image
@@ -222,7 +324,6 @@ export default function ParearPage() {
                     )}
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{p.nome}</p>
                     <p className="text-xs text-white/50 mt-0.5">
@@ -230,7 +331,6 @@ export default function ParearPage() {
                     </p>
                   </div>
 
-                  {/* Status / seta */}
                   {isAtivo ? (
                     <span className="text-[10px] font-bold text-green-400 bg-green-400/15 px-2.5 py-1 rounded-full flex-shrink-0">
                       Ativo
@@ -242,7 +342,6 @@ export default function ParearPage() {
               );
             })}
 
-            {/* Slots bloqueados (free) */}
             {!isVip && temConexoes &&
               Array.from({ length: MAX_CONEXOES_VIP - 1 }, (_, i) => i + 2).map((slot) => (
                 <div
@@ -261,8 +360,8 @@ export default function ParearPage() {
                 </div>
               ))}
 
-            {/* Botão adicionar nova conexão */}
             <button
+              type="button"
               onClick={handleNovaConexao}
               disabled={isVip && atMaxConnections}
               className="w-full rounded-2xl p-4 flex items-center gap-3 transition disabled:opacity-40"
@@ -288,167 +387,28 @@ export default function ParearPage() {
           </div>
         )}
 
-        {/* ── Formulário (só exibido inline quando não há conexões ainda) ── */}
-        {!temConexoes && (
-          <>
-            {/* Seu telefone */}
-            <div className="rounded-2xl bg-white/10 p-5">
-              <p className="text-xs text-white/60 mb-1">Seu número (compartilhe com seu parceiro)</p>
-              <p className="text-lg font-bold tracking-wide text-pink-400">{meuTelefone}</p>
-            </div>
-
-            {/* Convite via link */}
-            <button
-              onClick={handleGerarConvite}
-              disabled={gerandoConvite}
-              className="rounded-2xl bg-white/10 p-5 w-full text-left hover:bg-white/20 transition disabled:opacity-60"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center">
-                  <i className="fas fa-link text-pink-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">Convide seu amor</p>
-                  <p className="text-xs text-white/60">{gerandoConvite ? 'Gerando...' : 'Gerar e copiar link de convite'}</p>
-                </div>
-              </div>
-            </button>
-
-            {/* URL do convite gerado */}
-            {conviteUrl && (
-              <div className="rounded-2xl bg-pink-500/10 border border-pink-500/20 p-4">
-                <p className="text-xs text-pink-400 font-semibold mb-1">Link gerado (copiado!):</p>
-                <p className="text-xs text-white/70 break-all">{conviteUrl}</p>
-              </div>
+        {showAdicionarSection && (
+          <div id="adicionar-conexao" className="space-y-4 scroll-mt-4">
+            {temConexoes && (
+              <p className="text-sm font-semibold text-white/80 pt-2">Adicionar conexão</p>
             )}
+            <ParearFormSection
+              {...formProps}
+              showContinuarSemParear={!temConexoes}
+              onContinuarSemParear={handleContinuarSemParear}
+            />
+          </div>
+        )}
 
-            {/* Formulário de telefone */}
-            <form onSubmit={handleParear} className="rounded-2xl bg-white/10 p-5 space-y-3">
-              <p className="text-sm font-semibold">Parear pelo número do parceiro</p>
-              <input
-                type="tel"
-                placeholder="Telefone do parceiro (ex: 11999991111)"
-                value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
-                maxLength={14}
-                inputMode="numeric"
-              />
-              <input
-                type="text"
-                placeholder="Apelido carinhoso (ex: Meu amor, Fofinha...)"
-                value={apelido}
-                onChange={(e) => setApelido(e.target.value)}
-                maxLength={30}
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-red w-full py-3 rounded-xl text-sm disabled:opacity-60"
-              >
-                {loading ? 'Enviando...' : 'SOLICITAR PAREAMENTO'}
-              </button>
-            </form>
-
-            <button
-              onClick={handleContinuarSemParear}
-              className="w-full text-center text-xs text-white/40 hover:text-white/60 transition py-2"
-            >
-              Continuar sem parear por enquanto
-            </button>
-          </>
+        {temConexoes && (
+          <Link
+            href="/parceiro"
+            className="block w-full text-center text-xs text-white/40 hover:text-white/60 transition py-2"
+          >
+            Ir para o parceiro ativo
+          </Link>
         )}
       </section>
-
-      {/* ── Popup: Nova Conexão (VIP) ── */}
-      <OverlayModal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        backdropClassName="bg-black/75"
-        scrollPanel={false}
-        panelClassName="bg-[#0d0d0d] border border-white/[0.08] overflow-y-auto"
-        ariaLabel="Nova conexão VIP"
-      >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5" style={{ background: 'linear-gradient(135deg,#ff2d3f 0%,#ff5565 100%)' }}>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.20)' }}>
-                  <i className="fas fa-plus text-white text-sm" />
-                </div>
-                <div>
-                  <p className="text-white/70 text-xs uppercase tracking-widest">VIP · Poliamor</p>
-                  <h3 className="text-white font-bold text-base leading-tight">Nova Conexão</h3>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(0,0,0,0.20)' }}
-              >
-                <i className="fas fa-times text-white text-sm" />
-              </button>
-            </div>
-
-            {/* Conteúdo */}
-            <div className="p-5 space-y-3 pb-10">
-              {/* Seu telefone */}
-              <div className="rounded-2xl bg-white/10 p-5">
-                <p className="text-xs text-white/60 mb-1">Seu número (compartilhe com seu parceiro)</p>
-                <p className="text-lg font-bold tracking-wide text-pink-400">{meuTelefone}</p>
-              </div>
-
-              {/* Convite via link */}
-              <button
-                onClick={handleGerarConvite}
-                disabled={gerandoConvite}
-                className="rounded-2xl bg-white/10 p-5 w-full text-left hover:bg-white/20 transition disabled:opacity-60"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center">
-                    <i className="fas fa-link text-pink-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">Convide seu amor</p>
-                    <p className="text-xs text-white/60">{gerandoConvite ? 'Gerando...' : 'Gerar e copiar link de convite'}</p>
-                  </div>
-                </div>
-              </button>
-
-              {/* URL do convite gerado */}
-              {conviteUrl && (
-                <div className="rounded-2xl bg-pink-500/10 border border-pink-500/20 p-4">
-                  <p className="text-xs text-pink-400 font-semibold mb-1">Link gerado (copiado!):</p>
-                  <p className="text-xs text-white/70 break-all">{conviteUrl}</p>
-                </div>
-              )}
-
-              {/* Formulário de telefone */}
-              <form onSubmit={handleParear} className="rounded-2xl bg-white/10 p-5 space-y-3">
-                <p className="text-sm font-semibold">Parear pelo número do parceiro</p>
-                <input
-                  type="tel"
-                  placeholder="Telefone do parceiro (ex: 11999991111)"
-                  value={telefone}
-                  onChange={(e) => setTelefone(e.target.value)}
-                  maxLength={14}
-                  inputMode="numeric"
-                />
-                <input
-                  type="text"
-                  placeholder="Apelido carinhoso (ex: Meu amor, Fofinha...)"
-                  value={apelido}
-                  onChange={(e) => setApelido(e.target.value)}
-                  maxLength={30}
-                />
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="btn-red w-full py-3 rounded-xl text-sm disabled:opacity-60"
-                >
-                  {loading ? 'Enviando...' : 'SOLICITAR PAREAMENTO'}
-                </button>
-              </form>
-            </div>
-      </OverlayModal>
     </div>
   );
 }
