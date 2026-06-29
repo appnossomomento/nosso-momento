@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   description: 'Apimente a relação. Deixe tudo mais gostoso!',
   icons: {
     icon: [
-      { url: '/assets/icons/iconprincipal.png', type: 'image/png' },
-      { url: '/assets/icons/favicon.ico', sizes: 'any' },
+      { url: '/assets/icons/icon-192x192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/assets/icons/favicon.png', type: 'image/png' },
     ],
     apple: '/assets/icons/apple-touch-icon-180x180.png',
   },

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import type { AdminSectionId } from '@/admin-panel/constants';
 import { ADMIN_SECTIONS } from '@/admin-panel/constants';
 
@@ -29,8 +30,16 @@ export default function AdminSidebarNav({ active, onSelect, mobileOpen, onCloseM
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        <div className="px-4 py-5 border-b border-white/10">
-          <p className="text-base font-semibold text-white">Nosso Momento</p>
+        <div className="px-4 py-5 border-b border-white/10 flex flex-col items-center text-center">
+          <Image
+            src="/assets/icons/iconprincipal.png"
+            alt="Nosso Momento"
+            width={72}
+            height={72}
+            className="object-contain drop-shadow-[0_0_12px_rgba(255,73,106,0.45)]"
+            priority
+          />
+          <p className="text-sm font-semibold text-white mt-3">Nosso Momento</p>
           <p className="text-xs text-white/40 mt-0.5">Monitoring — uso interno</p>
         </div>
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
