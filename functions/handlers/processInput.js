@@ -21,6 +21,15 @@ const {
   resolveRedeemItems,
 } = require("../lib/momentPricing");
 const {
+  sanitizeCatalogoPersonalizado,
+  validateCustomMomentCreateInput,
+  isUserPareamentoMember,
+  findCustomMoment,
+  canAddCustomMoment,
+  generateCustomItemId,
+  buildCustomMomentId,
+} = require("../lib/customMoments");
+const {
   upsertWeeklyChallengeForPair,
   pickRouletteValue,
   ROULETTE_OPTIONS,
@@ -1265,6 +1274,7 @@ exports.processInput = onDocumentCreated(
           const priced = await resolveRedeemItems(
               sanitizedRaw,
               partnerSnap.exists ? partnerSnap.data() : null,
+              partnerUid,
               pareamentoId,
               admin.firestore(),
           );
@@ -3212,6 +3222,258 @@ exports.processInput = onDocumentCreated(
           });
           /* eslint-enable max-len */
           console.log("processInput: roulette_spin processado", inputId);
+        } else if (input.type === "catalog_personalizado_save") {
+          const fromUid = input.fromUid;
+          const rawCatalogo = input.catalogoPersonalizado;
+
+          if (!fromUid) {
+            await inputRef.update({error: "missing_uid", processed: false});
+            return;
+          }
+
+          const senderSnap = await admin.firestore()
+              .collection("usuarios").doc(fromUid).get();
+          if (!senderSnap.exists) {
+            await inputRef.update({
+              error: "usuario_nao_encontrado", processed: false,
+            });
+            return;
+          }
+
+          const senderData = senderSnap.data();
+          const sanitized = sanitizeCatalogoPersonalizado(
+              rawCatalogo,
+              !!senderData.vip,
+          );
+          if (!sanitized.ok) {
+            await inputRef.update({
+              error: sanitized.error, processed: false,
+            });
+            return;
+          }
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            tx.update(admin.firestore().collection("usuarios").doc(fromUid), {
+              catalogoPersonalizado: sanitized.catalogo,
+            });
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log(
+              "processInput: catalog_personalizado_save processado",
+              inputId,
+          );
+        } else if (input.type === "custom_moment_create") {
+          const fromUid = input.fromUid;
+          const pareamentoId = input.pareamentoId ?
+            String(input.pareamentoId) : null;
+
+          if (!fromUid || !pareamentoId) {
+            await inputRef.update({
+              error: "missing_custom_moment_info", processed: false,
+            });
+            return;
+          }
+
+          const validated = validateCustomMomentCreateInput(input);
+          if (!validated.ok) {
+            await inputRef.update({
+              error: validated.error, processed: false,
+            });
+            return;
+          }
+
+          const senderSnap = await admin.firestore()
+              .collection("usuarios").doc(fromUid).get();
+          if (!senderSnap.exists) {
+            await inputRef.update({
+              error: "usuario_nao_encontrado", processed: false,
+            });
+            return;
+          }
+
+          const senderData = senderSnap.data();
+          if (!senderData.vip) {
+            await inputRef.update({error: "vip_required", processed: false});
+            return;
+          }
+
+          const pareamentoRef = admin.firestore()
+              .collection("pareamentos").doc(pareamentoId);
+          const pareamentoSnap = await pareamentoRef.get();
+          if (!pareamentoSnap.exists) {
+            await inputRef.update({
+              error: "pareamento_nao_encontrado", processed: false,
+            });
+            return;
+          }
+
+          const pareamentoData = pareamentoSnap.data();
+          if (!isUserPareamentoMember(pareamentoData, fromUid)) {
+            await inputRef.update({error: "not_pair_member", processed: false});
+            return;
+          }
+
+          const existingList = (pareamentoData.momentosCustom || {})[fromUid];
+          if (!canAddCustomMoment(existingList)) {
+            await inputRef.update({
+              error: "custom_moment_limit", processed: false,
+            });
+            return;
+          }
+
+          const itemId = generateCustomItemId();
+          const newItem = {
+            id: itemId,
+            nome: validated.item.nome,
+            preco: validated.item.preco,
+            emoji: validated.item.emoji,
+            img: validated.item.img,
+            categoria: validated.item.categoria,
+            ativo: true,
+            criadoEm: admin.firestore.FieldValue.serverTimestamp(),
+            criadorUid: fromUid,
+          };
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const pSnap = await tx.get(pareamentoRef);
+            if (!pSnap.exists) {
+              tx.update(inputRef, {
+                error: "pareamento_nao_encontrado", processed: false,
+              });
+              return;
+            }
+
+            const pData = pSnap.data();
+            if (!isUserPareamentoMember(pData, fromUid)) {
+              tx.update(inputRef, {
+                error: "not_pair_member", processed: false,
+              });
+              return;
+            }
+
+            const rawCustomList = (pData.momentosCustom || {})[fromUid];
+            const currentList = Array.isArray(rawCustomList) ?
+              rawCustomList : [];
+            if (!canAddCustomMoment(currentList)) {
+              tx.update(inputRef, {
+                error: "custom_moment_limit", processed: false,
+              });
+              return;
+            }
+
+            tx.update(pareamentoRef, {
+              [`momentosCustom.${fromUid}`]:
+                admin.firestore.FieldValue.arrayUnion(newItem),
+            });
+            tx.update(inputRef, {
+              processed: true,
+              customMomentId: buildCustomMomentId(pareamentoId, itemId),
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: custom_moment_create processado", inputId);
+        } else if (input.type === "custom_moment_delete") {
+          const fromUid = input.fromUid;
+          const pareamentoId = input.pareamentoId ?
+            String(input.pareamentoId) : null;
+          const itemId = input.itemId ? String(input.itemId) : null;
+
+          if (!fromUid || !pareamentoId || !itemId) {
+            await inputRef.update({
+              error: "missing_custom_moment_info", processed: false,
+            });
+            return;
+          }
+
+          const senderSnap = await admin.firestore()
+              .collection("usuarios").doc(fromUid).get();
+          if (!senderSnap.exists) {
+            await inputRef.update({
+              error: "usuario_nao_encontrado", processed: false,
+            });
+            return;
+          }
+
+          const senderData = senderSnap.data();
+          if (!senderData.vip) {
+            await inputRef.update({error: "vip_required", processed: false});
+            return;
+          }
+
+          const pareamentoRef = admin.firestore()
+              .collection("pareamentos").doc(pareamentoId);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const pSnap = await tx.get(pareamentoRef);
+            if (!pSnap.exists) {
+              tx.update(inputRef, {
+                error: "pareamento_nao_encontrado", processed: false,
+              });
+              return;
+            }
+
+            const pData = pSnap.data();
+            if (!isUserPareamentoMember(pData, fromUid)) {
+              tx.update(inputRef, {
+                error: "not_pair_member", processed: false,
+              });
+              return;
+            }
+
+            const existing = findCustomMoment(
+                pData.momentosCustom, fromUid, itemId,
+            );
+            if (!existing) {
+              tx.update(inputRef, {
+                error: "momento_nao_encontrado", processed: false,
+              });
+              return;
+            }
+            if (existing.criadorUid && existing.criadorUid !== fromUid) {
+              tx.update(inputRef, {error: "forbidden", processed: false});
+              return;
+            }
+
+            const rawCustomList = (pData.momentosCustom || {})[fromUid];
+            const currentList = Array.isArray(rawCustomList) ?
+              rawCustomList : [];
+            const updatedList = currentList.map((item) => {
+              if (item && item.id === itemId) {
+                return {...item, ativo: false};
+              }
+              return item;
+            });
+
+            tx.update(pareamentoRef, {
+              [`momentosCustom.${fromUid}`]: updatedList,
+            });
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: custom_moment_delete processado", inputId);
         } else {
           console.log("processInput: tipo não suportado", input.type);
           await inputRef.update({error: "unsupported_type", processed: false});

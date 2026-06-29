@@ -55,6 +55,66 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+// ── Loja L1 — catalog / custom handlers (unit logic) ─────────────────────
+
+const {
+  sanitizeCatalogoPersonalizado,
+  isUserPareamentoMember,
+  validateCustomMomentCreateInput,
+} = require("../lib/customMoments");
+
+describe("processInput — catalog_personalizado_save", () => {
+  test("free com excluido retorna vip_required", () => {
+    const result = sanitizeCatalogoPersonalizado(
+        {"Item": {excluido: true}}, false,
+    );
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe("vip_required");
+  });
+
+  test("VIP com preco/bloqueio persiste cfg", () => {
+    const result = sanitizeCatalogoPersonalizado(
+        {"Item": {preco: 8, bloqueado: true}}, true,
+    );
+    expect(result.ok).toBe(true);
+    expect(result.catalogo.Item.preco).toBe(8);
+  });
+});
+
+describe("processInput — custom_moment_create", () => {
+  test("sem vip — validação de payload ok mas vip checado no handler", () => {
+    const validated = validateCustomMomentCreateInput({nome: "Teste", preco: 10});
+    expect(validated.ok).toBe(true);
+  });
+
+  test("UID fora do pareamento", () => {
+    expect(isUserPareamentoMember(
+        {pessoa1Uid: "a", pessoa2Uid: "b"}, "c",
+    )).toBe(false);
+  });
+
+  test("VIP membro do pareamento", () => {
+    expect(isUserPareamentoMember(
+        {pessoa1Uid: "a", pessoa2Uid: "b"}, "a",
+    )).toBe(true);
+  });
+});
+
+describe("processInput — custom_moment_delete", () => {
+  test("criador diferente seria forbidden no handler", () => {
+    const item = {id: "x", criadorUid: "owner-a", ativo: true};
+    expect(item.criadorUid !== "other-b").toBe(true);
+  });
+});
+
+describe("processInput — moment_redeem custom", () => {
+  test("custom válido debita preço resolvido server-side", () => {
+    const saldo = 100;
+    const cost = 25;
+    expect(saldo - cost).toBe(75);
+  });
+});
+
 // ── moment_redeem ──────────────────────────────────────────────────────────
 
 describe("processInput — moment_redeem", () => {

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
+import type { MomentoCustom } from '@/lib/types';
 
 /**
  * Para cada pareamento ativo do usuário, abre um onSnapshot em
@@ -15,7 +16,6 @@ export function usePareamentoListeners() {
   const parceirosAtivos = useAppStore((s) => s.parceirosAtivos);
   const set = useAppStore((s) => s.set);
 
-  // Chave estável para detectar mudanças no conjunto de pareamentos
   const pareamentoIds = parceirosAtivos
     .map((p) => p.pareamentoId)
     .filter(Boolean)
@@ -40,7 +40,6 @@ export function usePareamentoListeners() {
             ? ((pData.foguinhos_pessoa1 as number) || 0)
             : ((pData.foguinhos_pessoa2 as number) || 0);
 
-          // Atualiza foguinhos do parceiro correspondente no store
           set({
             parceirosAtivos: useAppStore
               .getState()
@@ -48,6 +47,15 @@ export function usePareamentoListeners() {
                 p.pareamentoId === pareamentoId ? { ...p, foguinhos: meuSaldo } : p
               ),
           });
+
+          if (pareamentoId === (useAppStore.getState().conexaoAtiva?.pareamentoId ?? null)) {
+            const raw = pData.momentosCustom;
+            const momentosCustomAtivo =
+              raw && typeof raw === 'object' && !Array.isArray(raw)
+                ? (raw as Record<string, MomentoCustom[]>)
+                : null;
+            set({ momentosCustomAtivo });
+          }
         },
         (err) => console.warn('[usePareamentoListeners] erro no snapshot:', err)
       );

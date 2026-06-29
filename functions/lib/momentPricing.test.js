@@ -6,6 +6,7 @@ const {
   computeMasterPrice,
   momentMatchesPartnerGender,
   resolveMasterMomentItem,
+  resolveCustomMomentItem,
   isCustomMomentId,
   getCatalogCfg,
 } = require("./momentPricing");
@@ -112,6 +113,47 @@ describe("momentPricing — custom ids", () => {
   test("identifica ids custom VIP", () => {
     expect(isCustomMomentId("custom_pareamento_item")).toBe(true);
     expect(isCustomMomentId("mestre-1")).toBe(false);
+  });
+});
+
+describe("momentPricing — resolveCustomMomentItem", () => {
+  const pareamentoId = "5511999991111_5511888882222";
+  const itemId = "abc123";
+  const partnerUid = "partner-uid";
+
+  test("resolve custom válido", () => {
+    const id = `custom_${pareamentoId}_${itemId}`;
+    const result = resolveCustomMomentItem(
+        {id, nome: "Massagem"},
+        partnerUid,
+        pareamentoId,
+        {
+          momentosCustom: {
+            [partnerUid]: [{
+              id: itemId,
+              nome: "Massagem VIP",
+              preco: 25,
+              emoji: "💆",
+              ativo: true,
+            }],
+          },
+        },
+    );
+    expect(result.ok).toBe(true);
+    expect(result.item.custoFoguinhos).toBe(25);
+    expect(result.item.nome).toBe("Massagem VIP");
+  });
+
+  test("rejeita custom de outro pareamento", () => {
+    const id = `custom_${pareamentoId}_${itemId}`;
+    const result = resolveCustomMomentItem(
+        {id},
+        partnerUid,
+        "outro_pareamento",
+        {momentosCustom: {[partnerUid]: [{id: itemId, preco: 10, ativo: true}]}},
+    );
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe("custom_pareamento_invalido");
   });
 });
 

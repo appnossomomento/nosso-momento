@@ -6,6 +6,7 @@ import type {
   Notificacao,
   Tarefa,
   MomentoMestre,
+  MomentoCustom,
   DesafioSemanal,
   Memoria,
   ClimaItem,
@@ -70,6 +71,8 @@ interface AppState {
   // Loja / Catálogo
   carrinho: CarrinhoItem[];
   momentosMestres: MomentoMestre[];
+  /** momentosCustom do pareamento ativo, keyed por criadorUid */
+  momentosCustomAtivo: Record<string, MomentoCustom[]> | null;
   showCartSidebar: boolean;
 
   // Memórias
@@ -188,6 +191,7 @@ const initialState: Omit<AppState, 'set' | 'reset'> = {
   pendingRealizadoPhotoFile: null,
   carrinho: [],
   momentosMestres: [],
+  momentosCustomAtivo: null,
   showCartSidebar: false,
   memoriasView: 'welcome',
   memoriasItems: [],

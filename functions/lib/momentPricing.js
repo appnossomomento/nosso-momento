@@ -3,7 +3,12 @@
 const PRICE_MULTIPLIER = 2;
 const MAX_ITEMS = 4;
 const MAX_PRICE = 1000;
-const CUSTOM_ID_PREFIX = "custom_";
+const {
+  isCustomMomentId,
+  parseCustomMomentId,
+  buildCustomMomentId,
+  findCustomMoment,
+} = require("./customMoments");
 
 /**
  * Sanitiza itens do carrinho preservando ids para resolução server-side.
@@ -37,10 +42,6 @@ function sanitizeMomentRedeemItems(rawItems) {
   }
 
   return sanitized;
-}
-
-function isCustomMomentId(id) {
-  return typeof id === "string" && id.startsWith(CUSTOM_ID_PREFIX);
 }
 
 function getCatalogCfg(catalogoPersonalizado, nome) {
@@ -108,7 +109,7 @@ function resolveMasterMomentItem(item, mestreData, partnerData) {
   }
 
   const catalogCfg = getCatalogCfg(partnerData.catalogoPersonalizado, nome);
-  if (catalogCfg.bloqueado === true) {
+  if (catalogCfg.bloqueado === true || catalogCfg.excluido === true) {
     return {ok: false, error: "momento_bloqueado"};
   }
 
@@ -132,10 +133,48 @@ function resolveMasterMomentItem(item, mestreData, partnerData) {
 }
 
 /**
- * Stub para momentos custom VIP (L1.5). Falha fechado até implementação.
+ * Resolve momento custom VIP a partir do doc de pareamento.
+ * @param {object} item
+ * @param {string} partnerUid
+ * @param {string|null} pareamentoId
+ * @param {object|null} pareamentoData
+ * @return {{ok: true, item: object}|{ok: false, error: string}}
  */
-function resolveCustomMomentItem() {
-  return {ok: false, error: "custom_not_available"};
+function resolveCustomMomentItem(item, partnerUid, pareamentoId, pareamentoData) {
+  const parsed = parseCustomMomentId(item.id);
+  if (!parsed) return {ok: false, error: "momento_invalido"};
+  if (pareamentoId && parsed.pareamentoId !== pareamentoId) {
+    return {ok: false, error: "custom_pareamento_invalido"};
+  }
+  if (!pareamentoData) {
+    return {ok: false, error: "pareamento_nao_encontrado"};
+  }
+
+  const custom = findCustomMoment(
+      pareamentoData.momentosCustom,
+      partnerUid,
+      parsed.itemId,
+  );
+  if (!custom) return {ok: false, error: "momento_nao_encontrado"};
+
+  const preco = Math.floor(Number(custom.preco));
+  if (!Number.isFinite(preco) || preco <= 0 || preco > MAX_PRICE) {
+    return {ok: false, error: "momento_preco_invalido"};
+  }
+
+  return {
+    ok: true,
+    item: {
+      id: buildCustomMomentId(parsed.pareamentoId, parsed.itemId),
+      nome: custom.nome || item.nome || "Momento custom",
+      custoFoguinhos: preco,
+      emoji: custom.emoji || item.emoji || "✨",
+      categoria: custom.categoria || "Custom",
+      img: custom.img || item.img || "",
+      momentoMestreId: "",
+      isCustom: true,
+    },
+  };
 }
 
 /**
@@ -170,15 +209,30 @@ async function fetchMomentoMestre(db, id, nome) {
  * Resolve todos os itens do resgate com preços server-side.
  * @param {Array<object>} sanitizedItems
  * @param {object|null} partnerData
+ * @param {string|null} partnerUid
  * @param {string|null} pareamentoId
  * @param {import('firebase-admin').firestore.Firestore} db
  */
-async function resolveRedeemItems(sanitizedItems, partnerData, pareamentoId, db) {
-  if (!partnerData) {
+async function resolveRedeemItems(
+    sanitizedItems,
+    partnerData,
+    partnerUid,
+    pareamentoId,
+    db,
+) {
+  if (!partnerData || !partnerUid) {
     return {ok: false, error: "usuario_nao_encontrado"};
   }
   if (!Array.isArray(sanitizedItems) || sanitizedItems.length === 0) {
     return {ok: false, error: "missing_redeem_info"};
+  }
+
+  let pareamentoData = null;
+  if (pareamentoId) {
+    const pareamentoSnap = await db.collection("pareamentos").doc(pareamentoId).get();
+    if (pareamentoSnap.exists) {
+      pareamentoData = pareamentoSnap.data();
+    }
   }
 
   const resolved = [];
@@ -186,8 +240,16 @@ async function resolveRedeemItems(sanitizedItems, partnerData, pareamentoId, db)
 
   for (const item of sanitizedItems) {
     if (isCustomMomentId(item.id)) {
-      const customResult = resolveCustomMomentItem();
+      const customResult = resolveCustomMomentItem(
+          item,
+          partnerUid,
+          pareamentoId,
+          pareamentoData,
+      );
       if (!customResult.ok) return {ok: false, error: customResult.error};
+      resolved.push(customResult.item);
+      totalCost += customResult.item.custoFoguinhos;
+      continue;
     }
 
     const mestreData = await fetchMomentoMestre(db, item.id, item.nome);

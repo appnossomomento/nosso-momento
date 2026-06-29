@@ -1,5 +1,23 @@
 // ── Tipos principais ──────────────────────────────────────────
 
+export interface CatalogoCfg {
+  preco?: number;
+  bloqueado?: boolean;
+  excluido?: boolean;
+}
+
+export interface MomentoCustom {
+  id: string;
+  nome: string;
+  preco: number;
+  emoji?: string;
+  img?: string;
+  categoria?: string;
+  ativo?: boolean;
+  criadorUid?: string;
+  criadoEm?: unknown;
+}
+
 export interface Usuario {
   uid: string;
   email?: string;
@@ -52,7 +70,7 @@ export interface ParceiroData {
   anatomia?: string;
   sexo?: string;
   pareadoCom?: string | null;
-  catalogoPersonalizado?: Record<string, { preco?: number; bloqueado?: boolean }>;
+  catalogoPersonalizado?: Record<string, CatalogoCfg>;
   [key: string]: unknown;
 }
 
