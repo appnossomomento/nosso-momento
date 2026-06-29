@@ -17,8 +17,7 @@ import { validateApelidoReal, APELIDO_REAL_MAX_LENGTH } from '@/lib/utils/valida
 import { CATALOGO_LOJA_OPTIONS } from '@/lib/types/profileEnums';
 import { nomeParaCard } from '@/lib/utils/displayName';
 import { getCatalogFilterGender } from '@/lib/utils/profile';
-import VipStarBadge from '@/components/profile/VipStarBadge';
-import VipStatusBanner from '@/components/profile/VipStatusBanner';
+import VipStatusInline from '@/components/profile/VipStatusInline';
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -209,14 +208,13 @@ export default function PerfilPage() {
       <section className="px-0 pt-11 pb-16" style={{ background: 'linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%)' }}>
         <div className="flex flex-col items-center text-center -mt-3">
           <div className="relative mb-3">
-            <div className="relative w-24 h-24 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/40">
+            <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/40">
               <Image src={fotoPerfil} alt="Foto de perfil" width={96} height={96} className="w-full h-full object-cover" />
-              {isVip && <VipStarBadge className="bottom-0 right-0" />}
             </div>
             <button
               onClick={() => fotoInputRef.current?.click()}
               disabled={uploadingFoto}
-              className="absolute bottom-0 left-0 w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-md hover:bg-gray-100 transition disabled:opacity-50"
+              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-md hover:bg-gray-100 transition disabled:opacity-50"
             >
               <i className="fas fa-camera text-red-500 text-xs" />
             </button>
@@ -245,7 +243,6 @@ export default function PerfilPage() {
       </section>
 
       <section className="px-5 -mt-8 space-y-4">
-        {isVip && <VipStatusBanner />}
         {/* Card do perfil */}
         <div className="rounded-2xl bg-[#0f0b14] p-5 space-y-4">
           {/* Nome */}
@@ -381,6 +378,7 @@ export default function PerfilPage() {
           <div>
             <p className="text-xs text-white/50 mb-1">Telefone</p>
             <p className="text-sm">{usuario.telefone || '—'}</p>
+            {isVip && <VipStatusInline />}
           </div>
         </div>
 
