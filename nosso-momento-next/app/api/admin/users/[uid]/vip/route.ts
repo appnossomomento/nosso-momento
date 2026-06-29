@@ -39,11 +39,26 @@ export async function PATCH(
       return NextResponse.json({ error: 'user_not_found' }, { status: 404 });
     }
 
+    const wasVip = snap.data()?.vip === true;
+
     await ref.update({
       vip: body.vip,
       vipUpdatedAt: FieldValue.serverTimestamp(),
       vipUpdatedBy: session.email,
     });
+
+    if (body.vip && !wasVip) {
+      await db.collection('notificacoes').add({
+        userId: uid,
+        titulo: '⭐ VIP ATIVO!',
+        mensagem: 'Aproveite suas regalias.',
+        icone: 'fa-star',
+        tipo: 'vip_activated',
+        redirectTo: 'perfil',
+        lida: false,
+        timestamp: FieldValue.serverTimestamp(),
+      });
+    }
 
     return NextResponse.json({
       ok: true,

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store/appStore';
+import VipStarBadge from '@/components/profile/VipStarBadge';
 
 export default function DashboardPage() {
   const { usuario, notificacoesTarefasNaoLidas, notificacoesPresentesNaoLidas, notificacoesConquistasNaoLidas, parceirosAtivos } = useAppStore();
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   const hasPending = pendingCount > 0;
   const userName = usuario?.nome || 'Amor';
   const fotoPerfil = usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
+  const isVip = usuario?.vip === true;
   const pareamentosCount = parceirosAtivos?.length ?? 0;
 
   return (
@@ -24,7 +26,7 @@ export default function DashboardPage() {
       {/* Header */}
       <section className="px-0 pt-11 pb-14" style={{ background: 'linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%)' }}>
         <div className="flex flex-col items-center text-center -mt-3">
-          <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-3 -mt-1">
+          <div className="relative w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-3 -mt-1 overflow-hidden border-2 border-white/30">
             <Image
               src={fotoPerfil}
               alt="Foto de perfil"
@@ -32,6 +34,7 @@ export default function DashboardPage() {
               height={64}
               className="w-16 h-16 rounded-full object-cover"
             />
+            {isVip && <VipStarBadge className="bottom-0 right-0" size="sm" />}
           </div>
           <div className="-mt-2">
             <h2 className="text-xl font-semibold leading-tight">Olá, {userName}</h2>
@@ -50,6 +53,12 @@ export default function DashboardPage() {
               </div>
               <h3 className="text-sm font-semibold">Meu Perfil</h3>
               <p className="text-xs text-white/70">Ver e Editar</p>
+              {isVip && (
+                <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/35">
+                  <i className="fas fa-star text-[8px]" />
+                  VIP ATIVO
+                </span>
+              )}
             </Link>
 
             <Link

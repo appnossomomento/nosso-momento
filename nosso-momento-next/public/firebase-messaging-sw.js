@@ -16,6 +16,7 @@ function resolveNotificationUrl(redirectTo, tipo) {
   var screenMap = {
     main: '/dashboard',
     momentos: '/momentos',
+    perfil: '/perfil',
     perfilParceiro: '/parceiro',
     achievementsPopup: '/dashboard?achievements=1',
   };
@@ -28,6 +29,7 @@ function resolveNotificationUrl(redirectTo, tipo) {
   if (type === 'momento_resgatado' || type === 'moment_completion') return '/momentos';
   if (type === 'achievement' || type === 'milestone') return '/dashboard?achievements=1';
   if (type === 'pairing') return '/parear';
+  if (type === 'vip_activated') return '/perfil';
 
   return key ? '/notificacoes' : '/dashboard';
 }

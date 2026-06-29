@@ -8,6 +8,7 @@ export type NotificationRedirectTarget = {
 const LEGACY_SCREEN_MAP: Record<string, NotificationRedirectTarget> = {
   main: { path: '/dashboard' },
   momentos: { path: '/momentos' },
+  perfil: { path: '/perfil' },
   perfilParceiro: { path: '/parceiro' },
   achievementsPopup: { path: '/dashboard', openAchievementsPopup: true },
 };
@@ -31,6 +32,7 @@ export function resolveNotificationTarget(
     return { path: '/dashboard', openAchievementsPopup: true };
   }
   if (type === 'pairing') return { path: '/parear' };
+  if (type === 'vip_activated') return { path: '/perfil' };
 
   return { path: key ? '/notificacoes' : '/dashboard' };
 }
