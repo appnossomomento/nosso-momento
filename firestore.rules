@@ -30,10 +30,13 @@ service cloud.firestore {
 
       allow create: if isOwner(userId)
         && request.resource.data.keys().hasOnly([
-          'achievementStats', 'catalogoPersonalizado', 'conquistas', 'createdAt',
-          'email', 'fcmToken', 'foguinhos', 'fotoUrl', 'lastCheckInDate', 'nome',
-          'notificationsEnabled', 'pareadoCom', 'pareadoUid', 'pareamentosAtivos',
-          'sexo', 'telefone', 'vip'
+          'achievementStats', 'anatomia', 'apelidoReal', 'catalogoPersonalizado',
+          'cidade', 'conquistas', 'createdAt', 'dataNascimento', 'diaNascimento',
+          'email', 'estado', 'estadoCivil', 'fcmToken', 'foguinhos', 'fotoUrl',
+          'genero', 'generoOutro', 'idade', 'lastCheckInDate', 'mesNascimento',
+          'anoNascimento', 'nome', 'notificationsEnabled', 'orientacaoSexual',
+          'orientacaoSexualOutro', 'pareadoCom', 'pareadoUid', 'pareamentosAtivos',
+          'sexo', 'sobrenome', 'telefone', 'tempoRelacionamento', 'vip'
         ])
         && request.resource.data.foguinhos is int
         && request.resource.data.foguinhos == 10
@@ -50,21 +53,30 @@ service cloud.firestore {
         && fieldUnchanged('createdAt')
         && fieldUnchanged('email')
         && fieldUnchanged('foguinhos')
-        && (!hasField(request.resource.data, 'nome') || request.resource.data.nome is string)
         && fieldUnchanged('notificationsEnabled')
         && fieldUnchanged('pareadoCom')
         && fieldUnchanged('pareadoUid')
-        && fieldUnchanged('sexo')
         && fieldUnchanged('telefone')
         && fieldUnchanged('lastCheckInDate')
-  && fieldUnchanged('fcmToken')
-  && fieldUnchanged('vip')
-  && fieldUnchanged('pareamentosAtivos')
-  && fieldUnchanged('conquistas')
-  && fieldUnchanged('achievementStats')
-  && (hasField(request.resource.data, 'catalogoPersonalizado') || !hasField(resource.data, 'catalogoPersonalizado'))
-  && (!hasField(request.resource.data, 'catalogoPersonalizado') || request.resource.data.catalogoPersonalizado is map)
-  && (!hasField(request.resource.data, 'fotoUrl') || request.resource.data.fotoUrl is string || request.resource.data.fotoUrl == null);
+        && fieldUnchanged('fcmToken')
+        && fieldUnchanged('vip')
+        && fieldUnchanged('pareamentosAtivos')
+        && fieldUnchanged('conquistas')
+        && fieldUnchanged('achievementStats')
+        && fieldUnchanged('genero')
+        && fieldUnchanged('estado')
+        && fieldUnchanged('cidade')
+        && fieldUnchanged('idade')
+        && fieldUnchanged('dataNascimento')
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'nome', 'fotoUrl', 'apelidoReal', 'anatomia', 'sexo', 'catalogoPersonalizado'
+        ])
+        && (!hasField(request.resource.data, 'nome') || request.resource.data.nome is string)
+        && (!hasField(request.resource.data, 'fotoUrl') || request.resource.data.fotoUrl is string || request.resource.data.fotoUrl == null)
+        && (!hasField(request.resource.data, 'apelidoReal') || request.resource.data.apelidoReal is string)
+        && (!hasField(request.resource.data, 'sexo') || request.resource.data.sexo is string)
+        && (hasField(request.resource.data, 'catalogoPersonalizado') || !hasField(resource.data, 'catalogoPersonalizado'))
+        && (!hasField(request.resource.data, 'catalogoPersonalizado') || request.resource.data.catalogoPersonalizado is map);
 
       allow delete: if isOwner(userId);
     }

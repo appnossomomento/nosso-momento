@@ -30,6 +30,10 @@ export function getAdminApp(): admin.app.App {
   return initAdmin();
 }
 
+export function getAdminFirestore(): admin.firestore.Firestore {
+  return initAdmin().firestore();
+}
+
 export function getAdminAuth(): admin.auth.Auth {
   return admin.auth(initAdmin());
 }

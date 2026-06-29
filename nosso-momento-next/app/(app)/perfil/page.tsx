@@ -103,7 +103,7 @@ export default function PerfilPage() {
     setUploadingFoto(true);
     setUploadProgress(10);
     try {
-      const storageRef = ref(storage, `perfis/${usuario.uid}/foto.jpg`);
+      const storageRef = ref(storage, `profile_pics/${usuario.uid}/foto.jpg`);
       setUploadProgress(30);
       await uploadBytes(storageRef, file, { contentType: file.type });
       setUploadProgress(80);

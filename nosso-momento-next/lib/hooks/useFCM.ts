@@ -122,7 +122,9 @@ export function useFCM() {
     void isSupported().then((supported) => {
       if (!supported) return;
       try {
-        const messaging = getMessaging(firebaseApp);
+        const app = firebaseApp;
+        if (!app) return;
+        const messaging = getMessaging(app);
         unsub = onMessage(messaging, (payload) => {
           const type = payload.data?.type ?? null;
           const title = payload.data?.title ?? '';

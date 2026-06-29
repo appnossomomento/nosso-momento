@@ -1,5 +1,7 @@
 # Plano de Ação — Pré-MVP Nosso Momento
 
+> **Scorecard atual:** ver [`nosso-momento-next/MVP_MATURIDADE.md`](../nosso-momento-next/MVP_MATURIDADE.md) — este arquivo é legado e pode estar desatualizado (ex.: ainda cita `index.html`).
+
 > Atualizado em: 19/05/2026
 > Objetivo: Sanear todos os pontos críticos antes do lançamento público
 

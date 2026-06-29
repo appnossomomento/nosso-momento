@@ -231,6 +231,12 @@ Variáveis usadas pelo código:
 | `FIREBASE_PROJECT_ID` | `lib/firebase/admin.ts` | Server |
 | `FIREBASE_CLIENT_EMAIL` | `lib/firebase/admin.ts` | Server |
 | `FIREBASE_PRIVATE_KEY` | `lib/firebase/admin.ts` | Server |
+| `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | `lib/utils/fcmClient.ts` | Client |
+| `ADMIN_MONITORING_EMAILS` | `lib/auth/adminMonitoring.ts` (painel admin) | Server |
+
+Painel interno: `/paineladmin-monitoring-v0` — código em `admin-panel/`, métricas via `/api/admin/*`. Configure `ADMIN_MONITORING_EMAILS` no Vercel (emails separados por vírgula, minúsculas).
+
+**Especificação UX/UI do dashboard moderno:** [`admin-panel/DASHBOARD_MODERNO.md`](admin-panel/DASHBOARD_MODERNO.md) — menu lateral, gráficos, filtros de período e identidade visual.
 
 ---
 

@@ -1,0 +1,324 @@
+'use client';
+
+import type { AdminMetrics } from '@/admin-panel/types';
+import type { AdminSectionId } from '@/admin-panel/constants';
+import KpiCard from '@/admin-panel/components/KpiCard';
+import ChartCard from '@/admin-panel/components/ChartCard';
+import DonutChart from '@/admin-panel/components/DonutChart';
+import LineAreaChart from '@/admin-panel/components/LineAreaChart';
+import BarChartSimple from '@/admin-panel/components/BarChartSimple';
+import ProgressRing from '@/admin-panel/components/ProgressRing';
+import GeoMapBr from '@/admin-panel/components/GeoMapBr';
+import DataTable from '@/admin-panel/components/DataTable';
+import { maskEmail, pct, rollupMonthly, rollupWeekly, withPercent } from '@/admin-panel/lib/chartUtils';
+
+const SNAPSHOT_NOTE = 'Distribuição acumulada — base total de usuários cadastrados.';
+
+function GeralView({ m }: { m: AdminMetrics }) {
+  const { totals } = m;
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <KpiCard label="Usuários" value={totals.users} />
+        <KpiCard label={`Cadastros (${m.periodDays}d)`} value={totals.signupsInPeriod} accent="#34d399" delta={totals.signupsGrowthPct} />
+        <KpiCard label="Pareamentos" value={totals.pareamentos} accent="#a78bfa" />
+        <KpiCard label="Pareados" value={totals.withPairing} accent="#f472b6" />
+        <KpiCard label="Ativos (7d)" value={totals.activeInPeriod} hint="Check-in clima" accent="#38bdf8" />
+        <KpiCard label="Push ativo" value={totals.notificationsEnabled} accent="#fbbf24" />
+      </div>
+      <div className="grid lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <ChartCard title={`Cadastros por dia (${m.periodDays}d)`}>
+            <LineAreaChart data={m.signupsByDay} />
+          </ChartCard>
+        </div>
+        <ChartCard title="Indicadores">
+          <div className="grid grid-cols-3 gap-2">
+            <ProgressRing value={totals.withPairing} max={totals.users || 1} label="Pareados" color="#f472b6" />
+            <ProgressRing value={totals.notificationsEnabled} max={totals.users || 1} label="Push" color="#fbbf24" />
+            <ProgressRing value={totals.activeInPeriod} max={totals.users || 1} label="Ativos 7d" color="#38bdf8" />
+          </div>
+        </ChartCard>
+      </div>
+      <ChartCard title="Cadastros por semana">
+        <BarChartSimple
+          title=""
+          items={rollupWeekly(m.signupsByDay)}
+          maxItems={20}
+        />
+      </ChartCard>
+    </div>
+  );
+}
+
+function GeolocalizadaView({ m }: { m: AdminMetrics }) {
+  const rows = withPercent(m.byEstado, m.totals.users);
+  return (
+    <div className="space-y-6">
+      <p className="text-xs text-white/35">{SNAPSHOT_NOTE}</p>
+      <div className="grid lg:grid-cols-2 gap-4">
+        <ChartCard title="Mapa / Top UFs" note={SNAPSHOT_NOTE}>
+          <GeoMapBr items={m.byEstado} total={m.totals.users} />
+        </ChartCard>
+        <ChartCard title="Distribuição por UF">
+          <DonutChart items={m.byEstado} />
+        </ChartCard>
+      </div>
+      <ChartCard title="Top 10 cidades">
+        <BarChartSimple title="" items={m.byCidade} maxItems={10} />
+      </ChartCard>
+      <ChartCard title="Tabela por UF">
+        <DataTable
+          columns={[
+            { key: 'label', header: 'UF' },
+            { key: 'count', header: 'Usuários' },
+            { key: 'pct', header: '%', render: (r) => `${r.pct}%` },
+          ]}
+          rows={rows}
+        />
+      </ChartCard>
+    </div>
+  );
+}
+
+function GeneroView({ m }: { m: AdminMetrics }) {
+  const naoInformado = m.byGenero.find((g) => g.label === 'Não informado')?.count ?? 0;
+  return (
+    <div className="space-y-6">
+      <p className="text-xs text-white/35">{SNAPSHOT_NOTE}</p>
+      <div className="grid md:grid-cols-3 gap-3">
+        <KpiCard label="Categorias" value={m.byGenero.length} accent="#a78bfa" />
+        <KpiCard label="Maior grupo" value={m.byGenero[0]?.label ?? '—'} accent="#ff5565" />
+        <KpiCard label="Não informado" value={naoInformado} accent="#38bdf8" />
+      </div>
+      <div className="grid lg:grid-cols-2 gap-4">
+        <ChartCard title="Distribuição por gênero">
+          <DonutChart items={m.byGenero} />
+        </ChartCard>
+        <ChartCard title="Ranking">
+          <BarChartSimple title="" items={m.byGenero} />
+        </ChartCard>
+      </div>
+      {m.generoPareado.length > 0 && (
+        <ChartCard title="Gênero × pareamento">
+          <DataTable
+            columns={[
+              { key: 'genero', header: 'Gênero' },
+              { key: 'pareado', header: 'Pareados' },
+              { key: 'solteiro', header: 'Solteiros' },
+            ]}
+            rows={m.generoPareado}
+          />
+        </ChartCard>
+      )}
+    </div>
+  );
+}
+
+function PareamentoView({ m }: { m: AdminMetrics }) {
+  const solteiros = m.totals.users - m.totals.withPairing;
+  const conv = pct(m.totals.withPairing, m.totals.users);
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard label="Pareamentos" value={m.totals.pareamentos} accent="#a78bfa" />
+        <KpiCard label="Pareados" value={m.totals.withPairing} accent="#f472b6" />
+        <KpiCard label="Solteiros" value={solteiros} accent="#38bdf8" />
+        <KpiCard label="Conversão" value={`${conv}%`} accent="#34d399" />
+      </div>
+      <ChartCard title="Funil">
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <div className="rounded-lg bg-[#1a1225] border border-white/10 px-4 py-3 flex-1 min-w-[120px] text-center">
+            <p className="text-xl font-bold text-white tabular-nums">{m.totals.users}</p>
+            <p className="text-xs text-white/50">Cadastrados</p>
+          </div>
+          <span className="text-white/30">→</span>
+          <div className="rounded-lg bg-[#1a1225] border border-white/10 px-4 py-3 flex-1 min-w-[120px] text-center">
+            <p className="text-xl font-bold text-[#f472b6] tabular-nums">{m.totals.withPairing}</p>
+            <p className="text-xs text-white/50">Pareados ({conv}%)</p>
+          </div>
+          <span className="text-white/30">→</span>
+          <div className="rounded-lg bg-[#1a1225] border border-white/10 px-4 py-3 flex-1 min-w-[120px] text-center">
+            <p className="text-xl font-bold text-[#38bdf8] tabular-nums">{m.totals.activeInPeriod}</p>
+            <p className="text-xs text-white/50">Ativos 7d</p>
+          </div>
+        </div>
+      </ChartCard>
+      {m.pareamentosByDay.length > 0 && (
+        <ChartCard title={`Novos pareamentos (${m.periodDays}d)`}>
+          <LineAreaChart data={m.pareamentosByDay} color="#a78bfa" />
+        </ChartCard>
+      )}
+    </div>
+  );
+}
+
+function DemograficaView({ m }: { m: AdminMetrics }) {
+  return (
+    <div className="space-y-6">
+      <p className="text-xs text-white/35">{SNAPSHOT_NOTE}</p>
+      <div className="grid lg:grid-cols-2 gap-4">
+        <ChartCard title="Estado civil">
+          <DonutChart items={m.byEstadoCivil} />
+        </ChartCard>
+        <ChartCard title="Orientação sexual">
+          <BarChartSimple title="" items={m.byOrientacao} />
+        </ChartCard>
+      </div>
+      <ChartCard title="Faixa etária">
+        <BarChartSimple title="" items={m.byFaixaEtaria} />
+      </ChartCard>
+    </div>
+  );
+}
+
+function EngajamentoView({ m }: { m: AdminMetrics }) {
+  const pushOff = m.totals.users - m.totals.notificationsEnabled;
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <KpiCard label="Ativos (7d)" value={m.totals.activeInPeriod} hint="Janela fixa de 7 dias" accent="#38bdf8" />
+        <KpiCard label="Push ativo" value={m.totals.notificationsEnabled} accent="#fbbf24" />
+        <KpiCard label="Push inativo" value={pushOff} accent="#a78bfa" />
+      </div>
+      <div className="grid lg:grid-cols-2 gap-4">
+        <ChartCard title="Push notifications">
+          <DonutChart
+            items={[
+              { label: 'Ativo', count: m.totals.notificationsEnabled },
+              { label: 'Inativo', count: pushOff },
+            ]}
+          />
+        </ChartCard>
+        {m.activeByDay.length > 0 && (
+          <ChartCard title={`Check-ins no período (${m.periodDays}d)`} note="Baseado em lastCheckInDate">
+            <LineAreaChart data={m.activeByDay} color="#38bdf8" />
+          </ChartCard>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LojaView({ m }: { m: AdminMetrics }) {
+  return (
+    <div className="space-y-6">
+      <p className="text-xs text-white/35">{SNAPSHOT_NOTE}</p>
+      <div className="grid lg:grid-cols-2 gap-4">
+        <ChartCard title="Anatomia (catálogo loja)">
+          <DonutChart items={m.byAnatomia} />
+        </ChartCard>
+        <ChartCard title="Ranking anatomia">
+          <BarChartSimple title="" items={m.byAnatomia} />
+        </ChartCard>
+      </div>
+    </div>
+  );
+}
+
+function CadastrosView({ m }: { m: AdminMetrics }) {
+  const media = m.periodDays ? Math.round((m.totals.signupsInPeriod / m.periodDays) * 10) / 10 : 0;
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <KpiCard label={`Cadastros (${m.periodDays}d)`} value={m.totals.signupsInPeriod} accent="#34d399" delta={m.totals.signupsGrowthPct} />
+        <KpiCard label="Média/dia" value={media} accent="#38bdf8" />
+        <KpiCard label="Período ant." value={m.totals.signupsPrevPeriod} accent="#a78bfa" />
+      </div>
+      <ChartCard title={`Cadastros por dia (${m.periodDays}d)`}>
+        <LineAreaChart data={m.signupsByDay} color="#34d399" />
+      </ChartCard>
+      {m.periodDays >= 90 && m.signupsByDay.length > 0 && (
+        <ChartCard title="Cadastros por mês">
+          <BarChartSimple title="" items={rollupMonthly(m.signupsByDay)} />
+        </ChartCard>
+      )}
+      {m.recentSignups.length > 0 && (
+        <ChartCard title="Últimos cadastros">
+          <DataTable
+            columns={[
+              {
+                key: 'email',
+                header: 'Email',
+                render: (r) => maskEmail(String(r.email)),
+              },
+              { key: 'estado', header: 'UF' },
+              {
+                key: 'createdAt',
+                header: 'Data',
+                render: (r) => new Date(String(r.createdAt)).toLocaleString('pt-BR'),
+              },
+            ]}
+            rows={m.recentSignups}
+          />
+        </ChartCard>
+      )}
+    </div>
+  );
+}
+
+function ExportacaoView({ m, onExport }: { m: AdminMetrics; onExport: () => void }) {
+  return (
+    <div className="space-y-6 max-w-xl">
+      <ChartCard title="Exportação de dados">
+        <p className="text-sm text-white/60 mb-4">
+          Exporte a base completa de usuários em CSV para análise externa. Uso interno restrito à allowlist
+          admin — respeite a LGPD.
+        </p>
+        <dl className="text-xs space-y-2 text-white/50 mb-6">
+          <div className="flex justify-between">
+            <dt>Período selecionado</dt>
+            <dd className="text-white/80">{m.periodDays} dias</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt>Gerado em</dt>
+            <dd className="text-white/80">{new Date(m.generatedAt).toLocaleString('pt-BR')}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt>Total usuários</dt>
+            <dd className="text-white/80 tabular-nums">{m.totals.users}</dd>
+          </div>
+        </dl>
+        <button
+          type="button"
+          onClick={onExport}
+          className="px-4 py-2 rounded-lg text-sm font-medium text-white"
+          style={{ background: 'linear-gradient(135deg, #ff3547 0%, #ff6b7c 100%)' }}
+        >
+          Exportar CSV
+        </button>
+      </ChartCard>
+    </div>
+  );
+}
+
+type Props = {
+  section: AdminSectionId;
+  metrics: AdminMetrics;
+  onExport: () => void;
+};
+
+export default function AdminSectionViews({ section, metrics, onExport }: Props) {
+  switch (section) {
+    case 'geral':
+      return <GeralView m={metrics} />;
+    case 'geolocalizada':
+      return <GeolocalizadaView m={metrics} />;
+    case 'genero':
+      return <GeneroView m={metrics} />;
+    case 'pareamento':
+      return <PareamentoView m={metrics} />;
+    case 'demografica':
+      return <DemograficaView m={metrics} />;
+    case 'engajamento':
+      return <EngajamentoView m={metrics} />;
+    case 'loja':
+      return <LojaView m={metrics} />;
+    case 'cadastros':
+      return <CadastrosView m={metrics} />;
+    case 'exportacao':
+      return <ExportacaoView m={metrics} onExport={onExport} />;
+    default:
+      return <GeralView m={metrics} />;
+  }
+}
