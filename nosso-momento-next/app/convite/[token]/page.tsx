@@ -8,6 +8,7 @@ import { sendInput } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
 import { isValidConviteToken } from '@/lib/utils/validations';
 import Link from 'next/link';
+import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
 
 export default function ConvitePage() {
   const router = useRouter();
@@ -91,12 +92,5 @@ export default function ConvitePage() {
   }
 
   // Loading
-  return (
-    <div className="auth-screen">
-      <div className="card p-8 text-white text-center" style={{ width: '92vw', maxWidth: 400 }}>
-        <div className="text-4xl mb-4 animate-spin">💫</div>
-        <p className="text-gray-300">Verificando convite...</p>
-      </div>
-    </div>
-  );
+  return <AppLoadingScreen message="Verificando convite..." />;
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuthenticatedRedirect } from '@/lib/hooks/useAuthenticatedRedirect';
 import { useParceiroData } from '@/lib/hooks/useParceiroData';
 import { useConquistas } from '@/lib/hooks/useConquistas';
 import { useChallenge } from '@/lib/hooks/useChallenge';
@@ -25,6 +26,7 @@ import { useFCM } from '@/lib/hooks/useFCM';
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   useAuth();
+  useAuthenticatedRedirect();
   useParceiroData();
   useConquistas();
   useChallenge();

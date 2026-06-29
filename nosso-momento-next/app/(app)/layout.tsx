@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store/appStore';
 import clsx from 'clsx';
+import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
 
 const NAV_ITEMS = [
   { href: '/dashboard', icon: 'fa-home', label: 'Início' },
@@ -31,14 +32,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!authInitialized || !usuario) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-center">
-          <div className="text-3xl mb-3 animate-spin">💫</div>
-          <p className="text-gray-400 text-sm">
-            {!authInitialized ? 'Carregando...' : 'Redirecionando...'}
-          </p>
-        </div>
-      </div>
+      <AppLoadingScreen
+        message={!authInitialized ? 'Carregando...' : 'Redirecionando...'}
+      />
     );
   }
 

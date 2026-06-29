@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
+import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
 
 // ── Constantes ────────────────────────────────────────────────
 
@@ -247,12 +248,11 @@ export default function ClimaHistoricoPage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="text-center">
-              <div className="text-3xl mb-3 animate-spin">💫</div>
-              <p className="text-white/40 text-sm">Carregando histórico...</p>
-            </div>
-          </div>
+          <AppLoadingScreen
+            message="Carregando histórico..."
+            fullScreen={false}
+            className="py-16"
+          />
         ) : (
           <>
             {/* Cards de resumo */}

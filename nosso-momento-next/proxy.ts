@@ -68,6 +68,12 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
+  if (!skipCookieGate && pathname === '/' && isLoggedIn) {
+    const dashboardUrl = request.nextUrl.clone();
+    dashboardUrl.pathname = '/dashboard';
+    return NextResponse.redirect(dashboardUrl);
+  }
+
   if (!skipCookieGate && isAuthPage && isLoggedIn) {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = '/dashboard';

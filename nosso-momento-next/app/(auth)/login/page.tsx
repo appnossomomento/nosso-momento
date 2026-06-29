@@ -13,9 +13,20 @@ import {
 } from '@/lib/auth/postLogin';
 import { openSystemAlert } from '@/components/ui/Modal';
 import { trackGA, trackMeta } from '@/lib/analytics';
+import { useAppStore } from '@/lib/store/appStore';
+import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
+
+const AUTH_BG = {
+  backgroundImage:
+    "linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80')",
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+} as const;
 
 export default function LoginPage() {
   const router = useRouter();
+  const authInitialized = useAppStore((s) => s.authInitialized);
+  const usuario = useAppStore((s) => s.usuario);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,15 +75,18 @@ export default function LoginPage() {
     }
   }
 
+  if (!authInitialized) {
+    return <AppLoadingScreen message="Carregando..." />;
+  }
+
+  if (usuario) {
+    return <AppLoadingScreen message="Entrando..." />;
+  }
+
   return (
     <div
       className="auth-screen"
-      style={{
-        backgroundImage:
-          "linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&w=1470&q=80')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      style={AUTH_BG}
     >
       <div className="card relative p-8 text-white" style={{ width: '92vw', maxWidth: 560, borderRadius: 24 }}>
         <Link

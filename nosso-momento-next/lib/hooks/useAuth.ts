@@ -6,8 +6,8 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import type { Pareamento, Usuario } from '@/lib/types';
-import { restoreParceiroAtivo, syncParceiroAtivoComLista, clearRestoreSuppression, isRestoreSuppressed } from '@/lib/utils/setParceiroAtivo';
-import { bootstrapUsuarioFromSnap } from '@/lib/auth/postLogin';
+import { syncParceiroAtivoComLista, clearRestoreSuppression, isRestoreSuppressed } from '@/lib/utils/setParceiroAtivo';
+import { bootstrapUsuarioFromSnap, createSessionCookie } from '@/lib/auth/postLogin';
 import { recordDailyAppOpen } from '@/lib/auth/recordDailyAppOpen';
 
 /**
@@ -35,22 +35,6 @@ export function useAuth() {
         return;
       }
 
-      // Sessão server-side e App Check em paralelo — não bloqueiam leitura do usuário.
-      void (async () => {
-        try {
-          const idToken = await firebaseUser.getIdToken();
-          await fetch('/api/auth/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-          });
-          recordDailyAppOpen();
-        } catch (err) {
-          console.error('[useAuth] falha ao criar sessão server-side:', err);
-        }
-      })();
-
-      // Ouvinte em tempo real do documento do usuário no Firestore
       const userRef = doc(db, 'usuarios', firebaseUser.uid);
 
       const authReadyTimeout = window.setTimeout(() => {
@@ -73,14 +57,20 @@ export function useAuth() {
         }
       }, 8000);
 
-      // getDoc como bootstrap imediato — seta usuario e authInitialized juntos (atomicamente)
-      // para evitar que o layout redirecione para /login enquanto usuario ainda é null.
-      getDoc(userRef).then((snap) => {
+      try {
+        const idToken = await firebaseUser.getIdToken();
+        await createSessionCookie(idToken);
+        recordDailyAppOpen();
+      } catch (err) {
+        console.error('[useAuth] falha ao criar sessão server-side:', err);
+      }
+
+      try {
+        const snap = await getDoc(userRef);
         window.clearTimeout(authReadyTimeout);
         bootstrapUsuarioFromSnap(firebaseUser, snap);
-      }).catch(() => {
+      } catch {
         window.clearTimeout(authReadyTimeout);
-        // Se getDoc falhar, ainda marca auth pronto com usuario mínimo (evita redirect indevido)
         set({
           authInitialized: true,
           usuario: {
@@ -95,7 +85,7 @@ export function useAuth() {
             catalogoPersonalizado: {},
           },
         });
-      });
+      }
 
       unsubscribeUser = onSnapshot(userRef, (snap) => {
         if (snap.exists()) {

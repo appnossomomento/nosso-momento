@@ -11,6 +11,7 @@ import { clearParceiroAtivoPersistido, setParceiroAtivo } from '@/lib/utils/setP
 import { showToast } from '@/components/ui/Toast';
 import { openSystemConfirm } from '@/components/ui/Modal';
 import { useWeeklyChallenge } from '@/lib/hooks/useWeeklyChallenge';
+import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
 
 const HUMORES = [
   { key: 'muito_feliz', emoji: '😍', label: 'Muito Feliz', delta: '+2 🔥' },
@@ -75,10 +76,10 @@ export default function ParceiroPage() {
   const pareadoUidAtual = pareadoUid ?? usuario?.pareadoUid ?? null;
   if (!parceiroData && pareadoUidAtual) {
     return (
-      <div className="screen screen-pad bg-black text-white flex flex-col items-center justify-center text-center px-8">
-        <div className="text-3xl mb-3 animate-spin">💫</div>
-        <p className="text-gray-400 text-sm">Carregando parceiro...</p>
-      </div>
+      <AppLoadingScreen
+        message="Carregando parceiro..."
+        className="screen screen-pad"
+      />
     );
   }
 
