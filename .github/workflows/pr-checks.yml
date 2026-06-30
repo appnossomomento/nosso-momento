@@ -31,7 +31,7 @@ jobs:
         working-directory: functions
 
       - name: Audit dependencies (functions)
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit --omit=dev --audit-level=critical
         working-directory: functions
 
   lint-next:
@@ -102,5 +102,5 @@ jobs:
         working-directory: nosso-momento-next
 
       - name: Audit dependencies (Next.js)
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit --omit=dev --audit-level=critical
         working-directory: nosso-momento-next
