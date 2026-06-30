@@ -199,7 +199,7 @@ async function generateStoriesCard(params: {
   ctx.textAlign = 'left';
   ctx.fillStyle = '#ffffff';
   const coupleLabel = nomesCasal || 'Nosso Momento';
-  let ty = cardY + 108;
+  const ty = cardY + 108;
   drawSingleLineText(ctx, coupleLabel, iX, ty, iW);
 
   ctx.fillStyle = 'rgba(255,255,255,0.44)';

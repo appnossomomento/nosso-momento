@@ -56,7 +56,7 @@ export interface Usuario {
   conquistas?: Record<string, boolean>;
   achievementStats?: Record<string, number>;
   createdAt?: unknown;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ParceiroData {
