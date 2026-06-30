@@ -25,6 +25,7 @@ exports.getExtrato = extrato.getExtrato;
 exports.handleMomentTaskUpdate = moments.handleMomentTaskUpdate;
 
 exports.propagateProfileChange = profile.propagateProfileChange;
+exports.excluirConta = profile.excluirConta;
 
 exports.checkMonthlyMilestones = milestones.checkMonthlyMilestones;
 

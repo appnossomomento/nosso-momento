@@ -26,6 +26,7 @@ export const FUNCTIONS = {
   getParceiroPerfil: cfUrl('getParceiroPerfil'),
   gerarConvite: cfUrl('gerarConvite'),
   verificarTelefone: cfUrl('verificarTelefone'),
+  excluirConta: cfUrl('excluirConta'),
 } as const;
 
 /**

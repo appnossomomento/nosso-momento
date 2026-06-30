@@ -4,15 +4,15 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { signOut, updateProfile, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { signOut, updateProfile, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { doc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { auth, db, storage } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
-import { openSystemAlert, openSystemConfirm } from '@/components/ui/Modal';
-import { showToast } from '@/components/ui/Toast';
-import { requestFCMPermission, revokeLocalFCM } from '@/lib/hooks/useFCM';
 import { callFunction, FUNCTIONS } from '@/lib/firebase/functions';
+import { showToast } from '@/components/ui/Toast';
+import { openSystemAlert, openSystemConfirm } from '@/components/ui/Modal';
+import { requestFCMPermission, revokeLocalFCM } from '@/lib/hooks/useFCM';
 import DarkSelect from '@/components/ui/DarkSelect';
 import { validateApelidoReal, APELIDO_REAL_MAX_LENGTH } from '@/lib/utils/validations';
 import { CATALOGO_LOJA_OPTIONS } from '@/lib/types/profileEnums';
@@ -175,21 +175,14 @@ export default function PerfilPage() {
           'Confirmar exclusão da conta?',
           async () => {
             try {
-              const user = auth.currentUser;
-              if (!user || !usuario?.uid) return;
-              // Apaga doc do usuário
-              await deleteDoc(doc(db, 'usuarios', usuario.uid));
-              // Apaga conta do Firebase Auth
-              await deleteUser(user);
+              if (!usuario?.uid) return;
+              await callFunction(FUNCTIONS.excluirConta, {});
+              await signOut(auth).catch(() => {});
               reset();
               router.replace('/');
               showToast('Conta excluída.', 'sucesso');
-            } catch (err: unknown) {
-              if (err instanceof Error && err.message.includes('requires-recent-login')) {
-                openSystemAlert('Por segurança, faça logout e login novamente antes de excluir a conta.');
-              } else {
-                openSystemAlert('Erro ao excluir a conta. Tente novamente.');
-              }
+            } catch {
+              openSystemAlert('Erro ao excluir a conta. Tente novamente.');
             }
           },
           'Sim, excluir',
