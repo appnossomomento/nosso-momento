@@ -83,7 +83,11 @@ describe("processInput — catalog_personalizado_save", () => {
 
 describe("processInput — custom_moment_create", () => {
   test("sem vip — validação de payload ok mas vip checado no handler", () => {
-    const validated = validateCustomMomentCreateInput({nome: "Teste", preco: 10});
+    const validated = validateCustomMomentCreateInput({
+      nome: "Teste",
+      preco: 10,
+      img: "https://firebasestorage.googleapis.com/v0/b/test/o/photo.jpg",
+    });
     expect(validated.ok).toBe(true);
   });
 

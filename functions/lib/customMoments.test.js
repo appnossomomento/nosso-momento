@@ -69,8 +69,19 @@ describe("customMoments — create validation", () => {
     expect(result.ok).toBe(false);
   });
 
+  test("rejeita sem imagem", () => {
+    const result = validateCustomMomentCreateInput({nome: "Jantar", preco: 50, emoji: "❤️"});
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe("missing_custom_moment_image");
+  });
+
   test("aceita payload válido", () => {
-    const result = validateCustomMomentCreateInput({nome: "Jantar", preco: 50});
+    const result = validateCustomMomentCreateInput({
+      nome: "Jantar",
+      preco: 50,
+      emoji: "❤️",
+      img: "https://firebasestorage.googleapis.com/v0/b/test/o/photo.jpg",
+    });
     expect(result.ok).toBe(true);
     expect(result.item.preco).toBe(50);
   });

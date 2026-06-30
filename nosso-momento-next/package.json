@@ -10,6 +10,7 @@
     "test:e2e": "node node_modules/@playwright/test/cli.js test e2e/jornada-novo-usuario.spec.ts",
     "test:e2e:nav": "node node_modules/@playwright/test/cli.js test e2e/nav-switch-parceiro.spec.ts",
     "test:e2e:resgate": "node node_modules/@playwright/test/cli.js test e2e/jornada-resgate-momentos.spec.ts",
+    "test:e2e:loja-personalizar": "node node_modules/@playwright/test/cli.js test e2e/jornada-loja-personalizar.spec.ts",
     "test:e2e:all": "node node_modules/@playwright/test/cli.js test e2e/",
     "test:e2e:headed": "node node_modules/@playwright/test/cli.js test e2e/jornada-novo-usuario.spec.ts --headed",
     "test:e2e:install": "node node_modules/@playwright/test/cli.js install chromium"
