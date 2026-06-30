@@ -9,12 +9,19 @@ import { openSystemConfirm } from '@/components/ui/Modal';
 import OverlayModal from '@/components/ui/OverlayModal';
 import clsx from 'clsx';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
+import MomentoCover from '@/components/ui/MomentoCover';
 import { trackGA } from '@/lib/analytics';
 import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
-import { uploadCustomMomentImage } from '@/lib/utils/uploadCustomMomentImage';
+import { uploadCustomMomentImage, isStorageUploadError } from '@/lib/utils/uploadCustomMomentImage';
 import type { CatalogoCfg, MomentoCustom, MomentoMestre } from '@/lib/types';
 
-const EMOJI_OPCOES = ['✨', '🔥', '❤️', '💋', '🍷', '🎁', '🌹', '😈'];
+const EMOJIS_POR_CATEGORIA = [
+  { label: 'Lovezin', emojis: ['💗', '❤️'] },
+  { label: 'Rotina', emojis: ['🍷', '🎉'] },
+  { label: 'Quentes', emojis: ['🌶️', '🔥'] },
+] as const;
+
+const EMOJI_PADRAO = '❤️';
 
 function cfgFromUsuario(raw: Record<string, unknown> | undefined): Record<string, CatalogoCfg> {
   const result: Record<string, CatalogoCfg> = {};
@@ -54,7 +61,7 @@ export default function PersonalizarPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [novoNome, setNovoNome] = useState('');
   const [novoPreco, setNovoPreco] = useState(10);
-  const [novoEmoji, setNovoEmoji] = useState('✨');
+  const [novoEmoji, setNovoEmoji] = useState(EMOJI_PADRAO);
   const [novaImagemFile, setNovaImagemFile] = useState<File | null>(null);
   const [novaImagemPreview, setNovaImagemPreview] = useState<string | null>(null);
   const imagemInputRef = useRef<HTMLInputElement>(null);
@@ -143,7 +150,7 @@ export default function PersonalizarPage() {
     }
     setNovoNome('');
     setNovoPreco(10);
-    setNovoEmoji('✨');
+    setNovoEmoji(EMOJI_PADRAO);
     setNovaImagemFile(null);
     setNovaImagemPreview(null);
     setShowCreateModal(true);
@@ -196,18 +203,32 @@ export default function PersonalizarPage() {
       return;
     }
     if (!pareamentoId) return;
+    if (!novaImagemFile || !meuUid) {
+      showToast('Adicione uma foto para criar o momento.', 'aviso');
+      return;
+    }
 
     setCriandoCustom(true);
     try {
       let imgUrl = '';
-      if (novaImagemFile && meuUid) {
+      try {
         imgUrl = await uploadCustomMomentImage(novaImagemFile, pareamentoId, meuUid);
+      } catch (uploadErr) {
+        if (uploadErr instanceof Error && uploadErr.message === 'file_too_large') {
+          showToast('A imagem deve ter menos de 5 MB.', 'aviso');
+          return;
+        }
+        if (isStorageUploadError(uploadErr)) {
+          showToast('Não foi possível enviar a foto. Tente novamente.', 'erro');
+          return;
+        }
+        throw uploadErr;
       }
       await sendInput('custom_moment_create', {
         pareamentoId,
         nome,
         preco,
-        emoji: imgUrl ? '' : novoEmoji,
+        emoji: novoEmoji,
         img: imgUrl,
       });
       showToast('Momento custom criado!', 'sucesso');
@@ -257,18 +278,12 @@ export default function PersonalizarPage() {
         )}
       >
         <div className="flex items-center gap-3 p-3">
-          {m.img ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={String(m.img)}
-              alt={m.nome ?? ''}
-              className="w-14 h-14 rounded-xl object-cover shrink-0"
-            />
-          ) : (
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500/30 to-pink-500/30 flex items-center justify-center shrink-0">
-              <span className="text-2xl">{String(m.emoji ?? '🔥')}</span>
-            </div>
-          )}
+          <MomentoCover
+            src={m.img ? String(m.img) : undefined}
+            alt={m.nome ?? ''}
+            emoji={String(m.emoji ?? '🔥')}
+            variant="thumb"
+          />
 
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white truncate">{m.nome ?? ''}</p>
@@ -365,7 +380,6 @@ export default function PersonalizarPage() {
 
             {/* Catálogo mestre */}
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-white/80 px-1">Catálogo mestre</p>
               <div className="flex flex-wrap justify-center gap-2 pb-1">
                 {categorias.map((cat) => (
                   <button
@@ -533,7 +547,7 @@ export default function PersonalizarPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs text-white/60">Imagem (opcional)</label>
+            <label className="text-xs text-white/60">Foto (obrigatória)</label>
             <input
               ref={imagemInputRef}
               type="file"
@@ -570,33 +584,44 @@ export default function PersonalizarPage() {
             )}
           </div>
 
-          {!novaImagemPreview && (
-          <div className="space-y-2">
-            <label className="text-xs text-white/60">Emoji</label>
-            <div className="flex flex-wrap gap-2">
-              {EMOJI_OPCOES.map((em) => (
-                <button
-                  key={em}
-                  type="button"
-                  onClick={() => setNovoEmoji(em)}
-                  className={clsx(
-                    'w-10 h-10 rounded-xl text-xl flex items-center justify-center border transition',
-                    novoEmoji === em
-                      ? 'border-pink-500 bg-pink-500/20'
-                      : 'border-white/10 bg-white/5',
-                  )}
-                >
-                  {em}
-                </button>
-              ))}
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-white/60">Emoji</label>
+              <p className="text-[11px] text-white/40 mt-0.5">
+                Identifica a categoria do momento na loja.
+              </p>
             </div>
+            {EMOJIS_POR_CATEGORIA.map((grupo) => (
+              <div key={grupo.label} className="space-y-1.5">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-white/35 px-0.5">
+                  {grupo.label}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {grupo.emojis.map((em) => (
+                    <button
+                      key={em}
+                      type="button"
+                      onClick={() => setNovoEmoji(em)}
+                      className={clsx(
+                        'w-10 h-10 rounded-xl text-xl flex items-center justify-center border transition',
+                        novoEmoji === em
+                          ? 'border-pink-500 bg-pink-500/20'
+                          : 'border-white/10 bg-white/5',
+                      )}
+                      aria-label={`Emoji ${grupo.label} ${em}`}
+                    >
+                      {em}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-          )}
 
           <button
             type="button"
             onClick={confirmarCriarCustom}
-            disabled={criandoCustom}
+            disabled={criandoCustom || !novaImagemPreview || !novoNome.trim()}
             className="btn-red w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-60"
           >
             {criandoCustom ? 'Criando...' : 'Criar momento'}

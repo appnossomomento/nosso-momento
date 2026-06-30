@@ -9,6 +9,7 @@ import { showToast } from '@/components/ui/Toast';
 import { openSystemConfirm } from '@/components/ui/Modal';
 import type { CarrinhoItem, MomentoCustom } from '@/lib/types';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
+import MomentoCover from '@/components/ui/MomentoCover';
 import { trackGA, trackMeta } from '@/lib/analytics';
 import { refreshParceiroPerfil } from '@/lib/services/parceiroPerfil';
 import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
@@ -216,14 +217,12 @@ export default function LojaPage() {
         className="rounded-2xl overflow-hidden bg-[#1a1020] border border-white/10"
       >
         <div className="relative">
-          {item.img ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.img} alt={item.nome} className="w-full h-40 object-cover" />
-          ) : (
-            <div className="w-full h-40 bg-gradient-to-br from-red-500/30 to-pink-500/30 flex items-center justify-center">
-              <span className="text-5xl">{item.emoji ?? '🔥'}</span>
-            </div>
-          )}
+          <MomentoCover
+            src={item.img}
+            alt={item.nome}
+            emoji={item.emoji ?? '🔥'}
+            variant="card"
+          />
           {item.isCustom && (
             <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/90 text-white">
               Personalizado

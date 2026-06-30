@@ -1,6 +1,11 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, enableIndexedDbPersistence, type Firestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  type Firestore,
+} from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { initializeAppCheck, ReCaptchaV3Provider, getToken, type AppCheck } from 'firebase/app-check';
 import type { FirebaseApp } from 'firebase/app';
@@ -24,9 +29,14 @@ if (canInitializeFirebase) {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 }
 
-// App Check — reCAPTCHA v3 (inicializar antes de Auth/Firestore para evitar corrida de token).
+// App Check — inicializado sob demanda (evita reCAPTCHA em toda navegação).
 export let appCheck: AppCheck | null = null;
-if (app && typeof window !== 'undefined') {
+let appCheckInitStarted = false;
+
+function initAppCheck(): AppCheck | null {
+  if (appCheck || appCheckInitStarted || !app) return appCheck;
+  appCheckInitStarted = true;
+
   const recaptchaKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
   const debugToken = process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN;
   const injectedDebugToken =
@@ -44,39 +54,49 @@ if (app && typeof window !== 'undefined') {
     }
   }
 
-  const isDevWithDebugToken = isDev && (!!debugToken || (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN === true);
+  const isDevWithDebugToken =
+    isDev &&
+    (!!debugToken ||
+      (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN === true);
   const hasDebugToken = isDevWithDebugToken || injectedDebugToken.length > 0;
   const siteKey = recaptchaKey?.trim() ?? '';
 
-  if (siteKey) {
-    appCheck = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(siteKey),
-      isTokenAutoRefreshEnabled: true,
+  try {
+    if (siteKey) {
+      appCheck = initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider(siteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+    } else if (hasDebugToken || isDev) {
+      appCheck = initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider('debug-placeholder'),
+        isTokenAutoRefreshEnabled: true,
+      });
+    } else {
+      console.error(
+        '[AppCheck] NEXT_PUBLIC_RECAPTCHA_SITE_KEY ausente em produção. Cloud Functions com enforce falharão.',
+      );
+    }
+  } catch (err) {
+    console.warn('[AppCheck] falha ao inicializar:', err);
+  }
+
+  return appCheck;
+}
+
+function createFirestore(firebaseApp: FirebaseApp): Firestore {
+  try {
+    return initializeFirestore(firebaseApp, {
+      localCache: persistentLocalCache(),
     });
-  } else if (hasDebugToken || isDev) {
-    appCheck = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider('debug-placeholder'),
-      isTokenAutoRefreshEnabled: true,
-    });
-  } else {
-    console.error(
-      '[AppCheck] NEXT_PUBLIC_RECAPTCHA_SITE_KEY ausente em produção. Cloud Functions com enforce falharão.',
-    );
+  } catch {
+    return getFirestore(firebaseApp);
   }
 }
 
 export const auth = (app ? getAuth(app) : null) as Auth;
-export const db = (app ? getFirestore(app) : null) as Firestore;
+export const db = (app ? createFirestore(app) : null) as Firestore;
 export const storage = (app ? getStorage(app) : null) as FirebaseStorage;
-
-// Habilita persistência offline (silencia erros esperados)
-if (app && typeof window !== 'undefined') {
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
-      console.warn('[Firestore] Offline persistence error:', err.code);
-    }
-  });
-}
 
 if (typeof window !== 'undefined' && !hasValidClientConfig) {
   console.error('[Firebase] Configuração NEXT_PUBLIC_FIREBASE_* ausente/inválida no ambiente.');
@@ -112,7 +132,8 @@ function isAppCheckThrottleError(err: unknown): boolean {
 }
 
 export async function getAppCheckToken(force = false): Promise<string | null> {
-  if (!appCheck) return null;
+  const check = initAppCheck();
+  if (!check) return null;
 
   const now = Date.now();
   if (!force && now < appCheckBackoffUntil) {
@@ -131,7 +152,7 @@ export async function getAppCheckToken(force = false): Promise<string | null> {
 
   inflightAppCheckToken = (async () => {
     try {
-      const result = await getToken(appCheck!, false);
+      const result = await getToken(check, false);
       const token = result.token || null;
       if (token) {
         appCheckBackoffUntil = 0;
