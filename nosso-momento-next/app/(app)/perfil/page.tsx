@@ -169,28 +169,28 @@ export default function PerfilPage() {
 
   async function handleExcluirConta() {
     openSystemConfirm(
-      'Tem certeza? Esta ação é irreversível. Seus dados serão excluídos permanentemente.',
+      'Tem certeza? Esta ação é irreversível.\n\nTodos os seus dados serão excluídos permanentemente e não poderão ser recuperados.',
       async () => {
-        openSystemConfirm(
-          'Confirmar exclusão da conta?',
-          async () => {
-            try {
-              if (!usuario?.uid) return;
-              await callFunction(FUNCTIONS.excluirConta, {});
-              await signOut(auth).catch(() => {});
-              reset();
-              router.replace('/');
-              showToast('Conta excluída.', 'sucesso');
-            } catch {
-              openSystemAlert('Erro ao excluir a conta. Tente novamente.');
-            }
-          },
-          'Sim, excluir',
-          'Cancelar'
-        );
+        try {
+          if (!usuario?.uid) return;
+          await callFunction(FUNCTIONS.excluirConta, {});
+          await signOut(auth).catch(() => {});
+          reset();
+          router.replace('/');
+          showToast('Conta excluída.', 'sucesso');
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : '';
+          if (msg.includes('app_check') || msg.includes('401')) {
+            openSystemAlert(
+              'Não foi possível validar a segurança do app (App Check). Recarregue a página e tente de novo.',
+            );
+          } else {
+            openSystemAlert('Erro ao excluir a conta. Tente novamente.');
+          }
+        }
       },
-      'Continuar',
-      'Cancelar'
+      'Sim, excluir',
+      'Cancelar',
     );
   }
 
