@@ -28,6 +28,7 @@ const {
   canAddCustomMoment,
   generateCustomItemId,
   buildCustomMomentId,
+  getPartnerUidsFromSender,
 } = require("../lib/customMoments");
 const {
   upsertWeeklyChallengeForPair,
@@ -3257,9 +3258,30 @@ exports.processInput = onDocumentCreated(
             if (!inSnap.exists) throw new Error("input não existe");
             if (inSnap.data().processed) return;
 
-            tx.update(admin.firestore().collection("usuarios").doc(fromUid), {
+            const senderRef = admin.firestore()
+                .collection("usuarios").doc(fromUid);
+            tx.update(senderRef, {
               catalogoPersonalizado: sanitized.catalogo,
             });
+
+            const meuNome = senderData.nome || "Seu parceiro";
+            const partnerUids = getPartnerUidsFromSender(senderData, fromUid);
+            for (const partnerUid of partnerUids) {
+              const notifRef = admin.firestore()
+                  .collection("notificacoes").doc();
+              tx.set(notifRef, {
+                userId: partnerUid,
+                titulo: `${meuNome} fez mudanças na lojinha! 👀`,
+                mensagem:
+                  "Corre lá... vai que tem promoção hahaha 🤭",
+                icone: "fa-store",
+                tipo: "catalog_update",
+                redirectTo: "main",
+                lida: false,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+
             tx.update(inputRef, {
               processed: true,
               processedAt: admin.firestore.FieldValue.serverTimestamp(),

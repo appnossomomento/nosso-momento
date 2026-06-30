@@ -46,15 +46,19 @@ export default function VipPopup() {
             <ul className="space-y-2">
               <li className="flex items-center gap-2 text-sm text-white/70">
                 <i className="fas fa-check text-pink-400 text-xs w-4" />
-                Múltiplas conexões (Modo Poliamor)
+                Até 5 conexões (Modo Poliamor)
               </li>
               <li className="flex items-center gap-2 text-sm text-white/70">
                 <i className="fas fa-check text-pink-400 text-xs w-4" />
-                Recursos premium e catálogo completo
+                Momentos custom com foto e preço próprio
               </li>
               <li className="flex items-center gap-2 text-sm text-white/70">
                 <i className="fas fa-check text-pink-400 text-xs w-4" />
-                Prioridade no suporte
+                Personalizar catálogo mestre (preço, bloqueio e exclusão)
+              </li>
+              <li className="flex items-center gap-2 text-sm text-white/70">
+                <i className="fas fa-check text-pink-400 text-xs w-4" />
+                Seu parceiro vê e resgata seus momentos exclusivos
               </li>
             </ul>
           </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store/appStore';
 import { sendInput } from '@/lib/firebase/functions';
@@ -11,6 +11,7 @@ import clsx from 'clsx';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import { trackGA } from '@/lib/analytics';
 import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
+import { uploadCustomMomentImage } from '@/lib/utils/uploadCustomMomentImage';
 import type { CatalogoCfg, MomentoCustom, MomentoMestre } from '@/lib/types';
 
 const EMOJI_OPCOES = ['✨', '🔥', '❤️', '💋', '🍷', '🎁', '🌹', '😈'];
@@ -54,6 +55,9 @@ export default function PersonalizarPage() {
   const [novoNome, setNovoNome] = useState('');
   const [novoPreco, setNovoPreco] = useState(10);
   const [novoEmoji, setNovoEmoji] = useState('✨');
+  const [novaImagemFile, setNovaImagemFile] = useState<File | null>(null);
+  const [novaImagemPreview, setNovaImagemPreview] = useState<string | null>(null);
+  const imagemInputRef = useRef<HTMLInputElement>(null);
   const [criandoCustom, setCriandoCustom] = useState(false);
   const [excluindoId, setExcluindoId] = useState<string | null>(null);
 
@@ -140,7 +144,27 @@ export default function PersonalizarPage() {
     setNovoNome('');
     setNovoPreco(10);
     setNovoEmoji('✨');
+    setNovaImagemFile(null);
+    setNovaImagemPreview(null);
     setShowCreateModal(true);
+  }
+
+  function handleImagemChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('A imagem deve ter menos de 5 MB.', 'aviso');
+      return;
+    }
+    setNovaImagemFile(file);
+    setNovaImagemPreview(URL.createObjectURL(file));
+  }
+
+  function limparImagemModal() {
+    setNovaImagemFile(null);
+    if (novaImagemPreview) URL.revokeObjectURL(novaImagemPreview);
+    setNovaImagemPreview(null);
+    if (imagemInputRef.current) imagemInputRef.current.value = '';
   }
 
   async function salvar() {
@@ -175,16 +199,27 @@ export default function PersonalizarPage() {
 
     setCriandoCustom(true);
     try {
+      let imgUrl = '';
+      if (novaImagemFile && meuUid) {
+        imgUrl = await uploadCustomMomentImage(novaImagemFile, pareamentoId, meuUid);
+      }
       await sendInput('custom_moment_create', {
         pareamentoId,
         nome,
         preco,
-        emoji: novoEmoji,
+        emoji: imgUrl ? '' : novoEmoji,
+        img: imgUrl,
       });
       showToast('Momento custom criado!', 'sucesso');
+      limparImagemModal();
       setShowCreateModal(false);
-    } catch {
-      showToast('Não foi possível criar o momento.', 'erro');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('file_too_large')) {
+        showToast('A imagem deve ter menos de 5 MB.', 'aviso');
+      } else {
+        showToast('Não foi possível criar o momento.', 'erro');
+      }
     } finally {
       setCriandoCustom(false);
     }
@@ -459,7 +494,11 @@ export default function PersonalizarPage() {
 
       <OverlayModal
         open={showCreateModal}
-        onClose={() => !criandoCustom && setShowCreateModal(false)}
+        onClose={() => {
+          if (criandoCustom) return;
+          limparImagemModal();
+          setShowCreateModal(false);
+        }}
         ariaLabel="Criar momento custom"
         panelClassName="bg-[#111114] border border-white/10"
       >
@@ -494,6 +533,45 @@ export default function PersonalizarPage() {
           </div>
 
           <div className="space-y-2">
+            <label className="text-xs text-white/60">Imagem (opcional)</label>
+            <input
+              ref={imagemInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleImagemChange}
+              className="hidden"
+            />
+            {novaImagemPreview ? (
+              <div className="relative rounded-xl overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={novaImagemPreview}
+                  alt="Preview"
+                  className="w-full h-32 object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={limparImagemModal}
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center"
+                  aria-label="Remover imagem"
+                >
+                  <i className="fas fa-times text-white text-xs" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => imagemInputRef.current?.click()}
+                className="w-full py-3 rounded-xl border border-dashed border-white/20 text-xs text-white/50 hover:bg-white/5 transition"
+              >
+                <i className="fas fa-camera mr-2" />
+                Adicionar foto
+              </button>
+            )}
+          </div>
+
+          {!novaImagemPreview && (
+          <div className="space-y-2">
             <label className="text-xs text-white/60">Emoji</label>
             <div className="flex flex-wrap gap-2">
               {EMOJI_OPCOES.map((em) => (
@@ -513,6 +591,7 @@ export default function PersonalizarPage() {
               ))}
             </div>
           </div>
+          )}
 
           <button
             type="button"

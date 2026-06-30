@@ -143,6 +143,30 @@ function generateCustomItemId() {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
 }
 
+/**
+ * UIDs de parceiros ativos do usuário (multi-conexão + legado monogâmico).
+ * @param {object|null|undefined} senderData
+ * @param {string} fromUid
+ * @return {string[]}
+ */
+function getPartnerUidsFromSender(senderData, fromUid) {
+  const uids = new Set();
+  if (!senderData || !fromUid) return [];
+
+  const ativos = Array.isArray(senderData.pareamentosAtivos) ?
+    senderData.pareamentosAtivos : [];
+  for (const entry of ativos) {
+    if (entry && typeof entry.uid === "string" && entry.uid !== fromUid) {
+      uids.add(entry.uid);
+    }
+  }
+  if (typeof senderData.pareadoUid === "string" &&
+      senderData.pareadoUid !== fromUid) {
+    uids.add(senderData.pareadoUid);
+  }
+  return [...uids];
+}
+
 module.exports = {
   CUSTOM_ID_PREFIX,
   MAX_CUSTOM_PRICE,
@@ -156,4 +180,5 @@ module.exports = {
   validateCustomMomentCreateInput,
   canAddCustomMoment,
   generateCustomItemId,
+  getPartnerUidsFromSender,
 };
