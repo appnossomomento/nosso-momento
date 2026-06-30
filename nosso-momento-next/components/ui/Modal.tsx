@@ -16,8 +16,10 @@ export default function Modal() {
 
   const close = () => set({ showSystemModal: false, systemModalOnConfirm: null });
   const confirm = () => {
-    systemModalOnConfirm?.();
+    const cb = systemModalOnConfirm;
     close();
+    // Deferir evita que um segundo openSystemConfirm (ex.: exclusão de conta) seja cancelado pelo close().
+    if (cb) queueMicrotask(() => { void cb(); });
   };
 
   return (

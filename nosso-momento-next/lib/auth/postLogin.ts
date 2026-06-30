@@ -16,7 +16,7 @@ export function bootstrapUsuarioFromSnap(firebaseUser: User, snap: DocumentSnaps
     ? ({
         ...(rawData as Omit<Usuario, 'uid'>),
         uid: firebaseUser.uid,
-        email: firebaseUser.email ?? rawData.email ?? '',
+        email: firebaseUser.email ?? (typeof rawData.email === 'string' ? rawData.email : ''),
       } as Usuario)
     : ({
         uid: firebaseUser.uid,

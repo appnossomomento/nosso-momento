@@ -58,8 +58,13 @@ export function useAuth() {
       }, 8000);
 
       try {
-        const idToken = await firebaseUser.getIdToken();
-        await createSessionCookie(idToken);
+        let idToken = await firebaseUser.getIdToken();
+        try {
+          await createSessionCookie(idToken);
+        } catch {
+          idToken = await firebaseUser.getIdToken(true);
+          await createSessionCookie(idToken);
+        }
         recordDailyAppOpen();
       } catch (err) {
         console.error('[useAuth] falha ao criar sessão server-side:', err);
