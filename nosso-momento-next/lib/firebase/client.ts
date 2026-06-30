@@ -46,13 +46,22 @@ if (app && typeof window !== 'undefined') {
 
   const isDevWithDebugToken = isDev && (!!debugToken || (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN === true);
   const hasDebugToken = isDevWithDebugToken || injectedDebugToken.length > 0;
-  if (recaptchaKey || hasDebugToken || isDev) {
+  const siteKey = recaptchaKey?.trim() ?? '';
+
+  if (siteKey) {
     appCheck = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(recaptchaKey || 'debug-placeholder'),
+      provider: new ReCaptchaV3Provider(siteKey),
       isTokenAutoRefreshEnabled: true,
     });
-  } else if (process.env.NODE_ENV !== 'production') {
-    console.warn('[AppCheck] NEXT_PUBLIC_RECAPTCHA_SITE_KEY não configurada. App Check desativado.');
+  } else if (hasDebugToken || isDev) {
+    appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider('debug-placeholder'),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } else {
+    console.error(
+      '[AppCheck] NEXT_PUBLIC_RECAPTCHA_SITE_KEY ausente em produção. Cloud Functions com enforce falharão.',
+    );
   }
 }
 

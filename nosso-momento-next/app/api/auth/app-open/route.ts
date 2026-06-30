@@ -45,7 +45,28 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[/api/auth/app-open]', err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[/api/auth/app-open]', message);
+
+    const authFailed =
+      message.includes('session-cookie') ||
+      message.includes('Firebase session cookie') ||
+      message.includes('Decoding Firebase session cookie') ||
+      message.includes('expired');
+
+    if (authFailed) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
+
+    const configFailed =
+      message.includes('Variáveis de ambiente Firebase Admin') ||
+      message.includes('invalid_grant') ||
+      message.includes('private key');
+
+    if (configFailed) {
+      return NextResponse.json({ error: 'admin_not_configured' }, { status: 503 });
+    }
+
     return NextResponse.json({ error: 'internal_error' }, { status: 500 });
   }
 }
