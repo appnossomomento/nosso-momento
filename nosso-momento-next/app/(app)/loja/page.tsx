@@ -1,27 +1,104 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAppStore } from '@/lib/store/appStore';
 import { sendInput } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
 import { openSystemConfirm } from '@/components/ui/Modal';
-import type { CarrinhoItem } from '@/lib/types';
+import type { CarrinhoItem, MomentoCustom } from '@/lib/types';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import { trackGA, trackMeta } from '@/lib/analytics';
 import { refreshParceiroPerfil } from '@/lib/services/parceiroPerfil';
 import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
+import { buildCustomMomentId, isCustomMomentId } from '@/lib/utils/customMoments';
+
+type LojaItem = {
+  id: string;
+  nome: string;
+  img?: string;
+  custoFoguinhos: number;
+  categoria?: string;
+  emoji?: string;
+  isCustom?: boolean;
+};
 
 export default function LojaPage() {
-  const { momentosMestres, parceiroData, pareado, carrinho, showCartSidebar, set, idPareamentoAmigavel, pareadoUid } = useAppStore();
+  const {
+    momentosMestres,
+    parceiroData,
+    pareado,
+    carrinho,
+    showCartSidebar,
+    set,
+    idPareamentoAmigavel,
+    pareadoUid,
+    conexaoAtiva,
+    momentosCustomAtivo,
+  } = useAppStore();
   const usuario = useAppStore((s) => s.usuario);
   const [filtro, setFiltro] = useState<string | null>(null);
+
+  const pareamentoId = conexaoAtiva?.pareamentoId ?? idPareamentoAmigavel ?? null;
+  const catalogoParceiro = parceiroData?.catalogoPersonalizado ?? {};
+  const partnerGender = parceiroData ? getCatalogFilterGender(parceiroData) : 'unisex';
+
+  const momentosParaParceiro = useMemo(
+    () => {
+      if (!parceiroData) return [];
+      return momentosMestres.filter((m) => {
+        if (!momentMatchesCatalogFilter(m.targetGender, partnerGender)) return false;
+        const cfg = catalogoParceiro[m.nome ?? ''];
+        if (cfg?.bloqueado || cfg?.excluido) return false;
+        return true;
+      });
+    },
+    [momentosMestres, partnerGender, catalogoParceiro, parceiroData],
+  );
+
+  const momentosCustomParceiro: LojaItem[] = useMemo(() => {
+    if (!pareadoUid || !pareamentoId || !momentosCustomAtivo) return [];
+    const raw = momentosCustomAtivo[pareadoUid];
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((m: MomentoCustom) => m && m.ativo !== false)
+      .map((m) => ({
+        id: buildCustomMomentId(pareamentoId, m.id),
+        nome: m.nome,
+        custoFoguinhos: m.preco,
+        emoji: m.emoji || '✨',
+        img: m.img,
+        categoria: 'Custom',
+        isCustom: true,
+      }));
+  }, [pareadoUid, pareamentoId, momentosCustomAtivo]);
+
+  const prevPartnerRef = useRef<{ uid: string | null; pareamentoId: string | null }>({
+    uid: null,
+    pareamentoId: null,
+  });
 
   useEffect(() => {
     if (pareadoUid) void refreshParceiroPerfil(pareadoUid);
   }, [pareadoUid]);
+
+  // Poliamor: limpa carrinho só ao trocar parceiro/pareamento (não no mount).
+  useEffect(() => {
+    const prev = prevPartnerRef.current;
+    const partnerChanged = prev.uid !== null && prev.uid !== (pareadoUid ?? null);
+    const pareamentoChanged =
+      prev.pareamentoId !== null && prev.pareamentoId !== pareamentoId;
+
+    prevPartnerRef.current = {
+      uid: pareadoUid ?? null,
+      pareamentoId,
+    };
+
+    if ((partnerChanged || pareamentoChanged) && carrinho.length > 0) {
+      set({ carrinho: [], showCartSidebar: false });
+    }
+  }, [pareadoUid, pareamentoId, carrinho.length, set]);
 
   if (!pareado || !parceiroData) {
     return (
@@ -44,46 +121,80 @@ export default function LojaPage() {
   }
 
   const foguinhos = Number(usuario?.foguinhos ?? 0);
-  const catalogoParceiro = parceiroData.catalogoPersonalizado ?? {};
-  const partnerGender = getCatalogFilterGender(parceiroData);
-  const momentosParaParceiro = momentosMestres.filter((m) =>
-    momentMatchesCatalogFilter(m.targetGender, partnerGender),
-  );
-  const categorias = [...new Set(momentosParaParceiro.map((m) => m.categoria))];
-  const momentosFiltrados = filtro ? momentosParaParceiro.filter((m) => m.categoria === filtro) : momentosParaParceiro;
-  const totalCarrinho = carrinho.reduce((s, c) => s + (Number((c as CarrinhoItem & { custoFoguinhos?: number }).custoFoguinhos) || 0), 0);
 
-  function adicionarAoCarrinho(item: { id: string; nome: string; img?: string; custoFoguinhos: number; categoria?: string; emoji?: string }) {
-    if (carrinho.find((c) => c.id === item.id)) { showToast('Já está no carrinho.', 'aviso'); return; }
-    set({ carrinho: [...carrinho, { id: item.id, titulo: item.nome, foto: item.img, quantidade: 1, custoFoguinhos: item.custoFoguinhos, categoria: item.categoria || '', emoji: item.emoji || '' } as CarrinhoItem], showCartSidebar: true });
+  const categorias = [...new Set(momentosParaParceiro.map((m) => m.categoria))];
+  const momentosFiltrados = filtro
+    ? momentosParaParceiro.filter((m) => m.categoria === filtro)
+    : momentosParaParceiro;
+
+  const totalCarrinho = carrinho.reduce(
+    (s, c) => s + (Number((c as CarrinhoItem & { custoFoguinhos?: number }).custoFoguinhos) || 0),
+    0,
+  );
+
+  function adicionarAoCarrinho(item: LojaItem) {
+    if (carrinho.find((c) => c.id === item.id)) {
+      showToast('Já está no carrinho.', 'aviso');
+      return;
+    }
+    set({
+      carrinho: [
+        ...carrinho,
+        {
+          id: item.id,
+          titulo: item.nome,
+          foto: item.img,
+          quantidade: 1,
+          custoFoguinhos: item.custoFoguinhos,
+          categoria: item.categoria || '',
+          emoji: item.emoji || '',
+        } as CarrinhoItem,
+      ],
+      showCartSidebar: true,
+    });
     showToast('Adicionado ao carrinho!', 'sucesso');
     trackGA('add_to_cart', { items: [{ item_id: item.id, item_name: item.nome }] });
     trackMeta('AddToCart', { content_ids: [item.id], content_name: item.nome });
   }
 
   async function finalizarPedido() {
-    if (!carrinho.length) { showToast('Carrinho vazio.', 'aviso'); return; }
+    if (!carrinho.length) {
+      showToast('Carrinho vazio.', 'aviso');
+      return;
+    }
+    if (!pareadoUid || !pareamentoId) {
+      showToast('Conexão inválida. Tente novamente.', 'erro');
+      return;
+    }
+
     openSystemConfirm('Confirmar pedido?', async () => {
       try {
-        const itemsPayload = carrinho.map((c) => ({
-          id: c.id,
-          momentoMestreId: c.id,
-          nome: (c as CarrinhoItem & { custoFoguinhos?: number; categoria?: string; emoji?: string }).titulo,
-          custoFoguinhos: (c as CarrinhoItem & { custoFoguinhos?: number }).custoFoguinhos ?? 0,
-          img: (c as CarrinhoItem & { foto?: string }).foto || '',
-          categoria: (c as CarrinhoItem & { categoria?: string }).categoria || '',
-          emoji: (c as CarrinhoItem & { emoji?: string }).emoji || '',
-        }));
+        const itemsPayload = carrinho.map((c) => {
+          const ext = c as CarrinhoItem & {
+            custoFoguinhos?: number;
+            categoria?: string;
+            emoji?: string;
+            foto?: string;
+          };
+          const custom = isCustomMomentId(c.id);
+          return {
+            id: c.id,
+            ...(custom ? {} : { momentoMestreId: c.id }),
+            nome: ext.titulo,
+            img: ext.foto || '',
+            categoria: ext.categoria || '',
+            emoji: ext.emoji || '',
+          };
+        });
+
         await sendInput('moment_redeem', {
           partnerUid: pareadoUid,
-          pareamentoId: idPareamentoAmigavel,
+          pareamentoId,
           items: itemsPayload,
           totalFoguinhos: totalCarrinho,
         });
         trackGA('purchase', { currency: 'BRL', value: totalCarrinho });
         trackMeta('Purchase', { currency: 'BRL', value: totalCarrinho });
-        // Débito otimista: reflete o custo imediatamente no store enquanto o
-        // onSnapshot do usuário não chega com o valor atualizado pelo backend.
         if (usuario) {
           set({
             usuario: { ...usuario, foguinhos: Math.max(0, foguinhos - totalCarrinho) },
@@ -91,15 +202,63 @@ export default function LojaPage() {
         }
         set({ carrinho: [], showCartSidebar: false });
         showToast('Momentos resgatados! Veja em Momentos 🔥', 'sucesso');
-      } catch { showToast('Erro ao finalizar pedido.', 'erro'); }
+      } catch {
+        showToast('Erro ao finalizar pedido.', 'erro');
+      }
     });
+  }
+
+  function renderCard(item: LojaItem) {
+    const semSaldo = foguinhos < item.custoFoguinhos;
+    return (
+      <div
+        key={item.id}
+        className="rounded-2xl overflow-hidden bg-[#1a1020] border border-white/10"
+      >
+        <div className="relative">
+          {item.img ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.img} alt={item.nome} className="w-full h-40 object-cover" />
+          ) : (
+            <div className="w-full h-40 bg-gradient-to-br from-red-500/30 to-pink-500/30 flex items-center justify-center">
+              <span className="text-5xl">{item.emoji ?? '🔥'}</span>
+            </div>
+          )}
+          {item.isCustom && (
+            <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/90 text-white">
+              Personalizado
+            </span>
+          )}
+        </div>
+        <div className="p-4">
+          <h3 className="font-semibold text-white text-sm leading-snug">{item.nome}</h3>
+          <div className="flex items-center justify-between mt-3">
+            <span className="text-amber-300 text-sm font-medium flex items-center gap-1">
+              <i className="fas fa-fire" /> {item.custoFoguinhos} foguinhos
+            </span>
+            <button
+              type="button"
+              onClick={() => adicionarAoCarrinho(item)}
+              disabled={semSaldo}
+              className={clsx(
+                'text-xs px-3 py-2 rounded-lg font-semibold transition',
+                semSaldo
+                  ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-pink-500 to-red-500 text-white',
+              )}
+            >
+              {semSaldo ? 'Sem saldo' : 'Resgatar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="screen bg-black text-white pb-28">
       <ParceiroHeader showCart />
 
-      {/* Hero section — igual ao index.html renderMain() */}
       <section
         className="px-6 pt-10 pb-28 flex flex-col items-center text-center"
         style={{ background: 'linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%)' }}
@@ -122,103 +281,104 @@ export default function LojaPage() {
         </div>
       </section>
 
-      {/* Content com -mt-10 para sobrepor o hero */}
       <section className="px-5 pb-8 -mt-10">
         <div className="max-w-5xl mx-auto">
-          {/* Card preto que abraça os filtros — padrão das outras telas */}
           <div className="rounded-[28px] bg-[#111114] p-4 shadow-lg space-y-4">
-
-          {/* Filtros */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            <button
-              onClick={() => setFiltro(null)}
-              className="flex-1 min-w-0 text-center py-[7px] px-[10px] rounded-full font-semibold text-[0.82rem] whitespace-nowrap transition"
-              style={!filtro ? { background: '#ef4444', color: '#fff' } : { background: '#1a1a1a', color: '#888' }}
-            >Todos</button>
-            {categorias.map((cat) => (
+            <div className="flex gap-2 overflow-x-auto pb-1">
               <button
-                key={cat}
-                onClick={() => setFiltro((cat ?? null) === filtro ? null : (cat ?? null))}
+                type="button"
+                onClick={() => setFiltro(null)}
                 className="flex-1 min-w-0 text-center py-[7px] px-[10px] rounded-full font-semibold text-[0.82rem] whitespace-nowrap transition"
-                style={filtro === cat ? { background: '#ef4444', color: '#fff' } : { background: '#1a1a1a', color: '#888' }}
-              >{cat === 'Sair da Rotina' ? 'Rotina' : cat}</button>
-            ))}
-          </div>{/* fecha filtros */}
-          </div>{/* fecha card preto */}
+                style={!filtro ? { background: '#ef4444', color: '#fff' } : { background: '#1a1a1a', color: '#888' }}
+              >
+                Todos
+              </button>
+              {categorias.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setFiltro((cat ?? null) === filtro ? null : (cat ?? null))}
+                  className="flex-1 min-w-0 text-center py-[7px] px-[10px] rounded-full font-semibold text-[0.82rem] whitespace-nowrap transition"
+                  style={filtro === cat ? { background: '#ef4444', color: '#fff' } : { background: '#1a1a1a', color: '#888' }}
+                >
+                  {cat === 'Sair da Rotina' ? 'Rotina' : cat}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          {/* Grid de produtos — fora do card, abaixo */}
+          {momentosCustomParceiro.length > 0 && (
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <h3 className="text-sm font-semibold text-white/80">Personalizado</h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/25 text-purple-300">
+                  ✦ VIP
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {momentosCustomParceiro.map((item) => renderCard(item))}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {momentosFiltrados.map((m) => {
               const cfg = catalogoParceiro[m.nome ?? ''];
-              const preco = cfg?.preco !== undefined ? cfg.preco : (Number(m.intensidade ?? 1)) * 2;
-              const bloqueado = cfg?.bloqueado ?? false;
-              const semSaldo = foguinhos < preco;
-              return (
-                <div key={m.id} className={clsx('rounded-2xl overflow-hidden bg-[#1a1020] border border-white/10', bloqueado && 'opacity-50')}>
-                  <div className="relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {m.img ? <img src={String(m.img)} alt={m.nome ?? ''} className="w-full h-40 object-cover" /> : <div className="w-full h-40 bg-gradient-to-br from-red-500/30 to-pink-500/30 flex items-center justify-center"><span className="text-5xl">{String(m.emoji ?? '🔥')}</span></div>}
-                    {bloqueado && <div className="absolute inset-0 bg-black/70 flex items-center justify-center"><i className="fas fa-lock text-3xl text-white" /></div>}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-white text-sm leading-snug">{m.nome ?? ''}</h3>
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="text-amber-300 text-sm font-medium flex items-center gap-1"><i className="fas fa-fire" /> {preco} foguinhos</span>
-                      <button
-                        onClick={() => !bloqueado && adicionarAoCarrinho({ id: m.id, nome: m.nome ?? '', img: m.img ? String(m.img) : undefined, custoFoguinhos: preco, categoria: m.categoria, emoji: m.emoji })}
-                        disabled={bloqueado || semSaldo}
-                        className={clsx('text-xs px-3 py-2 rounded-lg font-semibold transition', bloqueado ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : semSaldo ? 'bg-white/10 text-white/40 cursor-not-allowed' : 'bg-gradient-to-r from-pink-500 to-red-500 text-white')}
-                      >
-                        {bloqueado ? 'Bloqueado' : semSaldo ? 'Sem saldo' : 'Resgatar'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
+              const preco = cfg?.preco !== undefined ? cfg.preco : Number(m.intensidade ?? 1) * 2;
+              return renderCard({
+                id: m.id,
+                nome: m.nome ?? '',
+                img: m.img ? String(m.img) : undefined,
+                custoFoguinhos: preco,
+                categoria: m.categoria,
+                emoji: m.emoji ? String(m.emoji) : undefined,
+                isCustom: false,
+              });
             })}
-          </div>{/* fecha grid */}
-        </div>{/* fecha max-w-5xl */}
+          </div>
+        </div>
       </section>
 
       {showCartSidebar && (
         <>
           <div className="fixed inset-0 bg-black/50 z-20" onClick={() => set({ showCartSidebar: false })} />
           <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-[#120b16] z-30 border-l border-white/10 overflow-y-auto flex flex-col">
-            {/* Header */}
             <div className="flex items-center justify-between p-6 pb-4">
-              <button onClick={() => set({ showCartSidebar: false })} className="text-white/70 hover:text-white transition">
+              <button type="button" onClick={() => set({ showCartSidebar: false })} className="text-white/70 hover:text-white transition">
                 <i className="fas fa-chevron-left text-lg" />
               </button>
               <h3 className="text-lg font-semibold text-white text-center flex-1">Meu carrinho</h3>
-              <button className="text-white/70 hover:text-white transition" aria-label="Opções do carrinho">
+              <button type="button" className="text-white/70 hover:text-white transition" aria-label="Opções do carrinho">
                 <i className="fas fa-ellipsis-vertical text-lg" />
               </button>
             </div>
 
-            {/* Itens */}
             <div className="flex-1 px-4 space-y-3">
               {carrinho.length === 0 ? (
                 <p className="text-white/40 text-center py-10 text-sm">Seu carrinho está vazio.</p>
               ) : (
                 carrinho.map((item, idx) => (
                   <div key={idx} className="bg-white rounded-2xl p-4 flex gap-3 items-center shadow-md">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     {item.foto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.foto} alt={item.titulo} className="w-16 h-16 rounded-xl object-cover bg-gray-100 shrink-0" />
                     ) : (
-                      <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                        <i className="fas fa-gift text-gray-400" />
+                      <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 text-xl">
+                        {(item as CarrinhoItem & { emoji?: string }).emoji || '🎁'}
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{item.titulo}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Momento</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {isCustomMomentId(item.id) ? 'Personalizado' : 'Momento'}
+                      </p>
                       <p className="text-sm font-semibold text-amber-500 mt-1">
                         <i className="fas fa-fire mr-1 text-xs" />
                         {(item as CarrinhoItem & { custoFoguinhos?: number }).custoFoguinhos ?? 0} foguinhos
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => set({ carrinho: carrinho.filter((_, i) => i !== idx) })}
                       className="text-gray-400 hover:text-red-500 transition shrink-0"
                     >
@@ -229,10 +389,8 @@ export default function LojaPage() {
               )}
             </div>
 
-            {/* Resumo + Ações */}
             {carrinho.length > 0 && (
               <div className="px-4 pb-6 mt-4 space-y-4">
-                {/* Resumo financeiro */}
                 <div className="rounded-2xl bg-white/90 text-gray-900 p-4 shadow-sm">
                   <h4 className="text-sm font-semibold mb-3">Resumo</h4>
                   <div className="space-y-2 text-sm">
@@ -257,8 +415,8 @@ export default function LojaPage() {
                   </div>
                 </div>
 
-                {/* Botões */}
                 <button
+                  type="button"
                   onClick={finalizarPedido}
                   disabled={foguinhos < totalCarrinho}
                   className="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-semibold disabled:opacity-50 transition"
@@ -266,6 +424,7 @@ export default function LojaPage() {
                   Finalizar Pedido
                 </button>
                 <button
+                  type="button"
                   onClick={() => set({ showCartSidebar: false })}
                   className="w-full py-2 text-white/70 hover:text-white transition text-sm"
                 >
