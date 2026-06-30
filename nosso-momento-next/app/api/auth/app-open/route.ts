@@ -25,10 +25,12 @@ export async function POST(request: NextRequest) {
       const userSnap = await tx.get(userRef);
       if (userSnap.exists) return;
 
-      tx.set(userRef, { recordedAt: FieldValue.serverTimestamp() });
+      // Firestore exige todas as leituras antes de qualquer escrita na transação.
       const daySnap = await tx.get(dayRef);
       const prev = daySnap.data()?.loginCount;
       const loginCount = (typeof prev === 'number' ? prev : 0) + 1;
+
+      tx.set(userRef, { recordedAt: FieldValue.serverTimestamp() });
       tx.set(
         dayRef,
         { date, loginCount, updatedAt: FieldValue.serverTimestamp() },
