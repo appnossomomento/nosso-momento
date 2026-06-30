@@ -99,7 +99,7 @@ export function useAuth() {
             usuario: {
               ...data,
               uid: firebaseUser.uid,
-              email: firebaseUser.email ?? data.email ?? '',
+              email: firebaseUser.email ?? (typeof data.email === 'string' ? data.email : ''),
               ...(manterDespareado ? { pareadoUid: undefined, pareadoCom: undefined } : {}),
             },
             parceirosAtivos,
