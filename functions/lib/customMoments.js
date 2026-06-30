@@ -118,7 +118,7 @@ function validateCustomMomentCreateInput(input) {
     return {ok: false, error: "invalid_custom_price"};
   }
   const emoji = typeof input.emoji === "string" ? input.emoji.slice(0, 8) : "✨";
-  const img = typeof input.img === "string" ? input.img.trim().slice(0, 500) : "";
+  const img = typeof input.img === "string" ? input.img.trim().slice(0, 2048) : "";
   if (!img || !img.startsWith("http")) {
     return {ok: false, error: "missing_custom_moment_image"};
   }
