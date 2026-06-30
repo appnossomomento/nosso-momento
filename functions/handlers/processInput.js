@@ -3361,7 +3361,7 @@ exports.processInput = onDocumentCreated(
             img: validated.item.img,
             categoria: validated.item.categoria,
             ativo: true,
-            criadoEm: admin.firestore.FieldValue.serverTimestamp(),
+            criadoEm: admin.firestore.Timestamp.now(),
             criadorUid: fromUid,
           };
 

@@ -13,6 +13,7 @@ import MomentoCover from '@/components/ui/MomentoCover';
 import { trackGA } from '@/lib/analytics';
 import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
 import { uploadCustomMomentImage, isStorageUploadError } from '@/lib/utils/uploadCustomMomentImage';
+import { waitForCustomMomentVisible } from '@/lib/utils/refreshMomentosCustom';
 import type { CatalogoCfg, MomentoCustom, MomentoMestre } from '@/lib/types';
 
 const EMOJIS_POR_CATEGORIA = [
@@ -231,7 +232,13 @@ export default function PersonalizarPage() {
         emoji: novoEmoji,
         img: imgUrl,
       });
-      showToast('Momento custom criado!', 'sucesso');
+
+      const visivel = await waitForCustomMomentVisible(pareamentoId, meuUid, nome);
+      if (!visivel) {
+        showToast('Momento enviado — atualize a página se não aparecer.', 'aviso');
+      } else {
+        showToast('Momento custom criado!', 'sucesso');
+      }
       limparImagemModal();
       setShowCreateModal(false);
     } catch (err) {
@@ -450,9 +457,12 @@ export default function PersonalizarPage() {
                       key={item.id}
                       className="rounded-2xl bg-[#1a1020] border border-purple-500/20 p-3 flex items-center gap-3"
                     >
-                      <div className="w-12 h-12 rounded-xl bg-purple-500/15 flex items-center justify-center text-xl shrink-0">
-                        {item.emoji || '✨'}
-                      </div>
+                      <MomentoCover
+                        src={item.img}
+                        alt={item.nome}
+                        emoji={item.emoji || '✨'}
+                        variant="customThumb"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate">{item.nome}</p>
                         <p className="text-xs text-amber-400 mt-0.5">

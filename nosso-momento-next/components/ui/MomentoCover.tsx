@@ -4,7 +4,7 @@ import { useState } from 'react';
 import clsx from 'clsx';
 import { sanitizeMomentoImgUrl } from '@/lib/utils/momentoImage';
 
-type MomentoCoverVariant = 'thumb' | 'card';
+type MomentoCoverVariant = 'thumb' | 'card' | 'customThumb';
 
 const VARIANT_STYLES: Record<
   MomentoCoverVariant,
@@ -15,6 +15,12 @@ const VARIANT_STYLES: Record<
     fallback:
       'w-14 h-14 rounded-xl bg-gradient-to-br from-red-500/30 to-pink-500/30 flex items-center justify-center shrink-0',
     emoji: 'text-2xl',
+  },
+  customThumb: {
+    img: 'w-12 h-12 rounded-xl object-cover shrink-0',
+    fallback:
+      'w-12 h-12 rounded-xl bg-purple-500/15 flex items-center justify-center shrink-0',
+    emoji: 'text-xl',
   },
   card: {
     img: 'w-full h-40 object-cover',

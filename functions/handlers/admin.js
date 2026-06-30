@@ -77,6 +77,9 @@ exports.createInput = https.onRequest(async (req, res) => {
       "profile_photo_upload",
       "moment_photo_upload",
       "convite_aceitar",
+      "catalog_personalizado_save",
+      "custom_moment_create",
+      "custom_moment_delete",
     ];
     if (!input.type || !allowedTypes.includes(input.type)) {
       res.status(400).send({error: "unsupported_type"});
@@ -152,6 +155,15 @@ exports.createInput = https.onRequest(async (req, res) => {
       ],
       moment_photo_upload: [
         "type", "fromUid",
+      ],
+      catalog_personalizado_save: [
+        "type", "fromUid", "catalogoPersonalizado",
+      ],
+      custom_moment_create: [
+        "type", "fromUid", "pareamentoId", "nome", "preco", "emoji", "img",
+      ],
+      custom_moment_delete: [
+        "type", "fromUid", "pareamentoId", "itemId",
       ],
     };
 
