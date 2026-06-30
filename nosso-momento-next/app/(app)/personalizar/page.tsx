@@ -1,35 +1,72 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
+import { sendInput } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
+import { openSystemConfirm } from '@/components/ui/Modal';
+import OverlayModal from '@/components/ui/OverlayModal';
 import clsx from 'clsx';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import { trackGA } from '@/lib/analytics';
 import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
+import type { CatalogoCfg, MomentoCustom, MomentoMestre } from '@/lib/types';
 
-type CatalogoCfg = { preco?: number; bloqueado?: boolean };
+const EMOJI_OPCOES = ['✨', '🔥', '❤️', '💋', '🍷', '🎁', '🌹', '😈'];
+
+function cfgFromUsuario(raw: Record<string, unknown> | undefined): Record<string, CatalogoCfg> {
+  const result: Record<string, CatalogoCfg> = {};
+  if (!raw) return result;
+  for (const [k, v] of Object.entries(raw)) {
+    if (v && typeof v === 'object') result[k] = v as CatalogoCfg;
+  }
+  return result;
+}
+
+function precoDefault(m: MomentoMestre): number {
+  return Number(m.intensidade ?? 1) * 2;
+}
 
 export default function PersonalizarPage() {
   const router = useRouter();
-  const { usuario, momentosMestres, set, pareado } = useAppStore();
+  const {
+    usuario,
+    momentosMestres,
+    set,
+    pareado,
+    conexaoAtiva,
+    momentosCustomAtivo,
+  } = useAppStore();
 
-  // Estado local espelha o catalogoPersonalizado do usuário
-  const [catalogo, setCatalogo] = useState<Record<string, CatalogoCfg>>(
-    () => {
-      const raw = usuario?.catalogoPersonalizado ?? {};
-      const result: Record<string, CatalogoCfg> = {};
-      for (const [k, v] of Object.entries(raw)) {
-        result[k] = v as CatalogoCfg;
-      }
-      return result;
-    }
+  const isVip = usuario?.vip === true;
+  const meuUid = usuario?.uid ?? '';
+  const pareamentoId = conexaoAtiva?.pareamentoId ?? null;
+
+  const [catalogo, setCatalogo] = useState<Record<string, CatalogoCfg>>(() =>
+    cfgFromUsuario(usuario?.catalogoPersonalizado as Record<string, unknown> | undefined),
   );
   const [salvando, setSalvando] = useState(false);
   const [filtro, setFiltro] = useState<string | null>('Lovezin');
+  const [showExcluidos, setShowExcluidos] = useState(false);
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [novoNome, setNovoNome] = useState('');
+  const [novoPreco, setNovoPreco] = useState(10);
+  const [novoEmoji, setNovoEmoji] = useState('✨');
+  const [criandoCustom, setCriandoCustom] = useState(false);
+  const [excluindoId, setExcluindoId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCatalogo(cfgFromUsuario(usuario?.catalogoPersonalizado as Record<string, unknown> | undefined));
+  }, [usuario?.catalogoPersonalizado]);
+
+  const meusCustom: MomentoCustom[] = useMemo(() => {
+    if (!meuUid || !momentosCustomAtivo) return [];
+    const list = momentosCustomAtivo[meuUid];
+    if (!Array.isArray(list)) return [];
+    return list.filter((m) => m && m.ativo !== false);
+  }, [meuUid, momentosCustomAtivo]);
 
   if (!pareado) {
     return (
@@ -49,7 +86,14 @@ export default function PersonalizarPage() {
     momentMatchesCatalogFilter(m.targetGender, meuCatalogo),
   );
   const categorias = [...new Set(momentosParaMim.map((m) => m.categoria))];
-  const momentosFiltrados = filtro ? momentosParaMim.filter((m) => m.categoria === filtro) : momentosParaMim;
+
+  const momentosAtivos = momentosParaMim.filter((m) => {
+    const cfg = catalogo[m.nome ?? ''] ?? {};
+    if (cfg.excluido) return false;
+    return filtro ? m.categoria === filtro : true;
+  });
+
+  const momentosExcluidos = momentosParaMim.filter((m) => catalogo[m.nome ?? '']?.excluido === true);
 
   function toggleBloqueado(nomeItem: string) {
     setCatalogo((prev) => {
@@ -65,17 +109,50 @@ export default function PersonalizarPage() {
     });
   }
 
+  function handleExcluir(nomeItem: string) {
+    if (!isVip) {
+      set({ showVipPopup: true });
+      return;
+    }
+    setCatalogo((prev) => {
+      const atual = prev[nomeItem] ?? {};
+      return { ...prev, [nomeItem]: { ...atual, excluido: true } };
+    });
+  }
+
+  function handleRestaurar(nomeItem: string) {
+    setCatalogo((prev) => {
+      const atual = { ...(prev[nomeItem] ?? {}) };
+      delete atual.excluido;
+      return { ...prev, [nomeItem]: atual };
+    });
+  }
+
+  function handleCriarCustomClick() {
+    if (!isVip) {
+      set({ showVipPopup: true });
+      return;
+    }
+    if (!pareamentoId) {
+      showToast('Selecione uma conexão ativa.', 'aviso');
+      return;
+    }
+    setNovoNome('');
+    setNovoPreco(10);
+    setNovoEmoji('✨');
+    setShowCreateModal(true);
+  }
+
   async function salvar() {
     if (!usuario?.uid) return;
     setSalvando(true);
     try {
-      await updateDoc(doc(db, 'usuarios', usuario.uid), {
+      await sendInput('catalog_personalizado_save', {
         catalogoPersonalizado: catalogo,
       });
       set({ usuario: { ...usuario, catalogoPersonalizado: catalogo } });
       trackGA('customize_catalog');
-      showToast('Catálogo personalizado salvo! 🎉', 'sucesso');
-      router.back();
+      showToast('Catálogo personalizado salvo!', 'sucesso');
     } catch {
       showToast('Erro ao salvar. Tente novamente.', 'erro');
     } finally {
@@ -83,11 +160,154 @@ export default function PersonalizarPage() {
     }
   }
 
+  async function confirmarCriarCustom() {
+    const nome = novoNome.trim();
+    const preco = Math.floor(novoPreco);
+    if (!nome) {
+      showToast('Informe um nome para o momento.', 'aviso');
+      return;
+    }
+    if (preco < 1 || preco > 999) {
+      showToast('Preço deve ser entre 1 e 999 foguinhos.', 'aviso');
+      return;
+    }
+    if (!pareamentoId) return;
+
+    setCriandoCustom(true);
+    try {
+      await sendInput('custom_moment_create', {
+        pareamentoId,
+        nome,
+        preco,
+        emoji: novoEmoji,
+      });
+      showToast('Momento custom criado!', 'sucesso');
+      setShowCreateModal(false);
+    } catch {
+      showToast('Não foi possível criar o momento.', 'erro');
+    } finally {
+      setCriandoCustom(false);
+    }
+  }
+
+  async function excluirCustom(itemId: string) {
+    if (!pareamentoId) return;
+    openSystemConfirm('Excluir este momento custom?', async () => {
+      setExcluindoId(itemId);
+      try {
+        await sendInput('custom_moment_delete', { pareamentoId, itemId });
+        showToast('Momento removido.', 'sucesso');
+      } catch {
+        showToast('Erro ao excluir momento.', 'erro');
+      } finally {
+        setExcluindoId(null);
+      }
+    });
+  }
+
+  function renderMomentoRow(
+    m: MomentoMestre,
+    opts: { showRestore?: boolean; showExclude?: boolean },
+  ) {
+    const cfg = catalogo[m.nome ?? ''] ?? {};
+    const bloqueado = cfg.bloqueado ?? false;
+    const preco = cfg.preco !== undefined ? cfg.preco : precoDefault(m);
+
+    return (
+      <div
+        key={m.id}
+        className={clsx(
+          'rounded-2xl bg-[#1a1020] border border-white/10 overflow-hidden transition',
+          bloqueado && 'opacity-50',
+        )}
+      >
+        <div className="flex items-center gap-3 p-3">
+          {m.img ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={String(m.img)}
+              alt={m.nome ?? ''}
+              className="w-14 h-14 rounded-xl object-cover shrink-0"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500/30 to-pink-500/30 flex items-center justify-center shrink-0">
+              <span className="text-2xl">{String(m.emoji ?? '🔥')}</span>
+            </div>
+          )}
+
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-white truncate">{m.nome ?? ''}</p>
+            <p className="text-[11px] text-white/40 mt-0.5">{m.categoria}</p>
+            {!opts.showRestore && (
+              <div className="flex items-center gap-1 mt-1">
+                <i className="fas fa-fire text-amber-400 text-[10px]" />
+                <input
+                  type="number"
+                  value={preco}
+                  min={1}
+                  max={999}
+                  onChange={(e) => setPreco(m.nome ?? '', Number(e.target.value))}
+                  className="w-16 bg-white/10 rounded-md px-2 py-0.5 text-xs text-amber-300 font-semibold border border-white/10 focus:outline-none focus:border-red-400"
+                />
+                <span className="text-[10px] text-white/40">foguinhos</span>
+              </div>
+            )}
+          </div>
+
+          {opts.showRestore ? (
+            <button
+              type="button"
+              onClick={() => handleRestaurar(m.nome ?? '')}
+              className="shrink-0 px-3 py-2 rounded-xl bg-green-500/15 border border-green-500/30 text-green-400 text-xs font-semibold"
+            >
+              Restaurar
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => toggleBloqueado(m.nome ?? '')}
+                className={clsx(
+                  'w-10 h-10 rounded-xl flex items-center justify-center transition',
+                  bloqueado
+                    ? 'bg-red-500/30 border border-red-500/50'
+                    : 'bg-white/10 border border-white/15',
+                )}
+                aria-label={bloqueado ? 'Desbloquear' : 'Bloquear'}
+              >
+                <i
+                  className={clsx(
+                    'fas text-base',
+                    bloqueado ? 'fa-lock text-red-400' : 'fa-lock-open text-white/60',
+                  )}
+                />
+              </button>
+              {opts.showExclude && (
+                <button
+                  type="button"
+                  onClick={() => handleExcluir(m.nome ?? '')}
+                  className={clsx(
+                    'w-10 h-10 rounded-xl flex items-center justify-center transition border',
+                    isVip
+                      ? 'bg-white/10 border-white/15 hover:bg-red-500/20'
+                      : 'bg-white/5 border-white/10 opacity-50',
+                  )}
+                  aria-label="Excluir do catálogo"
+                >
+                  <i className="fas fa-trash-alt text-white/50 text-sm" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="screen bg-black text-white pb-28">
       <ParceiroHeader />
 
-      {/* Hero section — igual ao _catalogoHero do index.html */}
       <section
         className="px-6 pt-10 pb-28 flex flex-col items-center text-center"
         style={{ background: 'linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%)' }}
@@ -96,107 +316,214 @@ export default function PersonalizarPage() {
           <i className="fas fa-store text-3xl text-white mb-3" />
           <h2 className="text-3xl font-semibold text-white">Meu Catálogo</h2>
           <p className="text-white/80">Gerencie os momentos que seu parceiro irá resgatar.</p>
+          {conexaoAtiva && (
+            <p className="text-white/60 text-xs mt-2">
+              Conexão: {conexaoAtiva.nome}
+            </p>
+          )}
         </div>
       </section>
 
-      {/* Content com -mt-10 para sobrepor o hero */}
       <section className="px-5 pb-8 -mt-10">
         <div className="max-w-5xl mx-auto">
-          {/* Card escuro que sobrepõe o hero — padrão das outras telas */}
-          <div className="rounded-[28px] bg-[#111114] p-4 shadow-lg space-y-4">
+          <div className="rounded-[28px] bg-[#111114] p-4 shadow-lg space-y-6">
 
-          {/* Filtro de categoria */}
-          <div className="flex flex-wrap justify-center gap-2 pb-1">
-          {categorias.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFiltro(cat === filtro ? null : cat)}
-              className={clsx('px-4 py-2 rounded-full text-xs font-semibold transition', filtro === cat ? 'bg-white text-black' : 'bg-white/10 text-white/60')}
-            >
-              {cat === 'Sair da Rotina' ? 'Rotina' : cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Lista de itens */}
-        <div className="space-y-3">
-          {momentosFiltrados.map((m) => {
-            const cfg = catalogo[m.nome ?? ''] ?? {};
-            const bloqueado = cfg.bloqueado ?? false;
-            const precoDefault = Number(m.intensidade ?? 1) * 2;
-            const preco = cfg.preco !== undefined ? cfg.preco : precoDefault;
-
-            return (
-              <div
-                key={m.id}
-                className={clsx(
-                  'rounded-2xl bg-[#1a1020] border border-white/10 overflow-hidden transition',
-                  bloqueado && 'opacity-50'
-                )}
-              >
-                <div className="flex items-center gap-3 p-3">
-                  {m.img ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={String(m.img)}
-                      alt={m.nome ?? ''}
-                      className="w-14 h-14 rounded-xl object-cover shrink-0"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-red-500/30 to-pink-500/30 flex items-center justify-center shrink-0">
-                      <span className="text-2xl">{String(m.emoji ?? '🔥')}</span>
-                    </div>
-                  )}
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{m.nome ?? ''}</p>
-                    <p className="text-[11px] text-white/40 mt-0.5">{m.categoria}</p>
-                    {/* Preço customizável */}
-                    <div className="flex items-center gap-1 mt-1">
-                      <i className="fas fa-fire text-amber-400 text-[10px]" />
-                      <input
-                        type="number"
-                        value={preco}
-                        min={0}
-                        max={999}
-                        onChange={(e) => setPreco(m.nome ?? '', Number(e.target.value))}
-                        className="w-16 bg-white/10 rounded-md px-2 py-0.5 text-xs text-amber-300 font-semibold border border-white/10 focus:outline-none focus:border-red-400"
-                      />
-                      <span className="text-[10px] text-white/40">foguinhos</span>
-                    </div>
-                  </div>
-
-                  {/* Toggle bloqueado */}
+            {/* Catálogo mestre */}
+            <div className="space-y-3">
+              <p className="text-sm font-semibold text-white/80 px-1">Catálogo mestre</p>
+              <div className="flex flex-wrap justify-center gap-2 pb-1">
+                {categorias.map((cat) => (
                   <button
-                    onClick={() => toggleBloqueado(m.nome ?? '')}
+                    key={cat}
+                    type="button"
+                    onClick={() => setFiltro(cat === filtro ? null : cat)}
                     className={clsx(
-                      'shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition',
-                      bloqueado ? 'bg-red-500/30 border border-red-500/50' : 'bg-white/10 border border-white/15'
+                      'px-4 py-2 rounded-full text-xs font-semibold transition',
+                      filtro === cat ? 'bg-white text-black' : 'bg-white/10 text-white/60',
                     )}
                   >
-                    <i className={clsx('fas text-base', bloqueado ? 'fa-lock text-red-400' : 'fa-lock-open text-white/60')} />
+                    {cat === 'Sair da Rotina' ? 'Rotina' : cat}
                   </button>
-                </div>
+                ))}
               </div>
-            );
-          })}
-        </div>
+              <div className="space-y-3">
+                {momentosAtivos.map((m) =>
+                  renderMomentoRow(m, { showExclude: true }),
+                )}
+              </div>
+            </div>
 
-          {/* Botão salvar — centralizado no fim */}
-          <div className="pt-2 pb-1">
-            <button
-              onClick={salvar}
-              disabled={salvando}
-              className="w-full py-3 rounded-2xl text-sm font-bold transition"
-              style={{ background: 'linear-gradient(135deg,#ff2d3f,#ff5565)', color: 'white', opacity: salvando ? 0.5 : 1 }}
-            >
-              {salvando ? 'Salvando...' : 'Salvar alterações'}
-            </button>
+            {/* Excluídos (VIP) */}
+            {isVip && momentosExcluidos.length > 0 && (
+              <div className="space-y-2 border-t border-white/10 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowExcluidos((v) => !v)}
+                  className="w-full flex items-center justify-between px-1 text-sm font-semibold text-white/70"
+                >
+                  <span>
+                    <i className="fas fa-trash-restore mr-2 text-white/40" />
+                    Excluídos ({momentosExcluidos.length})
+                  </span>
+                  <i className={clsx('fas text-xs text-white/40', showExcluidos ? 'fa-chevron-up' : 'fa-chevron-down')} />
+                </button>
+                {showExcluidos && (
+                  <div className="space-y-3">
+                    {momentosExcluidos.map((m) =>
+                      renderMomentoRow(m, { showRestore: true }),
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Meus momentos custom */}
+            <div className="space-y-3 border-t border-white/10 pt-4">
+              <div className="flex items-center justify-between px-1">
+                <p className="text-sm font-semibold text-white/80">Meus momentos (custom)</p>
+                {isVip && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
+                    VIP
+                  </span>
+                )}
+              </div>
+
+              {meusCustom.length === 0 ? (
+                <p className="text-xs text-white/40 px-1">
+                  {isVip
+                    ? 'Crie momentos exclusivos para esta conexão.'
+                    : 'Disponível no plano VIP.'}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {meusCustom.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl bg-[#1a1020] border border-purple-500/20 p-3 flex items-center gap-3"
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-purple-500/15 flex items-center justify-center text-xl shrink-0">
+                        {item.emoji || '✨'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">{item.nome}</p>
+                        <p className="text-xs text-amber-400 mt-0.5">
+                          <i className="fas fa-fire text-[10px] mr-1" />
+                          {item.preco} foguinhos
+                        </p>
+                      </div>
+                      {isVip && (
+                        <button
+                          type="button"
+                          onClick={() => excluirCustom(item.id)}
+                          disabled={excluindoId === item.id}
+                          className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center disabled:opacity-50"
+                          aria-label="Excluir momento custom"
+                        >
+                          <i className="fas fa-trash-alt text-white/50 text-xs" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleCriarCustomClick}
+                className="w-full py-3 rounded-2xl border border-dashed border-white/20 text-sm font-semibold text-white/70 hover:bg-white/5 transition flex items-center justify-center gap-2"
+              >
+                <i className="fas fa-plus text-pink-400" />
+                Criar momento
+                {!isVip && <i className="fas fa-crown text-yellow-400/60 text-xs" />}
+              </button>
+            </div>
+
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={salvar}
+                disabled={salvando}
+                className="w-full py-3 rounded-2xl text-sm font-bold transition"
+                style={{
+                  background: 'linear-gradient(135deg,#ff2d3f,#ff5565)',
+                  color: 'white',
+                  opacity: salvando ? 0.5 : 1,
+                }}
+              >
+                {salvando ? 'Salvando...' : 'Salvar catálogo mestre'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <OverlayModal
+        open={showCreateModal}
+        onClose={() => !criandoCustom && setShowCreateModal(false)}
+        ariaLabel="Criar momento custom"
+        panelClassName="bg-[#111114] border border-white/10"
+      >
+        <div className="p-6 space-y-4">
+          <h3 className="text-lg font-bold">Novo momento custom</h3>
+          <p className="text-xs text-white/50">
+            Seu parceiro poderá resgatar este momento na loja desta conexão.
+          </p>
+
+          <div className="space-y-2">
+            <label className="text-xs text-white/60">Nome</label>
+            <input
+              type="text"
+              value={novoNome}
+              onChange={(e) => setNovoNome(e.target.value)}
+              maxLength={80}
+              placeholder="Ex: Noite especial"
+              className="w-full"
+            />
           </div>
 
-          </div>{/* closes card escuro */}
-        </div>{/* closes max-w-5xl */}
-      </section>{/* closes content section */}
+          <div className="space-y-2">
+            <label className="text-xs text-white/60">Valor (1–999 foguinhos)</label>
+            <input
+              type="number"
+              value={novoPreco}
+              min={1}
+              max={999}
+              onChange={(e) => setNovoPreco(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs text-white/60">Emoji</label>
+            <div className="flex flex-wrap gap-2">
+              {EMOJI_OPCOES.map((em) => (
+                <button
+                  key={em}
+                  type="button"
+                  onClick={() => setNovoEmoji(em)}
+                  className={clsx(
+                    'w-10 h-10 rounded-xl text-xl flex items-center justify-center border transition',
+                    novoEmoji === em
+                      ? 'border-pink-500 bg-pink-500/20'
+                      : 'border-white/10 bg-white/5',
+                  )}
+                >
+                  {em}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={confirmarCriarCustom}
+            disabled={criandoCustom}
+            className="btn-red w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-60"
+          >
+            {criandoCustom ? 'Criando...' : 'Criar momento'}
+          </button>
+        </div>
+      </OverlayModal>
     </div>
   );
 }
