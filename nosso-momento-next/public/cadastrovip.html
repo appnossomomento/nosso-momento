@@ -95,6 +95,13 @@
 </head>
 <body class="antialiased selection:bg-red-500/30">
 
+  <!-- HEADER MOBILE (apenas mobile) -->
+  <header class="md:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-600 via-rose-500 to-orange-500 shadow-lg">
+    <div class="flex items-center justify-center py-1.5">
+      <img src="assets/icons/logo-topdown-white-txt.png" alt="Nosso Momento" class="h-12 w-auto drop-shadow-[0_1px_6px_rgba(0,0,0,0.35)]" />
+    </div>
+  </header>
+
   <!-- HERO SECTION -->
   <section class="relative pt-24 pb-32 overflow-hidden">
     <!-- Casal ao fundo (direita), bem sutil -->
@@ -104,7 +111,7 @@
     
     <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center relative z-10">
       <!-- Left Content -->
-      <div class="max-w-xl">
+      <div class="max-w-xl mx-auto text-center md:mx-0 md:text-left">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-semibold tracking-wider mb-6">
           ACESSO ANTECIPADO LIBERADO
         </div>
@@ -117,7 +124,7 @@
         <a href="#form" class="inline-block bg-gradient-to-r from-red-500 to-rose-500 text-white font-bold px-8 py-4 rounded-full glow-button transition-all hover:scale-105">
           Quero ser um dos 50 Casais
         </a>
-        <p class="text-zinc-500 text-sm mt-4 flex items-center gap-2">
+        <p class="text-zinc-500 text-sm mt-4 flex items-center justify-center md:justify-start gap-2">
           <span class="text-green-400">✓</span> Acesso antecipado <span class="text-white font-semibold">100% gratuito</span> para os casais fundadores.
         </p>
       </div>
@@ -306,7 +313,7 @@
         <h2 class="text-3xl md:text-4xl font-bold text-white tracking-wide">A experiência que espera vocês</h2>
         <p class="text-rose-500 mt-2 text-base">Foi assim que desenhamos o Nosso Momento para o dia a dia de todos os casais — héteros, LGBTQIA+, do jeito que o amor de vocês for:</p>
       </div>
-      <div class="flex flex-col md:flex-row items-center justify-center gap-6">
+      <div class="flex flex-col md:flex-row items-center justify-center gap-6 w-full">
         <!-- Texto Esquerda -->
         <div class="flex-1 max-w-xs text-left hidden md:block">
           <blockquote class="text-gray-300 text-base italic">
@@ -315,7 +322,7 @@
           </blockquote>
         </div>
         <!-- Vídeos Centralizados -->
-        <div class="flex flex-row gap-6">
+        <div class="flex flex-row gap-3 md:gap-6 justify-center">
           <!-- Vídeo 1 -->
           <figure class="relative flex flex-col items-center">
             <div class="relative">
@@ -323,7 +330,7 @@
               <div class="absolute -inset-2 rounded-3xl blur-2xl opacity-60" style="background:linear-gradient(135deg,#e40303,#ff8c00,#ffed00,#008026,#004dff,#750787);"></div>
               <!-- Borda em gradiente arco-íris -->
               <div class="relative rounded-2xl p-[3px]" style="background:linear-gradient(135deg,#e40303,#ff8c00,#ffed00,#008026,#004dff,#750787);">
-                <div class="w-[220px] h-[320px] rounded-[14px] bg-black overflow-hidden flex items-center justify-center">
+                <div class="w-[150px] h-[230px] md:w-[220px] md:h-[320px] rounded-[14px] bg-black overflow-hidden flex items-center justify-center">
                   <img src="https://img.freepik.com/fotos-premium/casal-de-lesbicas-juntos-dentro-de-casa-conceito_53876-34145.jpg?semt=ais_hybrid&w=740&q=80" alt="Casal LGBTQIA+ sorrindo" class="w-full h-full object-cover opacity-85" />
                 </div>
               </div>
@@ -331,13 +338,13 @@
           </figure>
           <!-- Vídeo 2 -->
           <figure class="relative flex flex-col items-center">
-            <div class="relative w-[220px] h-[320px] aspect-[16/9] rounded-2xl bg-black border-2 border-orange-500/70 shadow-[0_0_32px_8px_rgba(251,146,60,0.5)] flex items-center justify-center overflow-hidden">
+            <div class="relative w-[150px] h-[230px] md:w-[220px] md:h-[320px] rounded-2xl bg-black border-2 border-orange-500/70 shadow-[0_0_32px_8px_rgba(251,146,60,0.5)] flex items-center justify-center overflow-hidden">
               <img src="https://img.freepik.com/fotos-premium/casal-feliz-deitada-na-cama-carinhos-em-casa-no-quarto_13339-274153.jpg?semt=ais_user_personalization&w=740&q=80" alt="Casal sorrindo" class="w-full h-full object-cover opacity-85" />
             </div>
           </figure>
         </div>
         <!-- Texto Direita -->
-        <div class="flex-1 max-w-xs text-right justify-normal md:block">
+        <div class="flex-1 max-w-xs text-right justify-normal hidden md:block">
           <blockquote class="text-gray-300 text-base italic">
             "Resgate de Foguinhos, surpresas ao longo da semana e um espaço só de vocês para reacender a conexão sempre que quiserem."
             <footer class="text-rose-400 font-semibold mt-3 not-italic text-sm">O que vocês vão viver como fundadores</footer>
@@ -362,14 +369,14 @@
   <!-- FORM SECTION -->
   <section id="form" class="py-24 bg-[#000000] border-y border-white/5">
     <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
-      <div>
+      <div class="text-center md:text-left">
         <h2 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-red-500 mb-6 leading-tight">
           Preencha o Formulário<br>Restam Poucas Vagas...
         </h2>
         <p class="text-zinc-400 leading-relaxed">
           Todos os campos são obrigatórios. Preencha com atenção para garantir sua vaga entre os <span class="font-bold text-white">50 primeiros casais</span>. O acesso será liberado em breve.
         </p>
-        <div class="flex flex-row items-start gap-6 mt-6 mb-2 select-none">
+        <div class="flex flex-row items-start justify-center md:justify-start gap-6 mt-6 mb-2 select-none">
           <div class="rounded-2xl bg-gradient-to-br from-rose-500 to-red-500 shadow-lg px-8 py-4 flex flex-col items-center">
             <span id="contador-casais" class="text-4xl md:text-5xl font-extrabold text-white tracking-widest transition-all duration-300 min-h-[3.5rem] flex items-center justify-center" aria-busy="true" aria-label="Carregando casais cadastrados">
               <span class="contador-spinner" aria-hidden="true"></span>
@@ -400,6 +407,10 @@
               <option value="" disabled selected>Como nos conheceu?</option>
               <option value="instagram">Instagram</option>
               <option value="tiktok">TikTok</option>
+              <option value="twitter">Twitter</option>
+              <option value="facebook">Facebook</option>
+              <option value="google">Google</option>
+              <option value="youtube">YouTube</option>
               <option value="indicacao">Indicação</option>
             </select>
             <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
