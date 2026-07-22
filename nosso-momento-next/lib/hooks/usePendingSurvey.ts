@@ -24,20 +24,33 @@ function isAdminPath(): boolean {
 
 /**
  * Mantém `pendingSurvey` atualizado.
- * Abre o popup só uma vez por sessão do app (cold start / remount do AuthProvider).
- * Disparo mid-session → só push no SO; próxima abertura do app mostra o popup.
+ * Abre o popup:
+ * - uma vez por sessão do app (nova sessão)
+ * - ou quando o usuário clica no push (`openSurveyFromNotification`)
  */
 export function usePendingSurvey() {
   const usuario = useAppStore((s) => s.usuario);
   const authInitialized = useAppStore((s) => s.authInitialized);
+  const openSurveyFromNotification = useAppStore((s) => s.openSurveyFromNotification);
+  const pendingSurvey = useAppStore((s) => s.pendingSurvey);
   const set = useAppStore((s) => s.set);
   const sessionGateDoneRef = useRef(false);
+
+  // Clique no push (ou deep link) com pesquisa já carregada.
+  useEffect(() => {
+    if (!openSurveyFromNotification || !pendingSurvey) return;
+    set({ showSurveyPopup: true, openSurveyFromNotification: false });
+  }, [openSurveyFromNotification, pendingSurvey, set]);
 
   useEffect(() => {
     if (!authInitialized || !usuario?.uid || !db || isAdminPath()) {
       if (!usuario?.uid) {
         sessionGateDoneRef.current = false;
-        set({ pendingSurvey: null, showSurveyPopup: false });
+        set({
+          pendingSurvey: null,
+          showSurveyPopup: false,
+          openSurveyFromNotification: false,
+        });
       }
       return;
     }
@@ -56,6 +69,8 @@ export function usePendingSurvey() {
           set({ pendingSurvey: null, showSurveyPopup: false });
           return;
         }
+
+        const openFromPush = useAppStore.getState().openSurveyFromNotification;
 
         if (snap.empty) {
           set({ pendingSurvey: null, showSurveyPopup: false });
@@ -109,12 +124,21 @@ export function usePendingSurvey() {
           return;
         }
 
-        set({ pendingSurvey: survey });
+        const shouldOpen =
+          !sessionGateDoneRef.current || openFromPush;
 
-        // Só abre popup no gate da sessão (primeira avaliação após abrir o app).
         if (!sessionGateDoneRef.current) {
           sessionGateDoneRef.current = true;
-          set({ showSurveyPopup: true });
+        }
+
+        if (shouldOpen) {
+          set({
+            pendingSurvey: survey,
+            showSurveyPopup: true,
+            openSurveyFromNotification: false,
+          });
+        } else {
+          set({ pendingSurvey: survey });
         }
       },
       () => {

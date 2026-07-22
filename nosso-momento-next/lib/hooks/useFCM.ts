@@ -70,29 +70,71 @@ export function useFCM() {
     });
   }, [usuario?.uid, usuario?.notificationsEnabled, set]);
 
+  const pendingNavRef = useRef<{
+    redirectTo?: string | null;
+    tipo?: string | null;
+  } | null>(null);
+
   const navigateFromNotification = useCallback(
     (redirectTo?: string | null, tipo?: string | null) => {
-      if (!usuario?.uid) return;
       const target = resolveNotificationTarget(redirectTo, tipo);
+
+      // Mesmo antes do auth: marca intenção de abrir pesquisa no clique do push.
+      if (target.openSurveyPopup || tipo === 'survey' || redirectTo === 'survey') {
+        set({ openSurveyFromNotification: true });
+      }
+
+      if (!usuario?.uid) {
+        pendingNavRef.current = { redirectTo, tipo };
+        return;
+      }
+
       if (target.openAchievementsPopup) {
         set({ showAchievementsPopup: true });
       }
-      if (tipo === 'survey' || redirectTo === 'survey') {
-        set({ showSurveyPopup: true });
+      if (target.openSurveyPopup || tipo === 'survey' || redirectTo === 'survey') {
+        const pending = useAppStore.getState().pendingSurvey;
+        if (pending) {
+          set({ showSurveyPopup: true, openSurveyFromNotification: false });
+        } else {
+          set({ openSurveyFromNotification: true });
+        }
       }
       router.push(target.path);
     },
     [router, set, usuario?.uid],
   );
 
-  // Deep link ao abrir app via ?achievements=1 (cold start pelo service worker)
+  // Replay do clique se chegou antes do auth estar pronto
+  useEffect(() => {
+    if (!usuario?.uid || !pendingNavRef.current) return;
+    const pending = pendingNavRef.current;
+    pendingNavRef.current = null;
+    navigateFromNotification(pending.redirectTo, pending.tipo);
+  }, [usuario?.uid, navigateFromNotification]);
+
+  // Deep link ao abrir app via ?achievements=1 / ?survey=1 (cold start pelo SW)
   useEffect(() => {
     if (!usuario?.uid || typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
-    if (params.get('achievements') !== '1') return;
+    const openAchievements = params.get('achievements') === '1';
+    const openSurvey = params.get('survey') === '1';
+    if (!openAchievements && !openSurvey) return;
 
-    set({ showAchievementsPopup: true });
-    params.delete('achievements');
+    if (openAchievements) {
+      set({ showAchievementsPopup: true });
+      params.delete('achievements');
+    }
+    if (openSurvey) {
+      const pending = useAppStore.getState().pendingSurvey;
+      if (pending) {
+        set({ showSurveyPopup: true, openSurveyFromNotification: false });
+      } else {
+        set({ openSurveyFromNotification: true });
+      }
+      params.delete('survey');
+    }
+
     const qs = params.toString();
     const nextPath = `${window.location.pathname}${qs ? `?${qs}` : ''}`;
     router.replace(nextPath);
@@ -161,7 +203,12 @@ export function useFCM() {
                 });
                 n.onclick = () => {
                   window.focus();
-                  set({ showSurveyPopup: true });
+                  const pending = useAppStore.getState().pendingSurvey;
+                  if (pending) {
+                    set({ showSurveyPopup: true, openSurveyFromNotification: false });
+                  } else {
+                    set({ openSurveyFromNotification: true });
+                  }
                   n.close();
                 };
               } catch {

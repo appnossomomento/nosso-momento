@@ -39,29 +39,24 @@ export default function SurveyPopup() {
     setStep(0);
   }
 
-  async function persist(skipped: boolean) {
+  async function persist() {
     if (!pendingSurvey || !usuario?.uid || !db) return;
     setSubmitting(true);
     try {
-      const payloadAnswers: SurveyAnswer[] = skipped
-        ? []
-        : questions.map((q) => ({
-            questionId: q.id,
-            value: answers[q.id] ?? (q.type === 'foguinhos' ? 0 : ''),
-          }));
+      const payloadAnswers: SurveyAnswer[] = questions.map((q) => ({
+        questionId: q.id,
+        value: answers[q.id] ?? (q.type === 'foguinhos' ? 0 : ''),
+      }));
 
       await setDoc(doc(db, 'surveyResponses', `${pendingSurvey.id}_${usuario.uid}`), {
         surveyId: pendingSurvey.id,
         userId: usuario.uid,
         answers: payloadAnswers,
-        skipped,
+        skipped: false,
         createdAt: serverTimestamp(),
       });
 
-      showToast(
-        skipped ? 'Tudo bem — obrigado mesmo assim!' : 'Obrigado! Sua resposta ajuda a gente 🔥',
-        'sucesso',
-      );
+      showToast('Obrigado! Sua resposta ajuda a gente 🔥', 'sucesso');
       closeLocal();
     } catch {
       showToast('Não foi possível enviar. Tente de novo.', 'erro');
@@ -73,7 +68,7 @@ export default function SurveyPopup() {
   function handleNext() {
     if (!canAdvance) return;
     if (isLast) {
-      void persist(false);
+      void persist();
       return;
     }
     setStep((s) => s + 1);
@@ -83,7 +78,7 @@ export default function SurveyPopup() {
     <OverlayModal
       open={showSurveyPopup}
       onClose={() => {
-        /* só fecha via pular / enviar — prioridade máxima */
+        /* só fecha via enviar — prioridade máxima */
       }}
       dismissOnBackdrop={false}
       backdropClassName="bg-black/90"
@@ -186,25 +181,15 @@ export default function SurveyPopup() {
             </>
           )}
 
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={() => void persist(true)}
-              className="flex-1 py-3 rounded-2xl text-sm text-white/50 hover:text-white/70 transition disabled:opacity-40"
-            >
-              Agora não
-            </button>
-            <button
-              type="button"
-              disabled={!canAdvance || submitting}
-              onClick={handleNext}
-              className="flex-[1.4] py-3 rounded-2xl text-sm font-semibold text-white transition disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg, #ff2d3f, #c8003a)' }}
-            >
-              {submitting ? 'Enviando...' : isLast ? 'Enviar' : 'Próxima'}
-            </button>
-          </div>
+          <button
+            type="button"
+            disabled={!canAdvance || submitting}
+            onClick={handleNext}
+            className="w-full py-3 rounded-2xl text-sm font-semibold text-white transition disabled:opacity-40"
+            style={{ background: 'linear-gradient(135deg, #ff2d3f, #c8003a)' }}
+          >
+            {submitting ? 'Enviando...' : isLast ? 'Enviar' : 'Próxima'}
+          </button>
         </div>
       </div>
     </OverlayModal>

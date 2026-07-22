@@ -101,6 +101,8 @@ interface AppState {
   showPairingModal: boolean;
   showVipPopup: boolean;
   showSurveyPopup: boolean;
+  /** Clique em push de pesquisa: abre popup quando pendingSurvey estiver pronto. */
+  openSurveyFromNotification: boolean;
   pendingSurvey: Survey | null;
   showLegalModal: boolean;
   legalModalType: LegalModalType | null;
@@ -218,6 +220,7 @@ const initialState: Omit<AppState, 'set' | 'reset'> = {
   showPairingModal: false,
   showVipPopup: false,
   showSurveyPopup: false,
+  openSurveyFromNotification: false,
   pendingSurvey: null,
   showLegalModal: false,
   legalModalType: null,

@@ -113,6 +113,11 @@ export default function SurveysView() {
     void load();
   }, [load]);
 
+  const queueSurveys = useMemo(
+    () => surveys.filter((s) => s.status === 'draft' || s.status === 'active'),
+    [surveys],
+  );
+
   const resultsSurveys = useMemo(
     () => surveys.filter((s) => s.status === 'active' || s.status === 'closed'),
     [surveys],
@@ -240,7 +245,8 @@ export default function SurveysView() {
       });
       if (!res.ok) throw new Error('close_failed');
       await load();
-      if (selectedId === id) void openResults(id);
+      setTab('resultados');
+      void openResults(id);
     } catch {
       setErro('Falha ao encerrar pesquisa.');
     } finally {
@@ -533,14 +539,14 @@ export default function SurveysView() {
             </div>
           </ChartCard>
 
-          <ChartCard title="Fila de envio">
+          <ChartCard title="Fila de envio" note="Rascunhos e ativas. Encerradas ficam em Resultados.">
             {loading ? (
               <p className="text-white/40 text-sm animate-pulse">Carregando...</p>
-            ) : surveys.length === 0 ? (
-              <p className="text-white/40 text-sm">Nenhuma pesquisa ainda.</p>
+            ) : queueSurveys.length === 0 ? (
+              <p className="text-white/40 text-sm">Nenhuma pesquisa na fila.</p>
             ) : (
               <div className="space-y-2">
-                {surveys.map((s) => (
+                {queueSurveys.map((s) => (
                   <div
                     key={s.id}
                     className={clsx(
