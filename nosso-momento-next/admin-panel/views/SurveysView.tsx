@@ -62,8 +62,8 @@ export default function SurveysView() {
 
   const [title, setTitle] = useState('');
   const [segment, setSegment] = useState<SurveySegment>('todos');
-  const [pushTitle, setPushTitle] = useState(DEFAULT_SURVEY_PUSH.title);
-  const [pushBody, setPushBody] = useState(DEFAULT_SURVEY_PUSH.body);
+  const [pushTitle, setPushTitle] = useState<string>(DEFAULT_SURVEY_PUSH.title);
+  const [pushBody, setPushBody] = useState<string>(DEFAULT_SURVEY_PUSH.body);
   const [questions, setQuestions] = useState<SurveyQuestion[]>([newQuestion('foguinhos')]);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
