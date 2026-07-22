@@ -2,6 +2,8 @@
 
 import { useAppStore } from '@/lib/store/appStore';
 import OverlayModal from '@/components/ui/OverlayModal';
+import VipStarBadge from '@/components/profile/VipStarBadge';
+import { trackAction } from '@/lib/analytics';
 
 export default function VipPopup() {
   const { showVipPopup, set } = useAppStore();
@@ -22,12 +24,11 @@ export default function VipPopup() {
           className="px-6 py-5 flex items-center gap-4"
           style={{ background: 'linear-gradient(135deg, #ff2d3f 0%, #ff5565 100%)' }}
         >
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(0,0,0,0.22)' }}
-          >
-            <i className="fas fa-crown text-xl text-white" />
-          </div>
+          <VipStarBadge
+            size="lg"
+            className="!relative shrink-0"
+            borderClassName="border-white/30"
+          />
           <div>
             <h2 className="text-base font-bold text-white">Acesso VIP</h2>
             <p className="text-xs text-white/80">Recursos exclusivos</p>
@@ -70,6 +71,7 @@ export default function VipPopup() {
             <p className="text-xs text-white/50 mb-1">Entre em contato para se tornar VIP:</p>
             <a
               href="mailto:faleconosco@nossomomento.app"
+              onClick={() => trackAction('seja_vip', { origem: 'contato_email' })}
               className="text-sm font-semibold text-pink-400 hover:text-pink-300 transition"
             >
               faleconosco@nossomomento.app

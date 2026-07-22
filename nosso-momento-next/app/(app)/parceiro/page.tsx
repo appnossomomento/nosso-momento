@@ -10,6 +10,7 @@ import { sendInput } from '@/lib/firebase/functions';
 import { clearParceiroAtivoPersistido, setParceiroAtivo } from '@/lib/utils/setParceiroAtivo';
 import { showToast } from '@/components/ui/Toast';
 import { openSystemConfirm } from '@/components/ui/Modal';
+import { trackAction } from '@/lib/analytics';
 import { useWeeklyChallenge } from '@/lib/hooks/useWeeklyChallenge';
 import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
 
@@ -154,6 +155,7 @@ export default function ParceiroPage() {
         ),
       });
       showToast('Clima registrado! 🔥', 'sucesso');
+      trackAction('registro_humor', { humor });
     } catch {
       showToast('Erro ao registrar clima.', 'erro');
     } finally {

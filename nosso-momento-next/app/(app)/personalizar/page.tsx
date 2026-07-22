@@ -10,7 +10,8 @@ import OverlayModal from '@/components/ui/OverlayModal';
 import clsx from 'clsx';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import MomentoCover from '@/components/ui/MomentoCover';
-import { trackGA } from '@/lib/analytics';
+import VipStarBadge from '@/components/profile/VipStarBadge';
+import { trackGA, trackAction } from '@/lib/analytics';
 import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
 import { uploadCustomMomentImage, isStorageUploadError } from '@/lib/utils/uploadCustomMomentImage';
 import { waitForCustomMomentVisible } from '@/lib/utils/refreshMomentosCustom';
@@ -60,6 +61,7 @@ export default function PersonalizarPage() {
   const [showExcluidos, setShowExcluidos] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [customBlockOpen, setCustomBlockOpen] = useState(false);
   const [novoNome, setNovoNome] = useState('');
   const [novoPreco, setNovoPreco] = useState(10);
   const [novoEmoji, setNovoEmoji] = useState(EMOJI_PADRAO);
@@ -123,6 +125,7 @@ export default function PersonalizarPage() {
 
   function handleExcluir(nomeItem: string) {
     if (!isVip) {
+      trackAction('seja_vip', { origem: 'personalizar_excluir' });
       set({ showVipPopup: true });
       return;
     }
@@ -142,6 +145,7 @@ export default function PersonalizarPage() {
 
   function handleCriarCustomClick() {
     if (!isVip) {
+      trackAction('seja_vip', { origem: 'personalizar_criar_custom' });
       set({ showVipPopup: true });
       return;
     }
@@ -433,71 +437,143 @@ export default function PersonalizarPage() {
               </div>
             )}
 
-            {/* Meus momentos custom */}
-            <div className="space-y-3 border-t border-white/10 pt-4">
-              <div className="flex items-center justify-between px-1">
-                <p className="text-sm font-semibold text-white/80">Meus momentos (custom)</p>
-                {isVip && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">
-                    VIP
+            {/* Meus momentos custom — gancho VIP (accordion se não-VIP) */}
+            <div
+              className={
+                isVip
+                  ? 'space-y-3 border-t border-white/10 pt-4'
+                  : 'mt-2 rounded-2xl border border-white/10 overflow-hidden'
+              }
+              style={
+                !isVip
+                  ? {
+                      background:
+                        'linear-gradient(180deg, rgba(255,45,63,0.10) 0%, rgba(255,255,255,0.03) 100%)',
+                    }
+                  : undefined
+              }
+            >
+              {!isVip ? (
+                <button
+                  type="button"
+                  onClick={() => setCustomBlockOpen((v) => !v)}
+                  className="w-full min-h-[52px] flex items-center justify-center gap-2.5 px-4 py-3"
+                  aria-expanded={customBlockOpen}
+                >
+                  <span className="text-sm font-semibold text-white text-center leading-none">
+                    Meus Momentos Personalizados
                   </span>
-                )}
-              </div>
-
-              {meusCustom.length === 0 ? (
-                <p className="text-xs text-white/40 px-1">
-                  {isVip
-                    ? 'Crie momentos exclusivos para esta conexão.'
-                    : 'Disponível no plano VIP.'}
-                </p>
+                  <i
+                    className={clsx(
+                      'fas fa-chevron-down text-amber-400 text-sm leading-none transition-transform duration-200 shrink-0',
+                      'drop-shadow-[0_0_6px_rgba(251,191,36,0.55)]',
+                      customBlockOpen && 'rotate-180',
+                    )}
+                  />
+                </button>
               ) : (
-                <div className="space-y-2">
-                  {meusCustom.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-2xl bg-[#1a1020] border border-purple-500/20 p-3 flex items-center gap-3"
-                    >
-                      <MomentoCover
-                        src={item.img}
-                        alt={item.nome}
-                        emoji={item.emoji || '✨'}
-                        variant="customThumb"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{item.nome}</p>
-                        <p className="text-xs text-amber-400 mt-0.5">
-                          <i className="fas fa-fire text-[10px] mr-1" />
-                          {item.preco} foguinhos
-                        </p>
-                      </div>
-                      {isVip && (
-                        <button
-                          type="button"
-                          onClick={() => excluirCustom(item.id)}
-                          disabled={excluindoId === item.id}
-                          className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center disabled:opacity-50"
-                          aria-label="Excluir momento custom"
-                        >
-                          <i className="fas fa-trash-alt text-white/50 text-xs" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                <div className="px-1">
+                  <p className="text-sm font-semibold text-white/80">
+                    Meus Momentos Personalizados
+                  </p>
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={handleCriarCustomClick}
-                className="w-full py-3 rounded-2xl border border-dashed border-white/20 text-sm font-semibold text-white/70 hover:bg-white/5 transition flex items-center justify-center gap-2"
-              >
-                <i className="fas fa-plus text-pink-400" />
-                Criar momento
-                {!isVip && <i className="fas fa-crown text-yellow-400/60 text-xs" />}
-              </button>
+              {(isVip || customBlockOpen) && (
+                <div className={clsx('space-y-3', !isVip ? 'px-3 pb-3' : '')}>
+                  {meusCustom.length === 0 ? (
+                    <div className={clsx('space-y-1', isVip && 'px-1')}>
+                      {isVip ? (
+                        <p className="text-xs text-white/40">
+                          Crie momentos exclusivos para esta conexão.
+                        </p>
+                      ) : (
+                        <>
+                          <p className="text-sm text-white/80 leading-snug">
+                            Personalize de acordo com os desejos de vocês.
+                          </p>
+                          <p className="text-xs text-white/40">
+                            Ofereça momentos personalizados para o seu parceiro com o VIP.
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {meusCustom.map((item) => (
+                        <div
+                          key={item.id}
+                          className="rounded-2xl bg-[#1a1020] border border-purple-500/20 p-3 flex items-center gap-3"
+                        >
+                          <MomentoCover
+                            src={item.img}
+                            alt={item.nome}
+                            emoji={item.emoji || '✨'}
+                            variant="customThumb"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate">{item.nome}</p>
+                            <p className="text-xs text-amber-400 mt-0.5">
+                              <i className="fas fa-fire text-[10px] mr-1" />
+                              {item.preco} foguinhos
+                            </p>
+                          </div>
+                          {isVip && (
+                            <button
+                              type="button"
+                              onClick={() => excluirCustom(item.id)}
+                              disabled={excluindoId === item.id}
+                              className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center disabled:opacity-50"
+                              aria-label="Excluir momento custom"
+                            >
+                              <i className="fas fa-trash-alt text-white/50 text-xs" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleCriarCustomClick}
+                    className="w-full py-3.5 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2"
+                    style={
+                      isVip
+                        ? {
+                            border: '1px dashed rgba(255,255,255,0.20)',
+                            color: 'rgba(255,255,255,0.70)',
+                            background: 'transparent',
+                          }
+                        : {
+                            background: 'linear-gradient(to right, #ef4444, #f97316)',
+                            color: '#fff',
+                            boxShadow: '0 0 25px rgba(239, 68, 68, 0.6)',
+                            border: 'none',
+                          }
+                    }
+                  >
+                    {isVip ? (
+                      <>
+                        <i className="fas fa-plus text-pink-400" />
+                        Criar momento personalizado
+                      </>
+                    ) : (
+                      <>
+                        <VipStarBadge
+                          size="sm"
+                          className="!relative shrink-0"
+                          borderClassName="border-white/25"
+                        />
+                        Crie um momento personalizado
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="pt-1">
+            <div className="pt-6">
               <button
                 type="button"
                 onClick={salvar}
@@ -509,7 +585,7 @@ export default function PersonalizarPage() {
                   opacity: salvando ? 0.5 : 1,
                 }}
               >
-                {salvando ? 'Salvando...' : 'Salvar catálogo mestre'}
+                {salvando ? 'Salvando...' : 'Salvar catálogo'}
               </button>
             </div>
           </div>

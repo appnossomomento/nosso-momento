@@ -12,6 +12,8 @@ import GeoMapBr from '@/admin-panel/components/GeoMapBr';
 import DataTable from '@/admin-panel/components/DataTable';
 import { formatTelefoneBr, pct, rollupMonthly, rollupWeekly, withPercent } from '@/admin-panel/lib/chartUtils';
 import VipsView from '@/admin-panel/views/VipsView';
+import SurveysView from '@/admin-panel/views/SurveysView';
+import LeadsView from '@/admin-panel/views/LeadsView';
 
 const SNAPSHOT_NOTE = 'Distribuição acumulada — base total de usuários cadastrados.';
 
@@ -360,6 +362,12 @@ type Props = {
 export default function AdminSectionViews({ section, metrics, onExport }: Props) {
   if (section === 'vips') {
     return <VipsView />;
+  }
+  if (section === 'pesquisas') {
+    return <SurveysView />;
+  }
+  if (section === 'leads') {
+    return <LeadsView />;
   }
   if (!metrics) return null;
 

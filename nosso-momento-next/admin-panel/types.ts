@@ -68,3 +68,23 @@ export type AdminUserRow = {
   notificationsEnabled: boolean;
   vip: boolean;
 };
+
+/** Lead capturado na LP (Google Sheets via Apps Script). */
+export type LpLead = {
+  data: string;
+  nome: string;
+  whatsapp: string;
+  email: string;
+  parceiroNome: string;
+  cidadeEstado: string;
+  origem: string;
+  consentimento: string;
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+  utmContent: string;
+  utmTerm: string;
+  gclid: string;
+  fbclid: string;
+  landingUrl: string;
+};

@@ -10,7 +10,7 @@ import { openSystemConfirm } from '@/components/ui/Modal';
 import type { CarrinhoItem, MomentoCustom } from '@/lib/types';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import MomentoCover from '@/components/ui/MomentoCover';
-import { trackGA, trackMeta } from '@/lib/analytics';
+import { trackAction } from '@/lib/analytics';
 import { refreshParceiroPerfil } from '@/lib/services/parceiroPerfil';
 import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
 import { buildCustomMomentId, isCustomMomentId } from '@/lib/utils/customMoments';
@@ -154,8 +154,11 @@ export default function LojaPage() {
       showCartSidebar: true,
     });
     showToast('Adicionado ao carrinho!', 'sucesso');
-    trackGA('add_to_cart', { items: [{ item_id: item.id, item_name: item.nome }] });
-    trackMeta('AddToCart', { content_ids: [item.id], content_name: item.nome });
+    trackAction('momentos_carrinho', {
+      content_ids: [item.id],
+      content_name: item.nome,
+      items: [{ item_id: item.id, item_name: item.nome }],
+    });
   }
 
   async function finalizarPedido() {
@@ -194,8 +197,11 @@ export default function LojaPage() {
           items: itemsPayload,
           totalFoguinhos: totalCarrinho,
         });
-        trackGA('purchase', { currency: 'BRL', value: totalCarrinho });
-        trackMeta('Purchase', { currency: 'BRL', value: totalCarrinho });
+        trackAction('momento_resgatado', {
+          currency: 'BRL',
+          value: totalCarrinho,
+          num_items: carrinho.length,
+        });
         if (usuario) {
           set({
             usuario: { ...usuario, foguinhos: Math.max(0, foguinhos - totalCarrinho) },

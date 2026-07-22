@@ -4,9 +4,36 @@ import { useAppStore } from '@/lib/store/appStore';
 import type { Pareamento, Usuario } from '@/lib/types';
 import { restoreParceiroAtivo } from '@/lib/utils/setParceiroAtivo';
 
-export function isUsuarioPareado(pareadoCom: string | null | undefined): boolean {
-  return !!pareadoCom && !pareadoCom.startsWith('pending_') && pareadoCom !== 'none';
+type PareamentoCheck = {
+  pareadoCom?: string | null;
+  pareadoUid?: string | null;
+  pareamentosAtivos?: unknown;
+};
+
+/**
+ * Considera pareado se há conexão ativa (campo legado ou lista multi-conexão).
+ * Ignora estados pending_/none em pareadoCom.
+ */
+export function isUsuarioPareado(
+  pareadoComOrUser?: string | null | PareamentoCheck,
+  maybeAtivos?: unknown,
+): boolean {
+  // Compat: isUsuarioPareado(pareadoCom)
+  if (typeof pareadoComOrUser === 'string' || pareadoComOrUser == null) {
+    const pareadoCom = pareadoComOrUser;
+    if (Array.isArray(maybeAtivos) && maybeAtivos.length > 0) return true;
+    return !!pareadoCom && !pareadoCom.startsWith('pending_') && pareadoCom !== 'none';
+  }
+
+  const u = pareadoComOrUser;
+  if (u.pareadoUid) return true;
+  if (Array.isArray(u.pareamentosAtivos) && u.pareamentosAtivos.length > 0) return true;
+  const pc = u.pareadoCom;
+  return !!pc && !pc.startsWith('pending_') && pc !== 'none';
 }
+
+/** Destino padrão ao iniciar sessão / abrir o app autenticado. */
+export const SESSION_HOME = '/dashboard' as const;
 
 /** Hidrata o store antes da navegação — evita spinner extra após login. */
 export function bootstrapUsuarioFromSnap(firebaseUser: User, snap: DocumentSnapshot): void {
@@ -33,6 +60,7 @@ export function bootstrapUsuarioFromSnap(firebaseUser: User, snap: DocumentSnaps
   useAppStore.getState().set({ usuario: baseUser, parceirosAtivos, authInitialized: true });
   restoreParceiroAtivo(firebaseUser.uid, parceirosAtivos);
 }
+
 
 export async function createSessionCookie(idToken: string): Promise<void> {
   const res = await fetch('/api/auth/session', {

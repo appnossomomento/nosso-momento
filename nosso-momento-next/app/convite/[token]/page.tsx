@@ -6,6 +6,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
 import { sendInput } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
+import { trackAction } from '@/lib/analytics';
 import { isValidConviteToken } from '@/lib/utils/validations';
 import Link from 'next/link';
 import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
@@ -35,6 +36,7 @@ export default function ConvitePage() {
           try { sessionStorage.removeItem('pendingConvite'); } catch (_) {}
           await new Promise((r) => setTimeout(r, 1800));
           showToast('Pareamento realizado!', 'sucesso');
+          trackAction('pareamento_link', { stage: 'aceito' });
           router.push('/dashboard');
         } catch (_) {
           showToast('Não foi possível aceitar o convite automaticamente.', 'erro');

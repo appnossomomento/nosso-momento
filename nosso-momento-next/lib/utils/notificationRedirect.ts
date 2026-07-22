@@ -11,6 +11,7 @@ const LEGACY_SCREEN_MAP: Record<string, NotificationRedirectTarget> = {
   perfil: { path: '/perfil' },
   perfilParceiro: { path: '/parceiro' },
   achievementsPopup: { path: '/dashboard', openAchievementsPopup: true },
+  survey: { path: '/dashboard' },
 };
 
 export function resolveNotificationTarget(
@@ -33,6 +34,7 @@ export function resolveNotificationTarget(
   }
   if (type === 'pairing') return { path: '/parear' };
   if (type === 'vip_activated') return { path: '/perfil' };
+  if (type === 'survey') return { path: '/dashboard' };
 
   return { path: key ? '/notificacoes' : '/dashboard' };
 }

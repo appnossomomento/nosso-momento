@@ -9,7 +9,7 @@ import { auth, db, getAppCheckToken } from '@/lib/firebase/client';
 import {
   bootstrapUsuarioFromSnap,
   createSessionCookie,
-  isUsuarioPareado,
+  SESSION_HOME,
 } from '@/lib/auth/postLogin';
 import { openSystemAlert } from '@/components/ui/Modal';
 import { trackGA, trackMeta } from '@/lib/analytics';
@@ -59,8 +59,8 @@ export default function LoginPage() {
       trackGA('login', { method: 'Email' });
       trackMeta('Login');
 
-      const pareadoCom = userSnap.data()?.pareadoCom as string | null | undefined;
-      router.replace(isUsuarioPareado(pareadoCom) ? '/dashboard' : '/parear');
+      // Sessão sempre abre no dashboard (parear fica acessível pelo app).
+      router.replace(SESSION_HOME);
     } catch (err: unknown) {
       const code = (err as { code?: string }).code;
       const messages: Record<string, string> = {

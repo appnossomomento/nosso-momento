@@ -127,12 +127,12 @@ export default function AdminDashboard() {
         </header>
 
         <main className="flex-1 px-4 py-6 md:px-6 overflow-x-hidden">
-          {loading && !metrics && section !== 'vips' && (
+          {loading && !metrics && section !== 'vips' && section !== 'pesquisas' && section !== 'leads' && (
             <p className="text-white/50 text-sm animate-pulse">Carregando métricas...</p>
           )}
-          {erro && section !== 'vips' && <p className="text-red-400 text-sm mb-4">{erro}</p>}
-          {(metrics || section === 'vips') && (
-            <div className={loading && section !== 'vips' ? 'opacity-60 pointer-events-none' : ''}>
+          {erro && section !== 'vips' && section !== 'pesquisas' && section !== 'leads' && <p className="text-red-400 text-sm mb-4">{erro}</p>}
+          {(metrics || section === 'vips' || section === 'pesquisas' || section === 'leads') && (
+            <div className={loading && section !== 'vips' && section !== 'pesquisas' && section !== 'leads' ? 'opacity-60 pointer-events-none' : ''}>
               <AdminSectionViews section={section} metrics={metrics} onExport={handleExport} />
             </div>
           )}

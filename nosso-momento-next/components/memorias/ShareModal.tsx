@@ -1,9 +1,10 @@
-﻿'use client';
+'use client';
 
 import { useEffect } from 'react';
 import { useAppStore } from '@/lib/store/appStore';
 import OverlayModal from '@/components/ui/OverlayModal';
 import { montarNomesCasal } from '@/lib/utils/displayName';
+import { trackAction } from '@/lib/analytics';
 
 function mesesJuntos(pareadoDesde: string | null | undefined): number {
   if (!pareadoDesde) return 0;
@@ -352,6 +353,7 @@ export default function ShareModal() {
     a.href = memoriasSharePreviewUrl;
     a.download = 'nosso-momento-stories.jpg';
     a.click();
+    trackAction('share_memoria', { metodo: 'download' });
   }
 
   async function handleShareNative() {
@@ -361,6 +363,7 @@ export default function ShareModal() {
       const blob = await res.blob();
       const file = new File([blob], 'nosso-momento-stories.jpg', { type: 'image/jpeg' });
       await navigator.share({ files: [file], title: 'Nosso Momento', text: 'Nossas memórias ❤️' });
+      trackAction('share_memoria', { metodo: 'nativo' });
     } catch { handleDownload(); }
   }
 
