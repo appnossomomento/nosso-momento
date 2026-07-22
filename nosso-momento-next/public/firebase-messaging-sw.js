@@ -19,7 +19,7 @@ function resolveNotificationUrl(redirectTo, tipo) {
     perfil: '/perfil',
     perfilParceiro: '/parceiro',
     achievementsPopup: '/dashboard?achievements=1',
-    survey: '/dashboard',
+    survey: '/dashboard?survey=1',
   };
   var key = typeof redirectTo === 'string' ? redirectTo.trim() : '';
   if (key && screenMap[key]) return screenMap[key];
@@ -31,7 +31,7 @@ function resolveNotificationUrl(redirectTo, tipo) {
   if (type === 'achievement' || type === 'milestone') return '/dashboard?achievements=1';
   if (type === 'pairing') return '/parear';
   if (type === 'vip_activated') return '/perfil';
-  if (type === 'survey') return '/dashboard';
+  if (type === 'survey') return '/dashboard?survey=1';
 
   return key ? '/notificacoes' : '/dashboard';
 }
@@ -67,6 +67,12 @@ self.addEventListener('notificationclick', function (event) {
             redirectTo: redirectTo || null,
             notificationType: tipo || null,
           });
+          // Navega para a URL com deep link (?survey=1) quando o app já está aberto.
+          if (typeof client.navigate === 'function') {
+            return client.navigate(absoluteUrl).then(function () {
+              return client.focus();
+            });
+          }
           return client.focus();
         }
       }

@@ -9,6 +9,9 @@ import type { SurveyAnswer } from '@/lib/types/survey';
 import { showToast } from '@/components/ui/Toast';
 import clsx from 'clsx';
 
+/** Escala 0–5 da pesquisa: corações (5 = coração em chamas, emoji ZWJ único). */
+const SURVEY_HEARTS = ['💙', '💛', '🤍', '🧡', '❤️', '❤️‍🔥'] as const;
+
 export default function SurveyPopup() {
   const { showSurveyPopup, pendingSurvey, usuario, set } = useAppStore();
   const [answers, setAnswers] = useState<Record<string, string | number>>({});
@@ -39,29 +42,24 @@ export default function SurveyPopup() {
     setStep(0);
   }
 
-  async function persist(skipped: boolean) {
+  async function persist() {
     if (!pendingSurvey || !usuario?.uid || !db) return;
     setSubmitting(true);
     try {
-      const payloadAnswers: SurveyAnswer[] = skipped
-        ? []
-        : questions.map((q) => ({
-            questionId: q.id,
-            value: answers[q.id] ?? (q.type === 'foguinhos' ? 0 : ''),
-          }));
+      const payloadAnswers: SurveyAnswer[] = questions.map((q) => ({
+        questionId: q.id,
+        value: answers[q.id] ?? (q.type === 'foguinhos' ? 0 : ''),
+      }));
 
       await setDoc(doc(db, 'surveyResponses', `${pendingSurvey.id}_${usuario.uid}`), {
         surveyId: pendingSurvey.id,
         userId: usuario.uid,
         answers: payloadAnswers,
-        skipped,
+        skipped: false,
         createdAt: serverTimestamp(),
       });
 
-      showToast(
-        skipped ? 'Tudo bem — obrigado mesmo assim!' : 'Obrigado! Sua resposta ajuda a gente 🔥',
-        'sucesso',
-      );
+      showToast('Obrigado! Sua resposta ajuda a gente 🔥', 'sucesso');
       closeLocal();
     } catch {
       showToast('Não foi possível enviar. Tente de novo.', 'erro');
@@ -73,7 +71,7 @@ export default function SurveyPopup() {
   function handleNext() {
     if (!canAdvance) return;
     if (isLast) {
-      void persist(false);
+      void persist();
       return;
     }
     setStep((s) => s + 1);
@@ -83,7 +81,7 @@ export default function SurveyPopup() {
     <OverlayModal
       open={showSurveyPopup}
       onClose={() => {
-        /* só fecha via pular / enviar — prioridade máxima */
+        /* só fecha via enviar — prioridade máxima */
       }}
       dismissOnBackdrop={false}
       backdropClassName="bg-black/90"
@@ -118,7 +116,7 @@ export default function SurveyPopup() {
 
               {current.type === 'foguinhos' && (
                 <div className="flex justify-between gap-1">
-                  {[0, 1, 2, 3, 4, 5].map((n) => {
+                  {SURVEY_HEARTS.map((heart, n) => {
                     const selected = answers[current.id] === n;
                     return (
                       <button
@@ -130,12 +128,12 @@ export default function SurveyPopup() {
                         className={clsx(
                           'flex-1 py-3 rounded-xl text-xs font-bold transition flex flex-col items-center gap-0.5',
                           selected
-                            ? 'bg-amber-400/20 text-amber-300 ring-1 ring-amber-400/50'
+                            ? 'bg-pink-500/20 text-pink-200 ring-1 ring-pink-400/50'
                             : 'bg-white/5 text-white/50 hover:bg-white/10',
                         )}
-                        aria-label={`${n} foguinhos`}
+                        aria-label={`${n} de 5`}
                       >
-                        <span>{n === 0 ? '—' : '🔥'}</span>
+                        <span className="text-base leading-none">{heart}</span>
                         <span>{n}</span>
                       </button>
                     );
@@ -186,25 +184,15 @@ export default function SurveyPopup() {
             </>
           )}
 
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={() => void persist(true)}
-              className="flex-1 py-3 rounded-2xl text-sm text-white/50 hover:text-white/70 transition disabled:opacity-40"
-            >
-              Agora não
-            </button>
-            <button
-              type="button"
-              disabled={!canAdvance || submitting}
-              onClick={handleNext}
-              className="flex-[1.4] py-3 rounded-2xl text-sm font-semibold text-white transition disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg, #ff2d3f, #c8003a)' }}
-            >
-              {submitting ? 'Enviando...' : isLast ? 'Enviar' : 'Próxima'}
-            </button>
-          </div>
+          <button
+            type="button"
+            disabled={!canAdvance || submitting}
+            onClick={handleNext}
+            className="w-full py-3 rounded-2xl text-sm font-semibold text-white transition disabled:opacity-40"
+            style={{ background: 'linear-gradient(135deg, #ff2d3f, #c8003a)' }}
+          >
+            {submitting ? 'Enviando...' : isLast ? 'Enviar' : 'Próxima'}
+          </button>
         </div>
       </div>
     </OverlayModal>

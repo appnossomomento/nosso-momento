@@ -3,6 +3,7 @@
 export type NotificationRedirectTarget = {
   path: string;
   openAchievementsPopup?: boolean;
+  openSurveyPopup?: boolean;
 };
 
 const LEGACY_SCREEN_MAP: Record<string, NotificationRedirectTarget> = {
@@ -11,7 +12,7 @@ const LEGACY_SCREEN_MAP: Record<string, NotificationRedirectTarget> = {
   perfil: { path: '/perfil' },
   perfilParceiro: { path: '/parceiro' },
   achievementsPopup: { path: '/dashboard', openAchievementsPopup: true },
-  survey: { path: '/dashboard' },
+  survey: { path: '/dashboard', openSurveyPopup: true },
 };
 
 export function resolveNotificationTarget(
@@ -34,7 +35,7 @@ export function resolveNotificationTarget(
   }
   if (type === 'pairing') return { path: '/parear' };
   if (type === 'vip_activated') return { path: '/perfil' };
-  if (type === 'survey') return { path: '/dashboard' };
+  if (type === 'survey') return { path: '/dashboard', openSurveyPopup: true };
 
   return { path: key ? '/notificacoes' : '/dashboard' };
 }
@@ -45,8 +46,9 @@ export function notificationTargetToUrl(
   tipo?: string | null,
 ): string {
   const target = resolveNotificationTarget(redirectTo, tipo);
-  if (target.openAchievementsPopup) {
-    return `${target.path}?achievements=1`;
-  }
-  return target.path;
+  const params = new URLSearchParams();
+  if (target.openAchievementsPopup) params.set('achievements', '1');
+  if (target.openSurveyPopup) params.set('survey', '1');
+  const qs = params.toString();
+  return qs ? `${target.path}?${qs}` : target.path;
 }
