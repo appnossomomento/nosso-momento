@@ -9,6 +9,9 @@ import type { SurveyAnswer } from '@/lib/types/survey';
 import { showToast } from '@/components/ui/Toast';
 import clsx from 'clsx';
 
+/** Escala 0–5 da pesquisa: corações (5 = coração em chamas, emoji ZWJ único). */
+const SURVEY_HEARTS = ['💙', '💛', '🤍', '🧡', '❤️', '❤️‍🔥'] as const;
+
 export default function SurveyPopup() {
   const { showSurveyPopup, pendingSurvey, usuario, set } = useAppStore();
   const [answers, setAnswers] = useState<Record<string, string | number>>({});
@@ -113,7 +116,7 @@ export default function SurveyPopup() {
 
               {current.type === 'foguinhos' && (
                 <div className="flex justify-between gap-1">
-                  {[0, 1, 2, 3, 4, 5].map((n) => {
+                  {SURVEY_HEARTS.map((heart, n) => {
                     const selected = answers[current.id] === n;
                     return (
                       <button
@@ -125,12 +128,12 @@ export default function SurveyPopup() {
                         className={clsx(
                           'flex-1 py-3 rounded-xl text-xs font-bold transition flex flex-col items-center gap-0.5',
                           selected
-                            ? 'bg-amber-400/20 text-amber-300 ring-1 ring-amber-400/50'
+                            ? 'bg-pink-500/20 text-pink-200 ring-1 ring-pink-400/50'
                             : 'bg-white/5 text-white/50 hover:bg-white/10',
                         )}
-                        aria-label={`${n} foguinhos`}
+                        aria-label={`${n} de 5`}
                       >
-                        <span>{n === 0 ? '—' : '🔥'}</span>
+                        <span className="text-base leading-none">{heart}</span>
                         <span>{n}</span>
                       </button>
                     );

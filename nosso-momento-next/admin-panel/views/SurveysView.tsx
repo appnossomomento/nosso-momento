@@ -417,7 +417,7 @@ export default function SurveysView() {
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-bold uppercase tracking-wide text-white/40">
                         {q.type === 'foguinhos'
-                          ? '🔥 0–5'
+                          ? '💙→❤️‍🔥 0–5'
                           : q.type === 'choice'
                             ? 'Escolha'
                             : 'Texto'}
