@@ -728,7 +728,7 @@ export default function SurveysView() {
                     {agg.type === 'foguinhos' && (
                       <>
                         <p className="text-sm text-amber-300">
-                          Média: {agg.foguinhosAvg ?? '—'} 🔥
+                          Média: {agg.foguinhosAvg ?? '—'}
                           <span className="text-white/40 text-xs ml-2">
                             ({agg.foguinhosCount || 0} respostas)
                           </span>
@@ -736,7 +736,7 @@ export default function SurveysView() {
                         <BarChartSimple
                           title=""
                           items={[0, 1, 2, 3, 4, 5].map((n) => ({
-                            label: `${n} 🔥`,
+                            label: String(n),
                             count: agg.foguinhosDist?.[String(n)] || 0,
                           }))}
                         />
