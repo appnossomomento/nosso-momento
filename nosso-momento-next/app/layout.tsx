@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
 import AuthProvider from '@/components/AuthProvider';
+import ScreenTracker from '@/components/ScreenTracker';
 
 export const metadata: Metadata = {
   title: 'Nosso Momento',
@@ -44,7 +45,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${GA_ID}');
+            // send_page_view:false — o page_view é disparado pelo ScreenTracker
+            // (App Router é SPA; evita page_view duplicado nas navegações).
+            gtag('config', '${GA_ID}', { send_page_view: false });
           `}
         </Script>
         {/* Meta Pixel */}
@@ -64,6 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
       </head>
       <body>
+        <ScreenTracker />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

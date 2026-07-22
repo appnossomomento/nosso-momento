@@ -2,7 +2,7 @@ import clsx from 'clsx';
 
 type Props = {
   className?: string;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   /** Borda do badge — use claro no header gradiente */
   borderClassName?: string;
 };
@@ -12,8 +12,8 @@ export default function VipStarBadge({
   size = 'md',
   borderClassName = 'border-[#0f0b14]',
 }: Props) {
-  const dim = size === 'sm' ? 'w-6 h-6' : 'w-7 h-7';
-  const icon = size === 'sm' ? 'text-[9px]' : 'text-[11px]';
+  const dim = size === 'sm' ? 'w-6 h-6' : size === 'lg' ? 'w-12 h-12' : 'w-7 h-7';
+  const icon = size === 'sm' ? 'text-[9px]' : size === 'lg' ? 'text-lg' : 'text-[11px]';
 
   return (
     <span

@@ -217,6 +217,30 @@ service cloud.firestore {
       }
     }
 
+    // Pesquisas in-app — escrita só via Admin SDK (API admin).
+    // Clientes autenticados leem apenas pesquisas ativas.
+    match /surveys/{surveyId} {
+      allow get, list: if isAuthenticated() && resource.data.status == 'active';
+      allow create, update, delete: if false;
+    }
+
+    // Respostas: usuário só cria/lê a própria (doc id = surveyId_uid).
+    match /surveyResponses/{responseId} {
+      allow get: if isAuthenticated()
+        && responseId.matches('.*_' + authUid());
+      allow list: if isAuthenticated() && resource.data.userId == authUid();
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == authUid()
+        && request.resource.data.surveyId is string
+        && request.resource.data.keys().hasOnly([
+          'surveyId', 'userId', 'answers', 'skipped', 'createdAt'
+        ])
+        && request.resource.data.skipped is bool
+        && request.resource.data.answers is list
+        && responseId == request.resource.data.surveyId + '_' + authUid();
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

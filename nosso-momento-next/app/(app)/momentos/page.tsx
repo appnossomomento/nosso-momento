@@ -10,7 +10,7 @@ import { formatDateRelative } from '@/lib/utils/formatDate';
 import clsx from 'clsx';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import OverlayModal from '@/components/ui/OverlayModal';
-import { trackGA, trackMeta } from '@/lib/analytics';
+import { trackAction } from '@/lib/analytics';
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -119,8 +119,7 @@ export default function MomentosPage() {
         tarefaId: realizandoMomento.id,
         comFoto: !!fotoBase64,
       });
-      trackGA('complete_moment');
-      trackMeta('CompleteMoment');
+      trackAction('momento_realizado', { com_foto: !!fotoBase64 });
 
       if (fotoBase64) {
         // Campos exatos esperados pela CF createMemoriaPhoto:

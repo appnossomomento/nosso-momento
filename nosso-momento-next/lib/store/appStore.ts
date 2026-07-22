@@ -16,6 +16,7 @@ import type {
   LegalModalType,
   SystemModalType,
 } from '@/lib/types';
+import type { Survey } from '@/lib/types/survey';
 
 // ── Formato do state ──────────────────────────────────────────
 interface AppState {
@@ -99,6 +100,8 @@ interface AppState {
   showAchievementsPopup: boolean;
   showPairingModal: boolean;
   showVipPopup: boolean;
+  showSurveyPopup: boolean;
+  pendingSurvey: Survey | null;
   showLegalModal: boolean;
   legalModalType: LegalModalType | null;
   showInstagramModal: boolean;
@@ -214,6 +217,8 @@ const initialState: Omit<AppState, 'set' | 'reset'> = {
   showAchievementsPopup: false,
   showPairingModal: false,
   showVipPopup: false,
+  showSurveyPopup: false,
+  pendingSurvey: null,
   showLegalModal: false,
   legalModalType: null,
   showInstagramModal: false,

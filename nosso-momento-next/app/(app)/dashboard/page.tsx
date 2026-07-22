@@ -9,7 +9,7 @@ export default function DashboardPage() {
   const { usuario, notificacoesTarefasNaoLidas, notificacoesPresentesNaoLidas, notificacoesConquistasNaoLidas, parceirosAtivos } = useAppStore();
 
   // Usuários não pareados podem ver o dashboard livremente.
-  // O redirecionamento para /parear acontece apenas no login (login/page.tsx).
+  // O início de sessão sempre abre aqui (/dashboard), não em /parear.
 
   const pendingCount =
     (notificacoesTarefasNaoLidas ?? 0) +

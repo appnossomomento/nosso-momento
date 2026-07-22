@@ -575,6 +575,25 @@
       var META_VAGAS = 50;
       var CONTADOR_BASE = 0;
       var formLoadedAt = Date.now();
+      var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid'];
+
+      function capturarUtms_() {
+        var params = new URLSearchParams(window.location.search);
+        var stored = {};
+        try { stored = JSON.parse(sessionStorage.getItem('nm_lp_utm') || '{}'); } catch (e) {}
+        if (!stored || typeof stored !== 'object') stored = {};
+        UTM_KEYS.forEach(function (k) {
+          var v = params.get(k);
+          if (v) stored[k] = v;
+        });
+        var temUtmNaUrl = UTM_KEYS.some(function (k) { return !!params.get(k); });
+        if (temUtmNaUrl || !stored.landing_url) {
+          stored.landing_url = window.location.href.split('#')[0];
+        }
+        try { sessionStorage.setItem('nm_lp_utm', JSON.stringify(stored)); } catch (e) {}
+        return stored;
+      }
+      capturarUtms_();
 
       // ---- Contador real (lê a contagem da planilha via JSONP) ----
       function setContadorErro(el) {
@@ -680,6 +699,11 @@
 
         dados.token = FORM_TOKEN;
         dados._formLoaded = formLoadedAt;
+
+        var utm = capturarUtms_();
+        Object.keys(utm).forEach(function (k) {
+          if (utm[k]) dados[k] = utm[k];
+        });
 
         if (SHEETS_ENDPOINT) {
           fetch(SHEETS_ENDPOINT, {

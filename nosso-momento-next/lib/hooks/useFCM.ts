@@ -77,6 +77,9 @@ export function useFCM() {
       if (target.openAchievementsPopup) {
         set({ showAchievementsPopup: true });
       }
+      if (tipo === 'survey' || redirectTo === 'survey') {
+        set({ showSurveyPopup: true });
+      }
       router.push(target.path);
     },
     [router, set, usuario?.uid],
@@ -129,6 +132,8 @@ export function useFCM() {
           const type = payload.data?.type ?? null;
           const title = payload.data?.title ?? '';
           const body = payload.data?.body ?? '';
+          const icon =
+            payload.data?.icon || '/assets/icons/icon-192x192.png';
 
           if (type === 'achievement') {
             // Conquistas: Firestore + AchievementCelebration já cuidam da UX
@@ -140,6 +145,29 @@ export function useFCM() {
             });
           } else if (type === 'pairing' || title.toLowerCase().includes('pareamento')) {
             // Popup de pareamento cuida disso
+          } else if (type === 'survey') {
+            // Sessão aberta: só notificação do SO — sem toast e sem popup.
+            if (
+              typeof window !== 'undefined' &&
+              'Notification' in window &&
+              Notification.permission === 'granted' &&
+              title
+            ) {
+              try {
+                const n = new Notification(title, {
+                  body,
+                  icon,
+                  data: payload.data || {},
+                });
+                n.onclick = () => {
+                  window.focus();
+                  set({ showSurveyPopup: true });
+                  n.close();
+                };
+              } catch {
+                // Alguns browsers bloqueiam Notification no foreground
+              }
+            }
           } else if (title) {
             showToast(`🔔 ${title}${body ? ': ' + body : ''}`, 'sucesso');
           }
@@ -152,7 +180,7 @@ export function useFCM() {
     return () => {
       unsub?.();
     };
-  }, [usuario?.uid]);
+  }, [usuario?.uid, set]);
 
   async function ativarNotificacoes() {
     if (fcmToken) {

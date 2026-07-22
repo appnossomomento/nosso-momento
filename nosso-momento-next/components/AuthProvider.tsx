@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useAuthenticatedRedirect } from '@/lib/hooks/useAuthenticatedRedirect';
 import { useParceiroData } from '@/lib/hooks/useParceiroData';
@@ -17,14 +18,21 @@ import ShareModal from '@/components/memorias/ShareModal';
 import ChallengePopup from '@/components/ChallengePopup';
 import PairingModal from '@/components/PairingModal';
 import VipPopup from '@/components/VipPopup';
+import SurveyPopup from '@/components/SurveyPopup';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import AchievementCelebration from '@/components/AchievementCelebration';
 import InstagramModal from '@/components/InstagramModal';
 import { usePareamentoListeners } from '@/lib/hooks/usePareamentoListeners';
 import { useNotificacoes } from '@/lib/hooks/useNotificacoes';
 import { useFCM } from '@/lib/hooks/useFCM';
+import { usePendingSurvey } from '@/lib/hooks/usePendingSurvey';
+
+const ADMIN_PREFIX = '/paineladmin-monitoring-v0';
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname() || '';
+  const isAdmin = pathname.startsWith(ADMIN_PREFIX);
+
   useAuth();
   useAuthenticatedRedirect();
   useParceiroData();
@@ -35,6 +43,12 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   usePareamentoListeners();
   useNotificacoes();
   useFCM();
+  usePendingSurvey();
+
+  // Painel admin: sem overlays/popups do app (pesquisa, VIP, etc.).
+  if (isAdmin) {
+    return <>{children}</>;
+  }
 
   return (
     <>
@@ -49,6 +63,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       <ChallengePopup />
       <PairingModal />
       <VipPopup />
+      <SurveyPopup />
       <PwaInstallPrompt />
       <AchievementCelebration />
       <InstagramModal />

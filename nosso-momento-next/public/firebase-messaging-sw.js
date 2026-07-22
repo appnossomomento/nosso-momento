@@ -19,6 +19,7 @@ function resolveNotificationUrl(redirectTo, tipo) {
     perfil: '/perfil',
     perfilParceiro: '/parceiro',
     achievementsPopup: '/dashboard?achievements=1',
+    survey: '/dashboard',
   };
   var key = typeof redirectTo === 'string' ? redirectTo.trim() : '';
   if (key && screenMap[key]) return screenMap[key];
@@ -30,6 +31,7 @@ function resolveNotificationUrl(redirectTo, tipo) {
   if (type === 'achievement' || type === 'milestone') return '/dashboard?achievements=1';
   if (type === 'pairing') return '/parear';
   if (type === 'vip_activated') return '/perfil';
+  if (type === 'survey') return '/dashboard';
 
   return key ? '/notificacoes' : '/dashboard';
 }

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { callFunction, sendInput, FUNCTIONS } from '@/lib/firebase/functions';
 import { useAppStore } from '@/lib/store/appStore';
 import { setParceiroAtivo } from '@/lib/utils/setParceiroAtivo';
-import { trackGA, trackMeta } from '@/lib/analytics';
+import { trackAction } from '@/lib/analytics';
 import { openSystemAlert } from '@/components/ui/Modal';
 import { showToast } from '@/components/ui/Toast';
 import type { Pareamento } from '@/lib/types';
@@ -130,6 +130,7 @@ export default function ParearPage() {
 
   function handleNovaConexao() {
     if (!isVip && temConexoes) {
+      trackAction('seja_vip', { origem: 'parear_nova_conexao' });
       set({ showVipPopup: true });
       return;
     }
@@ -142,6 +143,7 @@ export default function ParearPage() {
 
   function guardLimiteConexoes(): boolean {
     if (!isVip && temConexoes) {
+      trackAction('seja_vip', { origem: 'parear_limite' });
       set({ showVipPopup: true });
       return false;
     }
@@ -192,8 +194,7 @@ export default function ParearPage() {
         apelido: apelido.trim(),
       });
       showToast('Solicitação enviada! Aguarde seu parceiro aceitar.', 'sucesso');
-      trackGA('initiate_pairing');
-      trackMeta('InitiatePairing');
+      trackAction('pareamento_manual');
       setTelefone('');
       setApelido('');
     } catch (err) {
@@ -217,6 +218,7 @@ export default function ParearPage() {
       const result = await callFunction<{ token: string; url: string }>(FUNCTIONS.gerarConvite, {});
       const localUrl = `${window.location.origin}/convite/${result.token}`;
       setConviteUrl(localUrl);
+      trackAction('pareamento_link', { stage: 'gerado' });
       if (navigator.share) {
         try {
           await navigator.share({
