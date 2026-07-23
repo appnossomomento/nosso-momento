@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 
 const LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+const STREAK_LOOKBACK_DAYS = 120;
 
 function isHoje(registradoEm: unknown): boolean {
   if (!registradoEm) return false;
@@ -19,7 +20,7 @@ function isHoje(registradoEm: unknown): boolean {
 }
 
 /**
- * Carrega dados de clima (hoje e semana) do pareamento ativo.
+ * Carrega dados de clima (hoje, semana e histórico p/ streak) do pareamento ativo.
  * Deve ser chamado no AuthProvider (ou no parceiro page).
  */
 export function useClimaData() {
@@ -46,17 +47,17 @@ export function useClimaData() {
           });
         }
 
-        // 2. Semana atual (UTC-3)
+        // 2. Docs diários
         const spNow = new Date(Date.now() - 3 * 60 * 60 * 1000);
-        const dayOfWeek = spNow.getUTCDay(); // 0=Dom..6=Sab
+        const dayOfWeek = spNow.getUTCDay();
         const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
         const mondayMs = spNow.getTime() + diffToMonday * 86400000;
         const mondayDate = new Date(mondayMs);
         const mondayNorm = Date.UTC(mondayDate.getUTCFullYear(), mondayDate.getUTCMonth(), mondayDate.getUTCDate());
 
-        const dias: string[] = [];
+        const semanaDias: string[] = [];
         for (let i = 0; i < 7; i++) {
-          dias.push(new Date(mondayNorm + i * 86400000).toISOString().slice(0, 10));
+          semanaDias.push(new Date(mondayNorm + i * 86400000).toISOString().slice(0, 10));
         }
 
         const hojeStr = spNow.toISOString().slice(0, 10);
@@ -64,14 +65,24 @@ export function useClimaData() {
         const docsMap: Record<string, Record<string, unknown>> = {};
         docsSnaps.forEach((d) => { docsMap[d.id] = d.data() as Record<string, unknown>; });
 
-        const climaSemana = dias.map((dia, i) => {
+        const climaSemana = semanaDias.map((dia, i) => {
           const dData = docsMap[dia] ?? {};
           const meu = (dData[uid!] as { humor?: string } | undefined)?.humor ?? null;
           const parceiro = (dData[pareadoUid!] as { humor?: string } | undefined)?.humor ?? null;
           return { data: dia, label: LABELS[i], humor: meu, partnerHumor: parceiro, isHoje: dia === hojeStr };
         });
 
-        set({ climaSemana });
+        // 3. Histórico p/ streak (lookback)
+        const todayNorm = Date.UTC(spNow.getUTCFullYear(), spNow.getUTCMonth(), spNow.getUTCDate());
+        const climaHistory = Array.from({ length: STREAK_LOOKBACK_DAYS }, (_, i) => {
+          const dia = new Date(todayNorm - i * 86400000).toISOString().slice(0, 10);
+          const dData = docsMap[dia] ?? {};
+          const meu = (dData[uid!] as { humor?: string } | undefined)?.humor ?? null;
+          const parceiro = (dData[pareadoUid!] as { humor?: string } | undefined)?.humor ?? null;
+          return { data: dia, label: '', humor: meu, partnerHumor: parceiro, isHoje: dia === hojeStr };
+        });
+
+        set({ climaSemana, climaHistory });
       } catch (err) {
         console.error('[useClimaData] erro ao carregar clima:', err);
       }
