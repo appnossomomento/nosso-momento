@@ -128,6 +128,8 @@ interface AppState {
 
   // Clima
   climaSemana: ClimaItem[];
+  /** Histórico recente p/ streak do casal (YYYY-MM-DD). */
+  climaHistory: ClimaItem[];
   climaHoje: { humor: string; registradoEm: unknown } | null;
   climaPartnerHoje: { humor: string; registradoEm: unknown } | null;
 
@@ -240,6 +242,7 @@ const initialState: Omit<AppState, 'set' | 'reset'> = {
   achievementStats: {},
   conquistasCategoria: 'engajamento',
   climaSemana: [],
+  climaHistory: [],
   climaHoje: null,
   climaPartnerHoje: null,
   conexaoAtiva: null,

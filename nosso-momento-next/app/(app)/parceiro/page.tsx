@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -13,6 +13,9 @@ import { openSystemConfirm } from '@/components/ui/Modal';
 import { trackAction } from '@/lib/analytics';
 import { useWeeklyChallenge } from '@/lib/hooks/useWeeklyChallenge';
 import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
+import CoupleStreakCard from '@/components/parceiro/CoupleStreakCard';
+import { computeCoupleStreak } from '@/lib/clima/coupleStreak';
+import { nomeParaCard } from '@/lib/utils/displayName';
 
 const HUMORES = [
   { key: 'muito_feliz', emoji: '😍', label: 'Muito Feliz', delta: '+2 🔥' },
@@ -67,13 +70,36 @@ export default function ParceiroPage() {
     climaHoje,
     climaPartnerHoje,
     climaSemana,
+    climaHistory,
     set,
   } = useAppStore();
 
   const [submetendo, setSubmetendo] = useState(false);
   useWeeklyChallenge();
 
-  // Ainda carregando: o usuário tem pareadoUid mas o snapshot do parceiro ainda não chegou
+  const agora = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  const hojeUTC = agora.toISOString().slice(0, 10);
+
+  const streak = useMemo(() => {
+    const history =
+      climaHistory.length > 0
+        ? climaHistory
+        : climaSemana.map((d) => ({
+            data: d.data,
+            humor: d.humor,
+            partnerHumor: d.partnerHumor,
+          }));
+    const patched = history.map((d) => {
+      if (d.data !== hojeUTC) return d;
+      return {
+        ...d,
+        humor: climaHoje?.humor ?? d.humor,
+        partnerHumor: climaPartnerHoje?.humor ?? d.partnerHumor,
+      };
+    });
+    return computeCoupleStreak(patched, hojeUTC);
+  }, [climaHistory, climaSemana, climaHoje, climaPartnerHoje, hojeUTC]);
+
   const pareadoUidAtual = pareadoUid ?? usuario?.pareadoUid ?? null;
   if (!parceiroData && pareadoUidAtual) {
     return (
@@ -105,23 +131,25 @@ export default function ParceiroPage() {
   const partnerTriste = climaPartnerHoje?.humor === 'triste';
   const meuFoto = usuario?.fotoUrl ?? '/assets/icons/iconprincipal.png';
 
-  // ── Timeline (tempo junto) ──────────────────────────────────
-  // pareadoDesde está em pareamentosAtivos[i].pareadoDesde (não no nível raiz do doc)
   const usuarioRecord = usuario as unknown as Record<string, unknown> | null;
   const pareamentosAtivos = usuarioRecord?.pareamentosAtivos as Array<Record<string, unknown>> | undefined;
   const entradaParceiro = pareamentosAtivos?.find(
     (e) => e.uid === parceiroData.uid || e.uid === usuario?.pareadoUid
   );
+  const apelidoPareamento =
+    typeof entradaParceiro?.apelido === 'string' ? entradaParceiro.apelido.trim() : '';
+  const partnerLabel =
+    apelidoPareamento ||
+    nomeParaCard({
+      apelidoReal: parceiroData.apelidoReal,
+      nome,
+      fallback: 'Parceiro',
+    });
   const pareadoDesdeSrc =
     (entradaParceiro?.pareadoDesde as string | null | undefined) ??
     usuarioRecord?.pareadoDesde as string | null | undefined;
   const tc = calcTempoJunto(pareadoDesdeSrc);
 
-  // ── Dias da semana (SP UTC-3) ──────────────────────────────
-  const agora = new Date(Date.now() - 3 * 60 * 60 * 1000);
-  const hojeUTC = agora.toISOString().slice(0, 10);
-
-  // Se climaSemana ainda não carregou, gera 7 dias placeholder
   const LABELS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
   const semanaVisivel = climaSemana.length > 0 ? climaSemana : (() => {
     const dayOfWeek = agora.getUTCDay();
@@ -151,6 +179,9 @@ export default function ParceiroPage() {
       set({
         climaHoje: { humor, registradoEm: new Date() },
         climaSemana: climaSemana.map((d) =>
+          d.data === hojeUTC ? { ...d, humor } : d
+        ),
+        climaHistory: climaHistory.map((d) =>
           d.data === hojeUTC ? { ...d, humor } : d
         ),
       });
@@ -213,7 +244,6 @@ export default function ParceiroPage() {
 
   return (
     <div className="screen bg-black text-white pb-28">
-      {/* Header gradient — igual ao buildParceiroHeaderHtml('gradient') do index */}
       <div
         className="flex-shrink-0 px-4 pb-3 flex items-center gap-3 w-full sticky top-0 z-30"
         style={{ background: 'linear-gradient(180deg,#ff2d3f 0%,#ff5565 100%)', boxShadow: '0 4px 20px rgba(255,45,63,0.35)', paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}
@@ -254,53 +284,16 @@ export default function ParceiroPage() {
       </div>
 
       <div className="px-4 py-4 space-y-4">
-        {/* Alerta parceiro triste */}
-        {partnerTriste && (
-          <div className="rounded-xl bg-red-900/40 border border-red-700/40 text-red-200 text-sm px-4 py-3 flex items-center gap-3">
-            <i className="fas fa-heart-crack" />
-            <span><strong>{nome}</strong> marcou &ldquo;Triste&rdquo; hoje. Que tal um carinho?</span>
-          </div>
-        )}
+        <CoupleStreakCard
+          streak={streak}
+          partnerName={partnerLabel}
+          meFoto={meuFoto}
+          partnerFoto={foto}
+          meHumorEmoji={climaHoje?.humor ? HUMOR_EMOJI[climaHoje.humor] : null}
+          partnerHumorEmoji={climaPartnerHoje?.humor ? HUMOR_EMOJI[climaPartnerHoje.humor] : null}
+          partnerTriste={partnerTriste}
+        />
 
-        {/* Timeline — Tempo juntos */}
-        {tc && (() => {
-          const proximaMeta = METAS_DIAS.find((m) => m > tc.dias);
-          const progressoPct = proximaMeta ? Math.min(100, Math.round((tc.dias / proximaMeta) * 100)) : 100;
-          const diasParaMeta = proximaMeta ? proximaMeta - tc.dias : null;
-          return (
-            <div
-              className="p-5 text-center"
-              style={{
-                background: 'linear-gradient(#1a1b20, #1a1b20) padding-box, linear-gradient(135deg, rgba(255,45,63,0.50), rgba(255,106,120,0.34), rgba(255,45,63,0.20)) border-box',
-                border: '1px solid transparent',
-                borderRadius: 20,
-                boxShadow: '0 10px 28px rgba(0,0,0,0.48), 0 0 0 1px rgba(255,85,101,0.10), 0 0 20px rgba(255,73,106,0.16)',
-              }}
-            >
-              <img src="/assets/icons/iconprincipal.png" alt="Nosso Momento" style={{ width: 48, height: 48, margin: '0 auto 8px', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255,73,106,0.55))' }} />
-              <p className="text-2xl font-bold leading-tight text-white">{tc.texto}</p>
-              <p className="text-xs mt-1" style={{ color: '#9a9ba4' }}>sintonizados desde {tc.dataFormatada}</p>
-              {proximaMeta ? (
-                <div className="mt-3 px-1">
-                  <div className="flex justify-between text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.40)' }}>
-                    <span>{tc.dias} dias juntos</span>
-                    <span>Meta: {proximaMeta} dias · faltam {diasParaMeta}</span>
-                  </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${progressoPct}%`, background: 'linear-gradient(90deg,#ff2d3f,#ff6a78)' }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs font-semibold mt-2" style={{ color: '#ff6a78' }}>🏆 Mais de 2000 dias juntos!</p>
-              )}
-            </div>
-          );
-        })()}
-
-        {/* Check-in de clima */}
         <div
           className="rounded-[20px] p-4"
           style={{
@@ -309,7 +302,7 @@ export default function ParceiroPage() {
             boxShadow: '0 10px 28px rgba(0,0,0,0.48), 0 0 0 1px rgba(255,85,101,0.10), 0 0 20px rgba(255,73,106,0.16)',
           }}
         >
-          <h3 className="text-sm font-semibold text-white/90 mb-1 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-white/90 mb-3 flex items-center gap-2">
             <i className="fas fa-thermometer-half text-red-400" />
             Como você está hoje?
             <Link
@@ -321,9 +314,12 @@ export default function ParceiroPage() {
               Histórico
             </Link>
           </h3>
-          <p className="text-xs text-white/50 mb-3">
-            {jaFezClima ? `Você marcou ${HUMOR_EMOJI[climaHoje!.humor] ?? ''} hoje.` : 'Marque e seu parceiro ganha foguinhos!'}
-          </p>
+          {jaFezClima && !climaPartnerHoje && (
+            <p className="text-xs text-amber-200/90 mb-3 -mt-1 flex items-center gap-2">
+              <i className="fas fa-clock text-[10px] opacity-80" />
+              {partnerLabel} ainda não marcou o clima hoje...
+            </p>
+          )}
           <div className="flex gap-2">
             {HUMORES.map((h) => {
               const isActive = jaFezClima && climaHoje?.humor === h.key;
@@ -345,7 +341,6 @@ export default function ParceiroPage() {
           </div>
         </div>
 
-        {/* Tracking semanal — sempre visível, fundo vermelho igual ao index.html */}
         <div
           className="rounded-2xl p-4 overflow-hidden"
           style={{
@@ -353,7 +348,6 @@ export default function ParceiroPage() {
             boxShadow: '0 4px 12px rgba(255,45,63,0.20)',
           }}
         >
-          {/* Labels dos dias */}
           <div className="flex items-center gap-1 mb-2">
             <div className="w-8 shrink-0" />
             <div className="flex flex-1">
@@ -369,7 +363,6 @@ export default function ParceiroPage() {
               ))}
             </div>
           </div>
-          {/* Eu */}
           <div className="flex items-center gap-1 mb-2">
             <div
               className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
@@ -389,7 +382,6 @@ export default function ParceiroPage() {
               ))}
             </div>
           </div>
-          {/* Parceiro */}
           <div className="flex items-center gap-1">
             <div
               className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
@@ -417,7 +409,51 @@ export default function ParceiroPage() {
           </div>
         </div>
 
-        {/* Ações rápidas — estilo .perfil-parceiro-card.action-premium */}
+        {tc && (() => {
+          const proximaMeta = METAS_DIAS.find((m) => m > tc.dias);
+          const progressoPct = proximaMeta ? Math.min(100, Math.round((tc.dias / proximaMeta) * 100)) : 100;
+          return (
+            <div
+              className="px-4 py-3 rounded-2xl"
+              style={{
+                background:
+                  'linear-gradient(#1a1b20, #1a1b20) padding-box, linear-gradient(135deg, rgba(255,45,63,0.58), rgba(255,106,120,0.40), rgba(255,45,63,0.23)) border-box',
+                border: '1px solid transparent',
+                boxShadow:
+                  '0 10px 28px rgba(0,0,0,0.48), 0 0 0 1px rgba(255,85,101,0.14), 0 0 20px rgba(255,73,106,0.18)',
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <img
+                  src="/assets/icons/iconprincipal.png"
+                  alt=""
+                  style={{ width: 28, height: 28, objectFit: 'contain', opacity: 0.9 }}
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white/90 truncate">{tc.texto} juntos</p>
+                </div>
+                {proximaMeta ? (
+                  <span className="text-[10px] text-white/35 flex-shrink-0">
+                    Meta: {proximaMeta}
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-semibold flex-shrink-0" style={{ color: '#ff6a78' }}>
+                    2000+
+                  </span>
+                )}
+              </div>
+              {proximaMeta && (
+                <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${progressoPct}%`, background: 'linear-gradient(90deg,#ff2d3f,#ff6a78)' }}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         <div className="grid grid-cols-2 gap-3">
           {[
             { href: '/loja', icon: 'fa-store', label: 'Catálogo', catalog: true },
@@ -466,7 +502,6 @@ export default function ParceiroPage() {
           ))}
         </div>
 
-        {/* Instagram CTA */}
         <button
           onClick={() => set({ showInstagramModal: true })}
           className="w-full rounded-2xl p-4 text-sm font-medium flex items-center justify-center gap-2 transition active:scale-95"
@@ -479,7 +514,6 @@ export default function ParceiroPage() {
           <span className="text-white/80">Siga-nos no Instagram!</span>
         </button>
 
-        {/* Desfazer pareamento */}
         <button
           onClick={handleDesfazerPareamento}
           className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-400 text-sm font-medium hover:bg-red-500/20 transition"
