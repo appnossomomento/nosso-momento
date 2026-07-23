@@ -29,7 +29,7 @@ const midBlockFire = {
   border: '1px solid transparent',
   borderRadius: 18,
   boxShadow:
-    '0 8px 22px rgba(0,0,0,0.42), 0 0 0 1px rgba(249,115,22,0.22), 0 0 14px rgba(249,115,22,0.36), 0 0 28px rgba(239,68,68,0.24)',
+    '0 10px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(249,115,22,0.25), 0 0 16px rgba(249,115,22,0.4), 0 0 32px rgba(239,68,68,0.28)',
 } as const;
 
 const midBlockTriste = {
@@ -38,7 +38,7 @@ const midBlockTriste = {
   border: '1px solid transparent',
   borderRadius: 18,
   boxShadow:
-    '0 8px 22px rgba(0,0,0,0.42), 0 0 0 1px rgba(99,102,241,0.24), 0 0 14px rgba(59,130,246,0.32), 0 0 28px rgba(99,102,241,0.2)',
+    '0 10px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(99,102,241,0.28), 0 0 16px rgba(59,130,246,0.38), 0 0 32px rgba(99,102,241,0.24)',
 } as const;
 
 const GLOW_DONE =
