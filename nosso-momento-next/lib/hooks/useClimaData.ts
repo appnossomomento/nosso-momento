@@ -4,24 +4,15 @@ import { useEffect } from 'react';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
+import { isClimaFromToday } from '@/lib/clima/isClimaFromToday';
 
 const LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 const STREAK_LOOKBACK_DAYS = 120;
 
-function isHoje(registradoEm: unknown): boolean {
-  if (!registradoEm) return false;
-  try {
-    const ts = typeof registradoEm === 'object' && registradoEm !== null && 'toDate' in registradoEm
-      ? (registradoEm as { toDate: () => Date }).toDate()
-      : new Date(registradoEm as string);
-    const agora = new Date(Date.now() - 3 * 60 * 60 * 1000); // UTC-3
-    return ts.toISOString().slice(0, 10) === agora.toISOString().slice(0, 10);
-  } catch { return false; }
-}
-
 /**
  * Carrega dados de clima (hoje, semana e histórico p/ streak) do pareamento ativo.
  * Deve ser chamado no AuthProvider (ou no parceiro page).
+ * Atualizações em tempo real do clima de hoje vêm de usePareamentoListeners.
  */
 export function useClimaData() {
   const { usuario, pareado, idPareamentoAmigavel, pareadoUid, set } = useAppStore();
@@ -42,8 +33,15 @@ export function useClimaData() {
           const meuClima = climaHojeMap[uid!] ?? null;
           const partnerClima = climaHojeMap[pareadoUid!] ?? null;
           set({
-            climaHoje: meuClima && isHoje(meuClima.registradoEm) ? meuClima : null,
-            climaPartnerHoje: partnerClima && isHoje(partnerClima.registradoEm) ? partnerClima : null,
+            climaHoje: isClimaFromToday(meuClima)
+              ? { humor: String(meuClima.humor ?? ''), registradoEm: meuClima.registradoEm }
+              : null,
+            climaPartnerHoje: isClimaFromToday(partnerClima)
+              ? {
+                  humor: String(partnerClima.humor ?? ''),
+                  registradoEm: partnerClima.registradoEm,
+                }
+              : null,
           });
         }
 
@@ -53,7 +51,11 @@ export function useClimaData() {
         const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
         const mondayMs = spNow.getTime() + diffToMonday * 86400000;
         const mondayDate = new Date(mondayMs);
-        const mondayNorm = Date.UTC(mondayDate.getUTCFullYear(), mondayDate.getUTCMonth(), mondayDate.getUTCDate());
+        const mondayNorm = Date.UTC(
+          mondayDate.getUTCFullYear(),
+          mondayDate.getUTCMonth(),
+          mondayDate.getUTCDate(),
+        );
 
         const semanaDias: string[] = [];
         for (let i = 0; i < 7; i++) {
@@ -61,25 +63,47 @@ export function useClimaData() {
         }
 
         const hojeStr = spNow.toISOString().slice(0, 10);
-        const docsSnaps = await getDocs(collection(db, 'pareamentos', pareamentoId, 'climaDiario'));
+        const docsSnaps = await getDocs(
+          collection(db, 'pareamentos', pareamentoId, 'climaDiario'),
+        );
         const docsMap: Record<string, Record<string, unknown>> = {};
-        docsSnaps.forEach((d) => { docsMap[d.id] = d.data() as Record<string, unknown>; });
+        docsSnaps.forEach((d) => {
+          docsMap[d.id] = d.data() as Record<string, unknown>;
+        });
 
         const climaSemana = semanaDias.map((dia, i) => {
           const dData = docsMap[dia] ?? {};
           const meu = (dData[uid!] as { humor?: string } | undefined)?.humor ?? null;
-          const parceiro = (dData[pareadoUid!] as { humor?: string } | undefined)?.humor ?? null;
-          return { data: dia, label: LABELS[i], humor: meu, partnerHumor: parceiro, isHoje: dia === hojeStr };
+          const parceiro =
+            (dData[pareadoUid!] as { humor?: string } | undefined)?.humor ?? null;
+          return {
+            data: dia,
+            label: LABELS[i],
+            humor: meu,
+            partnerHumor: parceiro,
+            isHoje: dia === hojeStr,
+          };
         });
 
         // 3. Histórico p/ streak (lookback)
-        const todayNorm = Date.UTC(spNow.getUTCFullYear(), spNow.getUTCMonth(), spNow.getUTCDate());
+        const todayNorm = Date.UTC(
+          spNow.getUTCFullYear(),
+          spNow.getUTCMonth(),
+          spNow.getUTCDate(),
+        );
         const climaHistory = Array.from({ length: STREAK_LOOKBACK_DAYS }, (_, i) => {
           const dia = new Date(todayNorm - i * 86400000).toISOString().slice(0, 10);
           const dData = docsMap[dia] ?? {};
           const meu = (dData[uid!] as { humor?: string } | undefined)?.humor ?? null;
-          const parceiro = (dData[pareadoUid!] as { humor?: string } | undefined)?.humor ?? null;
-          return { data: dia, label: '', humor: meu, partnerHumor: parceiro, isHoje: dia === hojeStr };
+          const parceiro =
+            (dData[pareadoUid!] as { humor?: string } | undefined)?.humor ?? null;
+          return {
+            data: dia,
+            label: '',
+            humor: meu,
+            partnerHumor: parceiro,
+            isHoje: dia === hojeStr,
+          };
         });
 
         set({ climaSemana, climaHistory });

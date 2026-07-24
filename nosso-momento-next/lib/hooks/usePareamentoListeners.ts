@@ -4,12 +4,36 @@ import { useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
-import type { MomentoCustom } from '@/lib/types';
+import { isClimaFromToday } from '@/lib/clima/isClimaFromToday';
+import { saoPauloDateString } from '@/lib/utils/saoPauloDate';
+import type { ClimaItem, MomentoCustom } from '@/lib/types';
+
+type ClimaSnap = { humor?: string; registradoEm?: unknown } | null;
+
+function patchClimaHoje(
+  items: ClimaItem[],
+  hojeStr: string,
+  meuHumor: string | null | undefined,
+  partnerHumor: string | null | undefined,
+): ClimaItem[] {
+  if (!items.length) return items;
+  let changed = false;
+  const next = items.map((d) => {
+    if (d.data !== hojeStr) return d;
+    const humor = meuHumor !== undefined && meuHumor !== null ? meuHumor : d.humor;
+    const ph =
+      partnerHumor !== undefined && partnerHumor !== null ? partnerHumor : d.partnerHumor;
+    if (humor === d.humor && ph === d.partnerHumor) return d;
+    changed = true;
+    return { ...d, humor, partnerHumor: ph };
+  });
+  return changed ? next : items;
+}
 
 /**
  * Para cada pareamento ativo do usuário, abre um onSnapshot em
- * pareamentos/{pareamentoId} e atualiza os foguinhos em tempo real.
- * Equivalente ao setupPareamentoListeners() do index.html.
+ * pareamentos/{pareamentoId} e atualiza foguinhos, momentos custom e clima
+ * em tempo real. Equivalente ao setupPareamentoListeners() do index.html.
  */
 export function usePareamentoListeners() {
   const uid = useAppStore((s) => s.usuario?.uid ?? null);
@@ -40,24 +64,63 @@ export function usePareamentoListeners() {
             ? ((pData.foguinhos_pessoa1 as number) || 0)
             : ((pData.foguinhos_pessoa2 as number) || 0);
 
-          set({
-            parceirosAtivos: useAppStore
-              .getState()
-              .parceirosAtivos.map((p) =>
-                p.pareamentoId === pareamentoId ? { ...p, foguinhos: meuSaldo } : p
-              ),
-          });
+          const state = useAppStore.getState();
+          const nextParceiros = state.parceirosAtivos.map((p) =>
+            p.pareamentoId === pareamentoId ? { ...p, foguinhos: meuSaldo } : p,
+          );
 
-          if (pareamentoId === (useAppStore.getState().conexaoAtiva?.pareamentoId ?? null)) {
-            const raw = pData.momentosCustom;
-            const momentosCustomAtivo =
-              raw && typeof raw === 'object' && !Array.isArray(raw)
-                ? (raw as Record<string, MomentoCustom[]>)
-                : null;
-            set({ momentosCustomAtivo });
+          const activeId = state.conexaoAtiva?.pareamentoId ?? state.idPareamentoAmigavel ?? null;
+          if (pareamentoId !== activeId) {
+            set({ parceirosAtivos: nextParceiros });
+            return;
           }
+
+          const raw = pData.momentosCustom;
+          const momentosCustomAtivo =
+            raw && typeof raw === 'object' && !Array.isArray(raw)
+              ? (raw as Record<string, MomentoCustom[]>)
+              : null;
+
+          const partnerUid =
+            state.conexaoAtiva?.uid ?? state.pareadoUid ?? parceiro.uid ?? null;
+          const climaMap =
+            (pData.climaHoje as Record<string, ClimaSnap> | undefined) ?? {};
+          const meuRaw = climaMap[uid] ?? null;
+          const partnerRaw = partnerUid ? (climaMap[partnerUid] ?? null) : null;
+          const climaHoje = isClimaFromToday(meuRaw)
+            ? { humor: String(meuRaw!.humor ?? ''), registradoEm: meuRaw!.registradoEm }
+            : null;
+          const climaPartnerHoje = isClimaFromToday(partnerRaw)
+            ? {
+                humor: String(partnerRaw!.humor ?? ''),
+                registradoEm: partnerRaw!.registradoEm,
+              }
+            : null;
+
+          const hojeStr = saoPauloDateString();
+          const climaSemana = patchClimaHoje(
+            state.climaSemana,
+            hojeStr,
+            climaHoje?.humor,
+            climaPartnerHoje?.humor,
+          );
+          const climaHistory = patchClimaHoje(
+            state.climaHistory,
+            hojeStr,
+            climaHoje?.humor,
+            climaPartnerHoje?.humor,
+          );
+
+          set({
+            parceirosAtivos: nextParceiros,
+            momentosCustomAtivo,
+            climaHoje,
+            climaPartnerHoje,
+            climaSemana,
+            climaHistory,
+          });
         },
-        (err) => console.warn('[usePareamentoListeners] erro no snapshot:', err)
+        (err) => console.warn('[usePareamentoListeners] erro no snapshot:', err),
       );
 
       unsubscribers.push(unsub);
