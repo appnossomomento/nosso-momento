@@ -106,7 +106,8 @@ function sanitizeCatalogoPersonalizado(rawCatalogo, isVip) {
 
 /**
  * @param {object} input
- * @param {{requireImg?: boolean}} [opts]
+ * @param {object=} opts
+ * @param {boolean=} opts.requireImg
  * @return {{ok: true, item: object}|{ok: false, error: string}}
  */
 function validateCustomMomentFields(input, opts = {}) {
