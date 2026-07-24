@@ -151,7 +151,7 @@ export default function ParceiroPage() {
   const tc = calcTempoJunto(pareadoDesdeSrc);
 
   const LABELS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-  const semanaVisivel = climaSemana.length > 0 ? climaSemana : (() => {
+  const semanaBase = climaSemana.length > 0 ? climaSemana : (() => {
     const dayOfWeek = agora.getUTCDay();
     const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     const mondayMs = agora.getTime() + diffToMonday * 86400000;
@@ -162,6 +162,14 @@ export default function ParceiroPage() {
       return { data: dia, label: LABELS_SEMANA[i], humor: null, partnerHumor: null, isHoje: dia === hojeUTC };
     });
   })();
+  const semanaVisivel = semanaBase.map((dia) => {
+    if (dia.data !== hojeUTC) return dia;
+    return {
+      ...dia,
+      humor: climaHoje?.humor ?? dia.humor,
+      partnerHumor: climaPartnerHoje?.humor ?? dia.partnerHumor,
+    };
+  });
 
   async function handleSubmitClima(humor: string) {
     if (jaFezClima || submetendo) return;
