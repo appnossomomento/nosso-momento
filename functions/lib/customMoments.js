@@ -106,9 +106,12 @@ function sanitizeCatalogoPersonalizado(rawCatalogo, isVip) {
 
 /**
  * @param {object} input
+ * @param {object=} opts
+ * @param {boolean=} opts.requireImg
  * @return {{ok: true, item: object}|{ok: false, error: string}}
  */
-function validateCustomMomentCreateInput(input) {
+function validateCustomMomentFields(input, opts = {}) {
+  const requireImg = opts.requireImg !== false;
   const nome = typeof input.nome === "string" ? input.nome.trim() : "";
   const preco = Math.floor(Number(input.preco));
   if (!nome || nome.length > 80) {
@@ -118,14 +121,41 @@ function validateCustomMomentCreateInput(input) {
     return {ok: false, error: "invalid_custom_price"};
   }
   const emoji = typeof input.emoji === "string" ? input.emoji.slice(0, 8) : "✨";
-  const img = typeof input.img === "string" ? input.img.trim().slice(0, 2048) : "";
-  if (!img || !img.startsWith("http")) {
+  const rawImg = typeof input.img === "string" ? input.img.trim().slice(0, 2048) : "";
+  if (requireImg) {
+    if (!rawImg || !rawImg.startsWith("http")) {
+      return {ok: false, error: "missing_custom_moment_image"};
+    }
+  } else if (rawImg && !rawImg.startsWith("http")) {
     return {ok: false, error: "missing_custom_moment_image"};
   }
   return {
     ok: true,
-    item: {nome, preco, emoji, img, categoria: "Custom"},
+    item: {
+      nome,
+      preco,
+      emoji,
+      img: rawImg || null,
+      categoria: "Personalizado",
+    },
   };
+}
+
+/**
+ * @param {object} input
+ * @return {{ok: true, item: object}|{ok: false, error: string}}
+ */
+function validateCustomMomentCreateInput(input) {
+  return validateCustomMomentFields(input, {requireImg: true});
+}
+
+/**
+ * Update: imagem opcional (se omitida, o handler mantém a atual).
+ * @param {object} input
+ * @return {{ok: true, item: object}|{ok: false, error: string}}
+ */
+function validateCustomMomentUpdateInput(input) {
+  return validateCustomMomentFields(input, {requireImg: false});
 }
 
 /**
@@ -181,6 +211,7 @@ module.exports = {
   findCustomMoment,
   sanitizeCatalogoPersonalizado,
   validateCustomMomentCreateInput,
+  validateCustomMomentUpdateInput,
   canAddCustomMoment,
   generateCustomItemId,
   getPartnerUidsFromSender,

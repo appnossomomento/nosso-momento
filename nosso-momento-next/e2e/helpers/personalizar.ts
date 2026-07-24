@@ -85,9 +85,9 @@ export async function criarMomentoCustom(
   page: Page,
   opts: { nome: string; preco?: number },
 ): Promise<void> {
-  await page.getByRole('button', { name: /Criar momento/i }).click();
-  const modal = page.getByRole('dialog', { name: 'Criar momento custom' });
-  await expect(modal.getByRole('heading', { name: /Novo momento custom/i })).toBeVisible({
+  await page.getByRole('button', { name: /Crie do seu jeito/i }).click();
+  const modal = page.getByRole('dialog', { name: 'Crie do seu jeito' });
+  await expect(modal.getByRole('heading', { name: /Crie do seu jeito/i })).toBeVisible({
     timeout: 10_000,
   });
 
@@ -103,13 +103,13 @@ export async function criarMomentoCustom(
 
   await modal.getByRole('button', { name: /^Criar momento$/i }).click();
 
-  await expect(page.getByText('Momento custom criado!', { exact: true })).toBeVisible({
+  await expect(page.getByText('Momento personalizado criado!', { exact: true })).toBeVisible({
     timeout: 90_000,
   });
 }
 
 export async function aguardarCustomNaPersonalizar(page: Page, nome: string): Promise<void> {
-  const secao = page.locator('p:text("Meus momentos (custom)")').locator('..');
+  const secao = page.locator('p:text("Meus Momentos Personalizados")').locator('..');
   await expect(secao.getByText(nome, { exact: true })).toBeVisible({ timeout: 60_000 });
 }
 

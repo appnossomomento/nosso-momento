@@ -70,7 +70,7 @@ export default function LojaPage() {
         custoFoguinhos: m.preco,
         emoji: m.emoji || '✨',
         img: m.img,
-        categoria: 'Custom',
+        categoria: 'Personalizado',
         isCustom: true,
       }));
   }, [pareadoUid, pareamentoId, momentosCustomAtivo]);

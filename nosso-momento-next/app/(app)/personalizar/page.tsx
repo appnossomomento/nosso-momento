@@ -61,6 +61,7 @@ export default function PersonalizarPage() {
   const [showExcluidos, setShowExcluidos] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [customBlockOpen, setCustomBlockOpen] = useState(false);
   const [novoNome, setNovoNome] = useState('');
   const [novoPreco, setNovoPreco] = useState(10);
@@ -68,7 +69,7 @@ export default function PersonalizarPage() {
   const [novaImagemFile, setNovaImagemFile] = useState<File | null>(null);
   const [novaImagemPreview, setNovaImagemPreview] = useState<string | null>(null);
   const imagemInputRef = useRef<HTMLInputElement>(null);
-  const [criandoCustom, setCriandoCustom] = useState(false);
+  const [salvandoCustom, setSalvandoCustom] = useState(false);
   const [excluindoId, setExcluindoId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -143,6 +144,14 @@ export default function PersonalizarPage() {
     });
   }
 
+  function resetCustomForm() {
+    setEditingId(null);
+    setNovoNome('');
+    setNovoPreco(10);
+    setNovoEmoji(EMOJI_PADRAO);
+    limparImagemModal();
+  }
+
   function handleCriarCustomClick() {
     if (!isVip) {
       trackAction('seja_vip', { origem: 'personalizar_criar_custom' });
@@ -153,11 +162,26 @@ export default function PersonalizarPage() {
       showToast('Selecione uma conexão ativa.', 'aviso');
       return;
     }
-    setNovoNome('');
-    setNovoPreco(10);
-    setNovoEmoji(EMOJI_PADRAO);
+    resetCustomForm();
+    setShowCreateModal(true);
+  }
+
+  function handleEditarCustomClick(item: MomentoCustom) {
+    if (!isVip) {
+      set({ showVipPopup: true });
+      return;
+    }
+    if (!pareamentoId) {
+      showToast('Selecione uma conexão ativa.', 'aviso');
+      return;
+    }
+    setEditingId(item.id);
+    setNovoNome(item.nome);
+    setNovoPreco(item.preco);
+    setNovoEmoji(item.emoji || EMOJI_PADRAO);
     setNovaImagemFile(null);
-    setNovaImagemPreview(null);
+    setNovaImagemPreview(item.img || null);
+    if (imagemInputRef.current) imagemInputRef.current.value = '';
     setShowCreateModal(true);
   }
 
@@ -168,13 +192,14 @@ export default function PersonalizarPage() {
       showToast('A imagem deve ter menos de 5 MB.', 'aviso');
       return;
     }
+    if (novaImagemPreview?.startsWith('blob:')) URL.revokeObjectURL(novaImagemPreview);
     setNovaImagemFile(file);
     setNovaImagemPreview(URL.createObjectURL(file));
   }
 
   function limparImagemModal() {
     setNovaImagemFile(null);
-    if (novaImagemPreview) URL.revokeObjectURL(novaImagemPreview);
+    if (novaImagemPreview?.startsWith('blob:')) URL.revokeObjectURL(novaImagemPreview);
     setNovaImagemPreview(null);
     if (imagemInputRef.current) imagemInputRef.current.value = '';
   }
@@ -196,7 +221,7 @@ export default function PersonalizarPage() {
     }
   }
 
-  async function confirmarCriarCustom() {
+  async function confirmarSalvarCustom() {
     const nome = novoNome.trim();
     const preco = Math.floor(novoPreco);
     if (!nome) {
@@ -208,58 +233,87 @@ export default function PersonalizarPage() {
       return;
     }
     if (!pareamentoId) return;
-    if (!novaImagemFile || !meuUid) {
+    if (!meuUid) return;
+
+    const isEdit = Boolean(editingId);
+    if (!isEdit && !novaImagemFile) {
       showToast('Adicione uma foto para criar o momento.', 'aviso');
       return;
     }
+    if (isEdit && !novaImagemFile && !novaImagemPreview) {
+      showToast('Adicione uma foto para o momento.', 'aviso');
+      return;
+    }
 
-    setCriandoCustom(true);
+    setSalvandoCustom(true);
     try {
-      let imgUrl = '';
-      try {
-        imgUrl = await uploadCustomMomentImage(novaImagemFile, pareamentoId, meuUid);
-      } catch (uploadErr) {
-        if (uploadErr instanceof Error && uploadErr.message === 'file_too_large') {
-          showToast('A imagem deve ter menos de 5 MB.', 'aviso');
-          return;
+      let imgUrl = isEdit && !novaImagemFile ? (novaImagemPreview || '') : '';
+      if (novaImagemFile) {
+        try {
+          imgUrl = await uploadCustomMomentImage(novaImagemFile, pareamentoId, meuUid);
+        } catch (uploadErr) {
+          if (uploadErr instanceof Error && uploadErr.message === 'file_too_large') {
+            showToast('A imagem deve ter menos de 5 MB.', 'aviso');
+            return;
+          }
+          if (isStorageUploadError(uploadErr)) {
+            showToast('Não foi possível enviar a foto. Tente novamente.', 'erro');
+            return;
+          }
+          throw uploadErr;
         }
-        if (isStorageUploadError(uploadErr)) {
-          showToast('Não foi possível enviar a foto. Tente novamente.', 'erro');
-          return;
-        }
-        throw uploadErr;
       }
-      await sendInput('custom_moment_create', {
-        pareamentoId,
-        nome,
-        preco,
-        emoji: novoEmoji,
-        img: imgUrl,
-      });
 
-      const visivel = await waitForCustomMomentVisible(pareamentoId, meuUid, nome);
-      if (!visivel) {
-        showToast('Momento enviado — atualize a página se não aparecer.', 'aviso');
+      if (isEdit && editingId) {
+        await sendInput('custom_moment_update', {
+          pareamentoId,
+          itemId: editingId,
+          nome,
+          preco,
+          emoji: novoEmoji,
+          img: imgUrl,
+        });
+        const visivel = await waitForCustomMomentVisible(pareamentoId, meuUid, nome);
+        if (!visivel) {
+          showToast('Alterações enviadas — atualize a página se não aparecer.', 'aviso');
+        } else {
+          showToast('Momento personalizado atualizado!', 'sucesso');
+        }
       } else {
-        showToast('Momento custom criado!', 'sucesso');
+        await sendInput('custom_moment_create', {
+          pareamentoId,
+          nome,
+          preco,
+          emoji: novoEmoji,
+          img: imgUrl,
+        });
+        const visivel = await waitForCustomMomentVisible(pareamentoId, meuUid, nome);
+        if (!visivel) {
+          showToast('Momento enviado — atualize a página se não aparecer.', 'aviso');
+        } else {
+          showToast('Momento personalizado criado!', 'sucesso');
+        }
       }
-      limparImagemModal();
+      resetCustomForm();
       setShowCreateModal(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       if (msg.includes('file_too_large')) {
         showToast('A imagem deve ter menos de 5 MB.', 'aviso');
       } else {
-        showToast('Não foi possível criar o momento.', 'erro');
+        showToast(
+          editingId ? 'Não foi possível atualizar o momento.' : 'Não foi possível criar o momento.',
+          'erro',
+        );
       }
     } finally {
-      setCriandoCustom(false);
+      setSalvandoCustom(false);
     }
   }
 
   async function excluirCustom(itemId: string) {
     if (!pareamentoId) return;
-    openSystemConfirm('Excluir este momento custom?', async () => {
+    openSystemConfirm('Excluir este momento personalizado?', async () => {
       setExcluindoId(itemId);
       try {
         await sendInput('custom_moment_delete', { pareamentoId, itemId });
@@ -519,15 +573,26 @@ export default function PersonalizarPage() {
                             </p>
                           </div>
                           {isVip && (
-                            <button
-                              type="button"
-                              onClick={() => excluirCustom(item.id)}
-                              disabled={excluindoId === item.id}
-                              className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center disabled:opacity-50"
-                              aria-label="Excluir momento custom"
-                            >
-                              <i className="fas fa-trash-alt text-white/50 text-xs" />
-                            </button>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleEditarCustomClick(item)}
+                                disabled={salvandoCustom || excluindoId === item.id}
+                                className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center disabled:opacity-50"
+                                aria-label="Editar momento personalizado"
+                              >
+                                <i className="fas fa-pen text-white/50 text-xs" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => excluirCustom(item.id)}
+                                disabled={excluindoId === item.id || salvandoCustom}
+                                className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center disabled:opacity-50"
+                                aria-label="Excluir momento personalizado"
+                              >
+                                <i className="fas fa-trash-alt text-white/50 text-xs" />
+                              </button>
+                            </div>
                           )}
                         </div>
                       ))}
@@ -556,7 +621,7 @@ export default function PersonalizarPage() {
                     {isVip ? (
                       <>
                         <i className="fas fa-plus text-pink-400" />
-                        Criar momento personalizado
+                        Crie do seu jeito
                       </>
                     ) : (
                       <>
@@ -565,7 +630,7 @@ export default function PersonalizarPage() {
                           className="!relative shrink-0"
                           borderClassName="border-white/25"
                         />
-                        Crie um momento personalizado
+                        Crie do seu jeito
                       </>
                     )}
                   </button>
@@ -595,15 +660,17 @@ export default function PersonalizarPage() {
       <OverlayModal
         open={showCreateModal}
         onClose={() => {
-          if (criandoCustom) return;
-          limparImagemModal();
+          if (salvandoCustom) return;
+          resetCustomForm();
           setShowCreateModal(false);
         }}
-        ariaLabel="Criar momento custom"
+        ariaLabel={editingId ? 'Editar momento personalizado' : 'Crie do seu jeito'}
         panelClassName="bg-[#111114] border border-white/10"
       >
         <div className="p-6 space-y-4">
-          <h3 className="text-lg font-bold">Novo momento custom</h3>
+          <h3 className="text-lg font-bold">
+            {editingId ? 'Editar momento personalizado' : 'Crie do seu jeito'}
+          </h3>
           <p className="text-xs text-white/50">
             Seu parceiro poderá resgatar este momento na loja desta conexão.
           </p>
@@ -633,7 +700,9 @@ export default function PersonalizarPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs text-white/60">Foto (obrigatória)</label>
+            <label className="text-xs text-white/60">
+              {editingId ? 'Foto' : 'Foto (obrigatória)'}
+            </label>
             <input
               ref={imagemInputRef}
               type="file"
@@ -649,14 +718,26 @@ export default function PersonalizarPage() {
                   alt="Preview"
                   className="w-full h-32 object-cover"
                 />
-                <button
-                  type="button"
-                  onClick={limparImagemModal}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center"
-                  aria-label="Remover imagem"
-                >
-                  <i className="fas fa-times text-white text-xs" />
-                </button>
+                <div className="absolute top-2 right-2 flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => imagemInputRef.current?.click()}
+                    className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center"
+                    aria-label="Trocar foto"
+                  >
+                    <i className="fas fa-camera text-white text-xs" />
+                  </button>
+                  {!editingId && (
+                    <button
+                      type="button"
+                      onClick={limparImagemModal}
+                      className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center"
+                      aria-label="Remover imagem"
+                    >
+                      <i className="fas fa-times text-white text-xs" />
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               <button
@@ -706,11 +787,22 @@ export default function PersonalizarPage() {
 
           <button
             type="button"
-            onClick={confirmarCriarCustom}
-            disabled={criandoCustom || !novaImagemPreview || !novoNome.trim()}
+            onClick={confirmarSalvarCustom}
+            disabled={
+              salvandoCustom ||
+              !novoNome.trim() ||
+              (!editingId && !novaImagemPreview) ||
+              (Boolean(editingId) && !novaImagemPreview)
+            }
             className="btn-red w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-60"
           >
-            {criandoCustom ? 'Criando...' : 'Criar momento'}
+            {salvandoCustom
+              ? editingId
+                ? 'Salvando...'
+                : 'Criando...'
+              : editingId
+                ? 'Salvar alterações'
+                : 'Criar momento'}
           </button>
         </div>
       </OverlayModal>

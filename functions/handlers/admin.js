@@ -79,6 +79,7 @@ exports.createInput = https.onRequest(async (req, res) => {
       "convite_aceitar",
       "catalog_personalizado_save",
       "custom_moment_create",
+      "custom_moment_update",
       "custom_moment_delete",
     ];
     if (!input.type || !allowedTypes.includes(input.type)) {
@@ -161,6 +162,10 @@ exports.createInput = https.onRequest(async (req, res) => {
       ],
       custom_moment_create: [
         "type", "fromUid", "pareamentoId", "nome", "preco", "emoji", "img",
+      ],
+      custom_moment_update: [
+        "type", "fromUid", "pareamentoId", "itemId",
+        "nome", "preco", "emoji", "img",
       ],
       custom_moment_delete: [
         "type", "fromUid", "pareamentoId", "itemId",
