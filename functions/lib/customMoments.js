@@ -137,6 +137,9 @@ function validateCustomMomentFields(input, opts = {}) {
       emoji,
       img: rawImg || null,
       categoria: "Personalizado",
+      ...(Object.prototype.hasOwnProperty.call(input, "bloqueado") ?
+        {bloqueado: input.bloqueado === true} :
+        {}),
     },
   };
 }

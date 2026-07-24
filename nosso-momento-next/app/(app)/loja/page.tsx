@@ -63,7 +63,7 @@ export default function LojaPage() {
     const raw = momentosCustomAtivo[pareadoUid];
     if (!Array.isArray(raw)) return [];
     return raw
-      .filter((m: MomentoCustom) => m && m.ativo !== false)
+      .filter((m: MomentoCustom) => m && m.ativo !== false && m.bloqueado !== true)
       .map((m) => ({
         id: buildCustomMomentId(pareamentoId, m.id),
         nome: m.nome,

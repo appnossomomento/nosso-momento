@@ -14,6 +14,8 @@ export interface MomentoCustom {
   img?: string;
   categoria?: string;
   ativo?: boolean;
+  /** Se true, parceiro não vê/resgata na loja */
+  bloqueado?: boolean;
   criadorUid?: string;
   criadoEm?: unknown;
 }

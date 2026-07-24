@@ -157,6 +157,10 @@ function resolveCustomMomentItem(item, partnerUid, pareamentoId, pareamentoData)
   );
   if (!custom) return {ok: false, error: "momento_nao_encontrado"};
 
+  if (custom.bloqueado === true) {
+    return {ok: false, error: "momento_bloqueado"};
+  }
+
   const preco = Math.floor(Number(custom.preco));
   if (!Number.isFinite(preco) || preco <= 0 || preco > MAX_PRICE) {
     return {ok: false, error: "momento_preco_invalido"};
