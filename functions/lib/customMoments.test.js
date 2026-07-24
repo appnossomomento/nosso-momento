@@ -84,6 +84,32 @@ describe("customMoments — create validation", () => {
     });
     expect(result.ok).toBe(true);
     expect(result.item.preco).toBe(50);
+    expect(result.item.categoria).toBe("Personalizado");
+  });
+});
+
+describe("customMoments — update validation", () => {
+  const {
+    validateCustomMomentUpdateInput,
+  } = require("./customMoments");
+
+  test("aceita update sem imagem (mantém no handler)", () => {
+    const result = validateCustomMomentUpdateInput({
+      nome: "Jantar editado",
+      preco: 40,
+      emoji: "🔥",
+    });
+    expect(result.ok).toBe(true);
+    expect(result.item.img).toBeNull();
+  });
+
+  test("rejeita imagem inválida quando enviada", () => {
+    const result = validateCustomMomentUpdateInput({
+      nome: "Jantar",
+      preco: 40,
+      img: "not-a-url",
+    });
+    expect(result.ok).toBe(false);
   });
 });
 

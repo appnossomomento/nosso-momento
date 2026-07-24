@@ -169,7 +169,7 @@ function resolveCustomMomentItem(item, partnerUid, pareamentoId, pareamentoData)
       nome: custom.nome || item.nome || "Momento custom",
       custoFoguinhos: preco,
       emoji: custom.emoji || item.emoji || "✨",
-      categoria: custom.categoria || "Custom",
+      categoria: custom.categoria || "Personalizado",
       img: custom.img || item.img || "",
       momentoMestreId: "",
       isCustom: true,
