@@ -103,13 +103,15 @@ describe("customMoments — update validation", () => {
     expect(result.item.img).toBeNull();
   });
 
-  test("rejeita imagem inválida quando enviada", () => {
+  test("aceita flag bloqueado no update", () => {
     const result = validateCustomMomentUpdateInput({
       nome: "Jantar",
       preco: 40,
-      img: "not-a-url",
+      emoji: "🔥",
+      bloqueado: true,
     });
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
+    expect(result.item.bloqueado).toBe(true);
   });
 });
 

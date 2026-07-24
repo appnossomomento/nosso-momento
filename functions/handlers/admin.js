@@ -81,6 +81,7 @@ exports.createInput = https.onRequest(async (req, res) => {
       "custom_moment_create",
       "custom_moment_update",
       "custom_moment_delete",
+      "custom_moment_block",
     ];
     if (!input.type || !allowedTypes.includes(input.type)) {
       res.status(400).send({error: "unsupported_type"});
@@ -165,10 +166,13 @@ exports.createInput = https.onRequest(async (req, res) => {
       ],
       custom_moment_update: [
         "type", "fromUid", "pareamentoId", "itemId",
-        "nome", "preco", "emoji", "img",
+        "nome", "preco", "emoji", "img", "bloqueado",
       ],
       custom_moment_delete: [
         "type", "fromUid", "pareamentoId", "itemId",
+      ],
+      custom_moment_block: [
+        "type", "fromUid", "pareamentoId", "itemId", "bloqueado",
       ],
     };
 
