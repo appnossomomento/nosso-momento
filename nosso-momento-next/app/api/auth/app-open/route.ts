@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminAuth, getAdminFirestore } from '@/lib/firebase/admin';
-
-function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+import { saoPauloDateString } from '@/lib/utils/saoPauloDate';
 
 export async function POST(request: NextRequest) {
   const cookie = request.cookies.get('__session')?.value;
@@ -15,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const decoded = await getAdminAuth().verifySessionCookie(cookie, false);
     const uid = decoded.uid;
-    const date = todayKey();
+    const date = saoPauloDateString();
 
     const db = getAdminFirestore();
     const dayRef = db.collection('analytics_daily_logins').doc(date);
