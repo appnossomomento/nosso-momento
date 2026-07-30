@@ -11,6 +11,8 @@ module.exports = {
     "google",
   ],
   rules: {
+    // Windows (core.autocrlf) checkouts use CRLF; Google preset requires LF.
+    "linebreak-style": "off",
     "no-restricted-globals": ["error", "name", "length"],
     "prefer-arrow-callback": "error",
     "quotes": ["error", "double", {"allowTemplateLiterals": true}],
