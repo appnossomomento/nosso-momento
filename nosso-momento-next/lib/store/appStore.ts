@@ -175,7 +175,7 @@ const initialState: Omit<AppState, 'set' | 'reset'> = {
   notificacoesPresentesNaoLidas: 0,
   notificacoesConquistasNaoLidas: 0,
   notificacoes: [],
-  notificacoesTab: 'checkin',
+  notificacoesTab: 'momentos',
   pendingChallenge: null,
   pendingChallengeQueue: [],
   showChallengePopup: false,

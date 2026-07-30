@@ -27,6 +27,7 @@ function resolveNotificationUrl(redirectTo, tipo) {
 
   var type = typeof tipo === 'string' ? tipo.trim() : '';
   if (type === 'lembrete_humor') return '/clima';
+  if (type === 'chama_apagando' || type === 'clima') return '/parceiro';
   if (type === 'momento_resgatado' || type === 'moment_completion') return '/momentos';
   if (type === 'achievement' || type === 'milestone') return '/dashboard?achievements=1';
   if (type === 'pairing') return '/parear';

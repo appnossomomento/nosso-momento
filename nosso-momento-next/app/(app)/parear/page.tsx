@@ -2,7 +2,6 @@
 
 import { useState, FormEvent } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { callFunction, sendInput, FUNCTIONS } from '@/lib/firebase/functions';
 import { useAppStore } from '@/lib/store/appStore';
@@ -402,14 +401,6 @@ export default function ParearPage() {
           </div>
         )}
 
-        {temConexoes && (
-          <Link
-            href="/parceiro"
-            className="block w-full text-center text-xs text-white/40 hover:text-white/60 transition py-2"
-          >
-            Ir para o parceiro ativo
-          </Link>
-        )}
       </section>
     </div>
   );

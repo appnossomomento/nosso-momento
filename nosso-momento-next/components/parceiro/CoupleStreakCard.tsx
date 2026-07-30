@@ -1,5 +1,6 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import clsx from 'clsx';
 import type { CoupleStreak } from '@/lib/clima/coupleStreak';
@@ -8,7 +9,7 @@ import StreakFlame from '@/components/parceiro/StreakFlame';
 const STATE_COPY: Record<CoupleStreak['state'], string> = {
   alive: 'Sequência acesa',
   at_risk: 'Ainda dá tempo hoje',
-  ember: 'Um check-in reacende',
+  ember: 'A chama está apagando!',
   cold: 'Marquem juntos',
 };
 
@@ -32,6 +33,23 @@ const midBlockFire = {
     '0 10px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(249,115,22,0.25), 0 0 16px rgba(249,115,22,0.4), 0 0 32px rgba(239,68,68,0.28)',
 } as const;
 
+const midBlockEmber = {
+  background:
+    'linear-gradient(#1a1b20, #1a1b20) padding-box, linear-gradient(135deg, #78716c 0%, #a8a29e 55%, #57534e 100%) border-box',
+  border: '1px solid transparent',
+  borderRadius: 18,
+  boxShadow:
+    '0 10px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(168,162,158,0.2), 0 0 12px rgba(120,113,108,0.25)',
+} as const;
+
+const midBlockCold = {
+  background:
+    'linear-gradient(#1a1b20, #1a1b20) padding-box, linear-gradient(135deg, #52525b 0%, #71717a 55%, #3f3f46 100%) border-box',
+  border: '1px solid transparent',
+  borderRadius: 18,
+  boxShadow: '0 10px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(113,113,122,0.18)',
+} as const;
+
 const midBlockTriste = {
   background:
     'linear-gradient(#1a1b20, #1a1b20) padding-box, linear-gradient(135deg, #3b82f6 0%, #6366f1 55%, #818cf8 100%) border-box',
@@ -40,6 +58,16 @@ const midBlockTriste = {
   boxShadow:
     '0 10px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(99,102,241,0.28), 0 0 16px rgba(59,130,246,0.38), 0 0 32px rgba(99,102,241,0.24)',
 } as const;
+
+function midBlockStyle(
+  state: CoupleStreak['state'],
+  partnerTriste: boolean,
+): CSSProperties {
+  if (partnerTriste) return midBlockTriste;
+  if (state === 'cold') return midBlockCold;
+  if (state === 'ember') return midBlockEmber;
+  return midBlockFire;
+}
 
 const GLOW_DONE =
   '0 0 0 1px rgba(52,211,153,0.45), 0 0 12px rgba(52,211,153,0.55), 0 0 22px rgba(16,185,129,0.35)';
@@ -134,7 +162,7 @@ export default function CoupleStreakCard({
 
       <div
         className="flex-1 min-w-0 flex flex-col items-center justify-center px-2 pt-2 pb-2.5 text-center"
-        style={partnerTriste ? midBlockTriste : midBlockFire}
+        style={midBlockStyle(streak.state, partnerTriste)}
       >
         <StreakFlame state={streak.state} tier={streak.tier} softMood={partnerTriste} />
         <p className="text-xl font-bold leading-none text-white tabular-nums mt-0.5">{daysLabel}</p>

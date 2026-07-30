@@ -15,6 +15,7 @@ import { useWeeklyChallenge } from '@/lib/hooks/useWeeklyChallenge';
 import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
 import CoupleStreakCard from '@/components/parceiro/CoupleStreakCard';
 import { computeCoupleStreak } from '@/lib/clima/coupleStreak';
+import { saoPauloDateString } from '@/lib/utils/saoPauloDate';
 import { nomeParaCard } from '@/lib/utils/displayName';
 
 const HUMORES = [
@@ -77,9 +78,6 @@ export default function ParceiroPage() {
   const [submetendo, setSubmetendo] = useState(false);
   useWeeklyChallenge();
 
-  const agora = new Date(Date.now() - 3 * 60 * 60 * 1000);
-  const hojeUTC = agora.toISOString().slice(0, 10);
-
   const streak = useMemo(() => {
     const history =
       climaHistory.length > 0
@@ -89,16 +87,18 @@ export default function ParceiroPage() {
             humor: d.humor,
             partnerHumor: d.partnerHumor,
           }));
+    const hojeStr = saoPauloDateString();
     const patched = history.map((d) => {
-      if (d.data !== hojeUTC) return d;
+      if (d.data !== hojeStr) return d;
       return {
         ...d,
-        humor: climaHoje?.humor ?? d.humor,
-        partnerHumor: climaPartnerHoje?.humor ?? d.partnerHumor,
+        // Prefer live do dia; senão mantém climaDiario (já limpo pelo listener se for stale)
+        humor: climaHoje ? climaHoje.humor : d.humor,
+        partnerHumor: climaPartnerHoje ? climaPartnerHoje.humor : d.partnerHumor,
       };
     });
-    return computeCoupleStreak(patched, hojeUTC);
-  }, [climaHistory, climaSemana, climaHoje, climaPartnerHoje, hojeUTC]);
+    return computeCoupleStreak(patched, hojeStr);
+  }, [climaHistory, climaSemana, climaHoje, climaPartnerHoje]);
 
   const pareadoUidAtual = pareadoUid ?? usuario?.pareadoUid ?? null;
   if (!parceiroData && pareadoUidAtual) {
@@ -151,19 +151,19 @@ export default function ParceiroPage() {
   const tc = calcTempoJunto(pareadoDesdeSrc);
 
   const LABELS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  const hojeStr = saoPauloDateString();
   const semanaBase = climaSemana.length > 0 ? climaSemana : (() => {
-    const dayOfWeek = agora.getUTCDay();
+    const [y, m, d] = hojeStr.split('-').map(Number);
+    const dayOfWeek = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
     const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const mondayMs = agora.getTime() + diffToMonday * 86400000;
-    const mondayDate = new Date(mondayMs);
-    const mondayNorm = Date.UTC(mondayDate.getUTCFullYear(), mondayDate.getUTCMonth(), mondayDate.getUTCDate());
+    const mondayNorm = Date.UTC(y, m - 1, d + diffToMonday);
     return Array.from({ length: 7 }, (_, i) => {
       const dia = new Date(mondayNorm + i * 86400000).toISOString().slice(0, 10);
-      return { data: dia, label: LABELS_SEMANA[i], humor: null, partnerHumor: null, isHoje: dia === hojeUTC };
+      return { data: dia, label: LABELS_SEMANA[i], humor: null, partnerHumor: null, isHoje: dia === hojeStr };
     });
   })();
   const semanaVisivel = semanaBase.map((dia) => {
-    if (dia.data !== hojeUTC) return dia;
+    if (dia.data !== hojeStr) return dia;
     return {
       ...dia,
       humor: climaHoje?.humor ?? dia.humor,
@@ -187,10 +187,10 @@ export default function ParceiroPage() {
       set({
         climaHoje: { humor, registradoEm: new Date() },
         climaSemana: climaSemana.map((d) =>
-          d.data === hojeUTC ? { ...d, humor } : d
+          d.data === hojeStr ? { ...d, humor } : d
         ),
         climaHistory: climaHistory.map((d) =>
-          d.data === hojeUTC ? { ...d, humor } : d
+          d.data === hojeStr ? { ...d, humor } : d
         ),
       });
       showToast('Clima registrado! 🔥', 'sucesso');
@@ -438,7 +438,7 @@ export default function ParceiroPage() {
                   style={{ width: 28, height: 28, objectFit: 'contain', opacity: 0.9 }}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white/90 truncate">{tc.texto} juntos</p>
+                  <p className="text-sm font-semibold text-white/90 truncate">{tc.texto} conectados</p>
                 </div>
                 {proximaMeta ? (
                   <span className="text-[10px] text-white/35 flex-shrink-0">

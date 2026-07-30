@@ -1,8 +1,14 @@
-/* eslint-disable require-jsdoc */
+/* eslint-disable require-jsdoc, linebreak-style */
 "use strict";
 
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {admin} = require("../lib/config");
+const {
+  saoPauloDateString,
+  saoPauloYesterdayString,
+  saoPauloAnteontemString,
+  casalEmRiscoDeChama,
+} = require("../lib/chamaRisk");
 
 // =========================================================
 // FUNIL DE LEMBRETES DIÁRIOS DE HUMOR
@@ -95,6 +101,9 @@ async function enviarLembretes(titulo, mensagem, logTag) {
         titulo,
         mensagem,
         tipo: "lembrete_humor",
+        icone: "fa-thermometer-half",
+        lida: false,
+        timestamp: FS.serverTimestamp(),
         criadoEm: FS.serverTimestamp(),
       });
 
@@ -145,4 +154,90 @@ exports.lembreteHumorNoite = onSchedule(
         "Não esqueça de registrar seu humor antes de dormir.",
         "lembreteHumorNoite",
     ),
+);
+
+/**
+ * 00:01 BRT — Dia 3 da jornada: casal marcou no Dia 1, pulou o Dia 2.
+ * Push "A chama está apagando!". Reset cinza só no Dia 4 (client).
+ * @return {Promise<void>}
+ */
+async function enviarAlertaChamaApagando() {
+  const db = admin.firestore();
+  const FS = admin.firestore.FieldValue;
+  const todayKey = saoPauloDateString();
+  const yesterdayKey = saoPauloYesterdayString();
+  const anteontemKey = saoPauloAnteontemString();
+  const logTag = "alertaChamaApagando";
+
+  const pareamentosSnap = await db.collection("pareamentos").get();
+  let enviados = 0;
+  let casaisEmRisco = 0;
+  let semToken = 0;
+  let ignorados = 0;
+
+  for (const doc of pareamentosSnap.docs) {
+    const data = doc.data() || {};
+    const uidA = data.pessoa1Uid || null;
+    const uidB = data.pessoa2Uid || null;
+    if (!uidA || !uidB) {
+      ignorados += 1;
+      continue;
+    }
+
+    const climaHoje = data.climaHoje || {};
+    if (!casalEmRiscoDeChama(
+        climaHoje, uidA, uidB, anteontemKey, yesterdayKey,
+    )) {
+      ignorados += 1;
+      continue;
+    }
+
+    casaisEmRisco += 1;
+
+    for (const uid of [uidA, uidB]) {
+      const tokensDoc = await db
+          .collection("userNotificationTokens")
+          .doc(uid)
+          .get();
+      const docData = tokensDoc.exists ? (tokensDoc.data() || {}) : {};
+      const tokens = Array.isArray(docData.tokens) ?
+        docData.tokens.filter((t) => typeof t === "string" && t.length) :
+        [];
+
+      if (!tokens.length) {
+        semToken += 1;
+        continue;
+      }
+
+      await db.collection("notificacoes").add({
+        userId: uid,
+        titulo: "A chama está apagando!",
+        mensagem: "Marquem o humor hoje para manter a sequência acesa.",
+        tipo: "chama_apagando",
+        icone: "fa-fire",
+        redirectTo: "perfilParceiro",
+        lida: false,
+        timestamp: FS.serverTimestamp(),
+        criadoEm: FS.serverTimestamp(),
+      });
+      enviados += 1;
+    }
+  }
+
+  console.log(`${logTag}:concluido`, {
+    todayKey,
+    yesterdayKey,
+    anteontemKey,
+    pareamentos: pareamentosSnap.size,
+    casaisEmRisco,
+    enviados,
+    semToken,
+    ignorados,
+  });
+}
+
+// ── 00:01 BRT — risco da sequência do casal ──────────────
+exports.alertaChamaApagando = onSchedule(
+    {...SCHEDULE_OPTS, schedule: "1 0 * * *"},
+    () => enviarAlertaChamaApagando(),
 );

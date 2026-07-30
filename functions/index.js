@@ -54,3 +54,4 @@ const dailyHumorHandler = require("./handlers/dailyHumor");
 exports.lembreteHumorManha = dailyHumorHandler.lembreteHumorManha;
 exports.lembreteHumorAlmoco = dailyHumorHandler.lembreteHumorAlmoco;
 exports.lembreteHumorNoite = dailyHumorHandler.lembreteHumorNoite;
+exports.alertaChamaApagando = dailyHumorHandler.alertaChamaApagando;
