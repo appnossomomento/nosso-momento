@@ -29,6 +29,7 @@ export function resolveNotificationTarget(
 
   const type = typeof tipo === 'string' ? tipo.trim() : '';
   if (type === 'lembrete_humor') return { path: '/clima' };
+  if (type === 'chama_apagando' || type === 'clima') return { path: '/parceiro' };
   if (type === 'momento_resgatado' || type === 'moment_completion') return { path: '/momentos' };
   if (type === 'achievement' || type === 'milestone') {
     return { path: '/dashboard', openAchievementsPopup: true };

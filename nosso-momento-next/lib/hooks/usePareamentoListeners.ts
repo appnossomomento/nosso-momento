@@ -13,6 +13,7 @@ type ClimaSnap = { humor?: string; registradoEm?: unknown } | null;
 function patchClimaHoje(
   items: ClimaItem[],
   hojeStr: string,
+  /** null = limpar check-in de hoje; undefined = não mexer */
   meuHumor: string | null | undefined,
   partnerHumor: string | null | undefined,
 ): ClimaItem[] {
@@ -20,9 +21,8 @@ function patchClimaHoje(
   let changed = false;
   const next = items.map((d) => {
     if (d.data !== hojeStr) return d;
-    const humor = meuHumor !== undefined && meuHumor !== null ? meuHumor : d.humor;
-    const ph =
-      partnerHumor !== undefined && partnerHumor !== null ? partnerHumor : d.partnerHumor;
+    const humor = meuHumor !== undefined ? meuHumor : d.humor;
+    const ph = partnerHumor !== undefined ? partnerHumor : d.partnerHumor;
     if (humor === d.humor && ph === d.partnerHumor) return d;
     changed = true;
     return { ...d, humor, partnerHumor: ph };
@@ -98,17 +98,18 @@ export function usePareamentoListeners() {
             : null;
 
           const hojeStr = saoPauloDateString();
+          // null quando não é de hoje — limpa o patch e evita manter humor “aceso” velho
           const climaSemana = patchClimaHoje(
             state.climaSemana,
             hojeStr,
-            climaHoje?.humor,
-            climaPartnerHoje?.humor,
+            climaHoje ? climaHoje.humor : null,
+            climaPartnerHoje ? climaPartnerHoje.humor : null,
           );
           const climaHistory = patchClimaHoje(
             state.climaHistory,
             hojeStr,
-            climaHoje?.humor,
-            climaPartnerHoje?.humor,
+            climaHoje ? climaHoje.humor : null,
+            climaPartnerHoje ? climaPartnerHoje.humor : null,
           );
 
           set({

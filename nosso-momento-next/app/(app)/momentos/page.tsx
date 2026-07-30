@@ -264,7 +264,7 @@ export default function MomentosPage() {
                     className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
                     style={{ background: 'rgba(0,0,0,0.22)' }}
                   >
-                    <i className="fas fa-fire text-white text-base" />
+                    <i className="fas fa-check text-white text-base" />
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-white font-bold text-base leading-tight">Momento Realizado!</h3>
@@ -285,16 +285,19 @@ export default function MomentosPage() {
             <div className="p-5 space-y-4">
               <p className="text-white/50 text-sm text-center">Quer registrar uma memória deste momento?</p>
 
-              {/* Incentivo: foto = foguinhos */}
+              {/* Incentivo: foto = recompensa */}
               <div
                 className="flex items-center gap-2 rounded-xl px-3 py-2"
                 style={{ background: realizandoFoto ? 'rgba(34,197,94,0.10)' : 'rgba(255,45,63,0.08)', border: `1px solid ${realizandoFoto ? 'rgba(34,197,94,0.25)' : 'rgba(255,45,63,0.18)'}` }}
               >
-                <span className="text-base">{realizandoFoto ? '✅' : '📸'}</span>
+                <i
+                  className={`fas ${realizandoFoto ? 'fa-check-circle' : 'fa-camera'} text-sm shrink-0`}
+                  style={{ color: realizandoFoto ? 'rgb(134,239,172)' : 'rgba(255,100,100,0.9)' }}
+                />
                 <p className="text-xs leading-snug" style={{ color: realizandoFoto ? 'rgb(134,239,172)' : 'rgba(255,255,255,0.55)' }}>
                   {realizandoFoto
-                    ? <><strong className="text-green-400">+2 🔥 foguinhos</strong> serão adicionados ao confirmar!</>
-                    : <>Adicione uma foto e ganhe <strong style={{ color: 'rgba(255,100,100,0.9)' }}>+2 🔥 foguinhos</strong> de recompensa.</>}
+                    ? <><strong className="text-green-400">Recompensa</strong> será adicionada ao confirmar!</>
+                    : <>Adicione uma foto e ganhe uma recompensa.</>}
                 </p>
               </div>
 
@@ -332,6 +335,17 @@ export default function MomentosPage() {
                 className="hidden"
                 onChange={handleFotoChange}
               />
+
+              {/* Privacidade */}
+              <div
+                className="flex items-start gap-2 rounded-xl px-3 py-2.5"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                <i className="fas fa-lock text-[11px] mt-0.5 shrink-0" style={{ color: 'rgba(255,255,255,0.35)' }} />
+                <p className="text-[11px] leading-snug text-white/40">
+                  A foto de vocês ficará disponível apenas para o casal.
+                </p>
+              </div>
 
               {/* Botão confirmar */}
               <button

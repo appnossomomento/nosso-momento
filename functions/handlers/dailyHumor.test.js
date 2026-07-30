@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+/* eslint-disable max-len, linebreak-style */
 "use strict";
 
 // ── Testes da lógica pura de isSameCalendarDay e filtragem de pendentes ──
@@ -114,5 +114,63 @@ describe("filtragem de pendentes (quem não registrou hoje)", () => {
     const uidB = "uidB";
     const uids = [uidA, uidB].filter(Boolean);
     expect(uids).toEqual(["uidB"]);
+  });
+});
+
+// ── Alerta "A chama está apagando!" ───────────────────────────────────────
+
+const {
+  casalEmRiscoDeChama,
+  saoPauloYesterdayString,
+  saoPauloAnteontemString,
+  saoPauloDateString,
+} = require("../lib/chamaRisk");
+
+describe("casalEmRiscoDeChama (Dia 3 00:01 — push chama apagando)", () => {
+  // Dia 1 = anteontem, Dia 2 = ontem, Dia 3 = hoje
+  const anteontem = "2026-07-28";
+  const yesterday = "2026-07-29";
+
+  test("true quando ambos marcaram no Dia 1 (anteontem) e pularam o Dia 2", () => {
+    const climaHoje = {
+      uidA: {registradoEm: makeTs(new Date("2026-07-28T20:00:00-03:00"))},
+      uidB: {registradoEm: makeTs(new Date("2026-07-28T21:00:00-03:00"))},
+    };
+    expect(casalEmRiscoDeChama(
+        climaHoje, "uidA", "uidB", anteontem, yesterday,
+    )).toBe(true);
+  });
+
+  test("false no Dia 2 00:01 (último check-in foi ontem = Dia 1)", () => {
+    // No Dia 2, anteontem seria Dia 0; último check-in = ontem
+    const climaHoje = {
+      uidA: {registradoEm: makeTs(new Date("2026-07-29T20:00:00-03:00"))},
+      uidB: {registradoEm: makeTs(new Date("2026-07-29T21:00:00-03:00"))},
+    };
+    expect(casalEmRiscoDeChama(
+        climaHoje, "uidA", "uidB", anteontem, yesterday,
+    )).toBe(false);
+  });
+
+  test("false quando só um marcou no Dia 1", () => {
+    const climaHoje = {
+      uidA: {registradoEm: makeTs(new Date("2026-07-28T20:00:00-03:00"))},
+      uidB: {registradoEm: makeTs(new Date("2026-07-27T20:00:00-03:00"))},
+    };
+    expect(casalEmRiscoDeChama(
+        climaHoje, "uidA", "uidB", anteontem, yesterday,
+    )).toBe(false);
+  });
+
+  test("false quando climaHoje vazio", () => {
+    expect(casalEmRiscoDeChama({}, "uidA", "uidB", anteontem, yesterday))
+        .toBe(false);
+  });
+
+  test("offsets de data SP no Dia 3 00:01", () => {
+    const now = new Date("2026-07-30T03:01:00Z"); // 00:01 BRT do dia 30
+    expect(saoPauloDateString(now)).toBe("2026-07-30");
+    expect(saoPauloYesterdayString(now)).toBe("2026-07-29");
+    expect(saoPauloAnteontemString(now)).toBe("2026-07-28");
   });
 });

@@ -18,13 +18,30 @@ import type { Notificacao } from '@/lib/types';
 const TIPOS_MOMENTOS = new Set(['momento_resgatado', 'moment_completion', 'catalog_update']);
 const TIPOS_CONQUISTAS = new Set(['achievement', 'milestone']);
 
+/** IDs marcadas como lidas nesta sessão — evita o onSnapshot reacender o badge. */
+const locallyReadIds = new Set<string>();
+
+/** Só considera lida quando o campo é explicitamente true (ou marcada localmente). */
+export function isNotificacaoLida(n: Notificacao): boolean {
+  return n.lida === true || locallyReadIds.has(n.id);
+}
+
+function applyLocalReadState(docs: Notificacao[]): Notificacao[] {
+  if (!locallyReadIds.size) return docs;
+  return docs.map((n) =>
+    locallyReadIds.has(n.id) && n.lida !== true
+      ? ({ ...n, lida: true } as Notificacao)
+      : n,
+  );
+}
+
 function derivarContadores(docs: Notificacao[]) {
   let tarefas = 0;
   let presentes = 0;
   let conquistas = 0;
 
   for (const n of docs) {
-    if (n.lida) continue;
+    if (isNotificacaoLida(n)) continue;
     const tipo = String(n.tipo ?? '');
     const icone = String(n.icone ?? '');
     if (TIPOS_CONQUISTAS.has(tipo)) {
@@ -34,7 +51,6 @@ function derivarContadores(docs: Notificacao[]) {
     } else if (TIPOS_MOMENTOS.has(tipo)) {
       tarefas += 1;
     } else {
-      // diário: desafio, clima, lembrete_humor
       tarefas += 1;
     }
   }
@@ -56,6 +72,7 @@ export function useNotificacoes() {
 
   useEffect(() => {
     if (!uid) {
+      locallyReadIds.clear();
       set({
         notificacoes: [],
         notificacoesTarefasNaoLidas: 0,
@@ -75,10 +92,12 @@ export function useNotificacoes() {
     const unsub = onSnapshot(
       q,
       (snap) => {
-        const docs = snap.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
-        })) as Notificacao[];
+        const docs = applyLocalReadState(
+          snap.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+          })) as Notificacao[],
+        );
 
         set({
           notificacoes: docs,
@@ -96,17 +115,46 @@ export function useNotificacoes() {
 
 /**
  * Marca como lidas todas as notificações não lidas de um subconjunto.
- * As regras do Firestore permitem update apenas no campo `lida`.
+ * Atualiza o store na hora e mantém IDs locais para o badge do Início não voltar.
  */
 export async function marcarNotificacoesComoLidas(
   notificacoes: Notificacao[],
 ): Promise<void> {
-  const naoLidas = notificacoes.filter((n) => !n.lida);
+  const naoLidas = notificacoes.filter((n) => !isNotificacaoLida(n));
   if (!naoLidas.length) return;
 
-  await Promise.allSettled(
-    naoLidas.map((n) =>
-      updateDoc(doc(db, 'notificacoes', n.id), { lida: true }),
-    ),
+  for (const n of naoLidas) {
+    locallyReadIds.add(n.id);
+  }
+
+  const ids = new Set(naoLidas.map((n) => n.id));
+  const { notificacoes: atuais, set } = useAppStore.getState();
+  const atualizadas = atuais.map((n) =>
+    ids.has(n.id) ? ({ ...n, lida: true } as Notificacao) : n,
   );
+  set({
+    notificacoes: atualizadas,
+    ...derivarContadores(atualizadas),
+  });
+
+  const results = await Promise.allSettled(
+    naoLidas.map(async (n) => {
+      try {
+        await updateDoc(doc(db, 'notificacoes', n.id), { lida: true });
+      } catch (err) {
+        console.error('[marcarNotificacoesComoLidas] doc', n.id, err);
+        throw err;
+      }
+    }),
+  );
+
+  const falhas = results.filter((r) => r.status === 'rejected');
+  if (falhas.length) {
+    console.error(
+      '[marcarNotificacoesComoLidas] falha ao persistir',
+      falhas.length,
+      'de',
+      naoLidas.length,
+    );
+  }
 }
