@@ -151,19 +151,19 @@ export default function ParceiroPage() {
   const tc = calcTempoJunto(pareadoDesdeSrc);
 
   const LABELS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+  const hojeStr = saoPauloDateString();
   const semanaBase = climaSemana.length > 0 ? climaSemana : (() => {
-    const dayOfWeek = agora.getUTCDay();
+    const [y, m, d] = hojeStr.split('-').map(Number);
+    const dayOfWeek = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
     const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const mondayMs = agora.getTime() + diffToMonday * 86400000;
-    const mondayDate = new Date(mondayMs);
-    const mondayNorm = Date.UTC(mondayDate.getUTCFullYear(), mondayDate.getUTCMonth(), mondayDate.getUTCDate());
+    const mondayNorm = Date.UTC(y, m - 1, d + diffToMonday);
     return Array.from({ length: 7 }, (_, i) => {
       const dia = new Date(mondayNorm + i * 86400000).toISOString().slice(0, 10);
-      return { data: dia, label: LABELS_SEMANA[i], humor: null, partnerHumor: null, isHoje: dia === hojeUTC };
+      return { data: dia, label: LABELS_SEMANA[i], humor: null, partnerHumor: null, isHoje: dia === hojeStr };
     });
   })();
   const semanaVisivel = semanaBase.map((dia) => {
-    if (dia.data !== hojeUTC) return dia;
+    if (dia.data !== hojeStr) return dia;
     return {
       ...dia,
       humor: climaHoje?.humor ?? dia.humor,
@@ -187,10 +187,10 @@ export default function ParceiroPage() {
       set({
         climaHoje: { humor, registradoEm: new Date() },
         climaSemana: climaSemana.map((d) =>
-          d.data === hojeUTC ? { ...d, humor } : d
+          d.data === hojeStr ? { ...d, humor } : d
         ),
         climaHistory: climaHistory.map((d) =>
-          d.data === hojeUTC ? { ...d, humor } : d
+          d.data === hojeStr ? { ...d, humor } : d
         ),
       });
       showToast('Clima registrado! 🔥', 'sucesso');
