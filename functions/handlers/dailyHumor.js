@@ -123,6 +123,10 @@ const SCHEDULE_OPTS = {
   timeZone: "America/Sao_Paulo",
   region: "southamerica-east1",
   memory: "256MiB",
+  // CPU fracionário: evita estourar cota da região no deploy/healthcheck.
+  cpu: 0.083,
+  maxInstances: 1,
+  concurrency: 1,
   timeoutSeconds: 300,
 };
 

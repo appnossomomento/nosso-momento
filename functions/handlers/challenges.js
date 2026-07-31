@@ -60,24 +60,35 @@ async function runChallengeRotation(tipo) {
 }
 
 // Segunda-feira 20h → Perguntas (Alma Gêmea)
-exports.rotateWeeklyChallenges = onSchedule({
-  schedule: "0 20 * * 1",
+const CHALLENGE_SCHEDULE_OPTS = {
   timeZone: "America/Sao_Paulo",
+  memory: "256MiB",
+  cpu: 0.083,
+  maxInstances: 1,
+};
+
+exports.rotateWeeklyChallenges = onSchedule({
+  ...CHALLENGE_SCHEDULE_OPTS,
+  schedule: "0 20 * * 1",
 }, async () => runChallengeRotation("alma_gemea"));
 
 // Quarta-feira 20h → Preferências
 exports.startPreferenciasDesafio = onSchedule({
+  ...CHALLENGE_SCHEDULE_OPTS,
   schedule: "0 20 * * 3",
-  timeZone: "America/Sao_Paulo",
 }, async () => runChallengeRotation("preferencias"));
 
 // Domingo 22h → Roleta
 exports.startRoletaDesafio = onSchedule({
+  ...CHALLENGE_SCHEDULE_OPTS,
   schedule: "0 22 * * 0",
-  timeZone: "America/Sao_Paulo",
 }, async () => runChallengeRotation("roleta"));
 
-exports.resetWeeklyChallengesAdmin = https.onRequest(async (req, res) => {
+exports.resetWeeklyChallengesAdmin = https.onRequest({
+  maxInstances: 2,
+  memory: "256MiB",
+  cpu: 0.5,
+}, async (req, res) => {
   setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {

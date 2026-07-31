@@ -26,6 +26,8 @@ const ALLOWED_ORIGINS = [
 
 setGlobalOptions({
   region: "southamerica-east1",
+  // Cota Cloud Run southamerica-east1: ~20 CPU total (maxInstances * cpu).
+  maxInstances: 5,
 });
 
 const WEEKLY_CHALLENGE_QUESTIONS = [
