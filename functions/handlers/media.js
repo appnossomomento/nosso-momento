@@ -180,14 +180,13 @@ exports.resolveMediaUrls = https.onRequest(HTTP_OPTS, async (req, res) => {
   try {
     const db = admin.firestore();
     const pairCache = new Map();
-
-    async function canAccess(pareamentoId) {
+    const canAccess = async (pareamentoId) => {
       if (pairCache.has(pareamentoId)) return pairCache.get(pareamentoId);
       const snap = await db.collection("pareamentos").doc(pareamentoId).get();
       const ok = snap.exists && isUserPareamentoMember(snap.data(), uid);
       pairCache.set(pareamentoId, ok);
       return ok;
-    }
+    };
 
     const urls = {};
     await Promise.all(paths.map(async (filePath) => {

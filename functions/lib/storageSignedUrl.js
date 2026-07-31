@@ -27,7 +27,7 @@ function pathFromFirebaseDownloadUrl(url) {
 
 /**
  * Remove download tokens permanentes do metadata (best-effort).
- * @param {import('@google-cloud/storage').File} file
+ * @param {object} file Arquivo do Storage (Admin SDK).
  * @return {Promise<void>}
  */
 async function stripDownloadTokens(file) {
@@ -46,7 +46,9 @@ async function stripDownloadTokens(file) {
 /**
  * Gera URL assinada de leitura (V4), TTL padrão 15 min.
  * @param {string} filePath
- * @param {{ttlMs?: number, stripTokens?: boolean}=} opts
+ * @param {object=} opts
+ * @param {number=} opts.ttlMs
+ * @param {boolean=} opts.stripTokens
  * @return {Promise<string|null>}
  */
 async function signReadUrl(filePath, opts = {}) {
@@ -78,7 +80,7 @@ async function signReadUrl(filePath, opts = {}) {
 
 /**
  * Resolve fotoUrl assinado a partir de fotoPath ou URL legada.
- * @param {{fotoPath?: string|null, fotoUrl?: string|null}} doc
+ * @param {object} doc
  * @return {Promise<string|null>}
  */
 async function signMemoriaDoc(doc) {

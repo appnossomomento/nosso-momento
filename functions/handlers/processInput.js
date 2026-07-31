@@ -3488,7 +3488,8 @@ exports.processInput = onDocumentCreated(
             const rawCustomList = (pData.momentosCustom || {})[fromUid];
             const currentList = Array.isArray(rawCustomList) ?
               rawCustomList : [];
-            const nextImgPath = validated.item.imgPath || existing.imgPath || null;
+            const nextImgPath = validated.item.imgPath ||
+              existing.imgPath || null;
             const nextImg = nextImgPath ?
               null :
               (validated.item.img || existing.img || null);

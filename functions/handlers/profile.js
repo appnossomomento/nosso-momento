@@ -242,7 +242,7 @@ exports.exportarMeusDados = https.onRequest({
       memorias,
       waitlist,
       surveys,
-      note: "Arquivos de mídia não são embutidos; paths estão em memorias[].fotoPath.",
+      note: "Mídia não embutida; paths em memorias[].fotoPath.",
     });
   } catch (err) {
     console.error("exportarMeusDados: erro", err);
