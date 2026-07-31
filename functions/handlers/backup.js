@@ -15,6 +15,8 @@ exports.backupFirestore = onSchedule(
       timeZone: "UTC",
       region: "southamerica-east1",
       memory: "256MiB",
+      cpu: 0.083,
+      maxInstances: 1,
       timeoutSeconds: 120,
     },
     async () => {

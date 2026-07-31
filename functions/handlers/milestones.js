@@ -10,6 +10,9 @@ const {admin} = require("../lib/config");
 exports.checkMonthlyMilestones = onSchedule({
   schedule: "0 10 * * *",
   timeZone: "America/Sao_Paulo",
+  memory: "256MiB",
+  cpu: 0.083,
+  maxInstances: 1,
 }, async () => {
   const db = admin.firestore();
   const nowDate = new Date();
