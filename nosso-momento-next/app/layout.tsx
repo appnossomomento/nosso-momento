@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import Script from 'next/script';
 import './globals.css';
 import AuthProvider from '@/components/AuthProvider';
 import ScreenTracker from '@/components/ScreenTracker';
+import CookieConsent from '@/components/CookieConsent';
+import TrackingScripts from '@/components/TrackingScripts';
 
 export const metadata: Metadata = {
   title: 'Nosso Momento',
@@ -24,9 +25,6 @@ export const viewport: Viewport = {
   themeColor: '#0a0a0a',
 };
 
-const GA_ID = 'G-556FY0WV3Q';
-const META_PIXEL_ID = '1883535982201745';
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
@@ -35,40 +33,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         />
-        {/* Google Analytics 4 */}
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-          strategy="afterInteractive"
-        />
-        <Script id="ga4-init" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            // send_page_view:false — o page_view é disparado pelo ScreenTracker
-            // (App Router é SPA; evita page_view duplicado nas navegações).
-            gtag('config', '${GA_ID}', { send_page_view: false });
-          `}
-        </Script>
-        {/* Meta Pixel */}
-        <Script id="meta-pixel-init" strategy="afterInteractive">
-          {`
-            !function(f,b,e,v,n,t,s)
-            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-            n.queue=[];t=b.createElement(e);t.async=!0;
-            t.src=v;s=b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t,s)}(window, document,'script',
-            'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '${META_PIXEL_ID}');
-            fbq('track', 'PageView');
-          `}
-        </Script>
       </head>
       <body>
+        <TrackingScripts />
         <ScreenTracker />
         <AuthProvider>{children}</AuthProvider>
+        <CookieConsent />
       </body>
     </html>
   );

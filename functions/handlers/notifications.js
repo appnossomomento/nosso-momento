@@ -2,7 +2,7 @@
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
 const https = require("firebase-functions/v2/https");
 const {admin} = require("../lib/config");
-const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {setCorsHeaders, rateLimitFirestore} = require("../lib/http");
 const {requireAppCheck} = require("../lib/appCheck");
 
 exports.enviarNotificacaoPush = onDocumentCreated(
@@ -158,7 +158,7 @@ exports.setNotificationToken = https.onRequest(async (req, res) => {
     return;
   }
 
-  if (rateLimitHttp(req, res, {
+  if (await rateLimitFirestore(req, res, {
     keyPrefix: "setNotificationToken",
     limit: 30,
     windowMs: 60 * 1000,

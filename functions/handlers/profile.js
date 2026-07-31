@@ -2,7 +2,7 @@
 const {onDocumentUpdated} = require("firebase-functions/v2/firestore");
 const https = require("firebase-functions/v2/https");
 const {admin} = require("../lib/config");
-const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {setCorsHeaders, rateLimitFirestore} = require("../lib/http");
 const {requireAppCheck} = require("../lib/appCheck");
 const {deleteUserAccount} = require("../lib/deleteAccount");
 
@@ -110,7 +110,7 @@ exports.excluirConta = https.onRequest(async (req, res) => {
     return;
   }
 
-  if (rateLimitHttp(req, res, {
+  if (await rateLimitFirestore(req, res, {
     keyPrefix: "excluirConta",
     limit: 3,
     windowMs: 60 * 60 * 1000,

@@ -2,7 +2,7 @@
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const https = require("firebase-functions/v2/https");
 const {admin} = require("../lib/config");
-const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {setCorsHeaders, rateLimitFirestore} = require("../lib/http");
 const {requireAppCheck} = require("../lib/appCheck");
 const {
   upsertWeeklyChallengeForPair,
@@ -93,7 +93,7 @@ exports.resetWeeklyChallengesAdmin = https.onRequest(async (req, res) => {
     return;
   }
 
-  if (rateLimitHttp(req, res, {
+  if (await rateLimitFirestore(req, res, {
     keyPrefix: "resetWeeklyChallengesAdmin",
     limit: 10,
     windowMs: 5 * 60 * 1000,

@@ -1,7 +1,7 @@
 /* eslint-disable require-jsdoc */
 const {onRequest} = require("firebase-functions/v2/https");
 const {admin} = require("../lib/config");
-const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {setCorsHeaders, rateLimitFirestore} = require("../lib/http");
 const {requireAppCheck} = require("../lib/appCheck");
 
 exports.getExtrato = onRequest(async (req, res) => {
@@ -17,7 +17,7 @@ exports.getExtrato = onRequest(async (req, res) => {
   if (await requireAppCheck(req, res)) {
     return;
   }
-  if (rateLimitHttp(req, res, {
+  if (await rateLimitFirestore(req, res, {
     keyPrefix: "getExtrato",
     limit: 120,
     windowMs: 60 * 1000,

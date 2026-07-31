@@ -3,9 +3,7 @@
 
 const https = require("firebase-functions/v2/https");
 const {admin} = require("../lib/config");
-const {
-  setCorsHeaders, rateLimitHttp, rateLimitFirestore,
-} = require("../lib/http");
+const {setCorsHeaders, rateLimitFirestore} = require("../lib/http");
 const {requireAppCheck} = require("../lib/appCheck");
 const crypto = require("crypto");
 
@@ -38,7 +36,7 @@ exports.gerarConvite = https.onRequest(async (req, res) => {
     return;
   }
 
-  if (rateLimitHttp(req, res, {
+  if (await rateLimitFirestore(req, res, {
     keyPrefix: "gerarConvite",
     limit: 5,
     windowMs: 60 * 1000,

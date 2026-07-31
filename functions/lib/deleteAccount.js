@@ -195,6 +195,38 @@ async function deleteUserAccount({db, auth, storage, FieldValue}, uid) {
       db, db.collection("inputs").where("fromUid", "==", uid),
   );
 
+  // Pesquisas: campo userId (docId = `${surveyId}_${uid}`)
+  await deleteQueryInBatches(
+      db, db.collection("surveyResponses").where("userId", "==", uid),
+  );
+
+  // Waitlist / VIP leads vinculados a email ou telefone do usuário
+  if (userData) {
+    const email = typeof userData.email === "string" ?
+      userData.email.trim().toLowerCase() : "";
+    const phone = (userPhone || "").replace(/\D/g, "");
+    if (email) {
+      await deleteQueryInBatches(
+          db, db.collection("lista-de-espera").where("email", "==", email),
+      );
+    }
+    if (phone) {
+      await deleteQueryInBatches(
+          db,
+          db.collection("lista-de-espera")
+              .where("telefoneWhatsapp", "==", phone),
+      );
+    }
+  }
+
+  // Analytics de login diário: analytics_daily_logins/{date}/users/{uid}
+  {
+    const days = await db.collection("analytics_daily_logins").listDocuments();
+    for (const dayRef of days) {
+      await dayRef.collection("users").doc(uid).delete().catch(() => {});
+    }
+  }
+
   await deleteStoragePrefix(storage, `profile_pics/${uid}/`);
 
   const bucket = storage.bucket();

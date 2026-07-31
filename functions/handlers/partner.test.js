@@ -10,7 +10,7 @@ jest.mock("../lib/config", () => ({
 
 jest.mock("../lib/http", () => ({
   setCorsHeaders: jest.fn(),
-  rateLimitHttp: jest.fn(() => false),
+  rateLimitFirestore: jest.fn(async () => false),
 }));
 
 jest.mock("../lib/appCheck", () => ({

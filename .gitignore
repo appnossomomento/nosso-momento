@@ -68,12 +68,12 @@ nosso-momento-next/.next/
 
 # dotenv environment variables file
 .env
+.env.*
+!.env.example
+!.env.*.example
 
 # dataconnect generated files
 .dataconnect
-
-.vercel
-.env*.local
 
 .vercel
 .env*.local
