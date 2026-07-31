@@ -35,6 +35,7 @@ export default function PerfilPage() {
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [togglingNotif, setTogglingNotif] = useState(false);
+  const [exportandoDados, setExportandoDados] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fotoInputRef = useRef<HTMLInputElement>(null);
 
@@ -164,6 +165,35 @@ export default function PerfilPage() {
       openSystemAlert('Erro ao alterar as notificações. Tente novamente.');
     } finally {
       setTogglingNotif(false);
+    }
+  }
+
+  async function handleExportarDados() {
+    if (!usuario?.uid || exportandoDados) return;
+    setExportandoDados(true);
+    try {
+      const data = await callFunction<Record<string, unknown>>(FUNCTIONS.exportarMeusDados, {});
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nosso-momento-dados-${usuario.uid.slice(0, 8)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Seus dados foram baixados.', 'sucesso');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('app_check') || msg.includes('401')) {
+        openSystemAlert(
+          'Não foi possível validar a segurança do app (App Check). Recarregue a página e tente de novo.',
+        );
+      } else if (msg.includes('429') || msg.includes('rate')) {
+        openSystemAlert('Limite de exportações atingido. Tente novamente mais tarde.');
+      } else {
+        openSystemAlert('Erro ao exportar seus dados. Tente novamente.');
+      }
+    } finally {
+      setExportandoDados(false);
     }
   }
 
@@ -414,6 +444,16 @@ export default function PerfilPage() {
               style={{ transform: notifAtivas ? 'translateX(16px)' : 'translateX(0)' }}
             />
           </div>
+        </button>
+
+        {/* LGPD — portabilidade */}
+        <button
+          onClick={handleExportarDados}
+          disabled={exportandoDados}
+          className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-white/70 text-sm font-medium hover:bg-white/10 transition text-center disabled:opacity-60"
+        >
+          <i className="fas fa-download mr-2" />
+          {exportandoDados ? 'Preparando arquivo...' : 'Baixar meus dados'}
         </button>
 
         {/* Excluir conta */}

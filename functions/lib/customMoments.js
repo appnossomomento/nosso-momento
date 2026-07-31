@@ -121,12 +121,19 @@ function validateCustomMomentFields(input, opts = {}) {
     return {ok: false, error: "invalid_custom_price"};
   }
   const emoji = typeof input.emoji === "string" ? input.emoji.slice(0, 8) : "✨";
+  const rawImgPath = typeof input.imgPath === "string" ?
+    input.imgPath.trim().slice(0, 512) : "";
   const rawImg = typeof input.img === "string" ? input.img.trim().slice(0, 2048) : "";
+  const isStoragePath = rawImgPath.startsWith("custom_momentos/");
+  const isLegacyHttp = rawImg.startsWith("http");
+  // Preferir imgPath (sem token permanente); http legado ainda aceito em updates.
   if (requireImg) {
-    if (!rawImg || !rawImg.startsWith("http")) {
+    if (!isStoragePath && !isLegacyHttp) {
       return {ok: false, error: "missing_custom_moment_image"};
     }
-  } else if (rawImg && !rawImg.startsWith("http")) {
+  } else if (rawImgPath && !isStoragePath) {
+    return {ok: false, error: "missing_custom_moment_image"};
+  } else if (rawImg && !isLegacyHttp && !isStoragePath) {
     return {ok: false, error: "missing_custom_moment_image"};
   }
   return {
@@ -135,7 +142,9 @@ function validateCustomMomentFields(input, opts = {}) {
       nome,
       preco,
       emoji,
-      img: rawImg || null,
+      imgPath: isStoragePath ? rawImgPath : null,
+      // Não persistir URL http nova; legado só se não houver imgPath
+      img: isStoragePath ? null : (isLegacyHttp ? rawImg : null),
       categoria: "Personalizado",
       ...(Object.prototype.hasOwnProperty.call(input, "bloqueado") ?
         {bloqueado: input.bloqueado === true} :

@@ -20,12 +20,17 @@ exports.getMemorias = memories.getMemorias;
 exports.createMemoriaPhoto = memories.createMemoriaPhoto;
 exports.deleteMemoria = memories.deleteMemoria;
 
+const mediaHandler = require("./handlers/media");
+exports.uploadCustomMomentImage = mediaHandler.uploadCustomMomentImage;
+exports.resolveMediaUrls = mediaHandler.resolveMediaUrls;
+
 exports.getExtrato = extrato.getExtrato;
 
 exports.handleMomentTaskUpdate = moments.handleMomentTaskUpdate;
 
 exports.propagateProfileChange = profile.propagateProfileChange;
 exports.excluirConta = profile.excluirConta;
+exports.exportarMeusDados = profile.exportarMeusDados;
 
 exports.checkMonthlyMilestones = milestones.checkMonthlyMilestones;
 

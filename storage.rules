@@ -5,30 +5,17 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    function isPairMember(pareamentoId) {
-      return isAuthed() &&
-        firestore.exists(/databases/(default)/documents/pareamentos/$(pareamentoId)) &&
-        (
-          firestore.get(/databases/(default)/documents/pareamentos/$(pareamentoId)).data.pessoa1Uid == request.auth.uid ||
-          firestore.get(/databases/(default)/documents/pareamentos/$(pareamentoId)).data.pessoa2Uid == request.auth.uid
-        );
+    // Memórias e capas custom: só Admin SDK (+ signed URLs).
+    match /memorias/{pareamentoId}/{uid}/{tarefaId}/{fileName} {
+      allow read, write: if false;
     }
 
-    match /memorias/{pareamentoId}/{uid}/{tarefaId}/{fileName} {
+    match /custom_momentos/{pareamentoId}/{uid}/{fileName} {
       allow read, write: if false;
     }
 
     match /profile_pics/{uid}/{fileName} {
       allow read, write: if isAuthed() && request.auth.uid == uid;
-    }
-
-    match /custom_momentos/{pareamentoId}/{uid}/{fileName} {
-      allow read: if isPairMember(pareamentoId);
-      allow write: if isAuthed()
-        && request.auth.uid == uid
-        && isPairMember(pareamentoId)
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/(jpeg|png|webp)');
     }
 
     match /{allPaths=**} {

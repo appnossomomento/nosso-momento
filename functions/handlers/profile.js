@@ -147,3 +147,105 @@ exports.excluirConta = https.onRequest(async (req, res) => {
     res.status(500).send({error: "delete_account_failed"});
   }
 });
+
+/**
+ * LGPD Art. 18 — portabilidade: export JSON dos dados do usuário.
+ * POST /exportarMeusDados
+ */
+exports.exportarMeusDados = https.onRequest({
+  region: "southamerica-east1",
+  memory: "256MiB",
+  maxInstances: 5,
+  cpu: 0.5,
+}, async (req, res) => {
+  setCorsHeaders(req, res);
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+  if (req.method !== "POST") {
+    res.status(405).send({error: "method_not_allowed"});
+    return;
+  }
+  if (await requireAppCheck(req, res)) return;
+  if (await rateLimitFirestore(req, res, {
+    keyPrefix: "exportarMeusDados",
+    limit: 5,
+    windowMs: 60 * 60 * 1000,
+  })) {
+    return;
+  }
+
+  const authHeader =
+    req.get("Authorization") || req.get("authorization") || "";
+  const idToken = authHeader.startsWith("Bearer ") ?
+    authHeader.split("Bearer ")[1] : null;
+  if (!idToken) {
+    res.status(401).send({error: "missing_id_token"});
+    return;
+  }
+
+  try {
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+    const db = admin.firestore();
+
+    const userSnap = await db.collection("usuarios").doc(uid).get();
+    const perfil = userSnap.exists ? userSnap.data() : null;
+    // Não exportar tokens sensíveis
+    if (perfil) {
+      delete perfil.fcmTokens;
+    }
+
+    const memoriasSnap = await db.collection("memorias")
+        .where("pairUids", "array-contains", uid).limit(500).get();
+    const memorias = memoriasSnap.docs.map((d) => {
+      const data = d.data() || {};
+      return {
+        id: d.id,
+        momentoNome: data.momentoNome || null,
+        fotoPath: data.fotoPath || null,
+        createdAtMs: data.createdAtMs || null,
+        pareamentoId: data.pareamentoId || null,
+        descricao: data.descricao || null,
+      };
+    });
+
+    const email = perfil && typeof perfil.email === "string" ?
+      perfil.email.trim().toLowerCase() : "";
+    const phone = perfil && typeof perfil.telefone === "string" ?
+      String(perfil.telefone).replace(/\D/g, "") : "";
+
+    let waitlist = [];
+    if (email) {
+      const w = await db.collection("lista-de-espera")
+          .where("email", "==", email).limit(20).get();
+      waitlist = w.docs.map((d) => ({id: d.id, ...d.data()}));
+    }
+    if (!waitlist.length && phone) {
+      const w = await db.collection("lista-de-espera")
+          .where("telefoneWhatsapp", "==", phone).limit(20).get();
+      waitlist = w.docs.map((d) => ({id: d.id, ...d.data()}));
+    }
+
+    const surveysSnap = await db.collection("surveyResponses")
+        .where("userId", "==", uid).limit(100).get();
+    const surveys = surveysSnap.docs.map((d) => ({id: d.id, ...d.data()}));
+
+    res.send({
+      exportedAt: new Date().toISOString(),
+      uid,
+      perfil,
+      pareamentosAtivos: Array.isArray(perfil && perfil.pareamentosAtivos) ?
+        perfil.pareamentosAtivos : [],
+      memorias,
+      waitlist,
+      surveys,
+      note: "Arquivos de mídia não são embutidos; paths estão em memorias[].fotoPath.",
+    });
+  } catch (err) {
+    console.error("exportarMeusDados: erro", err);
+    res.status(500).send({error: "export_failed"});
+  }
+});

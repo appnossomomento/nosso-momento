@@ -184,7 +184,7 @@ export default function PersonalizarPage() {
     setNovoPreco(item.preco);
     setNovoEmoji(item.emoji || EMOJI_PADRAO);
     setNovaImagemFile(null);
-    setNovaImagemPreview(item.img || null);
+    setNovaImagemPreview(item.img || item.imgPath || null);
     if (imagemInputRef.current) imagemInputRef.current.value = '';
     setShowCreateModal(true);
   }
@@ -251,10 +251,10 @@ export default function PersonalizarPage() {
 
     setSalvandoCustom(true);
     try {
-      let imgUrl = isEdit && !novaImagemFile ? (novaImagemPreview || '') : '';
+      let imgPath: string | undefined;
       if (novaImagemFile) {
         try {
-          imgUrl = await uploadCustomMomentImage(novaImagemFile, pareamentoId, meuUid);
+          imgPath = await uploadCustomMomentImage(novaImagemFile, pareamentoId, meuUid);
         } catch (uploadErr) {
           if (uploadErr instanceof Error && uploadErr.message === 'file_too_large') {
             showToast('A imagem deve ter menos de 5 MB.', 'aviso');
@@ -266,6 +266,9 @@ export default function PersonalizarPage() {
           }
           throw uploadErr;
         }
+      } else if (isEdit) {
+        const existing = meusCustom.find((m) => m.id === editingId);
+        imgPath = existing?.imgPath || undefined;
       }
 
       if (isEdit && editingId) {
@@ -275,7 +278,7 @@ export default function PersonalizarPage() {
           nome,
           preco,
           emoji: novoEmoji,
-          img: imgUrl,
+          ...(imgPath ? { imgPath } : {}),
         });
         const visivel = await waitForCustomMomentVisible(pareamentoId, meuUid, nome);
         if (!visivel) {
@@ -284,12 +287,16 @@ export default function PersonalizarPage() {
           showToast('Momento personalizado atualizado!', 'sucesso');
         }
       } else {
+        if (!imgPath) {
+          showToast('Adicione uma foto para criar o momento.', 'aviso');
+          return;
+        }
         await sendInput('custom_moment_create', {
           pareamentoId,
           nome,
           preco,
           emoji: novoEmoji,
-          img: imgUrl,
+          imgPath,
         });
         const visivel = await waitForCustomMomentVisible(pareamentoId, meuUid, nome);
         if (!visivel) {

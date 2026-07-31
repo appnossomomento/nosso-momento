@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db, getAppCheckToken } from '@/lib/firebase/client';
+import { auth, db, getAppCheckToken, waitForAppCheckToken } from '@/lib/firebase/client';
 import {
   bootstrapUsuarioFromSnap,
   createSessionCookie,
@@ -44,6 +44,17 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
+      const appCheckToken = await waitForAppCheckToken(
+        process.env.NODE_ENV === 'production' ? 12_000 : 3_000,
+      );
+      if (process.env.NODE_ENV === 'production' && !appCheckToken) {
+        openSystemAlert(
+          'Não foi possível validar a segurança do app. Recarregue a página e tente novamente.',
+        );
+        setLoading(false);
+        return;
+      }
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const { user } = userCredential;
       const idToken = await user.getIdToken();

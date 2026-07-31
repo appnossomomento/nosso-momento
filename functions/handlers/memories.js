@@ -1,10 +1,10 @@
-/* eslint-disable require-jsdoc */
+/* eslint-disable require-jsdoc, linebreak-style */
 const https = require("firebase-functions/v2/https");
-const crypto = require("crypto");
 const {admin} = require("../lib/config");
 const {setCorsHeaders, rateLimitFirestore} = require("../lib/http");
 const {requireAppCheck} = require("../lib/appCheck");
 const {buildMemoriaDescricao} = require("../lib/normalize");
+const {signMemoriaDoc, signReadUrl} = require("../lib/storageSignedUrl");
 
 exports.getMemorias = https.onRequest(async (req, res) => {
   setCorsHeaders(req, res);
@@ -115,7 +115,12 @@ exports.getMemorias = https.onRequest(async (req, res) => {
 
     docs.sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0));
     const hasMore = docs.length > limit;
-    const items = docs.slice(0, limit);
+    const sliced = docs.slice(0, limit);
+
+    const items = await Promise.all(sliced.map(async (doc) => {
+      const fotoUrl = await signMemoriaDoc(doc);
+      return {...doc, fotoUrl: fotoUrl || null};
+    }));
 
     res.send({items, hasMore});
   } catch (err) {
@@ -250,20 +255,10 @@ exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
       `${Date.now()}_${safeName}`;
 
     const bucket = admin.storage().bucket();
-    const token = crypto.randomUUID();
+    // Sem download token permanente — leitura só via signed URL em getMemorias.
     await bucket.file(filePath).save(buffer, {
-      metadata: {
-        contentType,
-        metadata: {
-          firebaseStorageDownloadTokens: token,
-        },
-      },
+      metadata: {contentType},
     });
-
-    const encodedPath = encodeURIComponent(filePath);
-    const downloadURL =
-      `https://firebasestorage.googleapis.com/v0/b/${bucket.name}` +
-      `/o/${encodedPath}?alt=media&token=${token}`;
 
     let executadoNome = tarefa.executadoPorNome || "";
     let resgatadoNome = tarefa.resgatadoPorNome || "";
@@ -303,7 +298,7 @@ exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
       custoFoguinhos: Number.isFinite(Number(tarefa.custoFoguinhos)) ?
         Number(tarefa.custoFoguinhos) :
         0,
-      fotoUrl: downloadURL,
+      fotoUrl: null,
       fotoPath: filePath,
       pareamentoId: pareamentoId || null,
       pairUids,
@@ -318,7 +313,10 @@ exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
     };
 
     const memoriaRef = await db.collection("memorias").add(payload);
-    res.send({item: {id: memoriaRef.id, ...payload}});
+    const signed = await signReadUrl(filePath);
+    res.send({
+      item: {id: memoriaRef.id, ...payload, fotoUrl: signed || null},
+    });
   } catch (err) {
     console.error("createMemoriaPhoto error:", err);
     res.status(500).send({error: "create_memoria_failed"});
