@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
@@ -18,32 +18,9 @@
   <meta name="twitter:description" content="Garantam uma das 50 vagas de casal fundador para testar o Nosso Momento. Acesso antecipado e gratuito." />
   <meta name="twitter:image" content="https://nossomomento.app/assets/icons/iconprincipal.png" />
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-556FY0WV3Q"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-556FY0WV3Q');
-  </script>
-
-  <!-- Meta Pixel Code -->
-  <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1883535982201745');
-    fbq('track', 'PageView');
-  </script>
-  <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1883535982201745&ev=PageView&noscript=1"/></noscript>
-  <!-- End Meta Pixel Code -->
-
+  <!-- GA4 / Meta Pixel só após consentimento (ver script no final) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="assets/icons/iconprincipal.png" />
@@ -113,20 +90,28 @@
       <!-- Left Content -->
       <div class="max-w-xl mx-auto text-center md:mx-0 md:text-left">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-semibold tracking-wider mb-6">
-          ACESSO ANTECIPADO LIBERADO
+          🔥 RESTAM POUCAS VAGAS · 100% GRATUITO
         </div>
         <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] mb-6">
           Saiam do modo automático. <span class="bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-500">Vivam mais momentos juntos.</span>
         </h1>
         <p class="text-zinc-400 text-lg mb-8 leading-relaxed">
-          O <span class="font-bold text-white">Nosso Momento</span> é o app que tira vocês do celular e coloca vocês de volta na relação. Garanta sua vaga entre os <span class="font-bold text-white">50 primeiros casais fundadores</span>.
+          O <span class="font-bold text-white">Nosso Momento</span> transforma cuidar da relação em algo divertido: desafios, surpresas e um catálogo de momentos a dois. <span class="font-bold text-white">Menos tela, mais vocês.</span>
         </p>
-        <a href="#form" class="inline-block bg-gradient-to-r from-red-500 to-rose-500 text-white font-bold px-8 py-4 rounded-full glow-button transition-all hover:scale-105">
-          Quero ser um dos 50 Casais
+        <a href="#form" data-lp-cta="hero_principal" class="inline-block bg-gradient-to-r from-red-500 to-rose-500 text-white font-bold px-8 py-4 rounded-full glow-button transition-all hover:scale-105">
+          Quero minha vaga gratuita
         </a>
-        <p class="text-zinc-500 text-sm mt-4 flex items-center justify-center md:justify-start gap-2">
+        <!-- Microcopy (apenas desktop) -->
+        <p class="hidden md:flex text-zinc-500 text-sm mt-4 items-center justify-start gap-2">
           <span class="text-green-400">✓</span> Acesso antecipado <span class="text-white font-semibold">100% gratuito</span> para os casais fundadores.
         </p>
+        <!-- Seta de scroll (apenas mobile: no lugar do microcopy) -->
+        <div class="md:hidden mt-6 flex justify-center">
+          <a href="#como-funciona" class="inline-flex flex-col items-center gap-1 text-zinc-500 hover:text-rose-400 transition-colors text-sm">
+            <span>Veja como funciona</span>
+            <span class="animate-bounce text-lg leading-none">↓</span>
+          </a>
+        </div>
       </div>
 
       <!-- Right Content (Phones) -->
@@ -150,15 +135,23 @@
         </div>
       </div>
     </div>
+
+    <!-- Indicador de scroll (apenas desktop, um pouco mais abaixo) -->
+    <div class="relative z-10 mt-16 hidden md:flex justify-center">
+      <a href="#como-funciona" class="inline-flex flex-col items-center gap-1 text-zinc-500 hover:text-rose-400 transition-colors text-sm">
+        <span>Veja como funciona</span>
+        <span class="animate-bounce text-lg leading-none">↓</span>
+      </a>
+    </div>
   </section>
 
   <!-- FEATURES SECTION -->
-  <section class="py-24 border-y border-white/5 relative overflow-hidden" style="background: radial-gradient(circle at 50% 0%, rgba(239,68,68,0.14), transparent 60%), radial-gradient(circle at 85% 90%, rgba(249,115,22,0.10), transparent 55%), #0f0f0f;">
+  <section id="como-funciona" class="py-24 border-y border-white/5 relative overflow-hidden" style="background: radial-gradient(circle at 50% 0%, rgba(239,68,68,0.14), transparent 60%), radial-gradient(circle at 85% 90%, rgba(249,115,22,0.10), transparent 55%), #0f0f0f;">
     <div class="max-w-6xl mx-auto px-6 relative z-10">
       <div class="text-center mb-16">
-        <p class="text-rose-500 text-sm font-medium mb-2">Economia de Foguinhos</p>
-        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">A Rotina Está Apagando a Chama...</h2>
-        <p class="text-zinc-400">Conheça a Salvação da Chama do Seu Relacionamento 🔥</p>
+        <p class="text-rose-500 text-sm font-medium mb-2">Seu novo App favorito</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Não deixe a rotina apagar a chama...</h2>
+        <p class="text-zinc-400">Conheça o novo app que não vai deixar a chama do seu relacionamento apagar 🔥</p>
       </div>
 
       <div class="grid md:grid-cols-3 gap-6">
@@ -192,6 +185,13 @@
           <p class="text-zinc-400 text-sm leading-relaxed">Ação e surpresa: surpreenda seu parceiro(a) resgatando desejos e criando momentos inesquecíveis.</p>
         </div>
       </div>
+
+      <!-- CTA intermediário (dobra de decisão) -->
+      <div class="mt-10 md:mt-14 flex justify-center">
+        <a href="#form" data-lp-cta="meio_casal_fundador" class="inline-block bg-gradient-to-r from-red-500 to-rose-500 text-white font-bold px-8 py-4 rounded-full glow-button transition-all hover:scale-105">
+          Seja um Casal Fundador
+        </a>
+      </div>
     </div>
   </section>
 
@@ -200,7 +200,7 @@
     <div class="max-w-5xl mx-auto px-6">
       <div class="text-center mb-20">
         <p class="text-rose-500 text-sm font-medium mb-2">Jornada do Casal</p>
-        <h2 class="text-3xl md:text-4xl font-bold text-white">Do Primeiro Clique à Lembrança Inesquecível</h2>
+        <h2 class="text-3xl md:text-4xl font-bold text-white">Do primeiro clique à lembrança inesquecível</h2>
       </div>
 
       <div class="relative max-w-5xl mx-auto">
@@ -311,7 +311,7 @@
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-10">
         <h2 class="text-3xl md:text-4xl font-bold text-white tracking-wide">A experiência que espera vocês</h2>
-        <p class="text-rose-500 mt-2 text-base">Foi assim que desenhamos o Nosso Momento para o dia a dia de todos os casais — héteros, LGBTQIA+, do jeito que o amor de vocês for:</p>
+        <p class="text-rose-500 mt-2 text-base">Foi assim que desenhamos o Nosso Momento para o dia a dia de todos os casais, do jeito que o amor de vocês for:</p>
       </div>
       <div class="flex flex-col md:flex-row items-center justify-center gap-6 w-full">
         <!-- Texto Esquerda -->
@@ -346,7 +346,7 @@
         <!-- Texto Direita -->
         <div class="flex-1 max-w-xs text-right justify-normal hidden md:block">
           <blockquote class="text-gray-300 text-base italic">
-            "Resgate de Foguinhos, surpresas ao longo da semana e um espaço só de vocês para reacender a conexão sempre que quiserem."
+            "Resgate de momentos, surpresas ao longo da semana e um espaço só de vocês para reacender a conexão sempre que quiserem."
             <footer class="text-rose-400 font-semibold mt-3 not-italic text-sm">O que vocês vão viver como fundadores</footer>
           </blockquote>
         </div>
@@ -371,7 +371,7 @@
     <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
       <div class="text-center md:text-left">
         <h2 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-red-500 mb-6 leading-tight">
-          Preencha o Formulário<br>Restam Poucas Vagas...
+          Preencha o formulário<br><span class="text-white">Atente-se as vagas...</span>
         </h2>
         <p class="text-zinc-400 leading-relaxed">
           Todos os campos são obrigatórios. Preencha com atenção para garantir sua vaga entre os <span class="font-bold text-white">50 primeiros casais</span>. O acesso será liberado em breve.
@@ -420,13 +420,13 @@
 
           <label class="flex items-start gap-3 text-zinc-400 text-xs leading-relaxed cursor-pointer">
             <input type="checkbox" name="consent" id="consent" required class="mt-0.5 w-4 h-4 accent-red-500 shrink-0">
-            <span>Autorizo o contato pelo WhatsApp/e-mail informados. Li e aceito a <a href="#" class="text-rose-400 underline">Política de Privacidade</a>.</span>
+            <span>Autorizo o contato pelo WhatsApp/e-mail informados. Li e aceito os <a href="#" data-legal="terms" class="text-rose-400 underline">Termos de Uso</a> e a <a href="#" data-legal="privacy" class="text-rose-400 underline">Política de Privacidade</a>.</span>
           </label>
 
           <p id="form-erro" class="text-red-400 text-sm min-h-[20px]" role="alert" aria-live="polite"></p>
 
-          <button type="submit" class="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-lg py-4 rounded-xl mt-1 glow-button transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed">
-            Cadastrar Casal
+          <button type="submit" data-lp-cta="form_enviar" class="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-lg py-4 rounded-xl mt-1 glow-button transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed">
+            Garantir nossa vaga gratuita
           </button>
           <p class="text-center text-zinc-600 text-xs">🔒 Seus dados são usados apenas para o acesso ao beta. Nada de spam.</p>
         </form>
@@ -550,32 +550,89 @@
       </p>
       <p class="text-zinc-600 text-sm">Copyright © 2026 Nosso Momento</p>
       <div class="flex items-center gap-4 mt-3 text-zinc-600 text-xs">
-        <a href="#" class="hover:text-zinc-400 transition-colors">Política de Privacidade</a>
+        <a href="#" data-legal="privacy" class="hover:text-zinc-400 transition-colors">Política de Privacidade</a>
         <span>·</span>
-        <a href="#" class="hover:text-zinc-400 transition-colors">Termos de Uso</a>
+        <a href="#" data-legal="terms" class="hover:text-zinc-400 transition-colors">Termos de Uso</a>
       </div>
     </div>
   </footer>
 
+  <!-- Cookie consent banner -->
+  <div id="cookie-banner" class="fixed inset-x-0 bottom-0 z-[200] p-4 sm:p-6 pointer-events-none hidden" role="dialog" aria-label="Consentimento de cookies">
+    <div class="pointer-events-auto mx-auto max-w-xl rounded-2xl border border-white/10 bg-[#120b16]/95 text-white shadow-2xl backdrop-blur-md p-4 sm:p-5">
+      <p class="text-sm font-semibold text-white/90">Cookies e privacidade</p>
+      <p class="mt-2 text-xs leading-relaxed text-white/60">
+        Usamos cookies de medição (Google Analytics e Meta Pixel) para entender o uso da página.
+        Você pode aceitar ou recusar. O envio do formulário não depende disso.
+      </p>
+      <div class="mt-4 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+        <button type="button" id="cookie-decline" class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 transition">Recusar</button>
+        <button type="button" id="cookie-accept" class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-500 transition">Aceitar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
-      // ===================================================================
-      // Para receber os cadastros numa planilha do Google e ter o contador
-      // real de casais/vagas:
-      // 1. Crie um Google Sheet e vá em Extensões > Apps Script.
-      // 2. Cole o código de "cadastro-apps-script.gs" (na raiz do projeto).
-      // 3. Publique como Web App (Executar como: eu / Acesso: qualquer pessoa).
-      // 4. Cole a URL do Web App em SHEETS_ENDPOINT abaixo.
-      // Enquanto vazio, o form só redireciona e o contador usa os valores
-      // fixos que estão no HTML (fallback).
-      // ===================================================================
-      var SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzBLRdnuzt-_NURajfDrNECSql4S18oENpfnIAbV-V6ty0C1-9a5zXZI_IFehila8LVdQ/exec';
-      var FORM_TOKEN = 'nm-fundadores-7kQ2mXp9'; // deve ser igual em cadastro-apps-script.gs
-      var MIN_SUBMIT_MS = 3000; // tempo mínimo na página antes de enviar
+      var COOKIE_KEY = 'nm_cookie_consent';
+      var MIN_SUBMIT_MS = 3000;
       var META_VAGAS = 50;
-      var CONTADOR_BASE = 0;
       var formLoadedAt = Date.now();
       var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid'];
+      var publicConfig = null;
+      var appCheckReady = null;
+
+      function getConsent() {
+        try {
+          var v = localStorage.getItem(COOKIE_KEY);
+          return (v === 'accepted' || v === 'declined') ? v : null;
+        } catch (e) { return null; }
+      }
+
+      function setConsent(value) {
+        try { localStorage.setItem(COOKIE_KEY, value); } catch (e) {}
+        var banner = document.getElementById('cookie-banner');
+        if (banner) banner.classList.add('hidden');
+        if (value === 'accepted') loadMarketingPixels();
+      }
+
+      function loadMarketingPixels() {
+        if (window.__nmPixelsLoaded) return;
+        window.__nmPixelsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { dataLayer.push(arguments); };
+        var ga = document.createElement('script');
+        ga.async = true;
+        ga.src = 'https://www.googletagmanager.com/gtag/js?id=G-556FY0WV3Q';
+        document.head.appendChild(ga);
+        gtag('js', new Date());
+        gtag('config', 'G-556FY0WV3Q');
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1883535982201745');
+        fbq('track', 'PageView');
+      }
+
+      (function initCookieBanner() {
+        var consent = getConsent();
+        if (consent === 'accepted') {
+          loadMarketingPixels();
+          return;
+        }
+        if (consent === 'declined') return;
+        var banner = document.getElementById('cookie-banner');
+        if (banner) banner.classList.remove('hidden');
+        var accept = document.getElementById('cookie-accept');
+        var decline = document.getElementById('cookie-decline');
+        if (accept) accept.addEventListener('click', function () { setConsent('accepted'); });
+        if (decline) decline.addEventListener('click', function () { setConsent('declined'); });
+      })();
 
       function capturarUtms_() {
         var params = new URLSearchParams(window.location.search);
@@ -595,7 +652,6 @@
       }
       capturarUtms_();
 
-      // ---- Contador real (lê a contagem da planilha via JSONP) ----
       function setContadorErro(el) {
         if (!el) return;
         el.textContent = '?';
@@ -618,44 +674,76 @@
         }
       }
 
+      function loadPublicConfig() {
+        if (publicConfig) return Promise.resolve(publicConfig);
+        var urls = ['/api/public-config', 'https://nossomomento.app/api/public-config'];
+        function tryNext(i) {
+          if (i >= urls.length) return Promise.reject(new Error('public_config_failed'));
+          return fetch(urls[i], { cache: 'no-store' })
+            .then(function (r) {
+              if (!r.ok) throw new Error('bad_status');
+              return r.json();
+            })
+            .then(function (cfg) {
+              publicConfig = cfg;
+              if (typeof cfg.waitlistMeta === 'number') META_VAGAS = cfg.waitlistMeta;
+              return cfg;
+            })
+            .catch(function () { return tryNext(i + 1); });
+        }
+        return tryNext(0);
+      }
+
+      function ensureAppCheck() {
+        if (appCheckReady) return appCheckReady;
+        appCheckReady = loadPublicConfig().then(function (cfg) {
+          if (!cfg.firebase || !cfg.firebase.apiKey || !cfg.recaptchaSiteKey) {
+            throw new Error('public_config_incomplete');
+          }
+          if (!firebase.apps.length) {
+            firebase.initializeApp(cfg.firebase);
+          }
+          var appCheck = firebase.appCheck();
+          appCheck.activate(cfg.recaptchaSiteKey, true);
+          return appCheck;
+        });
+        return appCheckReady;
+      }
+
+      function getAppCheckToken() {
+        return ensureAppCheck().then(function (appCheck) {
+          return appCheck.getToken(false).then(function (result) {
+            return result && result.token ? result.token : '';
+          });
+        }).catch(function () { return ''; });
+      }
+
       function carregarContador() {
         var elCasais = document.getElementById('contador-casais');
         var elVagas = document.getElementById('contador-vagas');
-        if (!SHEETS_ENDPOINT) {
-          setContadorErro(elCasais);
-          setContadorErro(elVagas);
-          return;
-        }
-        var cbName = 'nmContador_' + Date.now();
-        var timeoutId = setTimeout(function () {
-          setContadorErro(elCasais);
-          setContadorErro(elVagas);
-        }, 12000);
-        window[cbName] = function (data) {
-          clearTimeout(timeoutId);
-          try {
+        Promise.all([loadPublicConfig(), getAppCheckToken()])
+          .then(function (pair) {
+            var cfg = pair[0];
+            var token = pair[1];
+            var url = (cfg.joinWaitlistUrl || '') + '?action=count';
+            var headers = {};
+            if (token) headers['X-Firebase-AppCheck'] = token;
+            return fetch(url, { headers: headers, cache: 'no-store' });
+          })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
             if (data && typeof data.count === 'number') {
-              var casais = data.count + CONTADOR_BASE;
               var meta = (typeof data.meta === 'number') ? data.meta : META_VAGAS;
-              setContadorValores(casais, Math.max(0, meta - casais));
+              setContadorValores(data.count, Math.max(0, meta - data.count));
             } else {
               setContadorErro(elCasais);
               setContadorErro(elVagas);
             }
-          } finally {
-            delete window[cbName];
-          }
-        };
-        var s = document.createElement('script');
-        s.src = SHEETS_ENDPOINT + (SHEETS_ENDPOINT.indexOf('?') > -1 ? '&' : '?') +
-          'action=count&callback=' + cbName + '&_=' + Date.now();
-        s.onerror = function () {
-          clearTimeout(timeoutId);
-          delete window[cbName];
-          setContadorErro(elCasais);
-          setContadorErro(elVagas);
-        };
-        document.body.appendChild(s);
+          })
+          .catch(function () {
+            setContadorErro(elCasais);
+            setContadorErro(elVagas);
+          });
       }
       carregarContador();
 
@@ -697,24 +785,161 @@
           return;
         }
 
-        dados.token = FORM_TOKEN;
-        dados._formLoaded = formLoadedAt;
-
         var utm = capturarUtms_();
         Object.keys(utm).forEach(function (k) {
           if (utm[k]) dados[k] = utm[k];
         });
+        dados.consent = true;
 
-        if (SHEETS_ENDPOINT) {
-          fetch(SHEETS_ENDPOINT, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dados)
-          }).then(irParaObrigado).catch(irParaObrigado);
-        } else {
-          irParaObrigado();
-        }
+        Promise.all([loadPublicConfig(), getAppCheckToken()])
+          .then(function (pair) {
+            var cfg = pair[0];
+            var token = pair[1];
+            if (!cfg.joinWaitlistUrl) throw new Error('missing_waitlist_url');
+            var headers = { 'Content-Type': 'application/json' };
+            if (token) headers['X-Firebase-AppCheck'] = token;
+            return fetch(cfg.joinWaitlistUrl, {
+              method: 'POST',
+              headers: headers,
+              body: JSON.stringify(dados)
+            });
+          })
+          .then(function (r) {
+            if (!r.ok) throw new Error('submit_failed');
+            irParaObrigado();
+          })
+          .catch(function () {
+            if (btn) { btn.disabled = false; btn.textContent = 'Garantir minha vaga'; }
+            if (erro) erro.textContent = 'Não foi possível enviar. Tente novamente em instantes.';
+          });
+      });
+    })();
+  </script>
+
+  <!-- LEGAL MODAL (Termos de Uso / Política de Privacidade) -->
+  <div id="legal-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="legal-title">
+    <div id="legal-overlay" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <div class="relative w-full max-w-lg bg-[#120b16] text-white border border-white/10 rounded-2xl p-6 flex flex-col max-h-[85vh] shadow-2xl">
+      <div class="flex items-start justify-between shrink-0">
+        <div>
+          <p class="text-xs uppercase tracking-widest text-white/60">Consentimento</p>
+          <h3 id="legal-title" class="text-2xl font-semibold mt-1">Termos de Uso</h3>
+        </div>
+        <button type="button" data-legal-close aria-label="Fechar" class="text-white/70 hover:text-white transition text-3xl leading-none -mt-1">&times;</button>
+      </div>
+      <div id="legal-body" class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4 text-xs text-white/80 leading-relaxed overflow-y-auto flex-1"></div>
+      <div class="mt-4 shrink-0">
+        <button type="button" data-legal-close class="w-full rounded-xl bg-white/10 py-3 text-white/80 font-semibold hover:bg-white/20 transition">Entendi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conteúdo dos Termos de Uso (template oculto) -->
+  <template id="legal-terms-content">
+    <p class="font-semibold text-white mb-2">Versão 1.0 — Vigente a partir de 19/05/2026</p>
+    <p class="mb-3">Bem-vindo ao <strong>Nosso Momento</strong>. Ao se cadastrar e utilizar o aplicativo, você declara que leu, compreendeu e concorda integralmente com estes Termos de Uso, em conformidade com a Lei Federal nº 12.965/2014 (Marco Civil da Internet) e a Lei Federal nº 13.709/2018 (LGPD).</p>
+    <p class="font-semibold text-white mt-4 mb-1">1. Descrição do Serviço</p>
+    <p class="mb-3">O Nosso Momento é um aplicativo web destinado a casais, que oferece funcionalidades de check-in emocional diário, catálogo de momentos a dois, desafios semanais, conquistas, memórias compartilhadas e notificações push. O serviço é disponibilizado exclusivamente via internet, em dispositivos compatíveis.</p>
+    <p class="font-semibold text-white mt-4 mb-1">2. Elegibilidade</p>
+    <p class="mb-3">O uso do aplicativo é permitido apenas a maiores de 18 anos. Ao se cadastrar, você declara ter capacidade civil plena para aceitar estes termos. Contas de menores de idade serão encerradas imediatamente ao serem identificadas.</p>
+    <p class="font-semibold text-white mt-4 mb-1">3. Cadastro e Responsabilidades do Usuário</p>
+    <p class="mb-3">Você é responsável pela veracidade e atualização das informações fornecidas no cadastro (nome, e-mail, telefone, dados de perfil e personalização da loja). Seu login e senha são pessoais e intransferíveis. O compartilhamento de credenciais é proibido, e o Nosso Momento não se responsabiliza por acessos indevidos decorrentes de negligência do usuário. Você se compromete a não utilizar o aplicativo para fins ilícitos, discriminatórios ou que violem direitos de terceiros.</p>
+    <p class="font-semibold text-white mt-4 mb-1">4. Propriedade Intelectual</p>
+    <p class="mb-3">Todo o conteúdo do aplicativo — incluindo textos, design, ícones, funcionalidades e código-fonte — é propriedade do Nosso Momento e está protegido por lei. É vedada a reprodução, distribuição ou modificação sem autorização expressa e por escrito.</p>
+    <p class="font-semibold text-white mt-4 mb-1">5. Limitação de Responsabilidade</p>
+    <p class="mb-3">O Nosso Momento não se responsabiliza por danos decorrentes de: (a) falhas de conexão ou dispositivos do usuário; (b) uso indevido das credenciais de acesso; (c) conteúdo enviado por outros usuários; (d) indisponibilidade temporária dos serviços de terceiros (Google Firebase, Vercel). O serviço é fornecido &ldquo;no estado em que se encontra&rdquo;, sem garantias de funcionamento ininterrupto.</p>
+    <p class="font-semibold text-white mt-4 mb-1">6. Cookies e Rastreamento</p>
+    <p class="mb-3">O Nosso Momento utiliza cookies e tecnologias similares para: (a) manter sua sessão autenticada; (b) analisar o uso do aplicativo via Google Analytics (GA4) e Meta Pixel (Facebook); (c) melhorar a experiência do usuário. Os dados coletados por essas ferramentas são pseudonimizados e utilizados de forma agregada para fins estatísticos e de marketing.</p>
+    <p class="font-semibold text-white mt-4 mb-1">7. Encerramento de Conta</p>
+    <p class="mb-3">Você pode solicitar a exclusão completa da sua conta a qualquer momento, diretamente no aplicativo, em &ldquo;Meu Perfil → Excluir minha conta&rdquo;. Todos os seus dados serão removidos conforme descrito na Política de Privacidade.</p>
+    <p class="font-semibold text-white mt-4 mb-1">8. Alterações nos Termos</p>
+    <p class="mb-3">O Nosso Momento reserva-se o direito de modificar estes Termos a qualquer momento. Alterações relevantes serão comunicadas por e-mail ou notificação no app. O uso continuado do serviço após a comunicação implica aceitação das novas condições.</p>
+    <p class="font-semibold text-white mt-4 mb-1">9. Foro</p>
+    <p class="mb-3">Eventuais disputas serão regidas pelas leis brasileiras e processadas no foro da comarca de São Paulo/SP, com renúncia a qualquer outro, por mais privilegiado que seja.</p>
+    <p class="font-semibold text-white mt-4 mb-1">10. Contato</p>
+    <p>Dúvidas e solicitações: <span class="text-pink-400">faleconosco@nossomomento.app</span></p>
+  </template>
+
+  <!-- Conteúdo da Política de Privacidade (template oculto) -->
+  <template id="legal-privacy-content">
+    <p class="font-semibold text-white mb-2">Versão 1.0 — Vigente a partir de 19/05/2026</p>
+    <p class="mb-3">Esta Política de Privacidade descreve como o <strong>Nosso Momento</strong> coleta, usa, armazena e protege seus dados pessoais, em conformidade com a Lei Federal nº 13.709/2018 (LGPD).</p>
+    <p class="font-semibold text-white mt-4 mb-1">1. Controlador dos Dados</p>
+    <p class="mb-3"><strong>Nosso Momento App</strong> — faleconosco@nossomomento.app</p>
+    <p class="font-semibold text-white mt-4 mb-1">2. Dados Coletados e Finalidade</p>
+    <p class="mb-3">Coletamos os dados necessários ao serviço e, quando informados no cadastro, dados de perfil (data de nascimento, localização, gênero, orientação sexual, estado civil) para fins analíticos internos e melhoria do produto. Também coletamos e-mail, telefone, apelido no card (opcional), personalização da loja de momentos, foto de perfil (opcional), token FCM, dados de uso (check-ins, desafios, conquistas, memórias) e dados de dispositivo para segurança. Dados sensíveis de perfil não são exibidos publicamente a outros usuários, exceto o necessário para o funcionamento do catálogo entre parceiros pareados.</p>
+    <p class="font-semibold text-white mt-4 mb-1">3. Base Legal</p>
+    <p class="mb-3">O tratamento dos seus dados é realizado com base no <strong>consentimento livre e informado</strong> (LGPD Art. 7º, I), manifestado no ato do cadastro.</p>
+    <p class="font-semibold text-white mt-4 mb-1">4. Operadores (Terceiros)</p>
+    <p class="mb-3">Google Firebase (Firestore, Auth, Storage, Cloud Functions, FCM), Vercel Inc., Google Analytics (GA4) e Meta Platforms (Facebook Pixel). Seus dados <strong>não são vendidos</strong> a terceiros.</p>
+    <p class="font-semibold text-white mt-4 mb-1">5. Cookies e Rastreamento</p>
+    <p class="mb-3">Utilizamos cookies para manter sua sessão autenticada, coletar métricas de uso via Google Analytics e medir eficácia de campanhas via Meta Pixel. Dados analíticos são pseudonimizados.</p>
+    <p class="font-semibold text-white mt-4 mb-1">6. Retenção dos Dados</p>
+    <p class="mb-3">Seus dados são mantidos enquanto sua conta estiver ativa. Após exclusão, são removidos em até <strong>30 dias</strong>, exceto registros de acesso (6 meses, conforme Marco Civil Art. 15).</p>
+    <p class="font-semibold text-white mt-4 mb-1">7. Segurança</p>
+    <p class="mb-3">Criptografia em trânsito (HTTPS/TLS), autenticação segura via Firebase Auth e regras de acesso ao banco de dados (Firestore Security Rules).</p>
+    <p class="font-semibold text-white mt-4 mb-1">8. Seus Direitos (LGPD Art. 18)</p>
+    <ul class="list-disc pl-5 mb-3 space-y-1">
+      <li><strong>Confirmação e acesso</strong> aos seus dados</li>
+      <li><strong>Retificação</strong> de dados incompletos ou incorretos</li>
+      <li><strong>Eliminação</strong> — disponível em &ldquo;Meu Perfil → Excluir minha conta&rdquo;</li>
+      <li><strong>Portabilidade</strong> dos seus dados</li>
+      <li><strong>Revogação do consentimento</strong> a qualquer momento</li>
+    </ul>
+    <p class="mb-3">Contato: <span class="text-pink-400">faleconosco@nossomomento.app</span>. Você também pode reclamar à <strong>ANPD</strong>.</p>
+    <p class="font-semibold text-white mt-4 mb-1">9. Transferência Internacional</p>
+    <p class="mb-3">Seus dados podem ser processados em servidores no EUA (Google, Vercel), que adotam salvaguardas conforme LGPD Art. 33.</p>
+    <p class="font-semibold text-white mt-4 mb-1">10. Alterações</p>
+    <p class="mb-3">Esta Política pode ser atualizada. Alterações relevantes serão comunicadas com antecedência mínima de 15 dias.</p>
+    <p class="font-semibold text-white mt-4 mb-1">11. Contato e DPO</p>
+    <p>Dúvidas: <span class="text-pink-400">faleconosco@nossomomento.app</span></p>
+  </template>
+
+  <script>
+    (function () {
+      var modal = document.getElementById('legal-modal');
+      if (!modal) return;
+      var titleEl = document.getElementById('legal-title');
+      var bodyEl = document.getElementById('legal-body');
+      var termsTpl = document.getElementById('legal-terms-content');
+      var privacyTpl = document.getElementById('legal-privacy-content');
+
+      function openLegal(type) {
+        var isTerms = type === 'terms';
+        titleEl.textContent = isTerms ? 'Termos de Uso' : 'Política de Privacidade';
+        bodyEl.innerHTML = (isTerms ? termsTpl : privacyTpl).innerHTML;
+        bodyEl.scrollTop = 0;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeLegal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+      }
+
+      document.addEventListener('click', function (e) {
+        var trigger = e.target.closest('[data-legal]');
+        if (trigger) { e.preventDefault(); openLegal(trigger.getAttribute('data-legal')); return; }
+        if (e.target.closest('[data-legal-close]') || e.target.id === 'legal-overlay') { closeLegal(); }
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeLegal();
+      });
+    })();
+  </script>
+
+  <!-- Tracking de cliques nos botões da LP (GA4 + Meta Pixel) -->
+  <script>
+    (function () {
+      function cliqueBotaoLP(label) {
+        try { if (typeof gtag !== 'undefined') gtag('event', 'clique_botao_lp', { botao: label, acao: 'CliqueBotaoLP' }); } catch (e) {}
+        try { if (typeof fbq !== 'undefined') fbq('trackCustom', 'CliqueBotaoLP', { botao: label }); } catch (e) {}
+      }
+      document.addEventListener('click', function (e) {
+        var cta = e.target.closest('[data-lp-cta]');
+        if (cta) { cliqueBotaoLP(cta.getAttribute('data-lp-cta')); }
       });
     })();
   </script>

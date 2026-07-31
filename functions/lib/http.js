@@ -9,7 +9,7 @@ function setCorsHeaders(req, res) {
   if (ALLOWED_ORIGINS.includes(origin) || isLocalDev) {
     res.set("Access-Control-Allow-Origin", origin);
   }
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.set(
       "Access-Control-Allow-Headers",
       "Authorization, Content-Type, X-Firebase-AppCheck",

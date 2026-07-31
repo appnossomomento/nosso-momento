@@ -69,7 +69,7 @@ export type AdminUserRow = {
   vip: boolean;
 };
 
-/** Lead capturado na LP (Google Sheets via Apps Script). */
+/** Lead capturado na LP (Firestore lista-de-espera). */
 export type LpLead = {
   data: string;
   nome: string;

@@ -1,7 +1,7 @@
 /* eslint-disable require-jsdoc, linebreak-style, max-len, valid-jsdoc */
 const https = require("firebase-functions/v2/https");
 const {admin} = require("../lib/config");
-const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {setCorsHeaders, rateLimitFirestore} = require("../lib/http");
 const {requireAppCheck} = require("../lib/appCheck");
 const {areUsersPaired} = require("../lib/pairing");
 
@@ -44,7 +44,7 @@ exports.getParceiroPerfil = https.onRequest(async (req, res) => {
     return;
   }
 
-  if (rateLimitHttp(req, res, {
+  if (await rateLimitFirestore(req, res, {
     keyPrefix: "getParceiroPerfil",
     limit: 120,
     windowMs: 60 * 1000,

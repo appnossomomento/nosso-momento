@@ -4,24 +4,43 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { trackScreenView } from '@/lib/analytics';
+import {
+  hasMarketingConsent,
+  onCookieConsentChange,
+} from '@/lib/consent/cookies';
 
 declare function fbq(...args: any[]): void;
 
 /**
- * Dispara screen_view (GA4) e PageView (Meta) a cada mudança de rota do App Router.
- * O page_view automático do GA4 está desligado no layout (send_page_view:false),
- * então este componente é a fonte única de page_view/screen_view.
- * No Meta, o script de init já dispara o primeiro PageView, então pulamos a 1ª rota.
+ * Dispara screen_view (GA4) e PageView (Meta) a cada mudança de rota do App Router,
+ * somente com consentimento de marketing.
  */
 export default function ScreenTracker() {
   const pathname = usePathname();
   const firstRun = useRef(true);
+  const consentRef = useRef(false);
 
   useEffect(() => {
-    if (!pathname) return;
+    consentRef.current = hasMarketingConsent();
+    return onCookieConsentChange(() => {
+      const next = hasMarketingConsent();
+      const justAccepted = next && !consentRef.current;
+      consentRef.current = next;
+      if (justAccepted && pathname) {
+        firstRun.current = true;
+        trackScreenView(pathname);
+        try {
+          if (typeof fbq !== 'undefined') fbq('track', 'PageView');
+        } catch (_) {}
+        firstRun.current = false;
+      }
+    });
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!pathname || !hasMarketingConsent()) return;
     trackScreenView(pathname);
 
-    // Meta: init já disparou o 1º PageView; dispara nas navegações seguintes.
     if (firstRun.current) {
       firstRun.current = false;
     } else {

@@ -2,7 +2,7 @@
 const https = require("firebase-functions/v2/https");
 const crypto = require("crypto");
 const {admin} = require("../lib/config");
-const {setCorsHeaders, rateLimitHttp} = require("../lib/http");
+const {setCorsHeaders, rateLimitFirestore} = require("../lib/http");
 const {requireAppCheck} = require("../lib/appCheck");
 const {buildMemoriaDescricao} = require("../lib/normalize");
 
@@ -23,7 +23,7 @@ exports.getMemorias = https.onRequest(async (req, res) => {
     return;
   }
 
-  if (rateLimitHttp(req, res, {
+  if (await rateLimitFirestore(req, res, {
     keyPrefix: "getMemorias",
     limit: 120,
     windowMs: 60 * 1000,
@@ -141,7 +141,7 @@ exports.createMemoriaPhoto = https.onRequest(async (req, res) => {
     return;
   }
 
-  if (rateLimitHttp(req, res, {
+  if (await rateLimitFirestore(req, res, {
     keyPrefix: "createMemoriaPhoto",
     limit: 10,
     windowMs: 60 * 1000,
@@ -342,7 +342,7 @@ exports.deleteMemoria = https.onRequest(async (req, res) => {
     return;
   }
 
-  if (rateLimitHttp(req, res, {
+  if (await rateLimitFirestore(req, res, {
     keyPrefix: "deleteMemoria",
     limit: 20,
     windowMs: 60 * 1000,
