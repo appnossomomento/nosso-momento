@@ -11,6 +11,10 @@ import clsx from 'clsx';
 import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import OverlayModal from '@/components/ui/OverlayModal';
 import { trackAction } from '@/lib/analytics';
+import {
+  isStorageMediaPath,
+  resolveMediaUrlMap,
+} from '@/lib/utils/resolveMediaUrls';
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -66,9 +70,19 @@ export default function MomentosPage() {
           limit(30)
         );
         const snap = await getDocs(q);
-        setMomentos(
-          snap.docs.map((d) => ({ id: d.id, ...d.data() } as TarefaMomento))
-        );
+        const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() } as TarefaMomento));
+        const paths = rows
+          .map((m) => m.momentoImg)
+          .filter((v): v is string => Boolean(v && isStorageMediaPath(v)));
+        if (paths.length) {
+          const urls = await resolveMediaUrlMap(paths);
+          for (const m of rows) {
+            if (m.momentoImg && urls[m.momentoImg]) {
+              m.momentoImg = urls[m.momentoImg]!;
+            }
+          }
+        }
+        setMomentos(rows);
       } catch {
         showToast('Erro ao carregar momentos.', 'erro');
       } finally {

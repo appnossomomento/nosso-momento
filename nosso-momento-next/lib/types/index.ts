@@ -11,7 +11,10 @@ export interface MomentoCustom {
   nome: string;
   preco: number;
   emoji?: string;
+  /** URL assinada de curta duração (runtime) ou http legado */
   img?: string;
+  /** Path no Storage (`custom_momentos/...`) — fonte da verdade */
+  imgPath?: string | null;
   categoria?: string;
   ativo?: boolean;
   /** Se true, parceiro não vê/resgata na loja */

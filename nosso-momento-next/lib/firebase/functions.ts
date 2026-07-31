@@ -22,11 +22,14 @@ export const FUNCTIONS = {
   getMemorias: cfUrl('getMemorias'),
   createMemoriaPhoto: cfUrl('createMemoriaPhoto'),
   deleteMemoria: cfUrl('deleteMemoria'),
+  uploadCustomMomentImage: cfUrl('uploadCustomMomentImage'),
+  resolveMediaUrls: cfUrl('resolveMediaUrls'),
   getExtrato: cfUrl('getExtrato'),
   getParceiroPerfil: cfUrl('getParceiroPerfil'),
   gerarConvite: cfUrl('gerarConvite'),
   verificarTelefone: cfUrl('verificarTelefone'),
   excluirConta: cfUrl('excluirConta'),
+  exportarMeusDados: cfUrl('exportarMeusDados'),
 } as const;
 
 /**

@@ -2,6 +2,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db, waitForAppCheckToken } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import type { MomentoCustom } from '@/lib/types';
+import { enrichMomentosCustomWithSignedUrls } from '@/lib/utils/resolveMediaUrls';
 
 function parseMomentosCustom(raw: unknown): Record<string, MomentoCustom[]> | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
@@ -23,10 +24,11 @@ export async function waitForCustomMomentVisible(
     await waitForAppCheckToken();
     const snap = await getDoc(ref);
     if (snap.exists()) {
-      const momentosCustomAtivo = parseMomentosCustom(snap.data()?.momentosCustom);
-      if (momentosCustomAtivo) {
-        useAppStore.getState().set({ momentosCustomAtivo });
-        const list = momentosCustomAtivo[ownerUid];
+      const parsed = parseMomentosCustom(snap.data()?.momentosCustom);
+      if (parsed) {
+        const enriched = (await enrichMomentosCustomWithSignedUrls(parsed)) ?? parsed;
+        useAppStore.getState().set({ momentosCustomAtivo: enriched });
+        const list = enriched[ownerUid];
         if (
           Array.isArray(list) &&
           list.some((m) => m && m.ativo !== false && m.nome === nome)

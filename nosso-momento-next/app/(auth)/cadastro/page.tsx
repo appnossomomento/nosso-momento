@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, FormEvent, useRef, useMemo } from 'react';
+import { useState, FormEvent, useRef, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/client';
+import { auth, db, getAppCheckToken, waitForAppCheckToken } from '@/lib/firebase/client';
 import { sendInput } from '@/lib/firebase/functions';
+import { LEGAL_VERSION } from '@/lib/legal/LegalContent';
 import { openSystemAlert } from '@/components/ui/Modal';
 import { showToast } from '@/components/ui/Toast';
 import DarkSelect from '@/components/ui/DarkSelect';
@@ -47,6 +48,11 @@ export default function CadastroPage() {
   const router = useRouter();
   const { set } = useAppStore();
   const [step, setStep] = useState<1 | 2>(1);
+
+  // Pré-aquece App Check/reCAPTCHA enquanto o usuário preenche o formulário.
+  useEffect(() => {
+    void getAppCheckToken(false);
+  }, []);
 
   // Etapa 1
   const [nome, setNome] = useState('');
@@ -184,6 +190,17 @@ export default function CadastroPage() {
 
     setLoading(true);
     try {
+      const appCheckToken = await waitForAppCheckToken(
+        process.env.NODE_ENV === 'production' ? 12_000 : 3_000,
+      );
+      if (process.env.NODE_ENV === 'production' && !appCheckToken) {
+        openSystemAlert(
+          'Não foi possível validar a segurança do app. Recarregue a página e tente novamente.',
+        );
+        setLoading(false);
+        return;
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), senha);
       const user = userCredential.user;
       const idToken = await user.getIdToken();
@@ -220,6 +237,9 @@ export default function CadastroPage() {
         lastCheckInDate: null,
         pareadoCom: null,
         catalogoPersonalizado: {},
+        consentimento: true,
+        consentimentoAt: serverTimestamp(),
+        consentimentoVersion: LEGAL_VERSION,
         createdAt: serverTimestamp(),
       };
 

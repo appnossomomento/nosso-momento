@@ -75,7 +75,21 @@ describe("customMoments — create validation", () => {
     expect(result.error).toBe("missing_custom_moment_image");
   });
 
-  test("aceita payload válido", () => {
+  test("aceita payload válido com imgPath", () => {
+    const result = validateCustomMomentCreateInput({
+      nome: "Jantar",
+      preco: 50,
+      emoji: "❤️",
+      imgPath: "custom_momentos/pair1/uid-a/foto.jpg",
+    });
+    expect(result.ok).toBe(true);
+    expect(result.item.preco).toBe(50);
+    expect(result.item.imgPath).toBe("custom_momentos/pair1/uid-a/foto.jpg");
+    expect(result.item.img).toBeNull();
+    expect(result.item.categoria).toBe("Personalizado");
+  });
+
+  test("aceita legado http no create", () => {
     const result = validateCustomMomentCreateInput({
       nome: "Jantar",
       preco: 50,
@@ -83,8 +97,7 @@ describe("customMoments — create validation", () => {
       img: "https://firebasestorage.googleapis.com/v0/b/test/o/photo.jpg",
     });
     expect(result.ok).toBe(true);
-    expect(result.item.preco).toBe(50);
-    expect(result.item.categoria).toBe("Personalizado");
+    expect(result.item.img).toContain("https://");
   });
 });
 

@@ -7,6 +7,7 @@ import { useAppStore } from '@/lib/store/appStore';
 import { isClimaFromToday } from '@/lib/clima/isClimaFromToday';
 import { saoPauloDateString } from '@/lib/utils/saoPauloDate';
 import type { ClimaItem, MomentoCustom } from '@/lib/types';
+import { enrichMomentosCustomWithSignedUrls } from '@/lib/utils/resolveMediaUrls';
 
 type ClimaSnap = { humor?: string; registradoEm?: unknown } | null;
 
@@ -76,7 +77,7 @@ export function usePareamentoListeners() {
           }
 
           const raw = pData.momentosCustom;
-          const momentosCustomAtivo =
+          const momentosRaw =
             raw && typeof raw === 'object' && !Array.isArray(raw)
               ? (raw as Record<string, MomentoCustom[]>)
               : null;
@@ -112,14 +113,27 @@ export function usePareamentoListeners() {
             climaPartnerHoje ? climaPartnerHoje.humor : null,
           );
 
+          // Paths primeiro; URLs assinadas em seguida (não bloqueia clima/parceiros)
           set({
             parceirosAtivos: nextParceiros,
-            momentosCustomAtivo,
+            momentosCustomAtivo: momentosRaw,
             climaHoje,
             climaPartnerHoje,
             climaSemana,
             climaHistory,
           });
+
+          if (momentosRaw) {
+            void enrichMomentosCustomWithSignedUrls(momentosRaw).then((enriched) => {
+              if (!enriched) return;
+              const stillActive =
+                useAppStore.getState().conexaoAtiva?.pareamentoId ??
+                useAppStore.getState().idPareamentoAmigavel ??
+                null;
+              if (stillActive !== pareamentoId) return;
+              set({ momentosCustomAtivo: enriched });
+            });
+          }
         },
         (err) => console.warn('[usePareamentoListeners] erro no snapshot:', err),
       );

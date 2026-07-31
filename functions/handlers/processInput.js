@@ -1418,7 +1418,7 @@ exports.processInput = onDocumentCreated(
               tx.set(tarefaRef, {
                 momentoNome: item.nome,
                 momentoEmoji: item.emoji || "",
-                momentoImg: item.img || "",
+                momentoImg: item.imgPath || item.img || "",
                 momentoCategoria: item.categoria || "Geral",
                 custoFoguinhos: item.custoFoguinhos,
                 status: "Pendente",
@@ -3359,7 +3359,8 @@ exports.processInput = onDocumentCreated(
             nome: validated.item.nome,
             preco: validated.item.preco,
             emoji: validated.item.emoji,
-            img: validated.item.img,
+            imgPath: validated.item.imgPath || null,
+            img: validated.item.imgPath ? null : (validated.item.img || null),
             categoria: validated.item.categoria,
             ativo: true,
             criadoEm: admin.firestore.Timestamp.now(),
@@ -3487,9 +3488,16 @@ exports.processInput = onDocumentCreated(
             const rawCustomList = (pData.momentosCustom || {})[fromUid];
             const currentList = Array.isArray(rawCustomList) ?
               rawCustomList : [];
-            const nextImg = validated.item.img || existing.img;
-            if (!nextImg || typeof nextImg !== "string" ||
-                !nextImg.startsWith("http")) {
+            const nextImgPath = validated.item.imgPath ||
+              existing.imgPath || null;
+            const nextImg = nextImgPath ?
+              null :
+              (validated.item.img || existing.img || null);
+            const hasPath = typeof nextImgPath === "string" &&
+              nextImgPath.startsWith("custom_momentos/");
+            const hasLegacyHttp = typeof nextImg === "string" &&
+              nextImg.startsWith("http");
+            if (!hasPath && !hasLegacyHttp) {
               tx.update(inputRef, {
                 error: "missing_custom_moment_image", processed: false,
               });
@@ -3503,7 +3511,8 @@ exports.processInput = onDocumentCreated(
                 nome: validated.item.nome,
                 preco: validated.item.preco,
                 emoji: validated.item.emoji,
-                img: nextImg,
+                imgPath: hasPath ? nextImgPath : null,
+                img: hasPath ? null : nextImg,
                 categoria: validated.item.categoria,
                 ativo: true,
                 criadorUid: item.criadorUid || fromUid,
