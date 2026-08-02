@@ -11,6 +11,12 @@ import { openSystemAlert } from '@/components/ui/Modal';
 import { showToast } from '@/components/ui/Toast';
 import type { Pareamento } from '@/lib/types';
 import { MAX_CONEXOES_VIP, getConnectionLimit } from '@/lib/constants';
+import AppHeroShell, { ACCENT, TILE } from '@/components/layout/AppHeroShell';
+
+const TILE_SURFACE = {
+  background: TILE,
+  border: '1px solid rgba(255, 255, 255, 0.09)',
+} as const;
 
 function ParearFormSection({
   meuTelefone,
@@ -41,20 +47,29 @@ function ParearFormSection({
 }) {
   return (
     <>
-      <div className="rounded-2xl bg-white/10 p-5">
+      <div className="rounded-2xl p-5" style={TILE_SURFACE}>
         <p className="text-xs text-white/60 mb-1">Seu número (compartilhe com seu parceiro)</p>
-        <p className="text-lg font-bold tracking-wide text-pink-400">{meuTelefone}</p>
+        <p className="text-lg font-bold tracking-wide" style={{ color: ACCENT }}>
+          {meuTelefone}
+        </p>
       </div>
 
       <button
         type="button"
         onClick={onGerarConvite}
         disabled={gerandoConvite}
-        className="rounded-2xl bg-white/10 p-5 w-full text-left hover:bg-white/20 transition disabled:opacity-60"
+        className="rounded-2xl p-5 w-full text-left transition disabled:opacity-60 active:scale-[0.99]"
+        style={TILE_SURFACE}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center">
-            <i className="fas fa-link text-pink-400" />
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{
+              background: 'rgba(244, 63, 94, 0.12)',
+              border: '1px solid rgba(244, 63, 94, 0.2)',
+            }}
+          >
+            <i className="fas fa-link" style={{ color: ACCENT }} />
           </div>
           <div>
             <p className="text-sm font-semibold">Convide seu amor</p>
@@ -64,13 +79,21 @@ function ParearFormSection({
       </button>
 
       {conviteUrl && (
-        <div className="rounded-2xl bg-pink-500/10 border border-pink-500/20 p-4">
-          <p className="text-xs text-pink-400 font-semibold mb-1">Link gerado (copiado!):</p>
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            background: 'rgba(244, 63, 94, 0.08)',
+            border: '1px solid rgba(244, 63, 94, 0.22)',
+          }}
+        >
+          <p className="text-xs font-semibold mb-1" style={{ color: ACCENT }}>
+            Link gerado (copiado!):
+          </p>
           <p className="text-xs text-white/70 break-all">{conviteUrl}</p>
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="rounded-2xl bg-white/10 p-5 space-y-3">
+      <form onSubmit={onSubmit} className="rounded-2xl p-5 space-y-3" style={TILE_SURFACE}>
         <p className="text-sm font-semibold">Parear pelo número do parceiro</p>
         <input
           type="tel"
@@ -256,20 +279,33 @@ export default function ParearPage() {
   };
 
   return (
-    <div className="screen screen-pad bg-black text-white">
-      <section className="px-0 pt-11 pb-6" style={{ background: 'linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%)' }}>
-        <div className="flex flex-col items-center text-center -mt-3">
-          <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mb-3">
-            <i className="fas fa-heart text-2xl text-white" />
+    <AppHeroShell
+      sheetClassName="space-y-4"
+      hero={
+        <>
+          <div
+            className="mb-5 flex items-center justify-center rounded-full"
+            style={{
+              width: 80,
+              height: 80,
+              background: 'rgba(255,255,255,0.12)',
+              boxShadow: [
+                `0 0 0 3px ${ACCENT}`,
+                '0 0 0 8px rgba(244, 63, 94, 0.2)',
+              ].join(', '),
+            }}
+          >
+            <i className="fas fa-heart text-3xl text-white" />
           </div>
-          <h2 className="text-xl font-semibold">Pareamentos</h2>
-          <p className="text-sm text-white/80 px-6">
+          <h2 className="text-[25px] font-bold leading-tight tracking-tight">
+            Pareamentos
+          </h2>
+          <p className="mt-0.5 text-[15px] text-white/75 leading-snug px-4">
             {isVip ? 'Gerencie até 5 conexões' : 'Conecte-se com seu parceiro'}
           </p>
-        </div>
-      </section>
-
-      <section className="px-5 pt-4 pb-8 space-y-4">
+        </>
+      }
+    >
         {temConexoes && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -299,11 +335,14 @@ export default function ParearPage() {
                 <button
                   key={p.uid}
                   onClick={() => handleSelectConexao(p)}
-                  className="w-full rounded-2xl p-4 flex items-center gap-4 transition text-left"
+                  className="w-full rounded-2xl p-4 flex items-center gap-4 transition text-left active:scale-[0.99]"
                   style={
                     isAtivo
-                      ? { background: 'linear-gradient(135deg,rgba(255,45,63,0.20),rgba(255,85,101,0.12))', border: '1px solid rgba(255,45,63,0.45)' }
-                      : { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.08)' }
+                      ? {
+                          background: 'rgba(244, 63, 94, 0.14)',
+                          border: `1px solid ${ACCENT}`,
+                        }
+                      : TILE_SURFACE
                   }
                 >
                   <div className="relative flex-shrink-0">
@@ -348,7 +387,10 @@ export default function ParearPage() {
                 <div
                   key={`locked-${slot}`}
                   className="w-full rounded-2xl p-4 flex items-center gap-3 opacity-50"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.08)' }}
+                  style={{
+                    background: TILE,
+                    border: '1px dashed rgba(255,255,255,0.12)',
+                  }}
                 >
                   <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
                     <i className="fas fa-lock text-white/30 text-sm" />
@@ -366,10 +408,19 @@ export default function ParearPage() {
               onClick={handleNovaConexao}
               disabled={isVip && atMaxConnections}
               className="w-full rounded-2xl p-4 flex items-center gap-3 transition disabled:opacity-40"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.15)' }}
+              style={{
+                background: TILE,
+                border: '1px dashed rgba(255,255,255,0.18)',
+              }}
             >
-              <div className="w-10 h-10 rounded-xl bg-pink-500/15 flex items-center justify-center">
-                <i className={`fas ${isVip && atMaxConnections ? 'fa-ban' : 'fa-plus'} text-pink-400`} />
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: 'rgba(244, 63, 94, 0.12)' }}
+              >
+                <i
+                  className={`fas ${isVip && atMaxConnections ? 'fa-ban' : 'fa-plus'}`}
+                  style={{ color: ACCENT }}
+                />
               </div>
               <div className="text-left">
                 <p className="text-sm font-semibold text-white/70">Nova Conexão</p>
@@ -400,8 +451,6 @@ export default function ParearPage() {
             />
           </div>
         )}
-
-      </section>
-    </div>
+    </AppHeroShell>
   );
 }

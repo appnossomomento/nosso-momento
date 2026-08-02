@@ -48,7 +48,7 @@ export function PrivacyContent() {
         <li><strong>Confirmação e acesso</strong> aos seus dados</li>
         <li><strong>Retificação</strong> de dados incompletos ou incorretos</li>
         <li><strong>Eliminação</strong> — disponível em &ldquo;Meu Perfil → Excluir minha conta&rdquo;</li>
-        <li><strong>Portabilidade</strong> dos seus dados (Perfil → Baixar meus dados)</li>
+        <li><strong>Portabilidade</strong> dos seus dados — solicite por e-mail a <span className="text-pink-400">faleconosco@nossomomento.app</span></li>
         <li><strong>Revogação do consentimento</strong> a qualquer momento</li>
       </ul>
       <p className="mb-3">Contato: <span className="text-pink-400">faleconosco@nossomomento.app</span>. Você também pode reclamar à <strong>ANPD</strong>.</p>

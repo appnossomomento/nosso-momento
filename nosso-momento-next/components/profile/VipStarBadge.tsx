@@ -1,4 +1,7 @@
 import clsx from 'clsx';
+import Image from 'next/image';
+
+const LOGO_WHITE = '/assets/icons/logo-icon-white-bottom.png';
 
 type Props = {
   className?: string;
@@ -13,7 +16,7 @@ export default function VipStarBadge({
   borderClassName = 'border-[#0f0b14]',
 }: Props) {
   const dim = size === 'sm' ? 'w-6 h-6' : size === 'lg' ? 'w-12 h-12' : 'w-7 h-7';
-  const icon = size === 'sm' ? 'text-[9px]' : size === 'lg' ? 'text-lg' : 'text-[11px]';
+  const logoPx = size === 'sm' ? 12 : size === 'lg' ? 22 : 14;
 
   return (
     <span
@@ -28,7 +31,14 @@ export default function VipStarBadge({
       aria-label="VIP ativo"
       title="VIP ativo"
     >
-      <i className={clsx('fas fa-star text-white drop-shadow', icon)} />
+      <Image
+        src={LOGO_WHITE}
+        alt=""
+        width={logoPx}
+        height={logoPx}
+        className="object-contain drop-shadow"
+        aria-hidden
+      />
     </span>
   );
 }

@@ -119,13 +119,21 @@ exports.getMemorias = https.onRequest(async (req, res) => {
 
     const items = await Promise.all(sliced.map(async (doc) => {
       const fotoUrl = await signMemoriaDoc(doc);
-      return {...doc, fotoUrl: fotoUrl || null};
+      // LGPD: espelha URL assinada (thumbnail legado pode estar sem token)
+      return {
+        ...doc,
+        fotoUrl: fotoUrl || null,
+        thumbnailUrl: fotoUrl || null,
+      };
     }));
 
     res.send({items, hasMore});
   } catch (err) {
     console.error("getMemorias error:", err);
-    res.status(500).send({error: "get_memorias_failed"});
+    res.status(500).send({
+      error: "get_memorias_failed",
+      message: err && err.message ? String(err.message) : "unknown",
+    });
   }
 });
 

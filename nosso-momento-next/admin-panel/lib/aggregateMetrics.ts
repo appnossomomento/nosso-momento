@@ -1,6 +1,7 @@
 import type { Firestore } from 'firebase-admin/firestore';
 import type { AdminMetrics, AdminUserRow, RecentSignup } from '../types';
 import { aggregateLojaMetrics } from './aggregateLojaMetrics';
+import { estimateCosts } from './estimateCosts';
 import { mergeAnatomiaCounts, normalizeOrientacao, normalizeTempoRelacionamento, sortByTempoRelOrder } from './normalizeLabels';
 
 function toDate(value: unknown): Date | null {
@@ -90,12 +91,27 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
   const prevPeriodStart = now - periodDays * 2 * 24 * 60 * 60 * 1000;
   const activeStart = now - 7 * 24 * 60 * 60 * 1000;
 
-  const [usersSnap, pareamentosSnap, loginsSnap, loja] = await Promise.all([
+  const [usersSnap, pareamentosSnap, loginsSnap, loja, memoriasTotalAgg] = await Promise.all([
     db.collection('usuarios').get(),
     db.collection('pareamentos').get(),
     db.collection('analytics_daily_logins').get(),
     aggregateLojaMetrics(db, periodStart),
+    db.collection('memorias').count().get(),
   ]);
+
+  const memoriasTotal = memoriasTotalAgg.data().count;
+
+  let memoriasInPeriod = 0;
+  try {
+    const periodAgg = await db
+      .collection('memorias')
+      .where('createdAtMs', '>=', periodStart)
+      .count()
+      .get();
+    memoriasInPeriod = periodAgg.data().count;
+  } catch {
+    memoriasInPeriod = 0;
+  }
 
   let signupsInPeriod = 0;
   let signupsPrevPeriod = 0;
@@ -205,6 +221,25 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
         ? 100
         : null;
 
+  const loginEventsInPeriod = loginsByDay.reduce((acc, d) => acc + d.count, 0);
+
+  const usage = {
+    memoriasTotal,
+    memoriasInPeriod,
+    loginEventsInPeriod,
+  };
+
+  const costs = estimateCosts({
+    users: usersSnap.size,
+    active7d: activeInPeriod,
+    pareamentos: pareamentosSnap.size,
+    memoriasTotal,
+    memoriasInPeriod,
+    periodDays,
+    signupsInPeriod,
+    loginEventsInPeriod,
+  });
+
   return {
     generatedAt: new Date().toISOString(),
     periodDays,
@@ -231,6 +266,8 @@ export async function aggregateMetrics(db: Firestore, periodDays: number): Promi
     byTempoRelacionamento: sortByTempoRelOrder(toSortedList(byTempoRelacionamento)),
     loja,
     recentSignups: recentSignups.slice(0, 20),
+    usage,
+    costs,
   };
 }
 

@@ -70,12 +70,21 @@ async function signReadUrl(filePath, opts = {}) {
     stripDownloadTokens(file).catch(() => {});
   }
 
-  const [url] = await file.getSignedUrl({
-    version: "v4",
-    action: "read",
-    expires: Date.now() + ttlMs,
-  });
-  return url || null;
+  try {
+    const [url] = await file.getSignedUrl({
+      version: "v4",
+      action: "read",
+      expires: Date.now() + ttlMs,
+    });
+    return url || null;
+  } catch (err) {
+    // Sem roles/iam.serviceAccountTokenCreator a CF estoura e derruba getMemorias inteiro.
+    console.warn(
+        "[storageSignedUrl] getSignedUrl failed:",
+        err && err.message ? err.message : err,
+    );
+    return null;
+  }
 }
 
 /**
@@ -85,13 +94,26 @@ async function signReadUrl(filePath, opts = {}) {
  */
 async function signMemoriaDoc(doc) {
   if (!doc || typeof doc !== "object") return null;
-  let path = typeof doc.fotoPath === "string" ? doc.fotoPath : null;
-  if (!path && typeof doc.fotoUrl === "string") {
-    path = pathFromFirebaseDownloadUrl(doc.fotoUrl);
+  try {
+    let path = typeof doc.fotoPath === "string" ? doc.fotoPath : null;
+    if (!path && typeof doc.fotoUrl === "string") {
+      path = pathFromFirebaseDownloadUrl(doc.fotoUrl);
+    }
+    if (!path) {
+      // Sem path: só devolve URL legada se ainda tiver token (senão o cliente recebe null).
+      const raw = typeof doc.fotoUrl === "string" ? doc.fotoUrl : null;
+      if (raw && /[?&]token=/.test(raw)) return raw;
+      return null;
+    }
+    const signed = await signReadUrl(path);
+    return signed || null;
+  } catch (err) {
+    console.warn(
+        "[storageSignedUrl] signMemoriaDoc failed:",
+        err && err.message ? err.message : err,
+    );
+    return null;
   }
-  if (!path) return typeof doc.fotoUrl === "string" ? doc.fotoUrl : null;
-  const signed = await signReadUrl(path);
-  return signed || null;
 }
 
 /**

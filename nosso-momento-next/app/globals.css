@@ -113,22 +113,41 @@
 }
 
 .bottom-nav-item.active {
-  color: #ff5565;
+  color: #f43f5e;
 }
 
 .bottom-nav-item-center {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52px;
-  height: 52px;
-  background: linear-gradient(135deg, #ff3547 0%, #ff6b7c 100%);
+  width: 58px;
+  height: 58px;
+  /* Mesmo gradiente LP: red-500 → rose-500 */
+  background: linear-gradient(135deg, #ef4444 0%, #f43f5e 100%);
   color: #fff;
   border-radius: 50%;
-  border: 3px solid #1f2937;
-  transform: translateY(-14px);
-  box-shadow: 0 -5px 15px rgba(255, 53, 71, 0.4);
-  transition: all 0.3s ease;
+  border: none;
+  transform: translateY(-16px) scale(1);
+  box-shadow:
+    0 0 0 4px rgba(239, 68, 68, 0.18),
+    0 -6px 22px rgba(239, 68, 68, 0.65),
+    0 0 48px rgba(244, 63, 94, 0.4),
+    0 12px 32px rgba(239, 68, 68, 0.28);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+  will-change: transform;
+}
+
+.bottom-nav-bar a:active .bottom-nav-item-center {
+  transform: translateY(-16px) scale(0.9);
+  box-shadow:
+    0 0 0 3px rgba(239, 68, 68, 0.14),
+    0 -3px 14px rgba(239, 68, 68, 0.48),
+    0 0 28px rgba(244, 63, 94, 0.3);
+}
+
+.bottom-nav-item-center img {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  pointer-events: none;
 }
 
 /* ── Inputs ────────────────────────────── */

@@ -14,6 +14,7 @@ import { formatTelefoneBr, pct, rollupMonthly, rollupWeekly, withPercent } from 
 import VipsView from '@/admin-panel/views/VipsView';
 import SurveysView from '@/admin-panel/views/SurveysView';
 import LeadsView from '@/admin-panel/views/LeadsView';
+import CostsView from '@/admin-panel/views/CostsView';
 
 const SNAPSHOT_NOTE = 'Distribuição acumulada — base total de usuários cadastrados.';
 
@@ -388,6 +389,8 @@ export default function AdminSectionViews({ section, metrics, onExport }: Props)
       return <LojaView m={metrics} />;
     case 'cadastros':
       return <CadastrosView m={metrics} />;
+    case 'custos':
+      return <CostsView m={metrics} />;
     case 'exportacao':
       return <ExportacaoView m={metrics} onExport={onExport} />;
     default:

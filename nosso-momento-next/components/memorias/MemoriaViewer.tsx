@@ -70,6 +70,7 @@ export default function MemoriaViewer() {
                 src={imgUrl}
                 alt="Memória"
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="400px"
               />

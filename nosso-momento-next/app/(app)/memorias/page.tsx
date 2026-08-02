@@ -9,8 +9,16 @@ import { callFunction, FUNCTIONS } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
 import Image from 'next/image';
 import clsx from 'clsx';
-import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
-import { montarNomesCasal } from '@/lib/utils/displayName';
+import AppHeroShell, { ACCENT } from '@/components/layout/AppHeroShell';
+import { montarNomesCasal, primeiroNome } from '@/lib/utils/displayName';
+import { setParceiroAtivo } from '@/lib/utils/setParceiroAtivo';
+import type { Pareamento } from '@/lib/types';
+
+const LOGO_COLOR = '/assets/icons/iconprincipal.png';
+const FALLBACK_AVATAR = '/assets/icons/iconprincipal.png';
+const AVATAR = 96;
+/** Sobreposição leve — só as bordas se invadem; o logo fica no centro da interseção. */
+const AVATAR_OVERLAP = 12;
 
 const CATEGORIAS = ['Todos', 'Lovezin', 'Sair da Rotina', 'Quentes'] as const;
 
@@ -41,8 +49,12 @@ export default function MemoriasPage() {
     usuario,
     parceiroNome,
     parceiroData,
+    parceirosAtivos,
+    pareadoUid,
   } = useAppStore();
   const uid = usuario?.uid ?? null;
+  const [switchOpen, setSwitchOpen] = useState(false);
+  const multiConexao = (parceirosAtivos?.length ?? 0) > 1;
 
   // Redireciona para /parear se o usuário não tiver pareamento ativo
   useEffect(() => {
@@ -170,7 +182,25 @@ export default function MemoriasPage() {
     apelidoReal: parceiroData?.apelidoReal,
     nome: parceiroNome ?? parceiroData?.nome,
   });
+  // Hero: só first name. Apelido fica no feed (nomesCasal / nomeParaCard).
+  const nomeMeu = primeiroNome(usuario?.nome) || 'Eu';
+  const nomePar =
+    primeiroNome(parceiroNome ?? parceiroData?.nome) || 'Parceiro';
+  const tituloCasal = `${nomeMeu} & ${nomePar}`;
+  const minhaFoto = usuario?.fotoUrl || FALLBACK_AVATAR;
+  const fotoParceiro = parceiroData?.fotoUrl || FALLBACK_AVATAR;
   const meses = mesesJuntos(usuario?.pareadoDesde);
+
+  function handleTrocarParceiro(partner: Pareamento) {
+    if (partner.uid === (pareadoUid || parceiroData?.uid)) {
+      setSwitchOpen(false);
+      return;
+    }
+    setParceiroAtivo(partner);
+    setSwitchOpen(false);
+    setCarregado(false);
+    showToast(`Memórias com ${partner.nome}`, 'sucesso');
+  }
 
   // Foto de perfil: foto aleatória de "Sair da Rotina" do mês, estabilizada por useMemo
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -184,9 +214,10 @@ export default function MemoriasPage() {
     });
     if (sdrItems.length === 0) return null;
     const random = sdrItems[Math.floor(Math.random() * sdrItems.length)];
+    // fotoUrl vem assinada do getMemorias (LGPD); thumbnailUrl legado pode estar morto
     return String(
-      (random as Record<string, unknown>).thumbnailUrl ??
       (random as Record<string, unknown>).fotoUrl ??
+      (random as Record<string, unknown>).thumbnailUrl ??
       (random as Record<string, unknown>).url ?? ''
     ) || null;
   }, [memoriasItems]);
@@ -200,10 +231,164 @@ export default function MemoriasPage() {
   }, [fotoPerfil, month, set]);
 
   return (
-    <div className="screen bg-black text-white pb-24">
-      <ParceiroHeader variant="gradient" />
+    <AppHeroShell
+      sheetClassName="space-y-4"
+      hero={
+        <>
+          <div className="relative mb-4 flex items-center justify-center" style={{ height: AVATAR }}>
+            <div
+              className="relative z-[1] rounded-full overflow-hidden"
+              style={{
+                width: AVATAR,
+                height: AVATAR,
+                marginRight: -AVATAR_OVERLAP,
+                boxShadow: [
+                  `0 0 0 3px ${ACCENT}`,
+                  '0 0 0 7px rgba(244, 63, 94, 0.22)',
+                ].join(', '),
+              }}
+            >
+              <Image
+                src={minhaFoto}
+                alt={nomeMeu}
+                width={AVATAR}
+                height={AVATAR}
+                className="w-full h-full object-cover"
+                priority
+              />
+            </div>
+            <div
+              className="relative z-[1] rounded-full overflow-hidden"
+              style={{
+                width: AVATAR,
+                height: AVATAR,
+                boxShadow: [
+                  `0 0 0 3px ${ACCENT}`,
+                  '0 0 0 7px rgba(244, 63, 94, 0.22)',
+                ].join(', '),
+              }}
+            >
+              <Image
+                src={fotoParceiro}
+                alt={nomePar}
+                width={AVATAR}
+                height={AVATAR}
+                className="w-full h-full object-cover"
+                priority
+              />
+            </div>
 
-      <div className="px-4 mt-3 pb-8 space-y-4">
+            {/* Logo-coração na junção — cor original + glow */}
+            <div
+              className="absolute z-[2] flex items-center justify-center rounded-full bg-white"
+              style={{
+                width: 32,
+                height: 32,
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                boxShadow: [
+                  '0 0 0 2px rgba(255,255,255,0.9)',
+                  '0 0 12px rgba(239, 68, 68, 0.75)',
+                  '0 0 24px rgba(244, 63, 94, 0.55)',
+                  '0 0 36px rgba(244, 63, 94, 0.35)',
+                ].join(', '),
+              }}
+              aria-hidden
+            >
+              <Image
+                src={LOGO_COLOR}
+                alt=""
+                width={30}
+                height={30}
+                className="object-contain"
+              />
+            </div>
+          </div>
+
+          <h2 className="text-[22px] font-bold leading-tight tracking-tight px-2">
+            {tituloCasal}
+          </h2>
+          <p className="mt-0.5 text-[14px] text-white/75 leading-snug px-4">
+            O espaço exclusivo das suas memórias
+          </p>
+
+          {multiConexao && (
+            <div className="relative mt-3 w-full max-w-[280px]">
+              <button
+                type="button"
+                onClick={() => setSwitchOpen((v) => !v)}
+                className="mx-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-white/80 transition active:scale-[0.98]"
+                style={{
+                  background: 'rgba(0,0,0,0.25)',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                }}
+              >
+                Trocar conexão
+                <i
+                  className={clsx(
+                    'fas fa-chevron-down text-[9px] transition-transform',
+                    switchOpen && 'rotate-180',
+                  )}
+                />
+              </button>
+              {switchOpen && (
+                <div
+                  className="absolute left-1/2 top-full z-20 mt-2 w-full -translate-x-1/2 overflow-hidden rounded-2xl p-1.5"
+                  style={{
+                    background: '#141414',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    boxShadow: '0 12px 32px rgba(0,0,0,0.55)',
+                  }}
+                >
+                  {parceirosAtivos.map((p) => {
+                    const ativo = p.uid === (pareadoUid || parceiroData?.uid);
+                    return (
+                      <button
+                        key={p.uid}
+                        type="button"
+                        onClick={() => handleTrocarParceiro(p)}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition"
+                        style={
+                          ativo
+                            ? {
+                                background: 'rgba(244, 63, 94, 0.14)',
+                                border: `1px solid ${ACCENT}`,
+                              }
+                            : undefined
+                        }
+                      >
+                        <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-white/10">
+                          {p.fotoUrl ? (
+                            <Image
+                              src={p.fotoUrl}
+                              alt={p.nome}
+                              width={32}
+                              height={32}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center">
+                              <i className="fas fa-user text-white/40 text-xs" />
+                            </span>
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-xs font-semibold text-white">
+                          {p.nome}
+                        </span>
+                        {ativo && (
+                          <i className="fas fa-check text-[10px]" style={{ color: ACCENT }} />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      }
+    >
         {/* Navegação de mês — fora do card neon */}
         <div className="rounded-2xl bg-[#0f0b14] px-4 py-3 flex items-center justify-between border border-white/[0.08]">
           <button
@@ -240,6 +425,7 @@ export default function MemoriasPage() {
                   src={fotoPerfil}
                   alt="Memória do casal"
                   fill
+                  unoptimized
                   className="object-cover"
                   sizes="96px"
                 />
@@ -337,8 +523,8 @@ export default function MemoriasPage() {
             <div className="grid grid-cols-3 gap-0.5 overflow-hidden rounded-b-[20px]">
               {filtrados.map((item, idx) => {
                 const imgUrl = String(
-                  (item as Record<string, unknown>).thumbnailUrl ??
                   (item as Record<string, unknown>).fotoUrl ??
+                  (item as Record<string, unknown>).thumbnailUrl ??
                   (item as Record<string, unknown>).url ?? ''
                 );
                 return (
@@ -352,6 +538,7 @@ export default function MemoriasPage() {
                         src={imgUrl}
                         alt="Memória"
                         fill
+                        unoptimized
                         className="object-cover"
                         sizes="33vw"
                       />
@@ -366,7 +553,6 @@ export default function MemoriasPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </AppHeroShell>
   );
 }

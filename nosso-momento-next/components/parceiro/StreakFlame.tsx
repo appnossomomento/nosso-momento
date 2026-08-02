@@ -17,12 +17,15 @@ type Props = {
   /** Parceiro marcou triste — mascote fica mais frio/úmido. */
   softMood?: boolean;
   className?: string;
+  /** `sm` = tip/dashboard; `md` = card do /parceiro. */
+  size?: 'md' | 'sm';
 };
 
 /** Viewport do bloco do meio; o Lottie é ampliado por dentro pra cortar a margem do canvas. */
-const VIEW_W = 104;
-const VIEW_H = 112;
-const INNER = 168;
+const SIZE = {
+  md: { viewW: 104, viewH: 112, inner: 168 },
+  sm: { viewW: 44, viewH: 48, inner: 72 },
+} as const;
 
 const TIER_SCALE: Record<CoupleStreakTier, number> = {
   t0: 0.96,
@@ -38,17 +41,20 @@ function CssFlameFallback({
   state,
   tier,
   softMood,
+  size = 'md',
 }: {
   state: CoupleStreakState;
   tier: CoupleStreakTier;
   softMood?: boolean;
+  size?: 'md' | 'sm';
 }) {
-  const scale = TIER_SCALE[tier];
+  const { viewW, viewH } = SIZE[size];
+  const scale = size === 'sm' ? 1 : TIER_SCALE[tier];
   const ember = state === 'ember' || state === 'cold';
   return (
     <div
       className="relative flex items-center justify-center"
-      style={{ width: VIEW_W, height: VIEW_H, transform: `scale(${scale})` }}
+      style={{ width: viewW, height: viewH, transform: `scale(${scale})` }}
       aria-hidden
     >
       <div
@@ -67,8 +73,15 @@ function CssFlameFallback({
 
 let mascoteCache: object | null = null;
 
-export default function StreakFlame({ state, tier, softMood = false, className }: Props) {
+export default function StreakFlame({
+  state,
+  tier,
+  softMood = false,
+  className,
+  size = 'md',
+}: Props) {
   const src = resolveStreakLottieSrc(state, tier);
+  const { viewW, viewH, inner } = SIZE[size];
   const [baseData, setBaseData] = useState<object | null>(mascoteCache);
   const [animationData, setAnimationData] = useState<object | null>(null);
   const [failed, setFailed] = useState(false);
@@ -114,7 +127,7 @@ export default function StreakFlame({ state, tier, softMood = false, className }
   }, [baseData, state, tier, mood]);
 
   const showLottie = Boolean(src && animationData && !failed);
-  const scale = TIER_SCALE[tier];
+  const scale = size === 'sm' ? 1 : TIER_SCALE[tier];
 
   return (
     <div
@@ -129,14 +142,14 @@ export default function StreakFlame({ state, tier, softMood = false, className }
       {showLottie ? (
         <div
           className="relative overflow-hidden"
-          style={{ width: VIEW_W, height: VIEW_H }}
+          style={{ width: viewW, height: viewH }}
           aria-hidden
         >
           <div
             className="absolute left-1/2 top-1/2"
             style={{
-              width: INNER,
-              height: INNER,
+              width: inner,
+              height: inner,
               transform: 'translate(-50%, -52%)',
             }}
           >
@@ -149,7 +162,7 @@ export default function StreakFlame({ state, tier, softMood = false, className }
           </div>
         </div>
       ) : (
-        <CssFlameFallback state={state} tier={tier} softMood={softMood} />
+        <CssFlameFallback state={state} tier={tier} softMood={softMood} size={size} />
       )}
     </div>
   );
