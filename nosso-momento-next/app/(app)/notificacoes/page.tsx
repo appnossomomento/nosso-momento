@@ -96,20 +96,21 @@ export default function NotificacoesPage() {
     [notificacoes, tab],
   );
 
-  const tabUnreadIdsKey = useMemo(
+  // Ao abrir a tela, marca todas as não lidas (qualquer aba) —
+  // assim o badge do Início some junto com a lista.
+  const allUnreadIdsKey = useMemo(
     () =>
-      filtradas
+      notificacoes
         .filter((n) => !isNotificacaoLida(n))
         .map((n) => n.id)
         .sort()
         .join(','),
-    [filtradas],
+    [notificacoes],
   );
 
-  // Marca como lidas só as não-lidas da aba atual
   useEffect(() => {
-    if (!tabUnreadIdsKey) return;
-    const ids = new Set(tabUnreadIdsKey.split(','));
+    if (!allUnreadIdsKey) return;
+    const ids = new Set(allUnreadIdsKey.split(','));
     const atuais = useAppStore.getState().notificacoes;
     const naoLidas = atuais.filter(
       (n) => ids.has(n.id) && !isNotificacaoLida(n),
@@ -118,7 +119,7 @@ export default function NotificacoesPage() {
     marcarNotificacoesComoLidas(naoLidas).catch((err) => {
       console.error('[NotificacoesPage] erro ao marcar como lidas:', err);
     });
-  }, [tab, tabUnreadIdsKey]);
+  }, [allUnreadIdsKey]);
 
   return (
     <div className="screen screen-pad bg-black text-white">
