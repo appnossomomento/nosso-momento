@@ -2,7 +2,6 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Image from 'next/image';
 import { signOut, updateProfile } from 'firebase/auth';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -15,10 +14,23 @@ import { openSystemAlert, openSystemConfirm } from '@/components/ui/Modal';
 import { requestFCMPermission, revokeLocalFCM } from '@/lib/hooks/useFCM';
 import DarkSelect from '@/components/ui/DarkSelect';
 import { validateApelidoReal, APELIDO_REAL_MAX_LENGTH } from '@/lib/utils/validations';
-import { CATALOGO_LOJA_OPTIONS } from '@/lib/types/profileEnums';
+import {
+  CATALOGO_LOJA_OPTIONS,
+  ESTADO_CIVIL_OPTIONS,
+  TEMPO_RELACIONAMENTO_OPTIONS,
+} from '@/lib/types/profileEnums';
 import { nomeParaCard } from '@/lib/utils/displayName';
 import { getCatalogFilterGender } from '@/lib/utils/profile';
 import VipStatusInline from '@/components/profile/VipStatusInline';
+import AppHeroShell, { ACCENT, TILE } from '@/components/layout/AppHeroShell';
+
+function labelFromOptions(
+  options: readonly { value: string; label: string }[],
+  value?: string | null,
+): string {
+  if (!value) return '—';
+  return options.find((o) => o.value === value)?.label ?? value;
+}
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -31,17 +43,25 @@ export default function PerfilPage() {
   const [novoCatalogo, setNovoCatalogo] = useState(
     () => getCatalogFilterGender(usuario ?? undefined) === 'feminino' ? 'feminino' : 'masculino',
   );
+  const [editandoEstadoCivil, setEditandoEstadoCivil] = useState(false);
+  const [novoEstadoCivil, setNovoEstadoCivil] = useState(usuario?.estadoCivil ?? '');
+  const [editandoTempoRel, setEditandoTempoRel] = useState(false);
+  const [novoTempoRel, setNovoTempoRel] = useState(usuario?.tempoRelacionamento ?? '');
   const [salvando, setSalvando] = useState(false);
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [togglingNotif, setTogglingNotif] = useState(false);
-  const [exportandoDados, setExportandoDados] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fotoInputRef = useRef<HTMLInputElement>(null);
 
   const fotoPerfil = usuario?.fotoUrl ?? '/assets/icons/iconprincipal.png';
   const isVip = usuario?.vip === true;
   const notifAtivas = !!(fcmToken || usuario?.notificationsEnabled);
+  const estadoCivilAtual = usuario?.estadoCivil ?? '';
+  const precisaTempoRel =
+    estadoCivilAtual === 'namorando' || estadoCivilAtual === 'casado';
+  const editandoPrecisaTempo =
+    novoEstadoCivil === 'namorando' || novoEstadoCivil === 'casado';
 
   async function handleSalvarNome() {
     if (!novoNome.trim()) { openSystemAlert('O nome não pode ser vazio.'); return; }
@@ -87,6 +107,67 @@ export default function PerfilPage() {
       set({ usuario: { ...usuario!, anatomia: novoCatalogo, sexo: novoCatalogo } });
       showToast('Personalização da loja atualizada!', 'sucesso');
       setEditandoCatalogo(false);
+    } catch {
+      openSystemAlert('Erro ao atualizar. Tente novamente.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function handleSalvarEstadoCivil() {
+    if (!novoEstadoCivil) {
+      openSystemAlert('Selecione seu estado civil.');
+      return;
+    }
+    const precisaTempo =
+      novoEstadoCivil === 'namorando' || novoEstadoCivil === 'casado';
+    const tempo = precisaTempo
+      ? (novoTempoRel || usuario?.tempoRelacionamento || '')
+      : null;
+    if (precisaTempo && !tempo) {
+      openSystemAlert('Selecione o tempo de relacionamento.');
+      return;
+    }
+    setSalvando(true);
+    try {
+      await updateDoc(doc(db, 'usuarios', usuario!.uid), {
+        estadoCivil: novoEstadoCivil,
+        tempoRelacionamento: tempo,
+      });
+      set({
+        usuario: {
+          ...usuario!,
+          estadoCivil: novoEstadoCivil,
+          tempoRelacionamento: tempo,
+        },
+      });
+      setNovoTempoRel(tempo ?? '');
+      showToast('Estado civil atualizado!', 'sucesso');
+      setEditandoEstadoCivil(false);
+      setEditandoTempoRel(false);
+    } catch {
+      openSystemAlert('Erro ao atualizar. Tente novamente.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function handleSalvarTempoRel() {
+    if (!precisaTempoRel) return;
+    if (!novoTempoRel) {
+      openSystemAlert('Selecione o tempo de relacionamento.');
+      return;
+    }
+    setSalvando(true);
+    try {
+      await updateDoc(doc(db, 'usuarios', usuario!.uid), {
+        tempoRelacionamento: novoTempoRel,
+      });
+      set({
+        usuario: { ...usuario!, tempoRelacionamento: novoTempoRel },
+      });
+      showToast('Tempo de relacionamento atualizado!', 'sucesso');
+      setEditandoTempoRel(false);
     } catch {
       openSystemAlert('Erro ao atualizar. Tente novamente.');
     } finally {
@@ -168,35 +249,6 @@ export default function PerfilPage() {
     }
   }
 
-  async function handleExportarDados() {
-    if (!usuario?.uid || exportandoDados) return;
-    setExportandoDados(true);
-    try {
-      const data = await callFunction<Record<string, unknown>>(FUNCTIONS.exportarMeusDados, {});
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `nosso-momento-dados-${usuario.uid.slice(0, 8)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('Seus dados foram baixados.', 'sucesso');
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : '';
-      if (msg.includes('app_check') || msg.includes('401')) {
-        openSystemAlert(
-          'Não foi possível validar a segurança do app (App Check). Recarregue a página e tente de novo.',
-        );
-      } else if (msg.includes('429') || msg.includes('rate')) {
-        openSystemAlert('Limite de exportações atingido. Tente novamente mais tarde.');
-      } else {
-        openSystemAlert('Erro ao exportar seus dados. Tente novamente.');
-      }
-    } finally {
-      setExportandoDados(false);
-    }
-  }
-
   async function handleExcluirConta() {
     openSystemConfirm(
       'Tem certeza? Esta ação é irreversível.\n\nTodos os seus dados serão excluídos permanentemente e não poderão ser recuperados.',
@@ -226,21 +278,44 @@ export default function PerfilPage() {
 
   if (!usuario) return null;
 
+  const tileBtn = {
+    background: TILE,
+    border: '1px solid rgba(255, 255, 255, 0.09)',
+  } as const;
+
   return (
-    <div className="screen screen-pad bg-black text-white">
-      {/* Header */}
-      <section className="px-0 pt-11 pb-16" style={{ background: 'linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%)' }}>
-        <div className="flex flex-col items-center text-center -mt-3">
-          <div className="relative mb-3">
-            <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border-2 border-white/40">
-              <Image src={fotoPerfil} alt="Foto de perfil" width={96} height={96} className="w-full h-full object-cover" />
+    <AppHeroShell
+      sheetClassName="space-y-3"
+      hero={
+        <>
+          <div className="relative mb-5">
+            <div
+              className="rounded-full overflow-hidden"
+              style={{
+                width: 118,
+                height: 118,
+                boxShadow: [
+                  `0 0 0 3px ${ACCENT}`,
+                  '0 0 0 8px rgba(244, 63, 94, 0.2)',
+                  '0 8px 40px rgba(244, 63, 94, 0.55)',
+                ].join(', '),
+              }}
+            >
+              <Image
+                src={fotoPerfil}
+                alt="Foto de perfil"
+                width={118}
+                height={118}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
             <button
               onClick={() => fotoInputRef.current?.click()}
               disabled={uploadingFoto}
-              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-md hover:bg-gray-100 transition disabled:opacity-50"
+              className="absolute bottom-[3px] right-[3px] w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-md hover:bg-gray-100 transition disabled:opacity-50"
             >
-              <i className="fas fa-camera text-red-500 text-xs" />
+              <i className="fas fa-camera text-xs" style={{ color: ACCENT }} />
             </button>
             <input
               ref={fotoInputRef}
@@ -250,7 +325,6 @@ export default function PerfilPage() {
               onChange={handleFotoChange}
             />
           </div>
-          {/* Barra de progresso do upload */}
           {uploadingFoto && (
             <div className="w-32 h-1.5 bg-white/30 rounded-full overflow-hidden mb-2">
               <div
@@ -259,17 +333,19 @@ export default function PerfilPage() {
               />
             </div>
           )}
-          <div>
-            <h2 className="text-xl font-semibold">{usuario.nome || 'Sem nome'}</h2>
-            <p className="text-sm text-white/80">{usuario.email}</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-5 -mt-8 space-y-4">
-        {/* Card do perfil */}
-        <div className="rounded-2xl bg-[#0f0b14] p-5 space-y-4">
-          {/* Nome */}
+          <h2 className="text-[25px] font-bold leading-tight tracking-tight">
+            {usuario.nome || 'Sem nome'}
+          </h2>
+          <p className="mt-0.5 text-[15px] text-white/75 leading-snug px-4 break-all">
+            {usuario.email}
+          </p>
+        </>
+      }
+    >
+      <div
+        className="rounded-[24px] p-5 space-y-4"
+        style={tileBtn}
+      >
           <div>
             <p className="text-xs text-white/50 mb-1">Nome</p>
             {editandoNome ? (
@@ -302,7 +378,8 @@ export default function PerfilPage() {
                 <p className="text-sm font-medium">{usuario.nome || '—'}</p>
                 <button
                   onClick={() => { setEditandoNome(true); setNovoNome(usuario.nome ?? ''); }}
-                  className="text-pink-400 text-xs hover:text-pink-300 transition"
+                  className="text-xs transition hover:opacity-80"
+                  style={{ color: ACCENT }}
                 >
                   <i className="fas fa-pen mr-1" />Editar
                 </button>
@@ -310,7 +387,6 @@ export default function PerfilPage() {
             )}
           </div>
 
-          {/* Apelido no card */}
           <div>
             <p className="text-xs text-white/50 mb-1">Apelido no card</p>
             {editandoApelido ? (
@@ -348,7 +424,8 @@ export default function PerfilPage() {
                 </p>
                 <button
                   onClick={() => { setEditandoApelido(true); setNovoApelido(usuario.apelidoReal ?? ''); }}
-                  className="text-pink-400 text-xs hover:text-pink-300 transition"
+                  className="text-xs transition hover:opacity-80"
+                  style={{ color: ACCENT }}
                 >
                   <i className="fas fa-pen mr-1" />Editar
                 </button>
@@ -356,7 +433,6 @@ export default function PerfilPage() {
             )}
           </div>
 
-          {/* Personalização da loja */}
           <div>
             <p className="text-xs text-white/50 mb-1">Personalização da loja</p>
             {editandoCatalogo ? (
@@ -390,7 +466,8 @@ export default function PerfilPage() {
                 </p>
                 <button
                   onClick={() => setEditandoCatalogo(true)}
-                  className="text-pink-400 text-xs hover:text-pink-300 transition"
+                  className="text-xs transition hover:opacity-80"
+                  style={{ color: ACCENT }}
                 >
                   <i className="fas fa-pen mr-1" />Editar
                 </button>
@@ -398,72 +475,188 @@ export default function PerfilPage() {
             )}
           </div>
 
-          {/* Telefone */}
+          <div>
+            <p className="text-xs text-white/50 mb-1">Estado civil</p>
+            {editandoEstadoCivil ? (
+              <div className="space-y-2">
+                <DarkSelect
+                  value={novoEstadoCivil}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setNovoEstadoCivil(v);
+                    if (v === 'solteiro') setNovoTempoRel('');
+                  }}
+                >
+                  {ESTADO_CIVIL_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </DarkSelect>
+                {editandoPrecisaTempo && (
+                  <DarkSelect
+                    value={novoTempoRel}
+                    onChange={(e) => setNovoTempoRel(e.target.value)}
+                  >
+                    <option value="">Tempo de relacionamento</option>
+                    {TEMPO_RELACIONAMENTO_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </DarkSelect>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSalvarEstadoCivil}
+                    disabled={salvando}
+                    className="btn-red px-4 py-2 rounded-xl text-xs disabled:opacity-60"
+                  >
+                    {salvando ? '...' : 'Salvar'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditandoEstadoCivil(false);
+                      setNovoEstadoCivil(usuario.estadoCivil ?? '');
+                      setNovoTempoRel(usuario.tempoRelacionamento ?? '');
+                    }}
+                    className="px-3 py-2 rounded-xl text-xs border border-white/20 text-white/60"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">
+                  {labelFromOptions(ESTADO_CIVIL_OPTIONS, usuario.estadoCivil)}
+                </p>
+                <button
+                  onClick={() => {
+                    setEditandoEstadoCivil(true);
+                    setNovoEstadoCivil(usuario.estadoCivil ?? '');
+                    setNovoTempoRel(usuario.tempoRelacionamento ?? '');
+                  }}
+                  className="text-xs transition hover:opacity-80"
+                  style={{ color: ACCENT }}
+                >
+                  <i className="fas fa-pen mr-1" />Editar
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className={precisaTempoRel ? undefined : 'opacity-40'}>
+            <p className="text-xs text-white/50 mb-1">Tempo de relacionamento</p>
+            {editandoTempoRel && precisaTempoRel ? (
+              <div className="space-y-2">
+                <DarkSelect
+                  value={novoTempoRel}
+                  onChange={(e) => setNovoTempoRel(e.target.value)}
+                >
+                  {TEMPO_RELACIONAMENTO_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </DarkSelect>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSalvarTempoRel}
+                    disabled={salvando}
+                    className="btn-red px-4 py-2 rounded-xl text-xs disabled:opacity-60"
+                  >
+                    {salvando ? '...' : 'Salvar'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditandoTempoRel(false);
+                      setNovoTempoRel(usuario.tempoRelacionamento ?? '');
+                    }}
+                    className="px-3 py-2 rounded-xl text-xs border border-white/20 text-white/60"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">
+                  {precisaTempoRel
+                    ? labelFromOptions(
+                        TEMPO_RELACIONAMENTO_OPTIONS,
+                        usuario.tempoRelacionamento,
+                      )
+                    : 'Não se aplica'}
+                </p>
+                {precisaTempoRel ? (
+                  <button
+                    onClick={() => {
+                      setEditandoTempoRel(true);
+                      setNovoTempoRel(usuario.tempoRelacionamento ?? '');
+                    }}
+                    className="text-xs transition hover:opacity-80"
+                    style={{ color: ACCENT }}
+                  >
+                    <i className="fas fa-pen mr-1" />Editar
+                  </button>
+                ) : (
+                  <span className="text-[10px] text-white/35 uppercase tracking-wide">
+                    Inativo
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
           <div>
             <p className="text-xs text-white/50 mb-1">Telefone</p>
             <p className="text-sm">{usuario.telefone || '—'}</p>
-            {isVip && <VipStatusInline />}
           </div>
-        </div>
 
-        <Link
-          href="/parear"
-          className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 flex items-center justify-between text-sm font-medium hover:bg-white/10 transition"
-        >
-          <span className="text-white/80">
-            <i className="fas fa-heart mr-2 icon-gradient" />
-            Pareamentos
-          </span>
-          <i className="fas fa-chevron-right text-white/30 text-xs" />
-        </Link>
+          {isVip && (
+            <div className="pt-3 mt-1 border-t border-white/[0.06] flex justify-center">
+              <VipStatusInline />
+            </div>
+          )}
+      </div>
 
-        {/* Sair */}
-        <button
-          onClick={handleLogout}
-          className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-400 text-sm font-medium hover:bg-red-500/20 transition"
+      <button
+        onClick={handleToggleNotificacoes}
+        disabled={togglingNotif}
+        className="w-full rounded-2xl p-4 flex items-center justify-between text-sm font-medium transition disabled:opacity-60"
+        style={tileBtn}
+      >
+        <span className={notifAtivas ? 'text-green-400' : 'text-white/60'}>
+          <i className={`fas fa-bell mr-2 ${notifAtivas ? 'text-green-400' : 'text-white/40'}`} />
+          {notifAtivas ? 'Notificações ativas' : 'Ativar notificações'}
+        </span>
+        <div
+          className="w-10 h-6 rounded-full transition-colors flex items-center px-1"
+          style={{ background: notifAtivas ? '#22c55e' : 'rgba(255,255,255,0.15)' }}
         >
-          <i className="fas fa-sign-out-alt mr-2" />Sair da conta
-        </button>
-
-        {/* Notificações */}
-        <button
-          onClick={handleToggleNotificacoes}
-          disabled={togglingNotif}
-          className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 flex items-center justify-between text-sm font-medium hover:bg-white/10 transition disabled:opacity-60"
-        >
-          <span className={notifAtivas ? 'text-green-400' : 'text-white/60'}>
-            <i className={`fas fa-bell mr-2 ${notifAtivas ? 'text-green-400' : 'text-white/40'}`} />
-            {notifAtivas ? 'Notificações ativas' : 'Ativar notificações'}
-          </span>
           <div
-            className="w-10 h-6 rounded-full transition-colors flex items-center px-1"
-            style={{ background: notifAtivas ? '#22c55e' : 'rgba(255,255,255,0.15)' }}
-          >
-            <div
-              className="w-4 h-4 rounded-full bg-white shadow transition-transform"
-              style={{ transform: notifAtivas ? 'translateX(16px)' : 'translateX(0)' }}
-            />
-          </div>
-        </button>
+            className="w-4 h-4 rounded-full bg-white shadow transition-transform"
+            style={{ transform: notifAtivas ? 'translateX(16px)' : 'translateX(0)' }}
+          />
+        </div>
+      </button>
 
-        {/* LGPD — portabilidade */}
-        <button
-          onClick={handleExportarDados}
-          disabled={exportandoDados}
-          className="w-full rounded-2xl border border-white/10 bg-white/5 p-4 text-white/70 text-sm font-medium hover:bg-white/10 transition text-center disabled:opacity-60"
-        >
-          <i className="fas fa-download mr-2" />
-          {exportandoDados ? 'Preparando arquivo...' : 'Baixar meus dados'}
-        </button>
+      <button
+        onClick={handleLogout}
+        className="w-full rounded-2xl p-4 text-red-400 text-sm font-medium transition"
+        style={{
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+        }}
+      >
+        <i className="fas fa-sign-out-alt mr-2" />Sair da conta
+      </button>
 
-        {/* Excluir conta */}
-        <button
-          onClick={handleExcluirConta}
-          className="w-full rounded-2xl border border-white/10 bg-transparent p-4 text-white/30 text-xs hover:text-red-500/60 hover:border-red-500/20 transition text-center"
-        >
-          <i className="fas fa-trash-alt mr-1" />Excluir minha conta
-        </button>
-      </section>
-    </div>
+      <button
+        onClick={handleExcluirConta}
+        className="w-full mt-5 rounded-xl py-2 px-3 text-white/30 text-[11px] hover:text-red-500/60 transition text-center"
+        style={{
+          background: 'transparent',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        Excluir minha conta
+      </button>
+    </AppHeroShell>
   );
 }

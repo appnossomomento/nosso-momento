@@ -1,4 +1,5 @@
 import type { LojaMetrics } from '@/admin-panel/lib/aggregateLojaMetrics';
+import type { CostEstimate } from '@/admin-panel/lib/estimateCosts';
 
 export type LabelCount = { label: string; count: number };
 
@@ -40,6 +41,12 @@ export type AdminMetrics = {
   byTempoRelacionamento: LabelCount[];
   loja: LojaMetrics;
   recentSignups: RecentSignup[];
+  usage: {
+    memoriasTotal: number;
+    memoriasInPeriod: number;
+    loginEventsInPeriod: number;
+  };
+  costs: CostEstimate;
 };
 
 export type AdminVipUser = {

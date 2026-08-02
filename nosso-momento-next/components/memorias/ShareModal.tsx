@@ -252,7 +252,8 @@ async function generateStoriesCard(params: {
       const cy = gridStartY + row * (cellW + gap);
       rrPath(ctx, cx, cy, cellW, cellW, 14); ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fill();
       const item = gridItems[i] as Record<string, unknown>;
-      const imgSrc = String(item.thumbnailUrl ?? item.fotoUrl ?? item.url ?? '');
+      // fotoUrl assinada (LGPD); thumbnailUrl legado pode estar sem token
+      const imgSrc = String(item.fotoUrl ?? item.thumbnailUrl ?? item.url ?? '');
       if (imgSrc) {
         try {
           const img = await loadImage(imgSrc);
