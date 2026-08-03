@@ -7,13 +7,13 @@ const MAX_FUNDADOR_COUPLES = 100;
 const FUNDADORES_DOC = "fundadores";
 
 /**
- * Planeja grant de fundador dentro da mesma transaction do pairing_response.
- * Ambos recebem a flag + o mesmo fundadorNumero (1–100) do casal.
+ * Planeja grant de fundador na transaction do pairing_response.
+ * Ambos recebem a flag + o mesmo fundadorNumero (1-100) do casal.
  *
  * @param {FirebaseFirestore.DocumentSnapshot} fundadorSnap
  * @param {object} senderData
  * @param {object} receiverData
- * @return {{grantSender: boolean, grantReceiver: boolean, nextCount: number|null, fundadorNumero: number|null}}
+ * @return {object} plano de grant (flags + nextCount/fundadorNumero)
  */
 function planFundadorGrant(fundadorSnap, senderData, receiverData) {
   const senderIs = senderData && senderData.fundador === true;
@@ -35,7 +35,7 @@ function planFundadorGrant(fundadorSnap, senderData, receiverData) {
     return null;
   })();
 
-  // Um já é fundador: o parceiro herda o mesmo número, sem consumir slot novo.
+  // Um já é fundador: o parceiro herda o mesmo número, sem consumir slot.
   if (existingNum != null && (senderIs || receiverIs)) {
     return {
       grantSender: !senderIs,
