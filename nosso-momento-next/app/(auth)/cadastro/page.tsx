@@ -250,6 +250,13 @@ export default function CadastroPage() {
       }
 
       await setDoc(doc(db, 'usuarios', user.uid), userDoc);
+      // Número global de cadastro (#1, #2…) — separado da flag Fundador
+      try {
+        const { ensureUserNumber } = await import('@/lib/auth/ensureUserNumber');
+        await ensureUserNumber();
+      } catch {
+        /* não bloqueia cadastro se o contador falhar */
+      }
 
       let pendingConviteToken: string | null = null;
       try { pendingConviteToken = sessionStorage.getItem('pendingConvite'); } catch (_) {}

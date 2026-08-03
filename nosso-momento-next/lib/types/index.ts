@@ -57,6 +57,14 @@ export interface Usuario {
   estadoCivil?: string;
   tempoRelacionamento?: string | null;
   vip?: boolean;
+  /** Ordem global de cadastro (1, 2, 3…) — permanente */
+  numeroUsuario?: number;
+  numeroUsuarioAt?: unknown;
+  /** Cohort dos primeiros casais que ativaram pareamento (permanece após unpair) */
+  fundador?: boolean;
+  /** Slot 1–100 do casal fundador (compartilhado pelos dois) */
+  fundadorNumero?: number;
+  fundadorSince?: unknown;
   pareamentosAtivos?: Array<Record<string, unknown>>;
   conquistas?: Record<string, boolean>;
   achievementStats?: Record<string, number>;

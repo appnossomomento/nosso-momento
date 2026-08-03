@@ -23,6 +23,7 @@ import { nomeParaCard } from '@/lib/utils/displayName';
 import { getCatalogFilterGender } from '@/lib/utils/profile';
 import VipStatusInline from '@/components/profile/VipStatusInline';
 import AppHeroShell, { ACCENT, TILE } from '@/components/layout/AppHeroShell';
+import { membershipLabel } from '@/lib/utils/usuarioMembership';
 
 function labelFromOptions(
   options: readonly { value: string; label: string }[],
@@ -283,6 +284,14 @@ export default function PerfilPage() {
     border: '1px solid rgba(255, 255, 255, 0.09)',
   } as const;
 
+  const membroLabel = membershipLabel({
+    numeroUsuario: usuario?.numeroUsuario,
+    fundadorNumero: usuario?.fundadorNumero,
+    fundador: usuario?.fundador === true,
+    anatomia: usuario?.anatomia,
+    sexo: usuario?.sexo,
+    genero: usuario?.genero,
+  });
   return (
     <AppHeroShell
       sheetClassName="space-y-3"
@@ -336,6 +345,11 @@ export default function PerfilPage() {
           <h2 className="text-[25px] font-bold leading-tight tracking-tight">
             {usuario.nome || 'Sem nome'}
           </h2>
+          {membroLabel && (
+            <p className="mt-1 text-[13px] font-semibold tracking-wide text-white/90">
+              {membroLabel}
+            </p>
+          )}
           <p className="mt-0.5 text-[15px] text-white/75 leading-snug px-4 break-all">
             {usuario.email}
           </p>

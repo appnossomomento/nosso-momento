@@ -36,6 +36,11 @@ const {
   pickRouletteValue,
   ROULETTE_OPTIONS,
 } = require("../lib/challenges");
+const {
+  FUNDADORES_DOC,
+  MAX_FUNDADOR_COUPLES,
+  planFundadorGrant,
+} = require("../lib/fundadores");
 
 // Processa documentos criados em 'inputs/{inputId}'
 // e aplica a ação no usuário destino
@@ -500,6 +505,11 @@ exports.processInput = onDocumentCreated(
 
               const senderSnap = await tx.get(senderRef);
               const receiverSnap = await tx.get(receiverRef);
+              const fundadorRef = admin
+                  .firestore()
+                  .collection("config")
+                  .doc(FUNDADORES_DOC);
+              const fundadorSnap = await tx.get(fundadorRef);
               if (!senderSnap.exists || !receiverSnap.exists) {
                 tx.update(
                     inputRef,
@@ -513,6 +523,9 @@ exports.processInput = onDocumentCreated(
 
               const senderData = senderSnap.data();
               const receiverData = receiverSnap.data();
+              const fundadorPlan = planFundadorGrant(
+                  fundadorSnap, senderData, receiverData,
+              );
 
               if (!senderData.vip && senderData.pareadoUid &&
                   senderData.pareadoUid !== fromUid) {
@@ -578,8 +591,37 @@ exports.processInput = onDocumentCreated(
               if (!Number.isFinite(rFog) || rFog < MIN_FOGUINHOS) {
                 receiverLegacy.foguinhos = MIN_FOGUINHOS;
               }
+              if (fundadorPlan.grantSender) {
+                senderLegacy.fundador = true;
+                senderLegacy.fundadorSince =
+                  admin.firestore.FieldValue.serverTimestamp();
+                if (fundadorPlan.fundadorNumero != null) {
+                  senderLegacy.fundadorNumero = fundadorPlan.fundadorNumero;
+                }
+              }
+              if (fundadorPlan.grantReceiver) {
+                receiverLegacy.fundador = true;
+                receiverLegacy.fundadorSince =
+                  admin.firestore.FieldValue.serverTimestamp();
+                if (fundadorPlan.fundadorNumero != null) {
+                  receiverLegacy.fundadorNumero =
+                    fundadorPlan.fundadorNumero;
+                }
+              }
               tx.update(senderRef, senderLegacy);
               tx.update(receiverRef, receiverLegacy);
+              if (fundadorPlan.nextCount != null) {
+                tx.set(
+                    fundadorRef,
+                    {
+                      couplesGranted: fundadorPlan.nextCount,
+                      maxCouples: MAX_FUNDADOR_COUPLES,
+                      updatedAt:
+                        admin.firestore.FieldValue.serverTimestamp(),
+                    },
+                    {merge: true},
+                );
+              }
 
               const telefones = [resolvedSenderPhone, resolvedReceiverPhone]
                   .map((t) => (t || "").replace(/\D/g, ""));

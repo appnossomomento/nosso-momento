@@ -67,6 +67,10 @@ export function useAuth() {
           await createSessionCookie(idToken);
         }
         recordDailyAppOpen();
+        // Backfill: usuários antigos sem numeroUsuario recebem na próxima sessão
+        void import('@/lib/auth/ensureUserNumber').then(({ ensureUserNumber }) =>
+          ensureUserNumber(),
+        );
       } catch (err) {
         console.error('[useAuth] falha ao criar sessão server-side:', err);
       }
