@@ -14,6 +14,7 @@ import { trackAction } from '@/lib/analytics';
 import { useWeeklyChallenge } from '@/lib/hooks/useWeeklyChallenge';
 import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
 import CoupleStreakCard from '@/components/parceiro/CoupleStreakCard';
+import FoguinhosIcon from '@/components/ui/FoguinhosIcon';
 import { computeCoupleStreak } from '@/lib/clima/coupleStreak';
 import { saoPauloDateString } from '@/lib/utils/saoPauloDate';
 import { nomeParaCard } from '@/lib/utils/displayName';
@@ -284,9 +285,14 @@ export default function ParceiroPage() {
         </button>
         <div
           className="flex items-center gap-1.5 flex-shrink-0"
-          style={{ background: 'rgba(0,0,0,0.20)', borderRadius: 20, padding: '4px 10px' }}
+          style={{
+            background: 'rgba(0,0,0,0.62)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            borderRadius: 20,
+            padding: '4px 10px',
+          }}
         >
-          <i className="fas fa-fire text-white text-sm" />
+          <FoguinhosIcon size={20} />
           <span className="text-sm font-bold text-white">{foguinhosHeader}</span>
         </div>
       </div>

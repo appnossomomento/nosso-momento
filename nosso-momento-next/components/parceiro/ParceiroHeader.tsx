@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAppStore } from '@/lib/store/appStore';
+import FoguinhosIcon from '@/components/ui/FoguinhosIcon';
 
 interface ParceiroHeaderProps {
   /** Exibe ícone de carrinho (para a página /loja) */
@@ -28,7 +29,10 @@ export default function ParceiroHeader({ showCart = false, variant = 'black' }: 
     ? { background: 'linear-gradient(180deg,#ff2d3f 0%,#ff5565 100%)', boxShadow: '0 4px 20px rgba(255,45,63,0.35)', paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }
     : { background: '#000000', borderBottom: '1px solid #222', paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' };
   const btnBg = isGradient ? 'rgba(0,0,0,0.20)' : 'rgba(255,255,255,0.08)';
-  const pillBg = isGradient ? 'rgba(0,0,0,0.20)' : 'rgba(255,255,255,0.10)';
+  /** Fundo mais escuro para a logo/moeda ter contraste no header. */
+  const coinPillBg = 'rgba(0,0,0,0.62)';
+  const coinPillBorder = '1px solid rgba(255,255,255,0.10)';
+  const pillBg = isGradient ? coinPillBg : 'rgba(0,0,0,0.45)';
   const fotoBorder = isGradient ? 'rgba(255,255,255,0.40)' : 'rgba(255,255,255,0.25)';
 
   return (
@@ -64,9 +68,14 @@ export default function ParceiroHeader({ showCart = false, variant = 'black' }: 
       <div className="flex items-center gap-2 flex-shrink-0">
         <div
           className="flex items-center gap-1.5"
-          style={{ background: pillBg, borderRadius: 20, padding: '4px 10px' }}
+          style={{
+            background: pillBg,
+            border: coinPillBorder,
+            borderRadius: 20,
+            padding: '4px 10px',
+          }}
         >
-          <i className="fas fa-fire text-white text-sm" />
+          <FoguinhosIcon size={20} />
           <span className="text-sm font-bold text-white">{foguinhos}</span>
         </div>
 
@@ -74,7 +83,7 @@ export default function ParceiroHeader({ showCart = false, variant = 'black' }: 
           <button
             onClick={() => set({ showCartSidebar: true })}
             className="relative w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: pillBg }}
+            style={{ background: pillBg, border: coinPillBorder }}
           >
             <i className="fas fa-shopping-cart text-white text-sm" />
             {cartCount > 0 && (

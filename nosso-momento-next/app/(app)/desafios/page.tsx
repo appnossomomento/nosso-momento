@@ -5,7 +5,17 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import clsx from 'clsx';
-import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
+import AppHeroShell, {
+  ACCENT,
+  ACCENT_SOFT,
+  LP_RED,
+  TILE,
+} from '@/components/layout/AppHeroShell';
+import FoguinhosIcon from '@/components/ui/FoguinhosIcon';
+
+const CTA_GRAD = `linear-gradient(135deg, ${LP_RED}, ${ACCENT})`;
+const CHIP_IDLE = { background: TILE, color: 'rgba(255,255,255,0.45)' } as const;
+const CHIP_ON = { background: ACCENT, color: '#fff' } as const;
 
 interface Achievement {
   id: string;
@@ -171,23 +181,16 @@ export default function DesafiosPage() {
   const totalGeral = ACHIEVEMENTS.filter((a) => !!conquistas[a.id]).length;
 
   return (
-    <div className="screen bg-black text-white pb-28">
-      <ParceiroHeader />
-
-      {/* Hero section — igual ao _desafiosHero do index.html */}
-      <section
-        className="px-6 pt-10 pb-28 flex flex-col items-center text-center"
-        style={{ background: 'linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%)' }}
-      >
-        <div className="flex flex-col items-center text-center" style={{ marginTop: -8 }}>
+    <AppHeroShell
+      sheetClassName="space-y-4"
+      hero={
+        <>
           <i className="fas fa-flag-checkered text-3xl text-white mb-3" />
-          <h2 className="text-3xl font-semibold text-white">Desafios</h2>
-          <p className="text-white/80">Acompanhe seus desafios e conquistas</p>
-        </div>
-      </section>
-
-      <section className="px-5 pb-8 -mt-10">
-        <div className="rounded-[28px] bg-[#0f0b14] p-4 shadow-lg space-y-4">
+          <h2 className="text-[26px] font-semibold text-white leading-tight">Desafios</h2>
+          <p className="text-white/75 text-sm mt-1">Acompanhe seus desafios e conquistas</p>
+        </>
+      }
+    >
           {/* ── Desafios da Semana ──────────────────────────── */}
           {activeDesafios.length > 0 && (
             <div className="space-y-2">
@@ -251,14 +254,19 @@ export default function DesafiosPage() {
                       <p className="text-xs leading-relaxed text-white/55">
                         <span className="font-bold text-white">{nomeA}</span>
                         <span> respondeu </span>
-                        <span className="font-extrabold text-[#ff2d3f]">{respostaA ?? 'SEM RESPOSTA'}</span>
+                        <span className="font-extrabold" style={{ color: ACCENT }}>{respostaA ?? 'SEM RESPOSTA'}</span>
                         <span> e </span>
                         <span className="font-bold text-white">{nomeB}</span>
                         <span> respondeu </span>
-                        <span className="font-extrabold text-[#ff2d3f]">{respostaB ?? 'SEM RESPOSTA'}</span>
+                        <span className="font-extrabold" style={{ color: ACCENT }}>{respostaB ?? 'SEM RESPOSTA'}</span>
                         <span>.</span>
                       </p>
-                      <p className="text-xs leading-relaxed font-semibold text-[#d4a017]">Ganharam +{recompensaBase} 🔥 foguinhos cada.</p>
+                      <p
+                        className="text-xs leading-relaxed font-semibold flex items-center gap-1"
+                        style={{ color: ACCENT_SOFT }}
+                      >
+                        Ganharam +{recompensaBase} <FoguinhosIcon size={14} /> foguinhos cada.
+                      </p>
                     </div>
                   )
                   : ch.status === 'finalizado_sem_recompensa'
@@ -267,14 +275,19 @@ export default function DesafiosPage() {
                         <p className="text-xs leading-relaxed text-white/55">
                           <span className="font-bold text-white">{nomeA}</span>
                           <span> respondeu </span>
-                          <span className="font-extrabold text-[#ff2d3f]">{respostaA ?? 'SEM RESPOSTA'}</span>
+                          <span className="font-extrabold" style={{ color: ACCENT }}>{respostaA ?? 'SEM RESPOSTA'}</span>
                           <span> e </span>
                           <span className="font-bold text-white">{nomeB}</span>
                           <span> respondeu </span>
-                          <span className="font-extrabold text-[#ff2d3f]">{respostaB ?? 'SEM RESPOSTA'}</span>
+                          <span className="font-extrabold" style={{ color: ACCENT }}>{respostaB ?? 'SEM RESPOSTA'}</span>
                           <span>.</span>
                         </p>
-                        <p className="text-xs leading-relaxed font-semibold text-[#d4a017]">Perderam 1 🔥 foguinho cada.</p>
+                        <p
+                          className="text-xs leading-relaxed font-semibold flex items-center gap-1"
+                          style={{ color: ACCENT_SOFT }}
+                        >
+                          Perderam 1 <FoguinhosIcon size={14} /> foguinho cada.
+                        </p>
                       </div>
                     )
                     : null;
@@ -282,13 +295,16 @@ export default function DesafiosPage() {
                   <div
                     key={ch.docId}
                     className="rounded-2xl p-3 flex items-center gap-3"
-                    style={{ background: 'rgba(255,45,63,0.07)', border: '1px solid rgba(255,45,63,0.18)' }}
+                    style={{
+                      background: 'rgba(244,63,94,0.08)',
+                      border: '1px solid rgba(244,63,94,0.20)',
+                    }}
                   >
                     <div
                       className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ background: 'rgba(255,45,63,0.18)' }}
+                      style={{ background: 'rgba(244,63,94,0.18)' }}
                     >
-                      <i className={`fas ${icon} text-red-400 text-sm`} />
+                      <i className={`fas ${icon} text-sm`} style={{ color: ACCENT_SOFT }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-semibold text-sm truncate">{ch.titulo}</p>
@@ -344,7 +360,7 @@ export default function DesafiosPage() {
                       <button
                         onClick={() => handleResponder(ch)}
                         className="text-xs font-bold px-3 py-1.5 rounded-full shrink-0 text-white"
-                        style={{ background: 'linear-gradient(135deg,#ff2d3f,#c8003a)' }}
+                        style={{ background: CTA_GRAD }}
                       >
                         Responder
                       </button>
@@ -362,10 +378,8 @@ export default function DesafiosPage() {
               <button
                 key={t.id}
                 onClick={() => set({ desafiosTab: t.id })}
-                className={clsx(
-                  'flex-1 py-2.5 rounded-xl text-xs font-semibold transition',
-                  tab === t.id ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white' : 'bg-white/5 text-white/50'
-                )}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition"
+                style={tab === t.id ? CHIP_ON : CHIP_IDLE}
               >
                 {t.label}
               </button>
@@ -378,10 +392,8 @@ export default function DesafiosPage() {
               <button
                 key={c.id}
                 onClick={() => set({ conquistasCategoria: c.id })}
-                className={clsx(
-                  'shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition',
-                  categoria === c.id ? 'bg-white text-black' : 'bg-white/10 text-white/60'
-                )}
+                className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition"
+                style={categoria === c.id ? CHIP_ON : CHIP_IDLE}
               >
                 {c.label}
               </button>
@@ -403,28 +415,41 @@ export default function DesafiosPage() {
                 return (
                   <div
                     key={a.id}
-                    className={clsx(
-                      'rounded-2xl border p-4 transition',
-                      desbloqueada ? 'bg-gray-900 border-transparent' : 'bg-[#141414] border-[#2a2a2a] opacity-65'
-                    )}
+                    className={clsx('rounded-2xl p-4 transition', !desbloqueada && 'opacity-65')}
+                    style={{
+                      background: TILE,
+                      border: desbloqueada
+                        ? '1px solid rgba(244,63,94,0.22)'
+                        : '1px solid rgba(255,255,255,0.08)',
+                    }}
                   >
                     <div className="flex items-center gap-4">
                       <div
                         className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-                        style={desbloqueada ? { background: a.accentColor, color: '#111827' } : { background: '#374151' }}
+                        style={
+                          desbloqueada
+                            ? { background: a.accentColor, color: '#111827' }
+                            : { background: 'rgba(255,255,255,0.08)' }
+                        }
                       >
-                        <i className={`fas ${a.icon} text-lg ${desbloqueada ? '' : 'text-gray-500'}`} />
+                        <i className={`fas ${a.icon} text-lg ${desbloqueada ? '' : 'text-white/35'}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={clsx('font-semibold text-sm', desbloqueada ? 'text-white' : 'text-gray-300')}>
+                        <p className={clsx('font-semibold text-sm', desbloqueada ? 'text-white' : 'text-white/70')}>
                           {a.title}
                         </p>
-                        <p className={clsx('text-xs mt-0.5', desbloqueada ? 'text-gray-400' : 'text-gray-500')}>
+                        <p className={clsx('text-xs mt-0.5', desbloqueada ? 'text-white/50' : 'text-white/35')}>
                           {desbloqueada ? a.description : a.hint}
                         </p>
                         {a.reward > 0 && (
-                          <p className="text-xs font-semibold text-amber-400 mt-1">
-                            <i className="fas fa-fire mr-1" />{a.reward} foguinho{a.reward !== 1 ? 's' : ''}
+                          <p
+                            className="text-xs font-semibold mt-1 flex items-center gap-1.5 leading-none"
+                            style={{ color: ACCENT_SOFT }}
+                          >
+                            <FoguinhosIcon size={14} />
+                            <span>
+                              {a.reward} foguinho{a.reward !== 1 ? 's' : ''}
+                            </span>
                           </p>
                         )}
                       </div>
@@ -434,15 +459,12 @@ export default function DesafiosPage() {
               })}
             </div>
           )}
-        </div>
-      </section>
 
-      {/* Contador — sutil, no fim do conteúdo */}
-      <div className="flex justify-center py-4">
-        <span className="text-[11px] text-white/30 tracking-wide">
-          Desbloqueadas {totalGeral}/{ACHIEVEMENTS.length}
-        </span>
-      </div>
-    </div>
+          <div className="flex justify-center pt-2">
+            <span className="text-[11px] text-white/30 tracking-wide">
+              Desbloqueadas {totalGeral}/{ACHIEVEMENTS.length}
+            </span>
+          </div>
+    </AppHeroShell>
   );
 }

@@ -8,13 +8,21 @@ import { sendInput, callFunction, FUNCTIONS } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
 import { formatDateRelative } from '@/lib/utils/formatDate';
 import clsx from 'clsx';
-import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import OverlayModal from '@/components/ui/OverlayModal';
 import { trackAction } from '@/lib/analytics';
 import {
   isStorageMediaPath,
   resolveMediaUrlMap,
 } from '@/lib/utils/resolveMediaUrls';
+import AppHeroShell, {
+  ACCENT,
+  LP_RED,
+  TILE,
+} from '@/components/layout/AppHeroShell';
+
+const CTA_GRAD = `linear-gradient(135deg, ${LP_RED}, ${ACCENT})`;
+const CHIP_IDLE = { background: TILE, color: 'rgba(255,255,255,0.45)' } as const;
+const CHIP_ON = { background: ACCENT, color: '#fff' } as const;
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -160,33 +168,25 @@ export default function MomentosPage() {
   }
 
   return (
-    <div className="screen bg-black text-white pb-28">
-      <ParceiroHeader />
-
-      {/* Hero section — igual ao _momentosHero do index.html */}
-      <section
-        className="px-6 pt-10 pb-28 flex flex-col items-center text-center"
-        style={{ background: 'linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%)' }}
+    <>
+      <AppHeroShell
+        sheetClassName="space-y-4"
+        hero={
+          <>
+            <i className="fas fa-heart text-3xl text-white mb-3" />
+            <h2 className="text-[26px] font-semibold text-white leading-tight">Momentos</h2>
+            <p className="text-white/75 text-sm mt-1">Recebidos e enviados</p>
+          </>
+        }
       >
-        <div className="flex flex-col items-center text-center" style={{ marginTop: -8 }}>
-          <i className="fas fa-heart text-3xl text-white mb-3" />
-          <h2 className="text-3xl font-semibold text-white">Momentos</h2>
-          <p className="text-white/80">Recebidos e enviados</p>
-        </div>
-      </section>
-
-      <section className="px-5 pb-8 -mt-10">
-        <div className="rounded-[28px] bg-[#0f0b14] p-4 shadow-lg space-y-4">
           {/* Tabs */}
           <div className="flex gap-2">
             {(['recebidos', 'enviados'] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={clsx(
-                  'flex-1 py-2.5 rounded-xl text-xs font-semibold transition capitalize',
-                  tab === t ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white' : 'bg-white/5 text-white/50'
-                )}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold transition capitalize"
+                style={tab === t ? CHIP_ON : CHIP_IDLE}
               >
                 {t}
               </button>
@@ -211,7 +211,11 @@ export default function MomentosPage() {
                 return (
                   <div
                     key={m.id}
-                    className="rounded-xl bg-white/8 border border-white/10 px-4 py-3 flex items-center gap-3"
+                    className="rounded-xl px-4 py-3 flex items-center gap-3"
+                    style={{
+                      background: TILE,
+                      border: '1px solid rgba(255,255,255,0.08)',
+                    }}
                   >
                     {/* Thumbnail: imagem do catálogo → emoji → ícone de status */}
                     <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0">
@@ -223,19 +227,32 @@ export default function MomentosPage() {
                           className="w-full h-full object-cover"
                         />
                       ) : m.momentoEmoji ? (
-                        <div className="w-full h-full bg-gradient-to-br from-red-500/20 to-pink-500/20 flex items-center justify-center text-xl">
+                        <div
+                          className="w-full h-full flex items-center justify-center text-xl"
+                          style={{ background: 'rgba(244,63,94,0.15)' }}
+                        >
                           {m.momentoEmoji}
                         </div>
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
-                          <i className={clsx('fas text-base text-white', realizado ? 'fa-fire' : 'fa-clock')} />
+                        <div
+                          className="w-full h-full flex items-center justify-center"
+                          style={{ background: CTA_GRAD }}
+                        >
+                          <i className={clsx('fas text-base text-white', realizado ? 'fa-heart' : 'fa-clock')} />
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white leading-snug">{m.momentoNome}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className={clsx('text-[10px] font-bold px-2 py-0.5 rounded-full', realizado ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-300')}>
+                        <span
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                          style={
+                            realizado
+                              ? { background: 'rgba(34,197,94,0.18)', color: '#4ade80' }
+                              : { background: 'rgba(244,63,94,0.18)', color: ACCENT }
+                          }
+                        >
                           {realizado ? 'Realizado' : 'Pendente'}
                         </span>
                         {dataStr && <span className="text-[10px] text-white/40">{dataStr}</span>}
@@ -245,7 +262,7 @@ export default function MomentosPage() {
                       <button
                         onClick={() => abrirConfirmacao(m)}
                         className="shrink-0 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition"
-                        style={{ background: 'linear-gradient(135deg,#ff2d3f,#c8003a)' }}
+                        style={{ background: CTA_GRAD }}
                       >
                         ✓ Feito
                       </button>
@@ -255,8 +272,7 @@ export default function MomentosPage() {
               })}
             </div>
           )}
-        </div>
-      </section>
+      </AppHeroShell>
 
       {/* ── Modal: Registrar memória ao concluir momento ── */}
       {realizandoMomento && (
@@ -266,17 +282,17 @@ export default function MomentosPage() {
         backdropClassName="bg-black/85"
         maxWidth="max-w-sm"
         scrollPanel={false}
-        panelClassName="overflow-hidden border border-[rgba(255,45,63,0.20)]"
+        panelClassName="overflow-hidden border border-white/10"
         ariaLabel="Registrar memória do momento"
       >
-        <div className="overflow-hidden" style={{ background: '#080808' }}>
+        <div className="overflow-hidden" style={{ background: '#101010' }}>
             {/* Header gradient */}
-            <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg,#ff2d3f 0%,#ff5565 100%)' }}>
+            <div className="px-6 py-5" style={{ background: CTA_GRAD }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <div
                     className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(0,0,0,0.22)' }}
+                    style={{ background: 'rgba(0,0,0,0.45)' }}
                   >
                     <i className="fas fa-check text-white text-base" />
                   </div>
@@ -288,7 +304,7 @@ export default function MomentosPage() {
                 <button
                   onClick={fecharConfirmacao}
                   className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 ml-2"
-                  style={{ background: 'rgba(0,0,0,0.22)' }}
+                  style={{ background: 'rgba(0,0,0,0.45)' }}
                 >
                   <i className="fas fa-times text-white text-sm" />
                 </button>
@@ -302,11 +318,14 @@ export default function MomentosPage() {
               {/* Incentivo: foto = recompensa */}
               <div
                 className="flex items-center gap-2 rounded-xl px-3 py-2"
-                style={{ background: realizandoFoto ? 'rgba(34,197,94,0.10)' : 'rgba(255,45,63,0.08)', border: `1px solid ${realizandoFoto ? 'rgba(34,197,94,0.25)' : 'rgba(255,45,63,0.18)'}` }}
+                style={{
+                  background: realizandoFoto ? 'rgba(34,197,94,0.10)' : 'rgba(244,63,94,0.08)',
+                  border: `1px solid ${realizandoFoto ? 'rgba(34,197,94,0.25)' : 'rgba(244,63,94,0.20)'}`,
+                }}
               >
                 <i
                   className={`fas ${realizandoFoto ? 'fa-check-circle' : 'fa-camera'} text-sm shrink-0`}
-                  style={{ color: realizandoFoto ? 'rgb(134,239,172)' : 'rgba(255,100,100,0.9)' }}
+                  style={{ color: realizandoFoto ? 'rgb(134,239,172)' : ACCENT }}
                 />
                 <p className="text-xs leading-snug" style={{ color: realizandoFoto ? 'rgb(134,239,172)' : 'rgba(255,255,255,0.55)' }}>
                   {realizandoFoto
@@ -321,8 +340,8 @@ export default function MomentosPage() {
                 onClick={() => fotoInputRef.current?.click()}
                 className="w-full rounded-2xl overflow-hidden flex items-center justify-center"
                 style={{
-                  background: '#111',
-                  border: '1px solid rgba(255,45,63,0.22)',
+                  background: TILE,
+                  border: '1px solid rgba(244,63,94,0.22)',
                   minHeight: realizandoFotoPreview ? 0 : 140,
                 }}
               >
@@ -335,7 +354,7 @@ export default function MomentosPage() {
                   />
                 ) : (
                   <div className="flex flex-col items-center gap-2 py-8">
-                    <i className="fas fa-camera text-2xl" style={{ color: 'rgba(255,45,63,0.7)' }} />
+                    <i className="fas fa-camera text-2xl" style={{ color: ACCENT }} />
                     <span className="text-white/40 text-xs">Toque para adicionar uma foto</span>
                     <span className="text-white/20 text-[10px]">(opcional)</span>
                   </div>
@@ -366,7 +385,7 @@ export default function MomentosPage() {
                 onClick={confirmarRealizado}
                 disabled={realizandoEnviando}
                 className="w-full py-3 rounded-xl font-bold text-white text-sm disabled:opacity-40"
-                style={{ background: 'linear-gradient(135deg,#ff2d3f,#c8003a)' }}
+                style={{ background: CTA_GRAD }}
               >
                 {realizandoEnviando
                   ? 'Salvando...'
@@ -387,6 +406,6 @@ export default function MomentosPage() {
         </div>
       </OverlayModal>
       )}
-    </div>
+    </>
   );
 }
