@@ -22,6 +22,7 @@ import AppHeroShell, {
   LP_RED,
   TILE,
 } from '@/components/layout/AppHeroShell';
+import { softPush } from '@/components/layout/softRouteNav';
 
 const EMOJIS_POR_CATEGORIA = [
   { label: 'Lovezin', emojis: ['💗', '❤️'] },
@@ -98,7 +99,7 @@ export default function PersonalizarPage() {
         <i className="fas fa-tags text-red-400 text-5xl mb-6" />
         <h2 className="text-xl font-bold mb-2">Personalizar Catálogo</h2>
         <p className="text-white/50 text-sm mb-6">Pareie com seu parceiro para personalizar o catálogo.</p>
-        <button onClick={() => router.push('/parear')} className="btn-red px-8 py-3 rounded-xl text-sm font-semibold">
+        <button onClick={() => softPush(router, '/parear')} className="btn-red px-8 py-3 rounded-xl text-sm font-semibold">
           Parear agora
         </button>
       </div>

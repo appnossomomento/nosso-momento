@@ -3,6 +3,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
+import { softBack } from '@/components/layout/softRouteNav';
 
 /**
  * Cores do CTA LP "Seja um Casal Fundador":
@@ -57,11 +58,7 @@ export default function AppHeroShell({
   const router = useRouter();
 
   function handleBack() {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back();
-      return;
-    }
-    router.push('/dashboard');
+    softBack(router, '/dashboard');
   }
 
   return (
