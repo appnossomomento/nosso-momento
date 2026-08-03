@@ -165,7 +165,9 @@ export default function CoupleStreakCard({
         style={midBlockStyle(streak.state, partnerTriste)}
       >
         <StreakFlame state={streak.state} tier={streak.tier} softMood={partnerTriste} />
-        <p className="text-xl font-bold leading-none text-white tabular-nums mt-0.5">{daysLabel}</p>
+        <p className="text-xl font-bold leading-none text-white tabular-nums mt-0.5">
+          {daysLabel}
+        </p>
         {partnerTriste ? (
           <p className="text-[10px] mt-1 leading-snug text-sky-200/70 px-1">
             {partnerName} precisa de um carinho

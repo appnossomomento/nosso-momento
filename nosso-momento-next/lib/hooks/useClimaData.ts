@@ -1,51 +1,47 @@
 'use client';
 
 import { useEffect } from 'react';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
-import { isClimaFromToday } from '@/lib/clima/isClimaFromToday';
 
 const LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 const STREAK_LOOKBACK_DAYS = 120;
 
+/** Evita re-fetch pesado de climaDiario ao remontar / re-render do AuthProvider. */
+let climaHistoryLoadedFor: string | null = null;
+
 /**
- * Carrega dados de clima (hoje, semana e histórico p/ streak) do pareamento ativo.
- * Deve ser chamado no AuthProvider (ou no parceiro page).
- * Atualizações em tempo real do clima de hoje vêm de usePareamentoListeners.
+ * Carrega semana + histórico p/ streak do pareamento ativo.
+ * Clima de hoje em tempo real vem de usePareamentoListeners (sem getDoc duplicado).
  */
 export function useClimaData() {
-  const { usuario, pareado, idPareamentoAmigavel, pareadoUid, set } = useAppStore();
-  const uid = usuario?.uid ?? null;
+  const uid = useAppStore((s) => s.usuario?.uid ?? null);
+  const pareado = useAppStore((s) => s.pareado);
+  const idPareamentoAmigavel = useAppStore((s) => s.idPareamentoAmigavel);
+  const pareadoUid = useAppStore((s) => s.pareadoUid);
+  const set = useAppStore((s) => s.set);
 
   useEffect(() => {
-    if (!uid || !pareado || !idPareamentoAmigavel || !pareadoUid) return;
+    if (!uid || !pareado || !idPareamentoAmigavel || !pareadoUid) {
+      if (!pareado || !idPareamentoAmigavel) {
+        climaHistoryLoadedFor = null;
+      }
+      return;
+    }
 
     const pareamentoId = idPareamentoAmigavel;
 
+    // Já carregou histórico deste pareamento nesta sessão
+    if (
+      climaHistoryLoadedFor === pareamentoId &&
+      useAppStore.getState().climaHistory.length > 0
+    ) {
+      return;
+    }
+
     async function carregar() {
       try {
-        // 1. Clima de hoje
-        const pDoc = await getDoc(doc(db, 'pareamentos', pareamentoId));
-        if (pDoc.exists()) {
-          const pData = pDoc.data();
-          const climaHojeMap = pData.climaHoje ?? {};
-          const meuClima = climaHojeMap[uid!] ?? null;
-          const partnerClima = climaHojeMap[pareadoUid!] ?? null;
-          set({
-            climaHoje: isClimaFromToday(meuClima)
-              ? { humor: String(meuClima.humor ?? ''), registradoEm: meuClima.registradoEm }
-              : null,
-            climaPartnerHoje: isClimaFromToday(partnerClima)
-              ? {
-                  humor: String(partnerClima.humor ?? ''),
-                  registradoEm: partnerClima.registradoEm,
-                }
-              : null,
-          });
-        }
-
-        // 2. Docs diários
         const spNow = new Date(Date.now() - 3 * 60 * 60 * 1000);
         const dayOfWeek = spNow.getUTCDay();
         const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -85,7 +81,6 @@ export function useClimaData() {
           };
         });
 
-        // 3. Histórico p/ streak (lookback)
         const todayNorm = Date.UTC(
           spNow.getUTCFullYear(),
           spNow.getUTCMonth(),
@@ -106,12 +101,13 @@ export function useClimaData() {
           };
         });
 
+        climaHistoryLoadedFor = pareamentoId;
         set({ climaSemana, climaHistory });
       } catch (err) {
         console.error('[useClimaData] erro ao carregar clima:', err);
       }
     }
 
-    carregar();
+    void carregar();
   }, [uid, pareado, idPareamentoAmigavel, pareadoUid, set]);
 }

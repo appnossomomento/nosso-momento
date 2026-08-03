@@ -25,7 +25,7 @@ export function useParceiroData() {
   const pareadoUid = useAppStore((s) => s.pareadoUid);
   const authInitialized = useAppStore((s) => s.authInitialized);
   const parceirosAtivos = useAppStore((s) => s.parceirosAtivos);
-  const { set } = useAppStore();
+  const set = useAppStore((s) => s.set);
 
   useEffect(() => {
     if (!authInitialized || !pareadoUid) {

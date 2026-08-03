@@ -17,10 +17,22 @@ type RouterLike = {
   back?: () => void;
 };
 
+/** Evita empilhar View Transitions / timeouts em toques rápidos. */
+let softNavLock = false;
+
 function hasViewTransition(): DocWithVT | null {
   if (typeof document === 'undefined') return null;
   const doc = document as DocWithVT;
   return typeof doc.startViewTransition === 'function' ? doc : null;
+}
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
 }
 
 function markCssFallback() {
@@ -35,10 +47,12 @@ function markCssFallback() {
 
 function runNative(update: () => void) {
   const doc = hasViewTransition()!;
+  softNavLock = true;
   document.documentElement.classList.add('soft-vt');
   const vt = doc.startViewTransition!(update);
   void vt.finished.finally(() => {
     document.documentElement.classList.remove('soft-vt');
+    softNavLock = false;
   });
 }
 
@@ -51,21 +65,33 @@ export function softNavigate(
   href: string,
   method: 'push' | 'replace' = 'push',
 ) {
+  if (softNavLock) return;
+
   const go = () => {
     if (method === 'replace' && router.replace) router.replace(href);
     else router.push(href);
   };
+
+  if (prefersReducedMotion()) {
+    go();
+    return;
+  }
 
   if (hasViewTransition()) {
     runNative(go);
     return;
   }
 
+  softNavLock = true;
   markCssFallback();
   if (typeof window !== 'undefined') {
-    window.setTimeout(go, 180);
+    window.setTimeout(() => {
+      go();
+      softNavLock = false;
+    }, 180);
     return;
   }
+  softNavLock = false;
   go();
 }
 
@@ -78,6 +104,8 @@ export function softReplace(router: RouterLike, href: string) {
 }
 
 export function softBack(router: RouterLike, fallback = '/dashboard') {
+  if (softNavLock) return;
+
   const go = () => {
     if (typeof window !== 'undefined' && window.history.length > 1 && router.back) {
       router.back();
@@ -86,16 +114,26 @@ export function softBack(router: RouterLike, fallback = '/dashboard') {
     router.push(fallback);
   };
 
+  if (prefersReducedMotion()) {
+    go();
+    return;
+  }
+
   if (hasViewTransition()) {
     runNative(go);
     return;
   }
 
+  softNavLock = true;
   markCssFallback();
   if (typeof window !== 'undefined') {
-    window.setTimeout(go, 180);
+    window.setTimeout(() => {
+      go();
+      softNavLock = false;
+    }, 180);
     return;
   }
+  softNavLock = false;
   go();
 }
 

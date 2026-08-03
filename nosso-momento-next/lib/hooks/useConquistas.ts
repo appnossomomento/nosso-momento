@@ -29,8 +29,8 @@ const ACHIEVEMENT_TRIGGERS: Record<string, string> = {
  * Atualiza o store quando novas conquistas são desbloqueadas.
  */
 export function useConquistas() {
-  const { usuario, set } = useAppStore();
-  const uid = usuario?.uid ?? null;
+  const uid = useAppStore((s) => s.usuario?.uid ?? null);
+  const set = useAppStore((s) => s.set);
 
   useEffect(() => {
     if (!uid) return;

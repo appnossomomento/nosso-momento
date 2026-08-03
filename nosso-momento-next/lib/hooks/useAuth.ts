@@ -15,7 +15,8 @@ import { recordDailyAppOpen } from '@/lib/auth/recordDailyAppOpen';
  * Deve ser chamado no layout raiz (client component).
  */
 export function useAuth() {
-  const { set, reset } = useAppStore();
+  const set = useAppStore((s) => s.set);
+  const reset = useAppStore((s) => s.reset);
 
   useEffect(() => {
     let unsubscribeUser: (() => void) | null = null;

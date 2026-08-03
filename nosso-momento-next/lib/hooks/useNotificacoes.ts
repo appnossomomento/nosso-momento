@@ -67,8 +67,8 @@ function derivarContadores(docs: Notificacao[]) {
  * o Zustand store com as notificações e contadores de não lidas.
  */
 export function useNotificacoes() {
-  const { usuario, set } = useAppStore();
-  const uid = usuario?.uid ?? null;
+  const uid = useAppStore((s) => s.usuario?.uid ?? null);
+  const set = useAppStore((s) => s.set);
 
   useEffect(() => {
     if (!uid) {

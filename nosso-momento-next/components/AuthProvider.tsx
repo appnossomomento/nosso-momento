@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useAuthenticatedRedirect } from '@/lib/hooks/useAuthenticatedRedirect';
@@ -11,14 +12,8 @@ import { useClimaData } from '@/lib/hooks/useClimaData';
 import Toast from '@/components/ui/Toast';
 import Modal from '@/components/ui/Modal';
 import LegalModal from '@/components/ui/LegalModal';
-import FoguinhosPopup from '@/components/dashboard/FoguinhosPopup';
-import AchievementsPopup from '@/components/dashboard/AchievementsPopup';
-import MemoriaViewer from '@/components/memorias/MemoriaViewer';
-import ShareModal from '@/components/memorias/ShareModal';
-import ChallengePopup from '@/components/ChallengePopup';
 import PairingModal from '@/components/PairingModal';
 import VipPopup from '@/components/VipPopup';
-import SurveyPopup from '@/components/SurveyPopup';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import AchievementCelebration from '@/components/AchievementCelebration';
 import InstagramModal from '@/components/InstagramModal';
@@ -26,6 +21,26 @@ import { usePareamentoListeners } from '@/lib/hooks/usePareamentoListeners';
 import { useNotificacoes } from '@/lib/hooks/useNotificacoes';
 import { useFCM } from '@/lib/hooks/useFCM';
 import { usePendingSurvey } from '@/lib/hooks/usePendingSurvey';
+
+/** Modais pesados: code-split — mesma UX, menos JS no boot do app. */
+const FoguinhosPopup = dynamic(() => import('@/components/dashboard/FoguinhosPopup'), {
+  ssr: false,
+});
+const AchievementsPopup = dynamic(() => import('@/components/dashboard/AchievementsPopup'), {
+  ssr: false,
+});
+const MemoriaViewer = dynamic(() => import('@/components/memorias/MemoriaViewer'), {
+  ssr: false,
+});
+const ShareModal = dynamic(() => import('@/components/memorias/ShareModal'), {
+  ssr: false,
+});
+const ChallengePopup = dynamic(() => import('@/components/ChallengePopup'), {
+  ssr: false,
+});
+const SurveyPopup = dynamic(() => import('@/components/SurveyPopup'), {
+  ssr: false,
+});
 
 const ADMIN_PREFIX = '/paineladmin-monitoring-v0';
 

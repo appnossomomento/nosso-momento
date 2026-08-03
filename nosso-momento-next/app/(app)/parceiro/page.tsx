@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import clsx from 'clsx';
+import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@/lib/store/appStore';
 import { sendInput } from '@/lib/firebase/functions';
 import { clearParceiroAtivoPersistido, setParceiroAtivo } from '@/lib/utils/setParceiroAtivo';
@@ -75,7 +76,20 @@ export default function ParceiroPage() {
     climaSemana,
     climaHistory,
     set,
-  } = useAppStore();
+  } = useAppStore(
+    useShallow((s) => ({
+      parceiroData: s.parceiroData,
+      pareado: s.pareado,
+      usuario: s.usuario,
+      pareadoUid: s.pareadoUid,
+      parceirosAtivos: s.parceirosAtivos,
+      climaHoje: s.climaHoje,
+      climaPartnerHoje: s.climaPartnerHoje,
+      climaSemana: s.climaSemana,
+      climaHistory: s.climaHistory,
+      set: s.set,
+    })),
+  );
 
   const [submetendo, setSubmetendo] = useState(false);
   useWeeklyChallenge();
@@ -327,14 +341,7 @@ export default function ParceiroPage() {
           <h3 className="text-sm font-semibold text-white/90 mb-3 flex items-center gap-2">
             <i className="fas fa-thermometer-half text-red-400" />
             Como você está hoje?
-            <Link
-              href="/clima"
-              className="ml-auto flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold text-white/60 hover:text-white transition-colors flex-shrink-0"
-              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
-            >
-              <i className="fas fa-chart-line text-[9px]" />
-              Histórico
-            </Link>
+            {/* Histórico (/clima) oculto por enquanto — redesenhar a tela antes de reexibir */}
           </h3>
           {jaFezClima && !climaPartnerHoje && (
             <p className="text-xs text-amber-200/90 mb-3 -mt-1 flex items-center gap-2">
