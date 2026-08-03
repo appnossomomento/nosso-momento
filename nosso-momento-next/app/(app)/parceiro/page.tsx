@@ -256,12 +256,16 @@ export default function ParceiroPage() {
     <div className="screen bg-black text-white pb-28">
       <div
         className="flex-shrink-0 px-4 pb-3 flex items-center gap-3 w-full sticky top-0 z-30"
-        style={{ background: 'linear-gradient(180deg,#ff2d3f 0%,#ff5565 100%)', boxShadow: '0 4px 20px rgba(255,45,63,0.35)', paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}
+        style={{
+          background: '#000000',
+          borderBottom: '1px solid #222',
+          paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)',
+        }}
       >
         <button
           onClick={() => softPush(router, '/dashboard')}
           className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ background: 'rgba(0,0,0,0.20)' }}
+          style={{ background: 'rgba(255,255,255,0.08)' }}
         >
           <i className="fas fa-arrow-left text-white text-sm" />
         </button>
@@ -273,7 +277,7 @@ export default function ParceiroPage() {
         >
           <div
             className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
-            style={{ border: '2px solid rgba(255,255,255,0.40)', background: 'rgba(0,0,0,0.20)' }}
+            style={{ border: '2px solid rgba(255,255,255,0.25)', background: 'rgba(0,0,0,0.20)' }}
           >
             {foto ? (
               <Image src={foto} alt={nome} width={36} height={36} className="w-full h-full object-cover" />

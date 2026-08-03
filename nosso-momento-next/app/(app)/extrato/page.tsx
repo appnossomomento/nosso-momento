@@ -75,7 +75,7 @@ export default function ExtratoPage() {
 
   return (
     <div className="screen bg-black text-white pb-28">
-      <ParceiroHeader variant="gradient" />
+      <ParceiroHeader />
 
       <div className="px-4 py-4 space-y-2">
         {extratoLoading && items.length === 0 ? (

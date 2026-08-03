@@ -4,7 +4,7 @@
   --background: #0a0a0a;
   --foreground: #ededed;
   /* Altura útil dos itens (ícone + label). Safe-area entra aparte. */
-  --footer-h: 52px;
+  --footer-h: 56px;
 }
 
 @theme inline {
@@ -121,13 +121,13 @@
   height: var(--footer-h);
   max-height: var(--footer-h);
   padding: 0;
-  gap: 1px;
-  font-size: 13px; /* ícones FA um pouco menores que text-lg */
+  gap: 2px;
+  font-size: 16px;
   line-height: 1;
 }
 
 .bottom-nav-item > span:last-child {
-  font-size: 9px;
+  font-size: 10px;
   margin-top: 0;
   line-height: 1.1;
 }
@@ -153,26 +153,26 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   /* Mesmo gradiente LP: red-500 → rose-500 */
   background: linear-gradient(135deg, #ef4444 0%, #f43f5e 100%);
   color: #fff;
   border-radius: 50%;
   border: none;
-  transform: translateY(-12px) scale(1);
+  transform: translateY(-14px) scale(1);
   box-shadow:
     0 0 0 3px rgba(239, 68, 68, 0.18),
-    0 -4px 18px rgba(239, 68, 68, 0.6),
-    0 0 36px rgba(244, 63, 94, 0.35),
-    0 10px 24px rgba(239, 68, 68, 0.25);
+    0 -5px 20px rgba(239, 68, 68, 0.62),
+    0 0 40px rgba(244, 63, 94, 0.36),
+    0 10px 26px rgba(239, 68, 68, 0.26);
   transition: transform 0.14s ease, box-shadow 0.14s ease;
   will-change: transform;
 }
 
 .bottom-nav-bar a:active .bottom-nav-item-center,
 .bottom-nav-bar button:active .bottom-nav-item-center {
-  transform: translateY(-12px) scale(0.9);
+  transform: translateY(-14px) scale(0.9);
   box-shadow:
     0 0 0 3px rgba(239, 68, 68, 0.14),
     0 -3px 14px rgba(239, 68, 68, 0.48),
