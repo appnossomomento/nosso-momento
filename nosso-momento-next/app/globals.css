@@ -150,6 +150,83 @@
   pointer-events: none;
 }
 
+/* ── Soft route demo: dashboard → /parceiro ─ */
+/* Nativo (Chromium/Safari): html.soft-vt */
+html.soft-vt::view-transition-old(root) {
+  animation: 160ms ease-out both soft-vt-fade-out;
+}
+html.soft-vt::view-transition-new(root) {
+  animation: 220ms ease-in 40ms both soft-vt-fade-in;
+}
+html.soft-vt::view-transition-group(bottom-nav) {
+  animation: none;
+  z-index: 200;
+}
+html.soft-vt::view-transition-old(bottom-nav) {
+  display: none;
+}
+html.soft-vt::view-transition-new(bottom-nav) {
+  animation: none;
+}
+
+@keyframes soft-vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes soft-vt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fallback sem View Transitions API */
+@keyframes soft-parceiro-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes soft-parceiro-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.soft-parceiro-exit {
+  animation: soft-parceiro-exit 180ms ease-in both;
+  pointer-events: none;
+}
+
+.soft-parceiro-enter {
+  animation: soft-parceiro-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .soft-parceiro-exit,
+  .soft-parceiro-enter {
+    animation: none;
+  }
+  html.soft-vt::view-transition-old(root),
+  html.soft-vt::view-transition-new(root) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
 /* ── Inputs ────────────────────────────── */
 input[type='text'],
 input[type='email'],

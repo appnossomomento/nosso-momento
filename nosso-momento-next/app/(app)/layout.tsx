@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useAppStore } from '@/lib/store/appStore';
 import clsx from 'clsx';
 import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
+import SoftParceiroEnter from '@/components/layout/SoftParceiroEnter';
+import { softPushToParceiro } from '@/components/layout/softRouteNav';
 
 const CENTER_LOGO = '/assets/icons/logo-icon-white-bottom.png';
 
@@ -50,20 +52,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="bg-black min-h-screen">
-      {children}
+      <SoftParceiroEnter>{children}</SoftParceiroEnter>
 
       {/* Bottom Navigation */}
-      <nav className="bottom-nav-bar">
+      <nav className="bottom-nav-bar" style={{ viewTransitionName: 'bottom-nav' }}>
         {NAV_ITEMS.map((item) => {
           if (item.center) {
-            const centerHref = '/parceiro';
             const centerActive = pathname === '/parceiro';
             return (
-              <Link
+              <button
                 key="center"
-                href={centerHref}
-                className="flex items-center justify-center flex-grow"
+                type="button"
+                className="flex items-center justify-center flex-grow bg-transparent border-0 p-0 cursor-pointer"
                 aria-label="Parceiro"
+                onClick={() => {
+                  if (pathname === '/parceiro') return;
+                  softPushToParceiro(router);
+                }}
               >
                 <div
                   className={clsx('bottom-nav-item-center', centerActive && 'ring-2 ring-white/30')}
@@ -85,7 +90,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     />
                   )}
                 </div>
-              </Link>
+              </button>
             );
           }
           const isActive = pathname === item.href;

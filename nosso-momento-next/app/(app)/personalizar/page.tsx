@@ -8,14 +8,20 @@ import { showToast } from '@/components/ui/Toast';
 import { openSystemConfirm } from '@/components/ui/Modal';
 import OverlayModal from '@/components/ui/OverlayModal';
 import clsx from 'clsx';
-import ParceiroHeader from '@/components/parceiro/ParceiroHeader';
 import MomentoCover from '@/components/ui/MomentoCover';
+import FoguinhosIcon from '@/components/ui/FoguinhosIcon';
 import VipStarBadge from '@/components/profile/VipStarBadge';
 import { trackGA, trackAction } from '@/lib/analytics';
 import { getCatalogFilterGender, momentMatchesCatalogFilter } from '@/lib/utils/profile';
 import { uploadCustomMomentImage, isStorageUploadError } from '@/lib/utils/uploadCustomMomentImage';
 import { waitForCustomMomentVisible } from '@/lib/utils/refreshMomentosCustom';
 import type { CatalogoCfg, MomentoCustom, MomentoMestre } from '@/lib/types';
+import AppHeroShell, {
+  ACCENT,
+  ACCENT_SOFT,
+  LP_RED,
+  TILE,
+} from '@/components/layout/AppHeroShell';
 
 const EMOJIS_POR_CATEGORIA = [
   { label: 'Lovezin', emojis: ['💗', '❤️'] },
@@ -25,6 +31,7 @@ const EMOJIS_POR_CATEGORIA = [
 
 const EMOJI_PADRAO = '❤️';
 const FILTRO_SEUS = 'Seus';
+const CTA_GRAD = `linear-gradient(135deg, ${LP_RED}, ${ACCENT})`;
 
 function cfgFromUsuario(raw: Record<string, unknown> | undefined): Record<string, CatalogoCfg> {
   const result: Record<string, CatalogoCfg> = {};
@@ -392,9 +399,13 @@ export default function PersonalizarPage() {
       <div
         key={m.id}
         className={clsx(
-          'rounded-2xl bg-[#1a1b20] border border-white/10 overflow-hidden transition',
+          'rounded-2xl overflow-hidden transition',
           bloqueado && 'opacity-50',
         )}
+        style={{
+          background: TILE,
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
       >
         <div className="flex items-center gap-3 p-3">
           <MomentoCover
@@ -408,15 +419,20 @@ export default function PersonalizarPage() {
             <p className="text-sm font-semibold text-white truncate">{m.nome ?? ''}</p>
             <p className="text-[11px] text-white/40 mt-0.5">{m.categoria}</p>
             {!opts.showRestore && (
-              <div className="flex items-center gap-1 mt-1">
-                <i className="fas fa-fire text-amber-400 text-[10px]" />
+              <div className="flex items-center gap-1.5 mt-1">
+                <FoguinhosIcon size={14} />
                 <input
                   type="number"
                   value={preco}
                   min={1}
                   max={999}
                   onChange={(e) => setPreco(m.nome ?? '', Number(e.target.value))}
-                  className="w-16 bg-white/10 rounded-md px-2 py-0.5 text-xs text-amber-300 font-semibold border border-white/10 focus:outline-none focus:border-red-400"
+                  className="w-16 rounded-md px-2 py-0.5 text-xs font-semibold border focus:outline-none"
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    color: ACCENT_SOFT,
+                    borderColor: 'rgba(255,255,255,0.1)',
+                  }}
                 />
                 <span className="text-[10px] text-white/40">foguinhos</span>
               </div>
@@ -481,12 +497,12 @@ export default function PersonalizarPage() {
       <div
         key={item.id}
         className={clsx(
-          'rounded-2xl p-3 flex items-center gap-3 border border-orange-400/20',
+          'rounded-2xl p-3 flex items-center gap-3',
           bloqueado && 'opacity-50',
         )}
         style={{
-          background:
-            'linear-gradient(135deg, rgba(255,45,63,0.14) 0%, rgba(249,115,22,0.10) 55%, rgba(255,45,63,0.06) 100%)',
+          background: 'rgba(244,63,94,0.10)',
+          border: '1px solid rgba(244,63,94,0.22)',
         }}
       >
         <MomentoCover
@@ -497,8 +513,11 @@ export default function PersonalizarPage() {
         />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold truncate">{item.nome}</p>
-          <p className="text-xs text-amber-400 mt-0.5">
-            <i className="fas fa-fire text-[10px] mr-1" />
+          <p
+            className="text-xs mt-0.5 flex items-center gap-1.5"
+            style={{ color: ACCENT_SOFT }}
+          >
+            <FoguinhosIcon size={13} />
             {item.preco} foguinhos
           </p>
         </div>
@@ -548,29 +567,24 @@ export default function PersonalizarPage() {
   }
 
   return (
-    <div className="screen bg-black text-white pb-28">
-      <ParceiroHeader />
-
-      <section
-        className="px-6 pt-10 pb-28 flex flex-col items-center text-center"
-        style={{ background: 'linear-gradient(180deg, #ff2d3f 0%, #ff5565 100%)' }}
-      >
-        <div className="flex flex-col items-center text-center" style={{ marginTop: -8 }}>
-          <i className="fas fa-store text-3xl text-white mb-3" />
-          <h2 className="text-3xl font-semibold text-white">Meu Catálogo</h2>
-          <p className="text-white/80">Gerencie os momentos que seu parceiro irá resgatar.</p>
-          {conexaoAtiva && (
-            <p className="text-white/60 text-xs mt-2">
-              Conexão: {conexaoAtiva.nome}
+    <>
+      <AppHeroShell
+        sheetClassName="space-y-6"
+        hero={
+          <>
+            <i className="fas fa-store text-3xl text-white mb-3" />
+            <h2 className="text-[26px] font-semibold text-white leading-tight">Meu Catálogo</h2>
+            <p className="text-white/75 text-sm mt-1">
+              Gerencie os momentos que seu parceiro irá resgatar.
             </p>
-          )}
-        </div>
-      </section>
-
-      <section className="px-5 pb-8 -mt-10">
-        <div className="max-w-5xl mx-auto">
-          <div className="rounded-[28px] bg-[#111114] p-4 shadow-lg space-y-6">
-
+            {conexaoAtiva && (
+              <p className="text-white/55 text-xs mt-2">
+                Conexão: {conexaoAtiva.nome}
+              </p>
+            )}
+          </>
+        }
+      >
             {/* Catálogo mestre */}
             <div className="space-y-3">
               <div className="flex flex-wrap justify-center gap-2 pb-1">
@@ -579,10 +593,12 @@ export default function PersonalizarPage() {
                     key={cat}
                     type="button"
                     onClick={() => setFiltro(cat === filtro ? null : cat)}
-                    className={clsx(
-                      'px-4 py-2 rounded-full text-xs font-semibold transition',
-                      filtro === cat ? 'bg-white text-black' : 'bg-white/10 text-white/60',
-                    )}
+                    className="px-4 py-2 rounded-full text-xs font-semibold transition"
+                    style={
+                      filtro === cat
+                        ? { background: ACCENT, color: '#fff' }
+                        : { background: TILE, color: 'rgba(255,255,255,0.45)' }
+                    }
                   >
                     {cat === 'Sair da Rotina' ? 'Rotina' : cat}
                   </button>
@@ -591,10 +607,12 @@ export default function PersonalizarPage() {
                   <button
                     type="button"
                     onClick={() => setFiltro(filtro === FILTRO_SEUS ? null : FILTRO_SEUS)}
-                    className={clsx(
-                      'px-4 py-2 rounded-full text-xs font-semibold transition',
-                      filtroSeus ? 'bg-white text-black' : 'bg-white/10 text-white/60',
-                    )}
+                    className="px-4 py-2 rounded-full text-xs font-semibold transition"
+                    style={
+                      filtroSeus
+                        ? { background: ACCENT, color: '#fff' }
+                        : { background: TILE, color: 'rgba(255,255,255,0.45)' }
+                    }
                   >
                     Seus
                   </button>
@@ -622,12 +640,7 @@ export default function PersonalizarPage() {
                     >
                       <i
                         className="fas fa-plus text-sm"
-                        style={{
-                          backgroundImage: 'linear-gradient(135deg, #ff2d3f, #f97316)',
-                          WebkitBackgroundClip: 'text',
-                          backgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                        }}
+                        style={{ color: ACCENT }}
                       />
                       Crie do seu jeito
                     </button>
@@ -681,22 +694,17 @@ export default function PersonalizarPage() {
                   >
                     <i
                       className="fas fa-plus text-sm"
-                      style={{
-                        backgroundImage: 'linear-gradient(135deg, #ff2d3f, #f97316)',
-                        WebkitBackgroundClip: 'text',
-                        backgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                      }}
+                      style={{ color: ACCENT }}
                     />
                     Crie do seu jeito
                   </button>
                 </div>
               ) : (
                 <div
-                  className="mt-2 rounded-2xl border border-white/10 overflow-hidden"
+                  className="mt-2 rounded-2xl overflow-hidden"
                   style={{
-                    background:
-                      'linear-gradient(180deg, rgba(255,45,63,0.10) 0%, rgba(255,255,255,0.03) 100%)',
+                    background: 'rgba(244,63,94,0.08)',
+                    border: '1px solid rgba(255,255,255,0.08)',
                   }}
                 >
                   <button
@@ -710,10 +718,10 @@ export default function PersonalizarPage() {
                     </span>
                     <i
                       className={clsx(
-                        'fas fa-chevron-down text-amber-400 text-sm leading-none transition-transform duration-200 shrink-0',
-                        'drop-shadow-[0_0_6px_rgba(251,191,36,0.55)]',
+                        'fas fa-chevron-down text-sm leading-none transition-transform duration-200 shrink-0',
                         customBlockOpen && 'rotate-180',
                       )}
+                      style={{ color: ACCENT_SOFT }}
                     />
                   </button>
 
@@ -732,9 +740,8 @@ export default function PersonalizarPage() {
                         onClick={handleCriarCustomClick}
                         className="w-full py-3.5 rounded-2xl text-sm font-semibold transition flex items-center justify-center gap-2"
                         style={{
-                          background: 'linear-gradient(to right, #ef4444, #f97316)',
+                          background: CTA_GRAD,
                           color: '#fff',
-                          boxShadow: '0 0 25px rgba(239, 68, 68, 0.6)',
                           border: 'none',
                         }}
                       >
@@ -751,14 +758,14 @@ export default function PersonalizarPage() {
               )
             )}
 
-            <div className="pt-6">
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={salvar}
                 disabled={salvando}
                 className="w-full py-3 rounded-2xl text-sm font-bold transition"
                 style={{
-                  background: 'linear-gradient(135deg,#ff2d3f,#ff5565)',
+                  background: CTA_GRAD,
                   color: 'white',
                   opacity: salvando ? 0.5 : 1,
                 }}
@@ -766,9 +773,7 @@ export default function PersonalizarPage() {
                 {salvando ? 'Salvando...' : 'Salvar catálogo'}
               </button>
             </div>
-          </div>
-        </div>
-      </section>
+      </AppHeroShell>
 
       <OverlayModal
         open={showCreateModal}
@@ -778,7 +783,7 @@ export default function PersonalizarPage() {
           setShowCreateModal(false);
         }}
         ariaLabel={editingId ? 'Editar momento personalizado' : 'Crie do seu jeito'}
-        panelClassName="bg-[#111114] border border-white/10"
+        panelClassName="bg-[#101010] border border-white/10"
       >
         <div className="p-6 space-y-4">
           <h3 className="text-lg font-bold">
@@ -919,6 +924,6 @@ export default function PersonalizarPage() {
           </button>
         </div>
       </OverlayModal>
-    </div>
+    </>
   );
 }
