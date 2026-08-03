@@ -12,18 +12,17 @@ import type { MomentoMestre } from '@/lib/types';
  * Deve ser chamado no AuthProvider após login.
  */
 export function useMomentosMestres() {
-  const { set, momentosMestres } = useAppStore();
+  const set = useAppStore((s) => s.set);
 
   useEffect(() => {
-    // Só carrega se ainda não tem dados
-    if (momentosMestres.length > 0) return;
+    if (useAppStore.getState().momentosMestres.length > 0) return;
 
     async function carregar() {
       try {
         const snap = await getDocs(query(collection(db, 'momentosMestres'), orderBy('nome')));
         const porChave = new Map<string, MomentoMestre>();
-        snap.forEach((doc) => {
-          const data = { id: doc.id, ...doc.data() } as MomentoMestre;
+        snap.forEach((docSnap) => {
+          const data = { id: docSnap.id, ...docSnap.data() } as MomentoMestre;
           if (!data.nome) return;
           data.img = sanitizeMomentoImgUrl(data.img);
           const key = `${data.nome}::${data.targetGender ?? 'any'}`;
@@ -35,7 +34,6 @@ export function useMomentosMestres() {
       }
     }
 
-    carregar();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void carregar();
+  }, [set]);
 }
