@@ -11,6 +11,23 @@ import { enrichMomentosCustomWithSignedUrls } from '@/lib/utils/resolveMediaUrls
 
 type ClimaSnap = { humor?: string; registradoEm?: unknown } | null;
 
+/** Evita re-chamar CF de URLs assinadas quando só foguinhos/clima mudaram. */
+const lastMomentosMediaKey = new Map<string, string>();
+
+function momentosMediaKey(raw: Record<string, MomentoCustom[]> | null): string {
+  if (!raw) return '';
+  const parts: string[] = [];
+  for (const [ownerUid, list] of Object.entries(raw)) {
+    if (!Array.isArray(list)) continue;
+    for (const item of list) {
+      if (!item) continue;
+      parts.push(`${ownerUid}:${item.id ?? ''}:${item.imgPath ?? ''}:${item.img ?? ''}`);
+    }
+  }
+  parts.sort();
+  return parts.join('|');
+}
+
 function patchClimaHoje(
   items: ClimaItem[],
   hojeStr: string,
@@ -124,15 +141,21 @@ export function usePareamentoListeners() {
           });
 
           if (momentosRaw) {
-            void enrichMomentosCustomWithSignedUrls(momentosRaw).then((enriched) => {
-              if (!enriched) return;
-              const stillActive =
-                useAppStore.getState().conexaoAtiva?.pareamentoId ??
-                useAppStore.getState().idPareamentoAmigavel ??
-                null;
-              if (stillActive !== pareamentoId) return;
-              set({ momentosCustomAtivo: enriched });
-            });
+            const mediaKey = momentosMediaKey(momentosRaw);
+            if (lastMomentosMediaKey.get(pareamentoId) !== mediaKey) {
+              lastMomentosMediaKey.set(pareamentoId, mediaKey);
+              void enrichMomentosCustomWithSignedUrls(momentosRaw).then((enriched) => {
+                if (!enriched) return;
+                const stillActive =
+                  useAppStore.getState().conexaoAtiva?.pareamentoId ??
+                  useAppStore.getState().idPareamentoAmigavel ??
+                  null;
+                if (stillActive !== pareamentoId) return;
+                set({ momentosCustomAtivo: enriched });
+              });
+            }
+          } else {
+            lastMomentosMediaKey.delete(pareamentoId);
           }
         },
         (err) => console.warn('[usePareamentoListeners] erro no snapshot:', err),

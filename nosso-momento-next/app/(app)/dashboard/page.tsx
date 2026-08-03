@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@/lib/store/appStore';
 import VipStarBadge from '@/components/profile/VipStarBadge';
 import StreakFlame from '@/components/parceiro/StreakFlame';
@@ -37,7 +38,21 @@ export default function DashboardPage() {
     climaPartnerHoje,
     climaSemana,
     climaHistory,
-  } = useAppStore();
+  } = useAppStore(
+    useShallow((s) => ({
+      usuario: s.usuario,
+      notificacoesTarefasNaoLidas: s.notificacoesTarefasNaoLidas,
+      notificacoesPresentesNaoLidas: s.notificacoesPresentesNaoLidas,
+      notificacoesConquistasNaoLidas: s.notificacoesConquistasNaoLidas,
+      parceirosAtivos: s.parceirosAtivos,
+      parceiroData: s.parceiroData,
+      parceiroNome: s.parceiroNome,
+      climaHoje: s.climaHoje,
+      climaPartnerHoje: s.climaPartnerHoje,
+      climaSemana: s.climaSemana,
+      climaHistory: s.climaHistory,
+    })),
+  );
 
   const pendingCount =
     (notificacoesTarefasNaoLidas ?? 0) +

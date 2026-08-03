@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import clsx from 'clsx';
+import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@/lib/store/appStore';
 import { sendInput } from '@/lib/firebase/functions';
 import { clearParceiroAtivoPersistido, setParceiroAtivo } from '@/lib/utils/setParceiroAtivo';
@@ -75,7 +76,20 @@ export default function ParceiroPage() {
     climaSemana,
     climaHistory,
     set,
-  } = useAppStore();
+  } = useAppStore(
+    useShallow((s) => ({
+      parceiroData: s.parceiroData,
+      pareado: s.pareado,
+      usuario: s.usuario,
+      pareadoUid: s.pareadoUid,
+      parceirosAtivos: s.parceirosAtivos,
+      climaHoje: s.climaHoje,
+      climaPartnerHoje: s.climaPartnerHoje,
+      climaSemana: s.climaSemana,
+      climaHistory: s.climaHistory,
+      set: s.set,
+    })),
+  );
 
   const [submetendo, setSubmetendo] = useState(false);
   useWeeklyChallenge();
