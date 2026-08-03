@@ -19,8 +19,11 @@ export default function SoftRouteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const pathnameRef = useRef(pathname);
-  pathnameRef.current = pathname;
   const [phase, setPhase] = useState<'idle' | 'exit' | 'enter'>('idle');
+
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     return installSoftLinkInterceptor(router, () => pathnameRef.current);
