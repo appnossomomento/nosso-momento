@@ -1,3 +1,5 @@
+'use client';
+
 /** Marca fade CSS só quando o browser não tem View Transitions. */
 export const SOFT_ENTER_KEY = 'nm-soft-enter';
 export const SOFT_EXIT_EVENT = 'nm-soft-nav-exit';

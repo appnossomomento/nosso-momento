@@ -26,6 +26,7 @@ export default function SoftRouteShell({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
+    if (typeof installSoftLinkInterceptor !== 'function') return;
     return installSoftLinkInterceptor(router, () => pathnameRef.current);
   }, [router]);
 
