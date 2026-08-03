@@ -13,7 +13,8 @@ export const LP_RED = '#ef4444';
 export const LP_ROSE = '#f43f5e';
 export const ACCENT = LP_ROSE;
 export const ACCENT_SOFT = '#fb7185';
-export const PANEL = '#101010';
+/** Sheet/container principal — mais escuro que os tiles pra hierarquia. */
+export const PANEL = '#0a0a0a';
 export const TILE = '#141414';
 
 /** Mesmas cores da LP, lavadas verticalmente até o preto. */
