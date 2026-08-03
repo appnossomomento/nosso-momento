@@ -1,12 +1,14 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '@/lib/store/appStore';
 import VipStarBadge from '@/components/profile/VipStarBadge';
+import FundadorBadge from '@/components/profile/FundadorBadge';
 import StreakFlame from '@/components/parceiro/StreakFlame';
+import { membershipLabel } from '@/lib/utils/usuarioMembership';
 import AppHeroShell, {
   ACCENT,
   ACCENT_SOFT,
@@ -26,6 +28,7 @@ type DashTile = {
 };
 
 export default function DashboardPage() {
+  const [previewFundador, setPreviewFundador] = useState(false);
   const {
     usuario,
     notificacoesTarefasNaoLidas,
@@ -54,6 +57,12 @@ export default function DashboardPage() {
     })),
   );
 
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+    const q = new URLSearchParams(window.location.search);
+    setPreviewFundador(q.get('previewFundador') === '1');
+  }, []);
+
   const pendingCount =
     (notificacoesTarefasNaoLidas ?? 0) +
     (notificacoesPresentesNaoLidas ?? 0) +
@@ -62,6 +71,15 @@ export default function DashboardPage() {
   const userName = primeiroNome(usuario?.nome) || 'Amor';
   const fotoPerfil = usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
   const isVip = usuario?.vip === true;
+  const isFundador = usuario?.fundador === true || previewFundador;
+  const membroLabel = membershipLabel({
+    numeroUsuario: usuario?.numeroUsuario,
+    fundadorNumero: usuario?.fundadorNumero,
+    fundador: isFundador,
+    anatomia: usuario?.anatomia,
+    sexo: usuario?.sexo,
+    genero: usuario?.genero,
+  });
   const pareamentosCount = parceirosAtivos?.length ?? 0;
   const jaFezClima = Boolean(climaHoje);
   const partnerTriste = climaPartnerHoje?.humor === 'triste';
@@ -156,6 +174,13 @@ export default function DashboardPage() {
       showBack={false}
       hero={
         <>
+          {isFundador && (
+            <FundadorBadge
+              anatomia={usuario?.anatomia}
+              sexo={usuario?.sexo}
+              genero={usuario?.genero}
+            />
+          )}
           <div className="relative mb-5">
             <div
               className="rounded-full overflow-hidden"
@@ -190,6 +215,11 @@ export default function DashboardPage() {
           <h2 className="relative text-[25px] font-bold leading-tight tracking-tight">
             Olá, {userName}
           </h2>
+          {membroLabel && (
+            <p className="mt-1 text-[13px] font-semibold tracking-wide text-white/90">
+              {membroLabel}
+            </p>
+          )}
           <p className="mt-0.5 text-[15px] text-white/75 leading-snug">
             Menos automático. Mais conexão.
           </p>
