@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, type CSSProperties, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { softBack } from '@/components/layout/softRouteNav';
@@ -57,6 +57,16 @@ export default function AppHeroShell({
 }: Props) {
   const router = useRouter();
 
+  // Status bar / PWA chrome na cor do topo (como /parceiro), em vez do preto global.
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const prev = meta?.getAttribute('content') ?? '#0a0a0a';
+    meta?.setAttribute('content', LP_RED);
+    return () => {
+      meta?.setAttribute('content', prev);
+    };
+  }, []);
+
   function handleBack() {
     softBack(router, '/dashboard');
   }
@@ -64,13 +74,24 @@ export default function AppHeroShell({
   return (
     <div
       className="relative screen screen-pad text-white"
-      style={{ backgroundColor: '#030206' }}
+      style={{
+        ...PAGE_BG,
+        // Pinta o notch / status bar — mesmo padrão do header /parceiro
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+      }}
     >
-      {/* Gradiente preso à viewport — não estica quando a lista muda de altura */}
+      {/*
+        Gradiente ancorado na viewport da tela (não estica com lista longa).
+        absolute (não fixed): SoftRoute usa transform e quebraria fixed → faixa preta no topo.
+      */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0"
-        style={{ ...PAGE_BG, zIndex: 0 }}
+        className="pointer-events-none absolute left-0 right-0 top-0"
+        style={{
+          ...PAGE_BG,
+          height: 'calc(100dvh + env(safe-area-inset-top, 0px))',
+          zIndex: 0,
+        }}
       />
 
       <div className="relative" style={{ zIndex: 1 }}>
@@ -82,9 +103,8 @@ export default function AppHeroShell({
             <button
               type="button"
               onClick={handleBack}
-              className="absolute left-3.5 z-10 flex h-9 w-9 items-center justify-center rounded-full transition active:scale-95"
+              className="absolute left-3.5 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full transition active:scale-95"
               style={{
-                top: 'max(12px, env(safe-area-inset-top))',
                 background: 'rgba(0,0,0,0.28)',
                 border: '1px solid rgba(255,255,255,0.12)',
               }}
