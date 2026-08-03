@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAppStore } from '@/lib/store/appStore';
 import FoguinhosIcon from '@/components/ui/FoguinhosIcon';
+import { softPush } from '@/components/layout/softRouteNav';
 
 interface ParceiroHeaderProps {
   /** Exibe ícone de carrinho (para a página /loja) */
@@ -42,7 +43,7 @@ export default function ParceiroHeader({ showCart = false, variant = 'black' }: 
     >
       {/* Voltar */}
       <button
-        onClick={() => router.push('/parceiro')}
+        onClick={() => softPush(router, '/parceiro')}
         className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
         style={{ background: btnBg }}
       >

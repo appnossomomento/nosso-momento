@@ -1,15 +1,33 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { useEffect, useState, type ReactNode } from 'react';
-import { SOFT_ENTER_KEY, SOFT_EXIT_EVENT } from '@/components/layout/softRouteNav';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import {
+  installSoftLinkInterceptor,
+  SOFT_ENTER_KEY,
+  SOFT_EXIT_EVENT,
+} from '@/components/layout/softRouteNav';
 
 /**
- * Exemplo: fade-out ao sair + fade-in ao chegar em /parceiro.
+ * Soft nav global do app autenticado:
+ * - intercepta todos os Link/<a> internos
+ * - fade CSS de fallback quando não há View Transitions
+ *
+ * Telas novas dentro de (app) herdam isso automaticamente.
  */
-export default function SoftParceiroEnter({ children }: { children: ReactNode }) {
+export default function SoftRouteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const pathnameRef = useRef(pathname);
   const [phase, setPhase] = useState<'idle' | 'exit' | 'enter'>('idle');
+
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
+
+  useEffect(() => {
+    return installSoftLinkInterceptor(router, () => pathnameRef.current);
+  }, [router]);
 
   useEffect(() => {
     function onExit() {
@@ -20,10 +38,6 @@ export default function SoftParceiroEnter({ children }: { children: ReactNode })
   }, []);
 
   useEffect(() => {
-    if (pathname !== '/parceiro') {
-      setPhase('idle');
-      return;
-    }
     let flagged = false;
     try {
       flagged = sessionStorage.getItem(SOFT_ENTER_KEY) === '1';
@@ -42,9 +56,9 @@ export default function SoftParceiroEnter({ children }: { children: ReactNode })
 
   const className =
     phase === 'exit'
-      ? 'soft-parceiro-exit'
+      ? 'soft-route-exit'
       : phase === 'enter'
-        ? 'soft-parceiro-enter'
+        ? 'soft-route-enter'
         : undefined;
 
   return (

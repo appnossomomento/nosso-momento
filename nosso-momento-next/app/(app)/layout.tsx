@@ -7,8 +7,8 @@ import Link from 'next/link';
 import { useAppStore } from '@/lib/store/appStore';
 import clsx from 'clsx';
 import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
-import SoftParceiroEnter from '@/components/layout/SoftParceiroEnter';
-import { softPushToParceiro } from '@/components/layout/softRouteNav';
+import SoftRouteShell from '@/components/layout/SoftRouteShell';
+import { softPush } from '@/components/layout/softRouteNav';
 
 const CENTER_LOGO = '/assets/icons/logo-icon-white-bottom.png';
 
@@ -52,7 +52,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="bg-black min-h-screen">
-      <SoftParceiroEnter>{children}</SoftParceiroEnter>
+      <SoftRouteShell>{children}</SoftRouteShell>
 
       {/* Bottom Navigation */}
       <nav className="bottom-nav-bar" style={{ viewTransitionName: 'bottom-nav' }}>
@@ -67,7 +67,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 aria-label="Parceiro"
                 onClick={() => {
                   if (pathname === '/parceiro') return;
-                  softPushToParceiro(router);
+                  softPush(router, '/parceiro');
                 }}
               >
                 <div

@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store/appStore';
 import VipStarBadge from '@/components/profile/VipStarBadge';
 import StreakFlame from '@/components/parceiro/StreakFlame';
@@ -12,7 +11,6 @@ import AppHeroShell, {
   ACCENT_SOFT,
   TILE,
 } from '@/components/layout/AppHeroShell';
-import { softPushToParceiro } from '@/components/layout/softRouteNav';
 import { computeCoupleStreak } from '@/lib/clima/coupleStreak';
 import { saoPauloDateString } from '@/lib/utils/saoPauloDate';
 import { primeiroNome } from '@/lib/utils/displayName';
@@ -27,7 +25,6 @@ type DashTile = {
 };
 
 export default function DashboardPage() {
-  const router = useRouter();
   const {
     usuario,
     notificacoesTarefasNaoLidas,
@@ -271,10 +268,9 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={() => softPushToParceiro(router)}
-        className="w-full text-left flex items-center gap-3 rounded-[20px] px-3.5 py-3.5 transition active:scale-[0.98]"
+      <Link
+        href="/parceiro"
+        className="flex items-center gap-3 rounded-[20px] px-3.5 py-3.5 transition active:scale-[0.98]"
         style={{
           background: 'rgba(244, 63, 94, 0.08)',
           border: '1px solid rgba(244, 63, 94, 0.22)',
@@ -305,7 +301,7 @@ export default function DashboardPage() {
           className="fas fa-chevron-right shrink-0"
           style={{ color: ACCENT_SOFT, fontSize: 13 }}
         />
-      </button>
+      </Link>
     </AppHeroShell>
   );
 }

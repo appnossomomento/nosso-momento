@@ -15,6 +15,7 @@ import { useWeeklyChallenge } from '@/lib/hooks/useWeeklyChallenge';
 import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
 import CoupleStreakCard from '@/components/parceiro/CoupleStreakCard';
 import FoguinhosIcon from '@/components/ui/FoguinhosIcon';
+import { softPush } from '@/components/layout/softRouteNav';
 import { computeCoupleStreak } from '@/lib/clima/coupleStreak';
 import { saoPauloDateString } from '@/lib/utils/saoPauloDate';
 import { nomeParaCard } from '@/lib/utils/displayName';
@@ -258,7 +259,7 @@ export default function ParceiroPage() {
         style={{ background: 'linear-gradient(180deg,#ff2d3f 0%,#ff5565 100%)', boxShadow: '0 4px 20px rgba(255,45,63,0.35)', paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}
       >
         <button
-          onClick={() => router.push('/dashboard')}
+          onClick={() => softPush(router, '/dashboard')}
           className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
           style={{ background: 'rgba(0,0,0,0.20)' }}
         >
@@ -266,7 +267,7 @@ export default function ParceiroPage() {
         </button>
         <button
           type="button"
-          onClick={() => router.push('/parear')}
+          onClick={() => softPush(router, '/parear')}
           className="flex items-center gap-2 flex-1 min-w-0 text-left"
           aria-label="Escolher conexão"
         >
