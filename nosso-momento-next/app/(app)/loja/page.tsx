@@ -305,10 +305,7 @@ export default function LojaPage() {
         sheetClassName="space-y-4"
         hero={
           <>
-            <div
-              className="absolute right-3.5 z-10 flex items-center gap-2"
-              style={{ top: 'max(12px, env(safe-area-inset-top))' }}
-            >
+            <div className="absolute right-3.5 top-3 z-10 flex items-center gap-2">
               <div
                 className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
                 style={{

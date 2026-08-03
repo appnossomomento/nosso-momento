@@ -3,7 +3,8 @@
 :root {
   --background: #0a0a0a;
   --foreground: #ededed;
-  --footer-h: 48px;
+  /* Altura útil dos itens (ícone + label). Safe-area entra aparte. */
+  --footer-h: 52px;
 }
 
 @theme inline {
@@ -91,13 +92,20 @@
   bottom: 0;
   left: 0;
   width: 100%;
-  height: var(--footer-h);
+  /*
+    Antes: height: 48px + padding-bottom safe-area com border-box
+    esmagava a área dos ícones no PWA (barra só até a metade).
+    Agora: altura total = conteúdo + safe-area; padding reserva o home indicator.
+  */
+  height: calc(var(--footer-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 100;
   box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.4);
-  padding-bottom: env(safe-area-inset-bottom);
+  overflow: visible;
 }
 
 .bottom-nav-item {
@@ -109,36 +117,62 @@
   transition: color 0.3s ease;
   cursor: pointer;
   flex-grow: 1;
-  height: 100%;
+  /* Altura só da faixa de conteúdo — não inclui safe-area */
+  height: var(--footer-h);
+  max-height: var(--footer-h);
+  padding: 0;
+  gap: 1px;
+  font-size: 13px; /* ícones FA um pouco menores que text-lg */
+  line-height: 1;
+}
+
+.bottom-nav-item > span:last-child {
+  font-size: 9px;
+  margin-top: 0;
+  line-height: 1.1;
 }
 
 .bottom-nav-item.active {
   color: #f43f5e;
 }
 
+.bottom-nav-center-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  height: var(--footer-h);
+  max-height: var(--footer-h);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
 .bottom-nav-item-center {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 58px;
-  height: 58px;
+  width: 48px;
+  height: 48px;
   /* Mesmo gradiente LP: red-500 → rose-500 */
   background: linear-gradient(135deg, #ef4444 0%, #f43f5e 100%);
   color: #fff;
   border-radius: 50%;
   border: none;
-  transform: translateY(-16px) scale(1);
+  transform: translateY(-12px) scale(1);
   box-shadow:
-    0 0 0 4px rgba(239, 68, 68, 0.18),
-    0 -6px 22px rgba(239, 68, 68, 0.65),
-    0 0 48px rgba(244, 63, 94, 0.4),
-    0 12px 32px rgba(239, 68, 68, 0.28);
+    0 0 0 3px rgba(239, 68, 68, 0.18),
+    0 -4px 18px rgba(239, 68, 68, 0.6),
+    0 0 36px rgba(244, 63, 94, 0.35),
+    0 10px 24px rgba(239, 68, 68, 0.25);
   transition: transform 0.14s ease, box-shadow 0.14s ease;
   will-change: transform;
 }
 
-.bottom-nav-bar a:active .bottom-nav-item-center {
-  transform: translateY(-16px) scale(0.9);
+.bottom-nav-bar a:active .bottom-nav-item-center,
+.bottom-nav-bar button:active .bottom-nav-item-center {
+  transform: translateY(-12px) scale(0.9);
   box-shadow:
     0 0 0 3px rgba(239, 68, 68, 0.14),
     0 -3px 14px rgba(239, 68, 68, 0.48),

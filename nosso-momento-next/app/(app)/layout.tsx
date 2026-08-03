@@ -51,7 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="bg-black min-h-screen">
+    <div className="min-h-screen" style={{ backgroundColor: '#030206' }}>
       <SoftRouteShell>{children}</SoftRouteShell>
 
       {/* Bottom Navigation */}
@@ -63,7 +63,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <button
                 key="center"
                 type="button"
-                className="flex items-center justify-center flex-grow bg-transparent border-0 p-0 cursor-pointer"
+                className="bottom-nav-center-slot"
                 aria-label="Parceiro"
                 onClick={() => {
                   if (pathname === '/parceiro') return;
@@ -77,10 +77,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <Image
                     src={CENTER_LOGO}
                     alt=""
-                    width={36}
-                    height={36}
+                    width={28}
+                    height={28}
                     className="object-contain"
-                    style={{ width: 36, height: 36 }}
+                    style={{ width: 28, height: 28 }}
                     priority
                   />
                   {desafiosPendentes > 0 && (
@@ -102,16 +102,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               className={clsx('bottom-nav-item', isActive && 'active')}
             >
               <span className="relative inline-flex">
-                <i className={`fas ${item.icon} text-lg`} />
+                <i className={`fas ${item.icon}`} aria-hidden />
                 {showNotifDot && (
                   <span
-                    className="absolute -top-0.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-[#FF2D3F]"
+                    className="absolute -top-0.5 -right-1.5 w-2 h-2 rounded-full bg-[#FF2D3F]"
                     style={{ boxShadow: '0 0 0 2px #000' }}
                     aria-label={`${notifPendentes} notificações não lidas`}
                   />
                 )}
               </span>
-              <span className="text-[10px] mt-0.5">{item.label}</span>
+              <span>{item.label}</span>
             </Link>
           );
         })}

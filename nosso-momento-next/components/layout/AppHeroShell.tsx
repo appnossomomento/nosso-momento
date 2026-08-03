@@ -75,23 +75,19 @@ export default function AppHeroShell({
     <div
       className="relative screen screen-pad text-white"
       style={{
-        ...PAGE_BG,
-        // Pinta o notch / status bar — mesmo padrão do header /parceiro
+        // Só cor sólida aqui — o gradient fica numa única camada (evita “duplo” no PWA).
+        backgroundColor: '#030206',
         paddingTop: 'env(safe-area-inset-top, 0px)',
       }}
     >
       {/*
-        Gradiente ancorado na viewport da tela (não estica com lista longa).
-        absolute (não fixed): SoftRoute usa transform e quebraria fixed → faixa preta no topo.
+        Uma camada de gradient cobrindo o shell (inclui a safe-area do padding).
+        absolute inset-0: não usa fixed (SoftRoute com transform quebraria).
       */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-0 right-0 top-0"
-        style={{
-          ...PAGE_BG,
-          height: 'calc(100dvh + env(safe-area-inset-top, 0px))',
-          zIndex: 0,
-        }}
+        className="pointer-events-none absolute inset-0"
+        style={{ ...PAGE_BG, zIndex: 0 }}
       />
 
       <div className="relative" style={{ zIndex: 1 }}>
