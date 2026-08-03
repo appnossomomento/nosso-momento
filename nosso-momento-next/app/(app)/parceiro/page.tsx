@@ -253,10 +253,17 @@ export default function ParceiroPage() {
   }
 
   return (
-    <div className="screen bg-black text-white pb-28">
+    <div
+      className="screen bg-black text-white pb-28"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+    >
+      {/* Header no fluxo do body (não sticky) — safe-area preta fica acima, no padding da página */}
       <div
-        className="flex-shrink-0 px-4 pb-3 flex items-center gap-3 w-full sticky top-0 z-30"
-        style={{ background: 'linear-gradient(180deg,#ff2d3f 0%,#ff5565 100%)', boxShadow: '0 4px 20px rgba(255,45,63,0.35)', paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)' }}
+        className="flex-shrink-0 px-4 pt-3 pb-3 flex items-center gap-3 w-full"
+        style={{
+          background: 'linear-gradient(180deg,#ff2d3f 0%,#ff5565 100%)',
+          boxShadow: '0 4px 20px rgba(255,45,63,0.35)',
+        }}
       >
         <button
           onClick={() => softPush(router, '/dashboard')}

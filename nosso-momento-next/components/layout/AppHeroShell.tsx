@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, type CSSProperties, type ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { softBack } from '@/components/layout/softRouteNav';
@@ -57,16 +57,6 @@ export default function AppHeroShell({
 }: Props) {
   const router = useRouter();
 
-  // Status bar / PWA chrome na cor do topo (como /parceiro), em vez do preto global.
-  useEffect(() => {
-    const meta = document.querySelector('meta[name="theme-color"]');
-    const prev = meta?.getAttribute('content') ?? '#0a0a0a';
-    meta?.setAttribute('content', LP_RED);
-    return () => {
-      meta?.setAttribute('content', prev);
-    };
-  }, []);
-
   function handleBack() {
     softBack(router, '/dashboard');
   }
@@ -75,19 +65,23 @@ export default function AppHeroShell({
     <div
       className="relative screen screen-pad text-white"
       style={{
-        // Só cor sólida aqui — o gradient fica numa única camada (evita “duplo” no PWA).
-        backgroundColor: '#030206',
+        // Safe-area / status bar do PWA fica preta (theme-color) — sem brigar com vermelho.
+        backgroundColor: '#0a0a0a',
         paddingTop: 'env(safe-area-inset-top, 0px)',
       }}
     >
       {/*
-        Uma camada de gradient cobrindo o shell (inclui a safe-area do padding).
-        absolute inset-0: não usa fixed (SoftRoute com transform quebraria).
+        Gradient começa ABAIXO da safe-area, alinhado ao header preto do /parceiro.
+        Assim o fade entre telas não quebra por faixa vermelha vs preta no topo.
       */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{ ...PAGE_BG, zIndex: 0 }}
+        className="pointer-events-none absolute left-0 right-0 bottom-0"
+        style={{
+          ...PAGE_BG,
+          top: 'env(safe-area-inset-top, 0px)',
+          zIndex: 0,
+        }}
       />
 
       <div className="relative" style={{ zIndex: 1 }}>

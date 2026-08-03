@@ -77,10 +77,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <Image
                     src={CENTER_LOGO}
                     alt=""
-                    width={28}
-                    height={28}
+                    width={32}
+                    height={32}
                     className="object-contain"
-                    style={{ width: 28, height: 28 }}
+                    style={{ width: 32, height: 32 }}
                     priority
                   />
                   {desafiosPendentes > 0 && (
