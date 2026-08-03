@@ -23,7 +23,8 @@ type Props = {
 
 /** Viewport do bloco do meio; o Lottie é ampliado por dentro pra cortar a margem do canvas. */
 const SIZE = {
-  md: { viewW: 104, viewH: 112, inner: 168 },
+  /* viewH um pouco menor no md: corta folga vazia embaixo do canvas (texto "N dias" fica menos isolado). */
+  md: { viewW: 104, viewH: 100, inner: 168 },
   sm: { viewW: 44, viewH: 48, inner: 72 },
 } as const;
 
