@@ -9,76 +9,10 @@ import { sendInput } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
 import OverlayModal from '@/components/ui/OverlayModal';
 import { formatSeconds } from '@/lib/utils/formatDate';
-
-const ROULETTE_OPTIONS = [
-  { valor: 1, prob: 0.147, label: '+1 🔥' },
-  { valor: 2, prob: 0.147, label: '+2 🔥🔥' },
-  { valor: -1, prob: 0.147, label: '-1 💔' },
-  { valor: -2, prob: 0.147, label: '-2 💔💔' },
-  { valor: 4, prob: 0.147, label: '+4 🚀' },
-  { valor: -3, prob: 0.147, label: '-3 😬' },
-  { valor: 10, prob: 0.118, label: '+10 ⚡️' },
-];
-
-// Segmentos do gráfico de pizza (computados uma vez)
-const _WHEEL_CX = 100, _WHEEL_CY = 100, _WHEEL_R = 82;
-// dourado para positivos, vermelho escuro para negativos
-const _getSegColor = (valor: number) => valor >= 0 ? '#b8860b' : '#7f1d1d';
-// variação de tom para distinguir segmentos do mesmo sinal
-const _POS_TONES = ['#b8860b', '#a07800', '#d4a017', '#8b6914', '#c9960c'];
-const _NEG_TONES = ['#7f1d1d', '#6b1a1a', '#991b1b', '#5c1515', '#8b2020'];
-const _totalProb = ROULETTE_OPTIONS.reduce((s, o) => s + o.prob, 0);
-let _cumAngle = -90;
-const ROULETTE_SEGMENTS = ROULETTE_OPTIONS.map((opt, i) => {
-  const deg = (opt.prob / _totalProb) * 360;
-  const sa = _cumAngle;
-  _cumAngle += deg;
-  const ea = _cumAngle;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const x1 = _WHEEL_CX + _WHEEL_R * Math.cos(toRad(sa));
-  const y1 = _WHEEL_CY + _WHEEL_R * Math.sin(toRad(sa));
-  const x2 = _WHEEL_CX + _WHEEL_R * Math.cos(toRad(ea));
-  const y2 = _WHEEL_CY + _WHEEL_R * Math.sin(toRad(ea));
-  const midRad = toRad((sa + ea) / 2);
-  const lr = _WHEEL_R * 0.62;
-  const parts = opt.label.split(' ');
-  const tones = opt.valor >= 0 ? _POS_TONES : _NEG_TONES;
-  const toneIdx = (opt.valor >= 0 ? _POS_TONES : _NEG_TONES).indexOf(tones[0]); // always 0, just pick by count
-  const posCount = ROULETTE_OPTIONS.slice(0, i).filter(o => o.valor >= 0).length;
-  const negCount = ROULETTE_OPTIONS.slice(0, i).filter(o => o.valor < 0).length;
-  const color = opt.valor === 10 ? '#ffffff' : opt.valor >= 0 ? _POS_TONES[posCount % _POS_TONES.length] : _NEG_TONES[negCount % _NEG_TONES.length];
-  const textColor = opt.valor === 10 ? '#1a1a1a' : 'white';
-  const textStroke = opt.valor === 10 ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.65)';
-  return {
-    path: `M${_WHEEL_CX},${_WHEEL_CY} L${x1.toFixed(2)},${y1.toFixed(2)} A${_WHEEL_R},${_WHEEL_R} 0 ${deg > 180 ? 1 : 0} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`,
-    lx: _WHEEL_CX + lr * Math.cos(midRad),
-    ly: _WHEEL_CY + lr * Math.sin(midRad),
-    num: parts[0],
-    icon: parts[1] ?? '',
-    color,
-    textColor,
-    textStroke,
-    valor: opt.valor,
-    startAngle: sa,
-    endAngle: ea,
-  };
-});
-
-function getSegmentAtPointer(totalRotation: number) {
-  const r = ((totalRotation % 360) + 360) % 360;
-  // o ponteiro fica no topo (-90° SVG). Após girar r graus CW, o ângulo original no ponteiro = -90 - r
-  const origAngle = (((-90 - r) % 360) + 360) % 360;
-  for (const seg of ROULETTE_SEGMENTS) {
-    const s = ((seg.startAngle % 360) + 360) % 360;
-    const e = ((seg.endAngle % 360) + 360) % 360;
-    if (s < e) {
-      if (origAngle >= s && origAngle < e) return seg;
-    } else {
-      if (origAngle >= s || origAngle < e) return seg;
-    }
-  }
-  return ROULETTE_SEGMENTS[0];
-}
+import PremiumRouletteWheel from '@/components/desafios/PremiumRouletteWheel';
+import { rotationToLandOnValor } from '@/lib/desafios/rouletteSegments';
+import { primeiroNome } from '@/lib/utils/displayName';
+import { artigoParceiro } from '@/lib/utils/usuarioMembership';
 
 function advanceQueue(set: (p: object) => void, onQueueFinished?: () => void) {
   const store = useAppStore.getState();
@@ -109,7 +43,23 @@ async function submitChallengeInput(
 
 export default function ChallengePopup() {
   const router = useRouter();
-  const { showChallengePopup, pendingChallenge, idPareamentoAmigavel, set } = useAppStore();
+  const {
+    showChallengePopup,
+    pendingChallenge,
+    idPareamentoAmigavel,
+    set,
+    parceiroNome,
+    parceiroData,
+  } = useAppStore();
+  const partnerFirst =
+    primeiroNome(parceiroNome) ||
+    primeiroNome(parceiroData?.nome) ||
+    'seu amor';
+  const partnerArtigo = artigoParceiro({
+    anatomia: parceiroData?.anatomia,
+    sexo: parceiroData?.sexo,
+    genero: typeof parceiroData?.genero === 'string' ? parceiroData.genero : null,
+  });
   const [resposta, setResposta] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [selectedOption, setSelectedOption] = useState<'A' | 'B' | null>(null);
@@ -119,7 +69,24 @@ export default function ChallengePopup() {
   const [localSeconds, setLocalSeconds] = useState(CHALLENGE_SECONDS);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSubmittedRef = useRef(false);
+
+  function clearCloseTimer() {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }
+
+  function closeAfterDelay(ms = 5000) {
+    clearCloseTimer();
+    closeTimerRef.current = setTimeout(() => {
+      closeTimerRef.current = null;
+      set({ desafiosPendentes: Math.max(0, (useAppStore.getState().desafiosPendentes || 1) - 1) });
+      advanceQueue(set, () => router.push('/desafios'));
+    }, ms);
+  }
 
   useEffect(() => {
     if (showChallengePopup && pendingChallenge) {
@@ -130,6 +97,7 @@ export default function ChallengePopup() {
       setWheelRotation(0);
       setLocalSeconds(CHALLENGE_SECONDS);
       autoSubmittedRef.current = false;
+      clearCloseTimer();
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setLocalSeconds((s) => {
@@ -139,7 +107,10 @@ export default function ChallengePopup() {
       }, 1000);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      clearCloseTimer();
+    };
   }, [showChallengePopup, pendingChallenge?.id]);
 
   // Auto-submit quando o tempo esgotar
@@ -194,12 +165,10 @@ export default function ChallengePopup() {
         challengeDocId: pendingChallenge!.id,
         ...(pareamentoIdAtual ? { pareamentoId: pareamentoIdAtual } : {}),
       });
-      set({ desafiosPendentes: Math.max(0, (useAppStore.getState().desafiosPendentes || 1) - 1) });
-      advanceQueue(set, () => router.push('/desafios'));
       showToast('Resposta enviada! 🏆', 'sucesso');
+      closeAfterDelay(5000);
     } catch {
       showToast('Erro ao enviar resposta.', 'erro');
-    } finally {
       setEnviando(false);
     }
   }
@@ -214,12 +183,10 @@ export default function ChallengePopup() {
         challengeId: pendingChallenge!.id,
         challengeDocId: pendingChallenge!.id,
       });
-      set({ desafiosPendentes: Math.max(0, (useAppStore.getState().desafiosPendentes || 1) - 1) });
-      advanceQueue(set, () => router.push('/desafios'));
       showToast('Escolha enviada! 🎯', 'sucesso');
+      closeAfterDelay(5000);
     } catch {
       showToast('Erro ao enviar escolha.', 'erro');
-    } finally {
       setEnviando(false);
     }
   }
@@ -236,9 +203,6 @@ export default function ChallengePopup() {
       set({ dismissedChallengeIds: [...prev, challengeId] });
     }
 
-    const extra = Math.floor(Math.random() * 360);
-    const newRotation = wheelRotation + 5 * 360 + extra;
-    setWheelRotation(newRotation);
     setSpinning(true);
     try {
       await submitChallengeInput('roulette_spin', {
@@ -251,45 +215,43 @@ export default function ChallengePopup() {
       setSpinning(false);
       return;
     }
-    // Após animação: ler resultado real do Firestore (backend escolhe o valor)
+
+    // Backend define o valor — só então giramos para o segmento certo
     const uid = useAppStore.getState().usuario?.uid;
     let resultadoEncontrado = false;
-    // Timeout de segurança: fecha popup após 14s mesmo sem resultado
     const autoCloseTimeout = setTimeout(() => {
       if (!resultadoEncontrado) {
-        const seg = getSegmentAtPointer(newRotation);
-        setSpunResult(seg.valor);
         setSpinning(false);
+        showToast('Não foi possível ler o resultado. Tente de novo.', 'erro');
       }
-      // Aguarda mais 3s para o usuário ver o resultado antes de fechar
-      setTimeout(() => {
-        set({ desafiosPendentes: Math.max(0, (useAppStore.getState().desafiosPendentes || 1) - 1) });
-        advanceQueue(set, () => router.push('/desafios'));
-      }, 3000);
     }, 14000);
+
+    const finishWithValor = (val: number) => {
+      resultadoEncontrado = true;
+      clearTimeout(autoCloseTimeout);
+      const nextRot = rotationToLandOnValor(wheelRotation, val, 5);
+      setWheelRotation(nextRot);
+      // Espera a animação CSS (~3.5s) e só então mostra o placar
+      window.setTimeout(() => {
+        setSpunResult(val);
+        setSpinning(false);
+        closeAfterDelay(5000);
+      }, 3600);
+    };
+
     const readResult = async (attempt = 0): Promise<void> => {
       try {
         const snap = await getDoc(doc(db, 'weeklyChallenges', challengeId));
         const respostas = (snap.data()?.['respostas'] as Record<string, number>) ?? {};
         const val = uid ? respostas[uid] : undefined;
         if (val !== undefined) {
-          resultadoEncontrado = true;
-          setSpunResult(val);
-          setSpinning(false);
-          // Cancela o auto-close de 14s e fecha após 5s de exibição do resultado
-          clearTimeout(autoCloseTimeout);
-          setTimeout(() => {
-            set({ desafiosPendentes: Math.max(0, (useAppStore.getState().desafiosPendentes || 1) - 1) });
-            advanceQueue(set, () => router.push('/desafios'));
-          }, 5000);
+          finishWithValor(val);
           return;
         }
       } catch { /* silencioso */ }
-      if (attempt < 16) setTimeout(() => readResult(attempt + 1), 600);
-      // Se esgotar 16 tentativas (~11s), o autoCloseTimeout (14s) cobrirá o fallback
+      if (attempt < 20) setTimeout(() => readResult(attempt + 1), 400);
     };
-    // Inicia polling em 1500ms — animação CSS é independente, não bloqueia
-    setTimeout(() => readResult(), 1500);
+    setTimeout(() => readResult(), 400);
   }
 
   return (
@@ -305,43 +267,52 @@ export default function ChallengePopup() {
     >
       <div
         className="overflow-hidden shadow-2xl"
-        style={{ background: '#080808' }}
+        style={{
+          background:
+            tipo === 'roleta'
+              ? 'radial-gradient(100% 80% at 50% 0%, #1a0a10 0%, #0a0508 55%, #050305 100%)'
+              : '#080808',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header gradient */}
-        <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg,#ff2d3f 0%,#ff5565 100%)' }}>
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
-              style={{ background: 'rgba(0,0,0,0.22)' }}
-            >
-              <i className={`fas ${tipo === 'roleta' ? 'fa-dice' : tipo === 'escolha' ? 'fa-hand-point-up' : 'fa-trophy'} text-white text-base`} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white/70 text-xs uppercase tracking-widest">Desafio da Semana</p>
-              <h3 className="text-white font-bold text-base leading-tight">{pendingChallenge.titulo}</h3>
+        {/* Header gradient — omitido na roleta (chrome próprio) */}
+        {tipo !== 'roleta' && (
+          <div className="px-6 py-5" style={{ background: 'linear-gradient(135deg,#ff2d3f 0%,#ff5565 100%)' }}>
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(0,0,0,0.22)' }}
+              >
+                <i className={`fas ${tipo === 'escolha' ? 'fa-hand-point-up' : 'fa-trophy'} text-white text-base`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white/70 text-xs uppercase tracking-widest">Desafio da Semana</p>
+                <h3 className="text-white font-bold text-base leading-tight">{pendingChallenge.titulo}</h3>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Content */}
         <div className="p-5 space-y-4">
-          {/* Countdown */}
-          {!(tipo === 'roleta' && spunResult !== null) && <div className="space-y-1.5">
-            <p className="text-center text-xs" style={{ color: 'rgba(255,255,255,0.50)' }}>
-              Você tem <span className="font-bold text-white">60 segundos</span> para responder
-            </p>
-            <div
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold"
-              style={{
-                background: esgotado ? 'rgba(239,68,68,0.15)' : localSeconds <= 10 ? 'rgba(239,68,68,0.10)' : 'rgba(255,255,255,0.06)',
-                color: esgotado ? '#f87171' : localSeconds <= 10 ? '#fca5a5' : 'rgba(255,255,255,0.70)',
-              }}
-            >
-              <i className="fas fa-clock" />
-              {esgotado ? 'Tempo esgotado!' : formatSeconds(localSeconds)}
+          {/* Countdown — não aplica à roleta */}
+          {tipo !== 'roleta' && (
+            <div className="space-y-1.5">
+              <p className="text-center text-xs" style={{ color: 'rgba(255,255,255,0.50)' }}>
+                Você tem <span className="font-bold text-white">60 segundos</span> para responder
+              </p>
+              <div
+                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold"
+                style={{
+                  background: esgotado ? 'rgba(239,68,68,0.15)' : localSeconds <= 10 ? 'rgba(239,68,68,0.10)' : 'rgba(255,255,255,0.06)',
+                  color: esgotado ? '#f87171' : localSeconds <= 10 ? '#fca5a5' : 'rgba(255,255,255,0.70)',
+                }}
+              >
+                <i className="fas fa-clock" />
+                {esgotado ? 'Tempo esgotado!' : formatSeconds(localSeconds)}
+              </div>
             </div>
-          </div>}
+          )}
 
           {/* ── PERGUNTA branch ── */}
           {tipo === 'pergunta' && (
@@ -415,105 +386,68 @@ export default function ChallengePopup() {
           {/* ── ROLETA branch ── */}
           {tipo === 'roleta' && (
             <>
-              <p className="text-white font-semibold text-base text-center">Ganhe em casal 🔥</p>
-
-              {/* Roda da roleta */}
-              <div className="flex flex-col items-center" style={{ gap: 0 }}>
-                {/* Ponteiro */}
-                <div style={{
-                  width: 0,
-                  height: 0,
-                  borderLeft: '10px solid transparent',
-                  borderRight: '10px solid transparent',
-                  borderTop: '18px solid #ffffff',
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.7))',
-                  marginBottom: '-2px',
-                  zIndex: 1,
-                }} />
-                {/* SVG gráfico de pizza */}
-                <svg
-                  viewBox="0 0 200 200"
-                  width={210}
-                  height={210}
+              <div className="flex justify-center -mt-1">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-[5px] text-[10px] font-medium tracking-wide text-white/90"
                   style={{
-                    transform: `rotate(${wheelRotation}deg)`,
-                    transition: spinning
-                      ? 'transform 3.5s cubic-bezier(0.17,0.67,0.12,0.99)'
-                      : 'none',
-                    borderRadius: '50%',
-                    boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
-                    display: 'block',
+                    background: 'rgba(190,18,60,0.22)',
+                    border: '1px solid rgba(255,80,100,0.22)',
                   }}
                 >
-                  {ROULETTE_SEGMENTS.map((seg, i) => (
-                    <g key={i}>
-                      <path d={seg.path} fill={seg.color} stroke="rgba(0,0,0,0.3)" strokeWidth="1.5" />
-                      <text
-                        x={seg.lx}
-                        y={seg.ly}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        fontSize="10"
-                        fontWeight="bold"
-                        fill={seg.textColor}
-                        stroke={seg.textStroke}
-                        strokeWidth="2.5"
-                        paintOrder="stroke"
-                      >
-                        {seg.num}
-                      </text>
-                    </g>
-                  ))}
-                  {/* Centro */}
-                  <circle cx={_WHEEL_CX} cy={_WHEEL_CY} r="14" fill="#111" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
-                  <circle cx={_WHEEL_CX} cy={_WHEEL_CY} r="5" fill="rgba(255,255,255,0.35)" />
-                </svg>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/assets/icons/logo-app-white.png"
+                    alt=""
+                    width={18}
+                    height={18}
+                    className="object-contain shrink-0"
+                    aria-hidden
+                  />
+                  Desafio Semanal
+                </span>
+              </div>
+              <h3 className="text-center text-[22px] font-semibold leading-[1.2] tracking-tight text-white px-1">
+                A conexão está em dia?
+                <br />
+                <span style={{ color: '#f43f5e' }}>Gire a roleta!</span>
+              </h3>
+              <p className="text-center text-[13px] text-white/55 -mt-0.5 px-1">
+                Gire junto com {partnerArtigo} {partnerFirst} e ganhe... ou perca!
+              </p>
+
+              <div className="flex justify-center pt-1 pb-5">
+                <PremiumRouletteWheel
+                  rotationDeg={wheelRotation}
+                  spinning={spinning}
+                  size={270}
+                />
               </div>
 
               {spunResult !== null ? (
-                <div className="flex flex-col items-center gap-2 py-2">
-                  <p className="text-white/60 text-xs uppercase tracking-widest">Você tirou</p>
+                <div className="flex flex-col items-center gap-1 py-1">
                   <p
-                    className="text-5xl font-black"
-                    style={{ color: spunResult >= 0 ? '#d4a017' : '#ef4444' }}
+                    className="text-[28px] font-bold tracking-tight"
+                    style={{ color: '#f43f5e' }}
                   >
-                    {spunResult > 0 ? `+${spunResult}` : spunResult}
+                    {spunResult > 0 ? `+${spunResult}` : spunResult} Foguinhos
                   </p>
-                  <p className="text-white/70 text-sm font-medium">
-                    {spunResult >= 0 ? '🔥 foguinhos para o casal!' : '💔 foguinhos perdidos pelo casal'}
+                  <p className="text-center text-[13px] font-bold text-white px-2">
+                    Some com o resultado d{partnerArtigo} {partnerFirst}
                   </p>
-                  <div
-                    className="flex items-center gap-2 mt-1 px-4 py-2 rounded-xl text-xs"
-                    style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.45)' }}
-                  >
-                    <i className="fas fa-hourglass-half" />
-                    <span>Aguardando o parceiro girar...</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      set({ desafiosPendentes: Math.max(0, (useAppStore.getState().desafiosPendentes || 1) - 1) });
-                      advanceQueue(set, () => router.push('/desafios'));
-                    }}
-                    className="w-full py-3 rounded-xl font-bold text-white text-sm mt-2"
-                    style={{ background: 'linear-gradient(135deg,#ff2d3f,#c8003a)' }}
-                  >
-                    Fechar
-                  </button>
                 </div>
               ) : !spinning ? (
                 <button
                   onClick={handleGirar}
                   disabled={esgotado}
-                  className="w-full py-3 rounded-xl font-bold text-white text-sm disabled:opacity-40"
-                  style={{ background: 'linear-gradient(135deg,#ff2d3f,#c8003a)' }}
+                  className="w-full py-3 rounded-2xl font-semibold tracking-[0.04em] text-white text-[14px] disabled:opacity-40"
+                  style={{
+                    background: 'linear-gradient(180deg,#fb7185 0%,#e11d48 52%,#be123c 100%)',
+                    boxShadow: '0 6px 20px rgba(244,63,94,0.28)',
+                  }}
                 >
-                  🎰 Girar Roleta
+                  GIRAR ROLETA
                 </button>
-              ) : (
-                <p className="text-center text-white/50 text-xs pt-1 animate-pulse">
-                  Girando...
-                </p>
-              )}
+              ) : null}
             </>
           )}
 
