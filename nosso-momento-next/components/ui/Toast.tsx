@@ -14,8 +14,10 @@ interface ToastItem {
 
 let addToastFn: ((message: string, type: ToastType) => void) | null = null;
 
-/** Função global para disparar toasts (usada fora de componentes React) */
+/** Função global para disparar toasts (usada fora de componentes React).
+ *  `sucesso` é ignorado — feedback positivo fica na própria UI, sem toast verde. */
 export function showToast(message: string, type: ToastType = 'info') {
+  if (type === 'sucesso') return;
   addToastFn?.(message, type);
 }
 
@@ -39,10 +41,10 @@ export default function Toast() {
   }, [addToast]);
 
   const colorMap: Record<ToastType, string> = {
-    sucesso: 'bg-green-600',
+    sucesso: 'bg-[#be123c]',
     erro: 'bg-red-600',
     aviso: 'bg-yellow-500',
-    info: 'bg-blue-600',
+    info: 'bg-[#1c0a10] border border-white/15',
   };
 
   return (
