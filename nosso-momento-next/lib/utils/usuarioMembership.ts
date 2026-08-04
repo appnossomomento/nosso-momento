@@ -13,19 +13,26 @@ type SexoOpts = {
   genero?: string | null;
 };
 
+/** Preferência anatomia/sexo; fallback genero mulher* → feminino. */
+export function isFemininoPerfil(opts?: SexoOpts | null): boolean {
+  const catalog = getCatalogFilterGender(opts ?? undefined);
+  if (catalog === 'feminino') return true;
+  if (catalog === 'masculino') return false;
+  const genero = (opts?.genero ?? '').trim().toLowerCase();
+  return genero === 'mulher' || genero === 'mulher_trans';
+}
+
 /**
  * Preferência: anatomia/sexo (catálogo).
  * Só cai no genero quando anatomia/sexo não está definido como masculino/feminino.
  */
 export function fundadorTitle(opts?: SexoOpts | null): 'Fundador' | 'Fundadora' {
-  const catalog = getCatalogFilterGender(opts ?? undefined);
-  if (catalog === 'feminino') return 'Fundadora';
-  if (catalog === 'masculino') return 'Fundador';
+  return isFemininoPerfil(opts) ? 'Fundadora' : 'Fundador';
+}
 
-  const genero = (opts?.genero ?? '').trim().toLowerCase();
-  if (genero === 'mulher' || genero === 'mulher_trans') return 'Fundadora';
-
-  return 'Fundador';
+/** Artigo "o" / "a" para o parceiro (ex.: "com a Ana"). */
+export function artigoParceiro(opts?: SexoOpts | null): 'o' | 'a' {
+  return isFemininoPerfil(opts) ? 'a' : 'o';
 }
 
 /**

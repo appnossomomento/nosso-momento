@@ -81,15 +81,15 @@ const WEEKLY_CHALLENGE_CHOICES = [
   {opcaoA: "Zoológico", opcaoB: "Aquário"},
 ];
 
-// p = 1/6.8 ≈ 0.147 para os 6 comuns; +10 = 0.8p ≈ 0.118 (20% mais raro)
+// +10 ~3%; os 6 comuns dividem o restante (~16,167% cada)
 const ROULETTE_OPTIONS = [
-  {valor: 1, prob: 0.147},
-  {valor: 2, prob: 0.147},
-  {valor: -1, prob: 0.147},
-  {valor: -2, prob: 0.147},
-  {valor: 4, prob: 0.147},
-  {valor: -3, prob: 0.147},
-  {valor: 10, prob: 0.118},
+  {valor: 1, prob: 0.16167},
+  {valor: 2, prob: 0.16167},
+  {valor: -1, prob: 0.16167},
+  {valor: -2, prob: 0.16167},
+  {valor: 4, prob: 0.16166},
+  {valor: -3, prob: 0.16166},
+  {valor: 10, prob: 0.03},
 ];
 
 const WEEKLY_CHALLENGE_CYCLE_MS = (3 * 24 + 23) * 60 * 60 * 1000;
