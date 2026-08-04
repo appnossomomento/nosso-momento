@@ -12,6 +12,7 @@ import AppHeroShell, {
   TILE,
 } from '@/components/layout/AppHeroShell';
 import FoguinhosIcon from '@/components/ui/FoguinhosIcon';
+import { primeiroNome } from '@/lib/utils/displayName';
 
 const CTA_GRAD = `linear-gradient(135deg, ${LP_RED}, ${ACCENT})`;
 const CHIP_IDLE = { background: TILE, color: 'rgba(255,255,255,0.45)' } as const;
@@ -248,45 +249,31 @@ export default function DesafiosPage() {
                 const recompensaBase = Number(
                   (ch.data['reward'] as number | undefined) ?? (ch.tipo === 'escolha' ? 2 : 1),
                 );
-                const resumoConcluido = ch.status === 'finalizado'
-                  ? (
-                    <div className="space-y-0.5">
-                      <p className="text-xs leading-relaxed text-white/55">
-                        <span className="font-bold text-white">{nomeA}</span>
-                        <span> respondeu </span>
-                        <span className="font-extrabold" style={{ color: ACCENT }}>{respostaA ?? 'SEM RESPOSTA'}</span>
-                        <span> e </span>
-                        <span className="font-bold text-white">{nomeB}</span>
-                        <span> respondeu </span>
-                        <span className="font-extrabold" style={{ color: ACCENT }}>{respostaB ?? 'SEM RESPOSTA'}</span>
-                        <span>.</span>
-                      </p>
-                      <p
-                        className="text-xs leading-relaxed font-semibold flex items-center gap-1"
-                        style={{ color: ACCENT_SOFT }}
-                      >
-                        Ganharam +{recompensaBase} <FoguinhosIcon size={14} /> foguinhos cada.
-                      </p>
-                    </div>
-                  )
-                  : ch.status === 'finalizado_sem_recompensa'
+                const resumoConcluido =
+                  ch.status === 'finalizado' || ch.status === 'finalizado_sem_recompensa'
                     ? (
-                      <div className="space-y-0.5">
-                        <p className="text-xs leading-relaxed text-white/55">
-                          <span className="font-bold text-white">{nomeA}</span>
-                          <span> respondeu </span>
-                          <span className="font-extrabold" style={{ color: ACCENT }}>{respostaA ?? 'SEM RESPOSTA'}</span>
-                          <span> e </span>
-                          <span className="font-bold text-white">{nomeB}</span>
-                          <span> respondeu </span>
-                          <span className="font-extrabold" style={{ color: ACCENT }}>{respostaB ?? 'SEM RESPOSTA'}</span>
-                          <span>.</span>
+                      <div className="space-y-0.5 mt-0.5">
+                        <p className="text-xs leading-snug">
+                          <span className="font-bold text-white">{primeiroNome(nomeA)}: </span>
+                          <span className="font-extrabold" style={{ color: ACCENT }}>
+                            {respostaA ?? 'SEM RESPOSTA'}
+                          </span>
+                        </p>
+                        <p className="text-xs leading-snug">
+                          <span className="font-bold text-white">{primeiroNome(nomeB)}: </span>
+                          <span className="font-extrabold" style={{ color: ACCENT }}>
+                            {respostaB ?? 'SEM RESPOSTA'}
+                          </span>
                         </p>
                         <p
-                          className="text-xs leading-relaxed font-semibold flex items-center gap-1"
+                          className="text-xs leading-snug font-semibold flex items-center gap-1"
                           style={{ color: ACCENT_SOFT }}
                         >
-                          Perderam 1 <FoguinhosIcon size={14} /> foguinho cada.
+                          {ch.status === 'finalizado' ? (
+                            <>Vocês ganharam +{recompensaBase} <FoguinhosIcon size={14} /> foguinhos cada.</>
+                          ) : (
+                            <>Vocês perderam 1 <FoguinhosIcon size={14} /> foguinho cada.</>
+                          )}
                         </p>
                       </div>
                     )
@@ -348,7 +335,9 @@ export default function DesafiosPage() {
                       })()}
                     </div>
                     {concluido ? (
-                      <span className="text-xs font-semibold text-green-400 shrink-0">Concluído ✓</span>
+                      <span className="text-xs font-semibold shrink-0" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                        Concluído ✓
+                      </span>
                     ) : ch.jaRespondeu ? (
                       <span
                         className="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0"

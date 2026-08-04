@@ -165,7 +165,6 @@ export default function ChallengePopup() {
         challengeDocId: pendingChallenge!.id,
         ...(pareamentoIdAtual ? { pareamentoId: pareamentoIdAtual } : {}),
       });
-      showToast('Resposta enviada! 🏆', 'sucesso');
       closeAfterDelay(5000);
     } catch {
       showToast('Erro ao enviar resposta.', 'erro');
@@ -183,7 +182,6 @@ export default function ChallengePopup() {
         challengeId: pendingChallenge!.id,
         challengeDocId: pendingChallenge!.id,
       });
-      showToast('Escolha enviada! 🎯', 'sucesso');
       closeAfterDelay(5000);
     } catch {
       showToast('Erro ao enviar escolha.', 'erro');
