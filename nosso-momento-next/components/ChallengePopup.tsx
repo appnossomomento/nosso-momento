@@ -398,12 +398,12 @@ export default function ChallengePopup() {
                   <img
                     src="/assets/icons/icon-192x192.png"
                     alt=""
-                    width={18}
-                    height={18}
+                    width={22}
+                    height={22}
                     className="object-contain shrink-0"
                     aria-hidden
                   />
-                  Desafio Semanal
+                  <span className="relative top-[1.5px]">Desafio Semanal</span>
                 </span>
               </div>
               <h3 className="text-center text-[22px] font-semibold leading-[1.2] tracking-tight text-white px-1">

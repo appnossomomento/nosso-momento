@@ -64,12 +64,12 @@ export default function RoletaPreviewPage() {
             <img
               src="/assets/icons/icon-192x192.png"
               alt=""
-              width={18}
-              height={18}
+              width={22}
+              height={22}
               className="object-contain shrink-0"
               aria-hidden
             />
-            Desafio Semanal
+            <span className="relative top-[1.5px]">Desafio Semanal</span>
           </span>
         </div>
 
