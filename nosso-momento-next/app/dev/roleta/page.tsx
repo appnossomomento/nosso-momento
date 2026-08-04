@@ -62,7 +62,7 @@ export default function RoletaPreviewPage() {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/assets/icons/logo-icon-white-bottom.png"
+              src="/assets/icons/icon-192x192.png"
               alt=""
               width={18}
               height={18}
