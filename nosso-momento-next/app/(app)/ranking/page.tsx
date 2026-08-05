@@ -2,7 +2,11 @@
 
 import AppHeroShell, { ACCENT, TILE } from '@/components/layout/AppHeroShell';
 
-/** Placeholder até o ranking real — só estrutura visual. */
+const MESES = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+] as const;
+
 const ROWS = [
   { pos: 1, casal: '—', pontos: '—' },
   { pos: 2, casal: '—', pontos: '—' },
@@ -14,42 +18,41 @@ const ROWS = [
   { pos: 8, casal: '—', pontos: '—' },
 ];
 
+function diasRestantesNoMes(): number {
+  const now = new Date();
+  const last = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return Math.max(0, last - now.getDate());
+}
+
 export default function RankingPage() {
+  const mesAtual = MESES[new Date().getMonth()];
+  const dias = diasRestantesNoMes();
+  const diasLabel = dias === 1 ? '1 dia' : `${dias} dias`;
+
   return (
     <AppHeroShell
       sheetClassName="space-y-4"
       hero={
         <>
           <div
-            className="relative mb-5 flex items-center justify-center rounded-full"
+            className="mb-5 flex items-center justify-center rounded-full"
             style={{
               width: 80,
               height: 80,
-              background: 'rgba(244, 63, 94, 0.12)',
+              background: 'rgba(255,255,255,0.12)',
               boxShadow: [
                 `0 0 0 3px ${ACCENT}`,
                 '0 0 0 8px rgba(244, 63, 94, 0.2)',
               ].join(', '),
             }}
           >
-            <i className="fas fa-medal text-3xl" style={{ color: ACCENT }} />
-            <span
-              className="absolute text-[13px] font-black text-white"
-              style={{
-                top: '52%',
-                left: '50%',
-                transform: 'translate(-50%, -42%)',
-                textShadow: '0 1px 2px rgba(0,0,0,0.55)',
-              }}
-            >
-              1
-            </span>
+            <i className="fas fa-medal text-3xl text-white" />
           </div>
           <h2 className="text-[25px] font-bold leading-tight tracking-tight">
             Ranking
           </h2>
           <p className="mt-0.5 text-[15px] text-white/75 leading-snug">
-            Em breve: a chama de vocês no placar
+            Aqui estão os casais mais conectados de {mesAtual}.
           </p>
         </>
       }
@@ -93,8 +96,16 @@ export default function RankingPage() {
           </div>
         ))}
       </div>
-      <p className="text-center text-[12px] text-white/35 px-2">
-        Visual provisório — o ranking real chega em breve.
+      <p
+        className="text-center text-[13px] font-semibold px-3 leading-snug"
+        style={{
+          background: 'linear-gradient(90deg, #fb7185 0%, #f43f5e 45%, #fb923c 100%)',
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          color: 'transparent',
+        }}
+      >
+        Faltam {diasLabel} para definir os campeões.
       </p>
     </AppHeroShell>
   );

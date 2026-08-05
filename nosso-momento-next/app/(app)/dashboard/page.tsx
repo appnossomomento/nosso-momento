@@ -360,17 +360,6 @@ export default function DashboardPage() {
                 filter: 'drop-shadow(0 0 3px rgba(244, 63, 94, 0.25))',
               }}
             />
-            <span
-              className="absolute text-[11px] font-black text-white"
-              style={{
-                top: '54%',
-                left: '50%',
-                transform: 'translate(-50%, -42%)',
-                textShadow: '0 1px 2px rgba(0,0,0,0.55)',
-              }}
-            >
-              1
-            </span>
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold text-white">Ranking</p>
