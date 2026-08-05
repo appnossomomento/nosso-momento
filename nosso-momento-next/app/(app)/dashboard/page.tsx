@@ -336,10 +336,9 @@ export default function DashboardPage() {
           href="/ranking"
           className="flex items-center gap-3 rounded-[20px] px-3.5 py-3.5 transition active:scale-[0.98]"
           style={{
-            background: TILE,
-            border: '1px solid rgba(255, 255, 255, 0.09)',
-            boxShadow:
-              '0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)',
+            background: 'rgba(244, 63, 94, 0.08)',
+            border: '1px solid rgba(244, 63, 94, 0.22)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)',
           }}
         >
           <span
@@ -362,14 +361,16 @@ export default function DashboardPage() {
             />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-bold text-white">Ranking</p>
+            <p className="text-[13px] font-bold" style={{ color: ACCENT }}>
+              Ranking
+            </p>
             <p className="text-[12px] text-white/65 leading-snug mt-0.5">
-              Em breve no placar do casal
+              Em breve a competição se inicia
             </p>
           </div>
           <i
             className="fas fa-chevron-right shrink-0"
-            style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}
+            style={{ color: ACCENT_SOFT, fontSize: 13 }}
           />
         </Link>
       </div>
