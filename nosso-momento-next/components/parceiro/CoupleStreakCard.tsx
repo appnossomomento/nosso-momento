@@ -59,14 +59,22 @@ const midBlockTriste = {
     '0 10px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(99,102,241,0.28), 0 0 16px rgba(59,130,246,0.38), 0 0 32px rgba(99,102,241,0.24)',
 } as const;
 
-function midBlockStyle(
+/** Glow/borda do bloco de streak — reutilizado no dashboard (Chama Acesa). */
+export function coupleStreakBlockStyle(
   state: CoupleStreak['state'],
-  partnerTriste: boolean,
+  partnerTriste = false,
 ): CSSProperties {
   if (partnerTriste) return midBlockTriste;
   if (state === 'cold') return midBlockCold;
   if (state === 'ember') return midBlockEmber;
   return midBlockFire;
+}
+
+function midBlockStyle(
+  state: CoupleStreak['state'],
+  partnerTriste: boolean,
+): CSSProperties {
+  return coupleStreakBlockStyle(state, partnerTriste);
 }
 
 const GLOW_DONE =
