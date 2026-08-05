@@ -52,7 +52,8 @@ export default function RankingPage() {
             Ranking
           </h2>
           <p className="mt-0.5 text-[15px] text-white/75 leading-snug">
-            Aqui estão os casais mais conectados de {mesAtual}.
+            Aqui estão os casais mais conectados de{' '}
+            <span className="font-bold text-white">{mesAtual}</span>.
           </p>
         </>
       }
@@ -105,7 +106,11 @@ export default function RankingPage() {
           color: 'transparent',
         }}
       >
-        Faltam {diasLabel} para definir os campeões.
+        Faltam{' '}
+        <span className="font-bold" style={{ color: '#fff', WebkitTextFillColor: '#fff' }}>
+          {diasLabel}
+        </span>{' '}
+        para definir os campeões.
       </p>
     </AppHeroShell>
   );
