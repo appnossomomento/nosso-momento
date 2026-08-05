@@ -8,7 +8,7 @@ import { useAppStore } from '@/lib/store/appStore';
 import VipStarBadge from '@/components/profile/VipStarBadge';
 import FundadorBadge from '@/components/profile/FundadorBadge';
 import StreakFlame from '@/components/parceiro/StreakFlame';
-import { membershipLabel } from '@/lib/utils/usuarioMembership';
+import { coupleStreakBlockStyle } from '@/components/parceiro/CoupleStreakCard';
 import AppHeroShell, {
   ACCENT,
   ACCENT_SOFT,
@@ -72,14 +72,6 @@ export default function DashboardPage() {
   const fotoPerfil = usuario?.fotoUrl || '/assets/icons/iconprincipal.png';
   const isVip = usuario?.vip === true;
   const isFundador = usuario?.fundador === true || previewFundador;
-  const membroLabel = membershipLabel({
-    numeroUsuario: usuario?.numeroUsuario,
-    fundadorNumero: usuario?.fundadorNumero,
-    fundador: isFundador,
-    anatomia: usuario?.anatomia,
-    sexo: usuario?.sexo,
-    genero: usuario?.genero,
-  });
   const pareamentosCount = parceirosAtivos?.length ?? 0;
   const jaFezClima = Boolean(climaHoje);
   const partnerTriste = climaPartnerHoje?.humor === 'triste';
@@ -215,11 +207,6 @@ export default function DashboardPage() {
           <h2 className="relative text-[25px] font-bold leading-tight tracking-tight">
             Olá, {userName}
           </h2>
-          {membroLabel && (
-            <p className="mt-1 text-[13px] font-semibold tracking-wide text-white/90">
-              {membroLabel}
-            </p>
-          )}
           <p className="mt-0.5 text-[15px] text-white/75 leading-snug">
             Menos automático. Mais conexão.
           </p>
@@ -313,40 +300,90 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <Link
-        href="/parceiro"
-        className="flex items-center gap-3 rounded-[20px] px-3.5 py-3.5 transition active:scale-[0.98]"
-        style={{
-          background: 'rgba(244, 63, 94, 0.08)',
-          border: '1px solid rgba(244, 63, 94, 0.22)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)',
-        }}
-      >
-        <span
-          className="shrink-0 flex items-center justify-center overflow-hidden"
-          style={{ width: 48, height: 48 }}
-          aria-hidden
+      <div className="space-y-3">
+        <Link
+          href="/parceiro"
+          className="flex items-center gap-3 rounded-[18px] px-3.5 py-3.5 transition active:scale-[0.98]"
+          style={coupleStreakBlockStyle(streak.state, partnerTriste)}
         >
-          <StreakFlame
-            state={streak.state}
-            tier={streak.tier}
-            softMood={partnerTriste}
-            size="sm"
+          <span
+            className="shrink-0 flex items-center justify-center overflow-hidden"
+            style={{ width: 48, height: 48 }}
+            aria-hidden
+          >
+            <StreakFlame
+              state={streak.state}
+              tier={streak.tier}
+              softMood={partnerTriste}
+              size="sm"
+            />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-bold" style={{ color: ACCENT }}>
+              {tip.title}
+            </p>
+            <p className="text-[12px] text-white/65 leading-snug mt-0.5">
+              {tip.body}
+            </p>
+          </div>
+          <i
+            className="fas fa-chevron-right shrink-0"
+            style={{ color: ACCENT_SOFT, fontSize: 13 }}
           />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-bold" style={{ color: ACCENT }}>
-            {tip.title}
-          </p>
-          <p className="text-[12px] text-white/65 leading-snug mt-0.5">
-            {tip.body}
-          </p>
-        </div>
-        <i
-          className="fas fa-chevron-right shrink-0"
-          style={{ color: ACCENT_SOFT, fontSize: 13 }}
-        />
-      </Link>
+        </Link>
+
+        <Link
+          href="/ranking"
+          className="flex items-center gap-3 rounded-[20px] px-3.5 py-3.5 transition active:scale-[0.98]"
+          style={{
+            background: TILE,
+            border: '1px solid rgba(255, 255, 255, 0.09)',
+            boxShadow:
+              '0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03)',
+          }}
+        >
+          <span
+            className="relative shrink-0 flex items-center justify-center rounded-[16px]"
+            style={{
+              width: 48,
+              height: 48,
+              background: 'rgba(244, 63, 94, 0.1)',
+              border: '1px solid rgba(244, 63, 94, 0.16)',
+            }}
+            aria-hidden
+          >
+            <i
+              className="fas fa-medal"
+              style={{
+                color: ACCENT,
+                fontSize: 26,
+                filter: 'drop-shadow(0 0 3px rgba(244, 63, 94, 0.25))',
+              }}
+            />
+            <span
+              className="absolute text-[11px] font-black text-white"
+              style={{
+                top: '54%',
+                left: '50%',
+                transform: 'translate(-50%, -42%)',
+                textShadow: '0 1px 2px rgba(0,0,0,0.55)',
+              }}
+            >
+              1
+            </span>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-bold text-white">Ranking</p>
+            <p className="text-[12px] text-white/65 leading-snug mt-0.5">
+              Em breve no placar do casal
+            </p>
+          </div>
+          <i
+            className="fas fa-chevron-right shrink-0"
+            style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}
+          />
+        </Link>
+      </div>
     </AppHeroShell>
   );
 }
