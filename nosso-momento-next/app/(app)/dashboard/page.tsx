@@ -9,6 +9,7 @@ import VipStarBadge from '@/components/profile/VipStarBadge';
 import FundadorBadge from '@/components/profile/FundadorBadge';
 import StreakFlame from '@/components/parceiro/StreakFlame';
 import { coupleStreakBlockStyle } from '@/components/parceiro/CoupleStreakCard';
+import CinzasLottie from '@/components/ranking/CinzasLottie';
 import AppHeroShell, {
   ACCENT,
   ACCENT_SOFT,
@@ -73,6 +74,7 @@ export default function DashboardPage() {
   const isVip = usuario?.vip === true;
   const isFundador = usuario?.fundador === true || previewFundador;
   const pareamentosCount = parceirosAtivos?.length ?? 0;
+  const isPaired = pareamentosCount > 0;
   const jaFezClima = Boolean(climaHoje);
   const partnerTriste = climaPartnerHoje?.humor === 'triste';
 
@@ -301,36 +303,68 @@ export default function DashboardPage() {
       </div>
 
       <div className="space-y-3">
-        <Link
-          href="/parceiro"
-          className="flex items-center gap-3 rounded-[18px] px-3.5 py-3.5 transition active:scale-[0.98]"
-          style={coupleStreakBlockStyle(streak.state, partnerTriste)}
-        >
-          <span
-            className="shrink-0 flex items-center justify-center overflow-hidden"
-            style={{ width: 48, height: 48 }}
-            aria-hidden
+        {isPaired ? (
+          <Link
+            href="/parceiro"
+            className="flex items-center gap-3 rounded-[18px] px-3.5 py-3.5 transition active:scale-[0.98]"
+            style={coupleStreakBlockStyle(streak.state, partnerTriste)}
           >
-            <StreakFlame
-              state={streak.state}
-              tier={streak.tier}
-              softMood={partnerTriste}
-              size="sm"
+            <span
+              className="shrink-0 flex items-center justify-center overflow-hidden"
+              style={{ width: 48, height: 48 }}
+              aria-hidden
+            >
+              <StreakFlame
+                state={streak.state}
+                tier={streak.tier}
+                softMood={partnerTriste}
+                size="sm"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold" style={{ color: ACCENT }}>
+                {tip.title}
+              </p>
+              <p className="text-[12px] text-white/65 leading-snug mt-0.5">
+                {tip.body}
+              </p>
+            </div>
+            <i
+              className="fas fa-chevron-right shrink-0"
+              style={{ color: ACCENT_SOFT, fontSize: 13 }}
             />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-bold" style={{ color: ACCENT }}>
-              {tip.title}
-            </p>
-            <p className="text-[12px] text-white/65 leading-snug mt-0.5">
-              {tip.body}
-            </p>
-          </div>
-          <i
-            className="fas fa-chevron-right shrink-0"
-            style={{ color: ACCENT_SOFT, fontSize: 13 }}
-          />
-        </Link>
+          </Link>
+        ) : (
+          <Link
+            href="/parear"
+            className="flex items-center gap-3 rounded-[18px] px-3.5 py-3.5 transition active:scale-[0.98]"
+            style={{
+              background:
+                'linear-gradient(#1a1b20, #1a1b20) padding-box, linear-gradient(135deg, #52525b 0%, #71717a 55%, #3f3f46 100%) border-box',
+              border: '1px solid transparent',
+              boxShadow:
+                '0 10px 24px rgba(0,0,0,0.45), 0 0 0 1px rgba(113,113,122,0.18)',
+            }}
+          >
+            <span
+              className="shrink-0 flex items-center justify-center overflow-hidden"
+              style={{ width: 48, height: 48 }}
+              aria-hidden
+            >
+              <CinzasLottie size={48} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-bold text-white/80">Chama apagada</p>
+              <p className="text-[12px] text-white/55 leading-snug mt-0.5">
+                Pareie para reacender a chama
+              </p>
+            </div>
+            <i
+              className="fas fa-chevron-right shrink-0"
+              style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13 }}
+            />
+          </Link>
+        )}
 
         <Link
           href="/ranking"
@@ -362,7 +396,7 @@ export default function DashboardPage() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold" style={{ color: ACCENT }}>
-              Ranking
+              Disputa de Casais
             </p>
             <p className="text-[12px] text-white/65 leading-snug mt-0.5">
               Em breve a competição se inicia
