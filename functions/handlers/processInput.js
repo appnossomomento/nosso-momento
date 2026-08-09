@@ -2647,6 +2647,357 @@ exports.processInput = onDocumentCreated(
           });
 
           console.log("processInput: calendar_event_delete processado", inputId);
+        } else if (input.type === "gasto_create") {
+          const fromUid = input.fromUid;
+          const pareamentoId = typeof input.pareamentoId === "string" ?
+            input.pareamentoId.trim() : "";
+          const titulo = typeof input.titulo === "string" ?
+            input.titulo.trim() : "";
+          const valorCentavos = Math.floor(Number(input.valorCentavos));
+          const categoria = typeof input.categoria === "string" ?
+            input.categoria.trim() : "";
+          const data = typeof input.data === "string" ?
+            input.data.trim() : "";
+          const pagoPorUid = typeof input.pagoPorUid === "string" ?
+            input.pagoPorUid.trim() : "";
+          const notas = typeof input.notas === "string" ?
+            input.notas.trim().slice(0, 500) : "";
+          const categoriasOk = [
+            "Moradia", "Mercado", "Transporte", "Lazer",
+            "Saúde", "Contas", "Outros",
+          ];
+
+          if (!fromUid || !pareamentoId) {
+            await inputRef.update({
+              error: "missing_gasto_info", processed: false,
+            });
+            return;
+          }
+          if (!titulo || titulo.length > 80) {
+            await inputRef.update({
+              error: "invalid_titulo", processed: false,
+            });
+            return;
+          }
+          if (!Number.isFinite(valorCentavos) || valorCentavos < 1 ||
+              valorCentavos > 100000000) {
+            await inputRef.update({
+              error: "invalid_valor", processed: false,
+            });
+            return;
+          }
+          if (!categoriasOk.includes(categoria)) {
+            await inputRef.update({
+              error: "invalid_categoria", processed: false,
+            });
+            return;
+          }
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+            await inputRef.update({
+              error: "invalid_data", processed: false,
+            });
+            return;
+          }
+          if (!pagoPorUid) {
+            await inputRef.update({
+              error: "invalid_pago_por", processed: false,
+            });
+            return;
+          }
+
+          const pareamentoRef = admin.firestore()
+              .collection("pareamentos").doc(pareamentoId);
+          const pareamentoSnap = await pareamentoRef.get();
+          if (!pareamentoSnap.exists) {
+            await inputRef.update({
+              error: "pareamento_nao_encontrado", processed: false,
+            });
+            return;
+          }
+          const pareamentoData = pareamentoSnap.data() || {};
+          if (!isUserPareamentoMember(pareamentoData, fromUid)) {
+            await inputRef.update({
+              error: "not_pair_member", processed: false,
+            });
+            return;
+          }
+          const uidA = pareamentoData.pessoa1Uid || null;
+          const uidB = pareamentoData.pessoa2Uid || null;
+          const memberUids = [uidA, uidB].filter(Boolean);
+          if (!memberUids.includes(pagoPorUid)) {
+            await inputRef.update({
+              error: "pago_por_not_member", processed: false,
+            });
+            return;
+          }
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const gastoRef = admin.firestore()
+                .collection("gastosCasal").doc();
+            tx.set(gastoRef, {
+              idPareamento: pareamentoId,
+              memberUids,
+              titulo,
+              valorCentavos,
+              categoria,
+              data,
+              pagoPorUid,
+              notas: notas || null,
+              criadoPorUid: fromUid,
+              criadoEm: admin.firestore.FieldValue.serverTimestamp(),
+              atualizadoEm: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            tx.update(inputRef, {
+              processed: true,
+              gastoId: gastoRef.id,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: gasto_create processado", inputId);
+        } else if (input.type === "gasto_update") {
+          const fromUid = input.fromUid;
+          const pareamentoId = typeof input.pareamentoId === "string" ?
+            input.pareamentoId.trim() : "";
+          const gastoId = typeof input.gastoId === "string" ?
+            input.gastoId.trim() : "";
+          const titulo = typeof input.titulo === "string" ?
+            input.titulo.trim() : "";
+          const valorCentavos = Math.floor(Number(input.valorCentavos));
+          const categoria = typeof input.categoria === "string" ?
+            input.categoria.trim() : "";
+          const data = typeof input.data === "string" ?
+            input.data.trim() : "";
+          const pagoPorUid = typeof input.pagoPorUid === "string" ?
+            input.pagoPorUid.trim() : "";
+          const notas = typeof input.notas === "string" ?
+            input.notas.trim().slice(0, 500) : "";
+          const categoriasOk = [
+            "Moradia", "Mercado", "Transporte", "Lazer",
+            "Saúde", "Contas", "Outros",
+          ];
+
+          if (!fromUid || !pareamentoId || !gastoId) {
+            await inputRef.update({
+              error: "missing_gasto_info", processed: false,
+            });
+            return;
+          }
+          if (!titulo || titulo.length > 80) {
+            await inputRef.update({
+              error: "invalid_titulo", processed: false,
+            });
+            return;
+          }
+          if (!Number.isFinite(valorCentavos) || valorCentavos < 1 ||
+              valorCentavos > 100000000) {
+            await inputRef.update({
+              error: "invalid_valor", processed: false,
+            });
+            return;
+          }
+          if (!categoriasOk.includes(categoria)) {
+            await inputRef.update({
+              error: "invalid_categoria", processed: false,
+            });
+            return;
+          }
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+            await inputRef.update({
+              error: "invalid_data", processed: false,
+            });
+            return;
+          }
+          if (!pagoPorUid) {
+            await inputRef.update({
+              error: "invalid_pago_por", processed: false,
+            });
+            return;
+          }
+
+          const gastoRef = admin.firestore()
+              .collection("gastosCasal").doc(gastoId);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const gastoSnap = await tx.get(gastoRef);
+            if (!gastoSnap.exists) {
+              tx.update(inputRef, {
+                error: "gasto_not_found", processed: false,
+              });
+              return;
+            }
+            const gastoData = gastoSnap.data() || {};
+            if (gastoData.idPareamento !== pareamentoId) {
+              tx.update(inputRef, {
+                error: "gasto_wrong_pair", processed: false,
+              });
+              return;
+            }
+            const members = Array.isArray(gastoData.memberUids) ?
+              gastoData.memberUids : [];
+            if (!members.includes(fromUid)) {
+              tx.update(inputRef, {
+                error: "not_pair_member", processed: false,
+              });
+              return;
+            }
+            if (!members.includes(pagoPorUid)) {
+              tx.update(inputRef, {
+                error: "pago_por_not_member", processed: false,
+              });
+              return;
+            }
+
+            tx.update(gastoRef, {
+              titulo,
+              valorCentavos,
+              categoria,
+              data,
+              pagoPorUid,
+              notas: notas || null,
+              atualizadoEm: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: gasto_update processado", inputId);
+        } else if (input.type === "gasto_delete") {
+          const fromUid = input.fromUid;
+          const pareamentoId = typeof input.pareamentoId === "string" ?
+            input.pareamentoId.trim() : "";
+          const gastoId = typeof input.gastoId === "string" ?
+            input.gastoId.trim() : "";
+
+          if (!fromUid || !pareamentoId || !gastoId) {
+            await inputRef.update({
+              error: "missing_gasto_info", processed: false,
+            });
+            return;
+          }
+
+          const gastoRef = admin.firestore()
+              .collection("gastosCasal").doc(gastoId);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const gastoSnap = await tx.get(gastoRef);
+            if (!gastoSnap.exists) {
+              tx.update(inputRef, {
+                processed: true,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                processedBy: "functions.processInput",
+              });
+              return;
+            }
+            const gastoData = gastoSnap.data() || {};
+            if (gastoData.idPareamento !== pareamentoId) {
+              tx.update(inputRef, {
+                error: "gasto_wrong_pair", processed: false,
+              });
+              return;
+            }
+            const members = Array.isArray(gastoData.memberUids) ?
+              gastoData.memberUids : [];
+            if (!members.includes(fromUid)) {
+              tx.update(inputRef, {
+                error: "not_pair_member", processed: false,
+              });
+              return;
+            }
+
+            tx.delete(gastoRef);
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: gasto_delete processado", inputId);
+        } else if (input.type === "financas_limite_set") {
+          const fromUid = input.fromUid;
+          const pareamentoId = typeof input.pareamentoId === "string" ?
+            input.pareamentoId.trim() : "";
+          const rawLimite = input.limiteMensalCentavos;
+          let limiteMensalCentavos = null;
+          if (rawLimite !== null && rawLimite !== undefined &&
+              rawLimite !== "") {
+            limiteMensalCentavos = Math.floor(Number(rawLimite));
+            if (!Number.isFinite(limiteMensalCentavos) ||
+                limiteMensalCentavos < 1 ||
+                limiteMensalCentavos > 100000000) {
+              await inputRef.update({
+                error: "invalid_limite", processed: false,
+              });
+              return;
+            }
+          }
+
+          if (!fromUid || !pareamentoId) {
+            await inputRef.update({
+              error: "missing_financas_info", processed: false,
+            });
+            return;
+          }
+
+          const pareamentoRef = admin.firestore()
+              .collection("pareamentos").doc(pareamentoId);
+          const pareamentoSnap = await pareamentoRef.get();
+          if (!pareamentoSnap.exists) {
+            await inputRef.update({
+              error: "pareamento_nao_encontrado", processed: false,
+            });
+            return;
+          }
+          const pareamentoData = pareamentoSnap.data() || {};
+          if (!isUserPareamentoMember(pareamentoData, fromUid)) {
+            await inputRef.update({
+              error: "not_pair_member", processed: false,
+            });
+            return;
+          }
+          const uidA = pareamentoData.pessoa1Uid || null;
+          const uidB = pareamentoData.pessoa2Uid || null;
+          const memberUids = [uidA, uidB].filter(Boolean);
+          const configRef = admin.firestore()
+              .collection("financasCasal").doc(pareamentoId);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            tx.set(configRef, {
+              idPareamento: pareamentoId,
+              memberUids,
+              limiteMensalCentavos,
+              atualizadoPorUid: fromUid,
+              atualizadoEm: admin.firestore.FieldValue.serverTimestamp(),
+            }, {merge: true});
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: financas_limite_set processado", inputId);
         } else if (input.type === "profile_photo_upload") {
           const fromUid = input.fromUid;
           if (!fromUid) {

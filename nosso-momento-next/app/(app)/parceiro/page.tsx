@@ -20,6 +20,7 @@ import { softPush } from '@/components/layout/softRouteNav';
 import { computeCoupleStreak } from '@/lib/clima/coupleStreak';
 import { saoPauloDateString } from '@/lib/utils/saoPauloDate';
 import { nomeParaCard } from '@/lib/utils/displayName';
+import { ACCENT, TILE } from '@/components/layout/AppHeroShell';
 
 const HUMORES = [
   { key: 'muito_feliz', emoji: '😍', label: 'Muito Feliz', delta: '+2 🔥' },
@@ -485,70 +486,167 @@ export default function ParceiroPage() {
 
         <div className="grid grid-cols-2 gap-3">
           {[
-            { href: '/loja', icon: 'fa-store', label: 'Catálogo', catalog: true },
-            { href: '/personalizar', icon: 'fa-tags', label: 'Personalizar', catalog: false },
-            { href: '/momentos', icon: 'fa-heart', label: 'Momentos', catalog: false },
-            { href: '/calendario', icon: 'fa-calendar', label: 'Calendário', catalog: false },
-            { href: '/extrato', icon: 'fa-fire', label: 'Extrato', catalog: false },
-            { href: '/desafios', icon: 'fa-trophy', label: 'Desafios', catalog: false },
+            {
+              href: '/loja',
+              icon: 'fa-store',
+              label: 'Catálogo',
+              accent: '#ffb86a',
+              accentSoft: 'rgba(255,145,42,0.14)',
+              accentBorder: 'rgba(255,145,42,0.42)',
+              iconShadow: 'drop-shadow(0 0 6px rgba(255,167,87,0.55))',
+            },
+            {
+              href: '/personalizar',
+              icon: 'fa-tags',
+              label: 'Personalizar',
+              accent: '#ff6a78',
+              accentSoft: 'rgba(255,45,63,0.10)',
+              accentBorder: 'rgba(255,106,120,0.36)',
+              iconShadow: 'drop-shadow(0 0 3px rgba(255,73,106,0.35))',
+            },
+            {
+              href: '/momentos',
+              icon: 'fa-heart',
+              label: 'Momentos',
+              accent: '#ff6a78',
+              accentSoft: 'rgba(255,45,63,0.10)',
+              accentBorder: 'rgba(255,106,120,0.36)',
+              iconShadow: 'drop-shadow(0 0 3px rgba(255,73,106,0.35))',
+            },
+            {
+              href: '/calendario',
+              icon: 'fa-calendar',
+              label: 'Calendário',
+              accent: '#ff6a78',
+              accentSoft: 'rgba(255,45,63,0.10)',
+              accentBorder: 'rgba(255,106,120,0.36)',
+              iconShadow: 'drop-shadow(0 0 3px rgba(255,73,106,0.35))',
+            },
+            {
+              href: '/extrato',
+              icon: 'fa-fire',
+              label: 'Extrato',
+              accent: '#ff6a78',
+              accentSoft: 'rgba(255,45,63,0.10)',
+              accentBorder: 'rgba(255,106,120,0.36)',
+              iconShadow: 'drop-shadow(0 0 3px rgba(255,73,106,0.35))',
+            },
+            {
+              href: '/desafios',
+              icon: 'fa-trophy',
+              label: 'Desafios',
+              accent: '#ff6a78',
+              accentSoft: 'rgba(255,45,63,0.10)',
+              accentBorder: 'rgba(255,106,120,0.36)',
+              iconShadow: 'drop-shadow(0 0 3px rgba(255,73,106,0.35))',
+            },
           ].map((a) => (
             <Link
               key={a.href}
               href={a.href}
-              className="p-4 text-center flex flex-col items-center gap-2 transition active:scale-95 rounded-[20px]"
-              style={a.catalog ? {
-                background: 'linear-gradient(#1f2024, #1f2024) padding-box, linear-gradient(135deg, rgba(255,145,42,0.68), rgba(255,190,100,0.46), rgba(255,145,42,0.24)) border-box',
-                border: '1px solid transparent',
-                boxShadow: '0 11px 30px rgba(0,0,0,0.52), 0 0 0 1px rgba(255,165,79,0.20), 0 0 26px rgba(255,152,72,0.24)',
-              } : {
-                background: 'linear-gradient(#1e1f25, #1e1f25) padding-box, linear-gradient(135deg, rgba(255,45,63,0.58), rgba(255,106,120,0.40), rgba(255,45,63,0.23)) border-box',
-                border: '1px solid transparent',
-                boxShadow: '0 11px 30px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,85,101,0.14), 0 0 24px rgba(255,73,106,0.21)',
+              className="relative flex flex-col rounded-[24px] p-3.5 text-left transition active:scale-[0.98]"
+              style={{
+                minHeight: 128,
+                background: TILE,
+                border: `1px solid ${a.accentBorder}`,
+                boxShadow:
+                  a.accent === '#ffb86a'
+                    ? '0 6px 18px rgba(0,0,0,0.38), 0 0 0 1px rgba(255,145,42,0.12), inset 0 1px 0 rgba(255,255,255,0.06)'
+                    : '0 6px 18px rgba(0,0,0,0.38), 0 0 0 1px rgba(255,45,63,0.10), inset 0 1px 0 rgba(255,255,255,0.06)',
               }}
             >
-              <div
-                className="w-11 h-11 rounded-full flex items-center justify-center"
-                style={a.catalog ? {
-                  background: 'rgba(255,145,42,0.14)',
-                  boxShadow: '0 0 16px rgba(255,163,82,0.46), inset 0 0 7px rgba(255,163,82,0.16)',
-                } : {
-                  background: 'rgba(255,45,63,0.12)',
-                  boxShadow: '0 0 14px rgba(255,73,106,0.38), inset 0 0 6px rgba(255,73,106,0.12)',
+              <div className="relative mb-3" style={{ width: 52, height: 52 }}>
+                <div
+                  className="flex items-center justify-center rounded-[16px] w-full h-full"
+                  style={{
+                    background: a.accentSoft,
+                    border: `1px solid ${a.accentBorder}`,
+                  }}
+                >
+                  <i
+                    className={`fas ${a.icon}`}
+                    style={{
+                      color: a.accent,
+                      fontSize: 24,
+                      filter: a.iconShadow,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="pr-8">
+                <h3 className="text-[15px] font-bold text-white leading-snug">
+                  {a.label}
+                </h3>
+              </div>
+
+              <span
+                className="absolute bottom-3 right-3 flex items-center justify-center rounded-full"
+                style={{
+                  width: 28,
+                  height: 28,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
                 <i
-                  className={`fas ${a.icon} text-lg`}
-                  style={a.catalog ? {
-                    color: '#ffb86a',
-                    filter: 'drop-shadow(0 0 6px rgba(255,167,87,0.95))',
-                  } : {
-                    color: '#ff6a78',
-                    filter: 'drop-shadow(0 0 5px rgba(255,73,106,0.85))',
+                  className="fas fa-chevron-right"
+                  style={{
+                    fontSize: 11,
+                    color: a.accent === '#ffb86a' ? a.accent : 'rgba(255,255,255,0.4)',
                   }}
                 />
-              </div>
-              <span className="text-xs font-semibold text-white/80">{a.label}</span>
+              </span>
             </Link>
           ))}
         </div>
 
-        <button
-          onClick={() => set({ showInstagramModal: true })}
-          className="w-full rounded-2xl p-4 text-sm font-medium flex items-center justify-center gap-2 transition active:scale-95"
+        <Link
+          href="/financas"
+          className="flex items-center gap-3 rounded-[20px] px-3.5 py-2.5 transition active:scale-[0.98]"
           style={{
-            background: 'linear-gradient(#1a1b20, #1a1b20) padding-box, linear-gradient(135deg, #ec4899, #ef4444) border-box',
-            border: '1px solid transparent',
+            background: 'rgba(244, 63, 94, 0.08)',
+            border: '1px solid rgba(244, 63, 94, 0.22)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)',
           }}
         >
-          <i className="fab fa-instagram text-pink-400" />
-          <span className="text-white/80">Siga-nos no Instagram!</span>
-        </button>
+          <span
+            className="relative shrink-0 flex items-center justify-center rounded-[14px]"
+            style={{
+              width: 40,
+              height: 40,
+              background: 'rgba(244, 63, 94, 0.1)',
+              border: '1px solid rgba(244, 63, 94, 0.16)',
+            }}
+            aria-hidden
+          >
+            <i
+              className="fas fa-sack-dollar"
+              style={{
+                color: ACCENT,
+                fontSize: 20,
+                filter: 'drop-shadow(0 0 3px rgba(244, 63, 94, 0.25))',
+              }}
+            />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-bold text-white">
+              Finanças do Casal
+            </p>
+          </div>
+          <i
+            className="fas fa-chevron-right shrink-0"
+            style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12 }}
+          />
+        </Link>
 
         <button
+          type="button"
           onClick={handleDesfazerPareamento}
-          className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-red-400 text-sm font-medium hover:bg-red-500/20 transition"
+          className="w-full mt-8 pb-2 text-center text-sm font-medium text-red-400/80 transition hover:text-red-400"
         >
-          <i className="fas fa-link-slash mr-2" />Desfazer Pareamento
+          <i className="fas fa-link-slash mr-2" />
+          Desfazer Pareamento
         </button>
       </div>
     </div>

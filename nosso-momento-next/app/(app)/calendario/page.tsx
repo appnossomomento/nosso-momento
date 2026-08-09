@@ -26,12 +26,20 @@ import AppHeroShell, {
 import {
   prazoDiasToMillis,
 } from '@/lib/momentos/prazoStatus';
+import { primeiroNome } from '@/lib/utils/displayName';
 import {
   isStorageMediaPath,
   resolveMediaUrlMap,
 } from '@/lib/utils/resolveMediaUrls';
 
 const CTA_GRAD = `linear-gradient(135deg, ${LP_RED}, ${ACCENT})`;
+/** Cards e blocos claros — utilidades (como Finanças) */
+const CARD_BG = '#FFF5F6';
+const CARD_SURFACE = '#FFFFFF';
+const CARD_TITLE = '#1A1214';
+const CARD_META = '#8B6B73';
+const DAY_MOMENTO = ACCENT;
+const DAY_LIVRE = '#3b82f6';
 
 const MESES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -70,6 +78,8 @@ type TarefaCal = {
   status: string;
   dataLimite?: { seconds: number } | null;
   dataResgate?: { seconds: number } | null;
+  resgatadoPorUid?: string;
+  executadoPorUid?: string;
 };
 
 type EventoLivre = {
@@ -150,7 +160,8 @@ function isValidHora(hora: string): boolean {
 }
 
 export default function CalendarioPage() {
-  const { usuario, idPareamentoAmigavel, pareado } = useAppStore();
+  const { usuario, idPareamentoAmigavel, pareado, parceiroNome, parceiroData } =
+    useAppStore();
   const agora = new Date();
   const [selectedMonth, setSelectedMonth] = useState(agora.getMonth());
   const [selectedYear, setSelectedYear] = useState(agora.getFullYear());
@@ -172,6 +183,10 @@ export default function CalendarioPage() {
 
   const uid = usuario?.uid ?? null;
   const hojeStr = toSpDateKey(Date.now());
+  const partnerFirstName =
+    primeiroNome(parceiroNome) ||
+    primeiroNome(parceiroData?.nome) ||
+    'parceiro';
 
   useEffect(() => {
     setListPhase('out');
@@ -497,9 +512,17 @@ export default function CalendarioPage() {
 
   if (!pareado || !idPareamentoAmigavel) {
     return (
-      <AppHeroShell compactHero hero={monthHero}>
-        <div className="rounded-2xl p-6 text-center" style={{ background: TILE }}>
-          <p className="text-white/70 text-sm">Pareie para ver o calendário do casal.</p>
+      <AppHeroShell compactHero bareSheet hero={monthHero}>
+        <div
+          className="rounded-2xl p-6 text-center"
+          style={{
+            background: CARD_BG,
+            boxShadow: '0 6px 16px rgba(0,0,0,0.14)',
+          }}
+        >
+          <p className="text-sm" style={{ color: CARD_META }}>
+            Pareie para ver o calendário do casal.
+          </p>
           <Link
             href="/parear"
             className="inline-block mt-4 px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
@@ -514,112 +537,110 @@ export default function CalendarioPage() {
 
   return (
     <>
-      <AppHeroShell compactHero sheetClassName="space-y-4" hero={monthHero}>
-        {/* Bloco 1 — Calendário */}
-        <div
-          className="rounded-[28px] p-4 relative"
-          style={{
-            background: TILE,
-            border: '1px solid rgba(244,63,94,0.28)',
-            boxShadow:
-              '0 0 0 1px rgba(244,63,94,0.12), 0 0 28px rgba(244,63,94,0.22), 0 12px 32px rgba(0,0,0,0.35)',
-          }}
-          onClick={() => setSelectedDay(null)}
-          role="presentation"
-        >
-          <div className="grid grid-cols-7 mb-2">
-            {DOW.map((d) => (
-              <div
-                key={d}
-                className="text-center text-[11px] font-semibold text-white pb-2"
-              >
-                {d}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-y-2">
-            {calendarCells.map((cell) => {
-              const hasM = (momentosByDay[cell.dateStr]?.length ?? 0) > 0;
-              const hasL = (livresByDay[cell.dateStr]?.length ?? 0) > 0;
-              const isSel = cell.dateStr === selectedDay;
-              const isHoje = cell.dateStr === hojeStr;
-              return (
-                <button
-                  key={cell.dateStr + String(cell.inMonth)}
-                  type="button"
-                  onClick={(ev) => {
-                    ev.stopPropagation();
-                    setSelectedDay((prev) =>
-                      prev === cell.dateStr ? null : cell.dateStr,
-                    );
-                  }}
-                  className="nm-cal-day-btn relative flex flex-col items-center justify-start pt-0.5 pb-1 min-h-[44px]"
+      <AppHeroShell
+        compactHero
+        bareSheet
+        sheetClassName="space-y-3"
+        hero={monthHero}
+      >
+        {/* Calendário + FAB fora do card (irmão, com overlap visual) */}
+        <div className="relative z-20">
+          <div
+            className="rounded-[28px] p-4"
+            style={{
+              background: CARD_BG,
+              border: '1px solid rgba(244,63,94,0.22)',
+              boxShadow: '0 8px 22px rgba(0,0,0,0.18)',
+            }}
+            onClick={() => setSelectedDay(null)}
+            role="presentation"
+          >
+            <div className="grid grid-cols-7 mb-1">
+              {DOW.map((d) => (
+                <div
+                  key={d}
+                  className="text-center text-[11px] font-semibold pb-2"
+                  style={{ color: CARD_META }}
                 >
-                  <span
-                    className={clsx(
-                      'nm-cal-day-btn flex h-9 w-9 items-center justify-center rounded-full text-[15px] font-medium',
-                      isSel && 'text-white font-semibold',
-                      !isSel && cell.inMonth && 'text-white',
-                      !isSel && !cell.inMonth && 'text-white/25',
-                      !isSel && isHoje && cell.inMonth && 'ring-1 ring-white/40',
-                    )}
-                    style={
-                      isSel
-                        ? {
-                            background: CTA_GRAD,
-                            boxShadow: '0 4px 14px rgba(244,63,94,0.45)',
-                          }
-                        : {
-                            background: 'transparent',
-                            boxShadow: 'none',
-                          }
-                    }
+                  {d}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-y-1">
+              {calendarCells.map((cell) => {
+                const hasM = (momentosByDay[cell.dateStr]?.length ?? 0) > 0;
+                const hasL = (livresByDay[cell.dateStr]?.length ?? 0) > 0;
+                const hasEvent = hasM || hasL;
+                const isSel = cell.dateStr === selectedDay;
+                const isHoje = cell.dateStr === hojeStr;
+                const eventColor = hasM ? DAY_MOMENTO : hasL ? DAY_LIVRE : null;
+                return (
+                  <button
+                    key={cell.dateStr + String(cell.inMonth)}
+                    type="button"
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      setSelectedDay((prev) =>
+                        prev === cell.dateStr ? null : cell.dateStr,
+                      );
+                    }}
+                    className="nm-cal-day-btn flex items-center justify-center min-h-[40px]"
                   >
-                    {cell.day}
-                  </span>
-                  <span className="flex gap-0.5 mt-0.5 h-1.5 items-center justify-center">
-                    {hasM && (
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ background: ACCENT_SOFT }}
-                      />
-                    )}
-                    {hasL && (
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ background: 'rgba(96,165,250,0.95)' }}
-                      />
-                    )}
-                  </span>
-                </button>
-              );
-            })}
+                    <span
+                      className={clsx(
+                        'nm-cal-day-btn flex h-9 w-9 items-center justify-center rounded-full text-[15px]',
+                        isSel || hasEvent ? 'font-bold' : 'font-medium',
+                      )}
+                      style={
+                        isSel
+                          ? {
+                              background: CTA_GRAD,
+                              boxShadow: '0 4px 14px rgba(244,63,94,0.45)',
+                              color: '#FFFFFF',
+                            }
+                          : {
+                              background: 'transparent',
+                              boxShadow:
+                                isHoje && cell.inMonth
+                                  ? `inset 0 0 0 1px ${ACCENT_SOFT}`
+                                  : 'none',
+                              color: !cell.inMonth
+                                ? 'rgba(26,18,20,0.28)'
+                                : eventColor || CARD_TITLE,
+                            }
+                      }
+                    >
+                      {cell.day}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={(ev) => {
-              ev.stopPropagation();
-              abrirCriar(selectedDay || undefined);
-            }}
-            className="absolute -bottom-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full text-white transition active:scale-95"
-            style={{
-              background: CTA_GRAD,
-              boxShadow: '0 6px 18px rgba(244,63,94,0.5)',
-            }}
-            aria-label="Novo evento"
-          >
-            <i className="fas fa-plus text-sm" />
-          </button>
+          <div className="relative z-30 flex justify-end pr-4 -mt-5">
+            <button
+              type="button"
+              onClick={() => abrirCriar(selectedDay || undefined)}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-white transition active:scale-95"
+              style={{
+                background: CTA_GRAD,
+                boxShadow: '0 6px 18px rgba(244,63,94,0.5)',
+              }}
+              aria-label="Novo evento"
+            >
+              <i className="fas fa-plus text-sm" />
+            </button>
+          </div>
         </div>
 
-        {/* Bloco 2 — Resumo do mês */}
+        {/* Resumo do mês */}
         <div
-          className="rounded-[28px] p-4 mt-2"
+          className="rounded-[28px] p-4"
           style={{
-            background: TILE,
-            border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.3)',
+            background: CARD_BG,
+            border: '1px solid rgba(244,63,94,0.18)',
+            boxShadow: '0 8px 22px rgba(0,0,0,0.16)',
           }}
         >
           <div
@@ -628,14 +649,20 @@ export default function CalendarioPage() {
               listPhase === 'out' ? 'nm-cal-list-fade--out' : 'nm-cal-list-fade--in',
             )}
           >
-          <p className="text-[15px] font-bold text-white mb-3">
+          <p
+            className="text-[16px] font-bold mb-3 tracking-wide"
+            style={{ color: CARD_TITLE }}
+          >
             {listDay
               ? listDay === hojeStr
                 ? 'Eventos de hoje'
                 : `Eventos de ${listDay.split('-').reverse().join('/')}`
               : `Eventos de ${MESES[selectedMonth].toLowerCase()}`}
             {!carregando && (
-              <span className="text-white/45 font-semibold text-sm">
+              <span
+                className="font-semibold text-sm"
+                style={{ color: ACCENT }}
+              >
                 {' '}
                 · {monthItems.length}
               </span>
@@ -643,9 +670,11 @@ export default function CalendarioPage() {
           </p>
 
           {carregando ? (
-            <p className="text-center text-white/50 text-sm py-8">Carregando...</p>
+            <p className="text-center text-sm py-8" style={{ color: CARD_META }}>
+              Carregando...
+            </p>
           ) : monthItems.length === 0 ? (
-            <p className="text-center text-white/45 text-sm py-8 px-2">
+            <p className="text-center text-sm py-8 px-2" style={{ color: CARD_META }}>
               {listDay
                 ? 'Nenhum evento neste dia.'
                 : 'Nenhum evento neste mês. Toque no + para criar.'}
@@ -663,20 +692,32 @@ export default function CalendarioPage() {
                   const limiteLabel = limMs != null
                     ? formatLimiteCurto(limMs)
                     : formatLimiteCurtoFromKey(dateKey);
+                  const souExecutor = Boolean(uid && m.executadoPorUid === uid);
+                  const souResgatante = Boolean(
+                    uid && m.resgatadoPorUid === uid,
+                  );
+                  const enviadoPorMim = souResgatante && !souExecutor;
+                  const statusLabel = enviadoPorMim
+                    ? `Aguardando ${partnerFirstName} realizar`
+                    : 'Momento para realizar';
+                  const href = enviadoPorMim
+                    ? '/momentos?tab=enviados'
+                    : '/momentos?tab=recebidos';
                   return (
                     <Link
                       key={`m-${m.id}`}
-                      href="/momentos"
-                      className="relative block rounded-2xl p-3.5"
+                      href={href}
+                      className="nm-cal-card relative block rounded-2xl p-3.5"
                       style={{
-                        background: 'rgba(255,255,255,0.04)',
+                        backgroundColor: CARD_SURFACE,
                         border: '1px solid rgba(244,63,94,0.22)',
-                        boxShadow: '0 8px 22px rgba(0,0,0,0.28)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                       }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center"
-                          style={{ background: 'rgba(244,63,94,0.14)' }}
+                        <div
+                          className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 flex items-center justify-center"
+                          style={{ backgroundColor: 'rgba(244,63,94,0.12)' }}
                         >
                           {m.momentoImg ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -690,7 +731,10 @@ export default function CalendarioPage() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <p className="text-[14px] font-bold text-white truncate leading-tight">
+                          <p
+                            className="nm-cal-card-title text-[14px] font-bold truncate leading-tight"
+                            style={{ color: CARD_TITLE }}
+                          >
                             {m.momentoNome}
                           </p>
                           <p
@@ -706,14 +750,20 @@ export default function CalendarioPage() {
                               className="shrink-0"
                               style={{ width: 12, height: 'auto' }}
                             />
-                            Momento para realizar
+                            {statusLabel}
                           </p>
                         </div>
                         <div className="text-right shrink-0 pl-1">
-                          <p className="text-[14px] font-bold text-white leading-tight">
+                          <p
+                            className="nm-cal-card-title text-[14px] font-bold leading-tight"
+                            style={{ color: CARD_TITLE }}
+                          >
                             {limiteLabel}
                           </p>
-                          <p className="text-[10px] text-white/40 mt-0.5">
+                          <p
+                            className="nm-cal-card-meta text-[10px] mt-0.5"
+                            style={{ color: CARD_META }}
+                          >
                             Prazo
                           </p>
                         </div>
@@ -726,11 +776,11 @@ export default function CalendarioPage() {
                 return (
                   <div
                     key={`e-${e.id}`}
-                    className="relative rounded-2xl p-3.5 pr-10"
+                    className="nm-cal-card relative rounded-2xl p-3.5 pr-10"
                     style={{
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      boxShadow: '0 8px 22px rgba(0,0,0,0.28)',
+                      backgroundColor: CARD_SURFACE,
+                      border: '1px solid rgba(244,63,94,0.14)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                     }}
                   >
                     <button
@@ -738,7 +788,7 @@ export default function CalendarioPage() {
                       onClick={() => excluirEvento(e)}
                       className="absolute -top-2 -right-2 z-10 flex h-7 w-7 items-center justify-center rounded-full text-white"
                       style={{
-                        background: ACCENT,
+                        backgroundColor: ACCENT,
                         boxShadow: '0 4px 12px rgba(244,63,94,0.45)',
                       }}
                       aria-label="Excluir evento"
@@ -752,32 +802,45 @@ export default function CalendarioPage() {
                     >
                       <div
                         className="w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center"
-                        style={{ background: 'rgba(96,165,250,0.14)' }}
+                        style={{ backgroundColor: 'rgba(59,130,246,0.12)' }}
                       >
                         <i
                           className={clsx(
-                            'fas text-sky-300',
+                            'fas',
                             e.icone && isEventoIcone(e.icone)
                               ? e.icone
                               : EVENTO_ICONE_DEFAULT,
                           )}
+                          style={{ color: '#3b82f6' }}
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-bold text-white truncate leading-tight">
+                        <p
+                          className="nm-cal-card-title text-[14px] font-bold truncate leading-tight"
+                          style={{ color: CARD_TITLE }}
+                        >
                           {e.titulo}
                         </p>
-                        <p className="text-[12px] text-white/55 mt-0.5 truncate">
+                        <p
+                          className="nm-cal-card-meta text-[12px] mt-0.5 truncate"
+                          style={{ color: CARD_META }}
+                        >
                           {e.notas?.trim() || 'Evento livre'}
                         </p>
                       </div>
                       <div className="text-right shrink-0 pl-1">
-                        <p className="text-[14px] font-bold text-white leading-tight">
+                        <p
+                          className="nm-cal-card-title text-[14px] font-bold leading-tight"
+                          style={{ color: CARD_TITLE }}
+                        >
                           {e.horaInicio && isValidHora(e.horaInicio)
                             ? e.horaInicio
                             : 'Dia todo'}
                         </p>
-                        <p className="text-[10px] text-white/40 mt-0.5">
+                        <p
+                          className="nm-cal-card-meta text-[10px] mt-0.5"
+                          style={{ color: CARD_META }}
+                        >
                           {formatDiaMesPt(e.dataInicio)}
                         </p>
                       </div>

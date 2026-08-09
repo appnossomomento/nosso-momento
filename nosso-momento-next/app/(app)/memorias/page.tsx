@@ -232,6 +232,7 @@ export default function MemoriasPage() {
 
   return (
     <AppHeroShell
+      bareSheet
       sheetClassName="space-y-4"
       hero={
         <>
@@ -389,11 +390,16 @@ export default function MemoriasPage() {
         </>
       }
     >
-        {/* Navegação de mês — fora do card neon */}
-        <div className="rounded-2xl bg-[#0f0b14] px-4 py-3 flex items-center justify-between border border-white/[0.08]">
+        {/* Navegação de mês — sem bloco preto, direto no gradiente */}
+        <div className="px-1 py-1 flex items-center justify-between">
           <button
             onClick={() => changeMonth(-1)}
-            className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition active:scale-95"
+            style={{
+              background: 'rgba(0,0,0,0.28)',
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}
+            aria-label="Mês anterior"
           >
             <i className="fas fa-chevron-left text-white text-sm" />
           </button>
@@ -401,7 +407,12 @@ export default function MemoriasPage() {
           <button
             onClick={() => changeMonth(1)}
             disabled={isFuture}
-            className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition disabled:opacity-30"
+            className="w-9 h-9 rounded-full flex items-center justify-center transition active:scale-95 disabled:opacity-30"
+            style={{
+              background: 'rgba(0,0,0,0.28)',
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}
+            aria-label="Próximo mês"
           >
             <i className="fas fa-chevron-right text-white text-sm" />
           </button>
