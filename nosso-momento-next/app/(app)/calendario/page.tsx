@@ -706,7 +706,7 @@ export default function CalendarioPage() {
                               className="shrink-0"
                               style={{ width: 12, height: 'auto' }}
                             />
-                            Momento à realizar
+                            Momento para realizar
                           </p>
                         </div>
                         <div className="text-right shrink-0 pl-1">
