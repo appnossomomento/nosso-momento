@@ -21,7 +21,12 @@ import AppHeroShell, {
   PANEL,
   TILE,
 } from '@/components/layout/AppHeroShell';
-import { primeiroNome } from '@/lib/utils/displayName';
+import { primeiroNome, nomeParaCard } from '@/lib/utils/displayName';
+import {
+  PRAZO_DIAS_OPTIONS,
+  PRAZO_DIAS_DEFAULT,
+  type PrazoDiasOption,
+} from '@/lib/momentos/prazoStatus';
 
 const CTA_GRAD = `linear-gradient(135deg, ${LP_RED}, ${ACCENT})`;
 const CHIP_IDLE = { background: TILE, color: 'rgba(255,255,255,0.45)' } as const;
@@ -171,6 +176,7 @@ export default function LojaPage() {
           custoFoguinhos: item.custoFoguinhos,
           categoria: item.categoria || '',
           emoji: item.emoji || '',
+          prazoDias: PRAZO_DIAS_DEFAULT,
         } as CarrinhoItem,
       ],
       showCartSidebar: true,
@@ -203,6 +209,11 @@ export default function LojaPage() {
             foto?: string;
           };
           const custom = isCustomMomentId(c.id);
+          const pd = PRAZO_DIAS_OPTIONS.includes(
+            Number(c.prazoDias) as PrazoDiasOption,
+          )
+            ? (Number(c.prazoDias) as PrazoDiasOption)
+            : PRAZO_DIAS_DEFAULT;
           return {
             id: c.id,
             ...(custom ? {} : { momentoMestreId: c.id }),
@@ -210,6 +221,7 @@ export default function LojaPage() {
             img: ext.foto || '',
             categoria: ext.categoria || '',
             emoji: ext.emoji || '',
+            prazoDias: pd,
           };
         });
 
@@ -296,7 +308,11 @@ export default function LojaPage() {
     );
   }
 
-  const partnerName = primeiroNome(parceiroData.nome) || 'Parceiro';
+  const partnerName = nomeParaCard({
+    apelidoReal: (parceiroData as { apelidoReal?: string | null }).apelidoReal,
+    nome: parceiroData.nome,
+    fallback: 'ele(a)',
+  }) || primeiroNome(parceiroData.nome) || 'ele(a)';
   const cartCount = carrinho.length;
 
   return (
@@ -447,74 +463,129 @@ export default function LojaPage() {
               {carrinho.length === 0 ? (
                 <p className="text-white/40 text-center py-10 text-sm">Seu carrinho está vazio.</p>
               ) : (
-                carrinho.map((item, idx) => (
+                carrinho.map((item, idx) => {
+                  const prazoItem = (
+                    PRAZO_DIAS_OPTIONS.includes(
+                      Number(item.prazoDias) as PrazoDiasOption,
+                    )
+                      ? Number(item.prazoDias)
+                      : PRAZO_DIAS_DEFAULT
+                  ) as PrazoDiasOption;
+                  return (
                   <div
                     key={idx}
-                    className="rounded-2xl p-4 flex gap-3 items-center"
+                    className="rounded-2xl p-4 space-y-3"
                     style={{
                       background: TILE,
                       border: '1px solid rgba(255,255,255,0.08)',
                     }}
                   >
-                    {item.foto ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.foto}
-                        alt={item.titulo}
-                        className="w-16 h-16 rounded-xl object-cover shrink-0"
-                        style={{ background: 'rgba(255,255,255,0.06)' }}
-                      />
-                    ) : (
-                      <div
-                        className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0 text-xl"
-                        style={{ background: 'rgba(255,255,255,0.06)' }}
-                      >
-                        {(item as CarrinhoItem & { emoji?: string }).emoji || '🎁'}
+                    <div className="flex gap-3 items-center">
+                      {item.foto ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.foto}
+                          alt={item.titulo}
+                          className="w-16 h-16 rounded-xl object-cover shrink-0"
+                          style={{ background: 'rgba(255,255,255,0.06)' }}
+                        />
+                      ) : (
+                        <div
+                          className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0 text-xl"
+                          style={{ background: 'rgba(255,255,255,0.06)' }}
+                        >
+                          {(item as CarrinhoItem & { emoji?: string }).emoji || '🎁'}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-white truncate">{item.titulo}</p>
+                        <p className="text-xs text-white/40 mt-0.5">
+                          {(() => {
+                            const cat = String(
+                              (item as CarrinhoItem & { categoria?: string }).categoria || '',
+                            ).trim();
+                            if (isCustomMomentId(item.id)) return cat || 'Personalizado';
+                            if (cat === 'Sair da Rotina') return 'Rotina';
+                            return cat || 'Momento';
+                          })()}
+                        </p>
+                        <p
+                          className="text-sm font-semibold mt-1 flex items-center gap-1.5 leading-none"
+                          style={{ color: ACCENT_SOFT }}
+                        >
+                          <FoguinhosIcon size={20} />
+                          <span>
+                            {(item as CarrinhoItem & { custoFoguinhos?: number }).custoFoguinhos ?? 0}{' '}
+                            foguinhos
+                          </span>
+                        </p>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{item.titulo}</p>
-                      <p className="text-xs text-white/40 mt-0.5">
-                        {(() => {
-                          const cat = String(
-                            (item as CarrinhoItem & { categoria?: string }).categoria || '',
-                          ).trim();
-                          if (isCustomMomentId(item.id)) return cat || 'Personalizado';
-                          if (cat === 'Sair da Rotina') return 'Rotina';
-                          return cat || 'Momento';
-                        })()}
-                      </p>
-                      <p
-                        className="text-sm font-semibold mt-1 flex items-center gap-1.5 leading-none"
-                        style={{ color: ACCENT_SOFT }}
+                      <button
+                        type="button"
+                        onClick={() => set({ carrinho: carrinho.filter((_, i) => i !== idx) })}
+                        className="text-white/35 hover:text-white transition shrink-0 self-start"
                       >
-                        <FoguinhosIcon size={20} />
-                        <span>
-                          {(item as CarrinhoItem & { custoFoguinhos?: number }).custoFoguinhos ?? 0}{' '}
-                          foguinhos
-                        </span>
-                      </p>
+                        <i className="fas fa-times" />
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => set({ carrinho: carrinho.filter((_, i) => i !== idx) })}
-                      className="text-white/35 hover:text-white transition shrink-0"
-                    >
-                      <i className="fas fa-times" />
-                    </button>
+                    <div>
+                      <label className="block text-xs font-semibold text-white/55 mb-1.5">
+                        Quantos dias {partnerName} tem para realizar?
+                      </label>
+                      <select
+                        value={prazoItem}
+                        onChange={(e) => {
+                          const next = Number(e.target.value) as PrazoDiasOption;
+                          set({
+                            carrinho: carrinho.map((c, i) =>
+                              i === idx ? { ...c, prazoDias: next } : c,
+                            ),
+                          });
+                        }}
+                        className="w-full rounded-xl px-3 py-2 text-sm text-white outline-none"
+                        style={{
+                          background: 'rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.12)',
+                        }}
+                      >
+                        {PRAZO_DIAS_OPTIONS.map((d) => (
+                          <option key={d} value={d} className="bg-[#141414] text-white">
+                            {d} {d === 1 ? 'dia' : 'dias'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                ))
+                  );
+                })
               )}
             </div>
 
             {carrinho.length > 0 && (
               <div
-                className="px-4 mt-4 space-y-4"
+                className="px-4 mt-4 space-y-3"
                 style={{
                   /* Carrinho cobre a nav; folga do canto + safe area */
                   paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 28px)',
                 }}
               >
+                <div
+                  className="rounded-xl px-3 py-2.5 flex items-center gap-2.5"
+                  style={{
+                    background: 'rgba(244,63,94,0.08)',
+                    border: '1px solid rgba(244,63,94,0.18)',
+                  }}
+                >
+                  <i
+                    className="fas fa-clock text-sm shrink-0"
+                    style={{ color: ACCENT }}
+                    aria-hidden
+                  />
+                  <p className="text-[11px] leading-snug text-white/55">
+                    Se atrasar mais de 24h após o prazo, {partnerName} perderá 5 foguinhos.
+                  </p>
+                </div>
+
                 <div
                   className="rounded-2xl p-4"
                   style={{

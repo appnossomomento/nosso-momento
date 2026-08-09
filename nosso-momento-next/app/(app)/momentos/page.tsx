@@ -19,6 +19,16 @@ import AppHeroShell, {
   LP_RED,
   TILE,
 } from '@/components/layout/AppHeroShell';
+import {
+  PRAZO_DIAS_OPTIONS,
+  PRAZO_DIAS_DEFAULT,
+  type PrazoDiasOption,
+  derivePrazoStatus,
+  prazoStatusLabel,
+  prazoStatusStyle,
+  formatDataLimiteShort,
+  computeDataLimite,
+} from '@/lib/momentos/prazoStatus';
 
 const CTA_GRAD = `linear-gradient(135deg, ${LP_RED}, ${ACCENT})`;
 const CHIP_IDLE = { background: TILE, color: 'rgba(255,255,255,0.45)' } as const;
@@ -44,6 +54,10 @@ interface TarefaMomento {
   momentoEmoji?: string;
   status: string;
   dataResgate: { seconds: number } | null;
+  dataLimite?: { seconds: number } | null;
+  prazoDias?: number;
+  penalidadeAplicadaAt?: { seconds: number } | null;
+  penalidadeValor?: number | null;
   fromUid?: string;
   toUid?: string;
   idPareamento?: string;
@@ -60,6 +74,9 @@ export default function MomentosPage() {
   const [realizandoFoto, setRealizandoFoto] = useState<File | null>(null);
   const [realizandoFotoPreview, setRealizandoFotoPreview] = useState<string | null>(null);
   const [realizandoEnviando, setRealizandoEnviando] = useState(false);
+  const [postergandoMomento, setPostergandoMomento] = useState<TarefaMomento | null>(null);
+  const [prazoPostergar, setPrazoPostergar] = useState<PrazoDiasOption>(PRAZO_DIAS_DEFAULT);
+  const [postergandoEnviando, setPostergandoEnviando] = useState(false);
   const fotoInputRef = useRef<HTMLInputElement>(null);
 
   const uid = usuario?.uid ?? null;
@@ -110,6 +127,44 @@ export default function MomentosPage() {
     setRealizandoMomento(null);
     setRealizandoFoto(null);
     setRealizandoFotoPreview(null);
+  }
+
+  function abrirPostergar(m: TarefaMomento) {
+    setPostergandoMomento(m);
+    setPrazoPostergar(PRAZO_DIAS_DEFAULT);
+  }
+
+  function fecharPostergar() {
+    setPostergandoMomento(null);
+    setPostergandoEnviando(false);
+  }
+
+  async function confirmarPostergar() {
+    if (!postergandoMomento || postergandoEnviando || !idPareamentoAmigavel) return;
+    setPostergandoEnviando(true);
+    try {
+      await sendInput('moment_postpone', {
+        pareamentoId: idPareamentoAmigavel,
+        tarefaId: postergandoMomento.id,
+        prazoDias: prazoPostergar,
+      });
+      setMomentos((prev) =>
+        prev.map((row) => {
+          if (row.id !== postergandoMomento.id) return row;
+          const lim = computeDataLimite(prazoPostergar);
+          return {
+            ...row,
+            prazoDias: prazoPostergar,
+            dataLimite: { seconds: Math.floor(lim.getTime() / 1000) },
+          };
+        }),
+      );
+      showToast('Prazo postergado!', 'sucesso');
+      fecharPostergar();
+    } catch {
+      showToast('Erro ao postergar prazo.', 'erro');
+      setPostergandoEnviando(false);
+    }
   }
 
   function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -208,6 +263,9 @@ export default function MomentosPage() {
                   ? formatDateRelative(new Date(m.dataResgate.seconds * 1000))
                   : null;
                 const realizado = m.status === 'realizado' || m.status === 'Realizado';
+                const prazoKey = !realizado ? derivePrazoStatus(m.dataLimite) : null;
+                const ateStr = !realizado ? formatDataLimiteShort(m.dataLimite) : null;
+                const penalizado = Boolean(m.penalidadeAplicadaAt);
                 return (
                   <div
                     key={m.id}
@@ -244,7 +302,7 @@ export default function MomentosPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white leading-snug">{m.momentoNome}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                         <span
                           className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                           style={
@@ -255,17 +313,51 @@ export default function MomentosPage() {
                         >
                           {realizado ? 'Realizado' : 'Pendente'}
                         </span>
-                        {dataStr && <span className="text-[10px] text-white/40">{dataStr}</span>}
+                        {prazoKey && (
+                          <span
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={prazoStatusStyle(prazoKey)}
+                          >
+                            {prazoStatusLabel(prazoKey)}
+                          </span>
+                        )}
+                        {penalizado && !realizado && (
+                          <span
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ background: 'rgba(239,68,68,0.2)', color: LP_RED }}
+                          >
+                            −{m.penalidadeValor ?? 5} aplicados
+                          </span>
+                        )}
+                        {ateStr && (
+                          <span className="text-[10px] text-white/40">Até {ateStr}</span>
+                        )}
+                        {dataStr && !ateStr && (
+                          <span className="text-[10px] text-white/40">{dataStr}</span>
+                        )}
                       </div>
                     </div>
                     {tab === 'enviados' && !realizado && (
-                      <button
-                        onClick={() => abrirConfirmacao(m)}
-                        className="shrink-0 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition"
-                        style={{ background: CTA_GRAD }}
-                      >
-                        ✓ Feito
-                      </button>
+                      <div className="flex flex-col gap-1.5 shrink-0">
+                        <button
+                          onClick={() => abrirConfirmacao(m)}
+                          className="text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition"
+                          style={{ background: CTA_GRAD }}
+                        >
+                          ✓ Feito
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => abrirPostergar(m)}
+                          className="text-[10px] font-semibold px-2 py-1 rounded-lg"
+                          style={{
+                            background: 'rgba(255,255,255,0.06)',
+                            color: 'rgba(255,255,255,0.55)',
+                          }}
+                        >
+                          Postergar
+                        </button>
+                      </div>
                     )}
                   </div>
                 );
@@ -405,6 +497,60 @@ export default function MomentosPage() {
             </div>
         </div>
       </OverlayModal>
+      )}
+
+      {postergandoMomento && (
+        <OverlayModal
+          open
+          onClose={fecharPostergar}
+          backdropClassName="bg-black/85"
+          maxWidth="max-w-sm"
+          scrollPanel={false}
+          panelClassName="overflow-hidden border border-white/10"
+          ariaLabel="Postergar prazo do momento"
+        >
+          <div className="overflow-hidden p-5 space-y-4" style={{ background: '#101010' }}>
+            <h3 className="text-white font-bold text-base">Postergar prazo</h3>
+            <p className="text-white/50 text-sm truncate">{postergandoMomento.momentoNome}</p>
+            <label className="block text-sm font-semibold text-white">
+              Mais quantos dias?
+            </label>
+            <select
+              value={prazoPostergar}
+              onChange={(e) =>
+                setPrazoPostergar(Number(e.target.value) as PrazoDiasOption)
+              }
+              className="w-full rounded-xl px-3 py-2.5 text-sm text-white outline-none"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.12)',
+              }}
+            >
+              {PRAZO_DIAS_OPTIONS.map((d) => (
+                <option key={d} value={d} className="bg-[#141414] text-white">
+                  {d} {d === 1 ? 'dia' : 'dias'}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={confirmarPostergar}
+              disabled={postergandoEnviando}
+              className="w-full py-3 rounded-xl font-bold text-white text-sm disabled:opacity-40"
+              style={{ background: CTA_GRAD }}
+            >
+              {postergandoEnviando ? 'Salvando...' : 'Confirmar'}
+            </button>
+            <button
+              type="button"
+              onClick={fecharPostergar}
+              className="w-full py-2.5 rounded-xl text-sm"
+              style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.35)' }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </OverlayModal>
       )}
     </>
   );

@@ -48,6 +48,8 @@ type Props = {
   sheetClassName?: string;
   /** Seta top-left para voltar. Default true; desligar no Início. */
   showBack?: boolean;
+  /** Hero mais baixo (ex.: só seletor de mês no calendário). */
+  compactHero?: boolean;
 };
 
 export default function AppHeroShell({
@@ -55,6 +57,7 @@ export default function AppHeroShell({
   children,
   sheetClassName = 'space-y-3',
   showBack = true,
+  compactHero = false,
 }: Props) {
   const router = useRouter();
 
@@ -87,8 +90,11 @@ export default function AppHeroShell({
 
       <div className="relative" style={{ zIndex: 1 }}>
         <section
-          className="relative flex flex-col items-center justify-center px-5 pt-14 pb-5"
-          style={{ minHeight: HERO_MIN_HEIGHT }}
+          className={clsx(
+            'relative flex flex-col items-center justify-center px-5',
+            compactHero ? 'pt-12 pb-4' : 'pt-14 pb-5',
+          )}
+          style={{ minHeight: compactHero ? 120 : HERO_MIN_HEIGHT }}
         >
           {showBack && (
             <button

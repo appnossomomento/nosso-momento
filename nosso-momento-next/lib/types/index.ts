@@ -168,6 +168,8 @@ export interface CarrinhoItem {
   preco?: number;
   quantidade: number;
   foto?: string;
+  /** Dias para o parceiro realizar (1|3|7|14|30). */
+  prazoDias?: number;
 }
 
 export interface PendingChallenge {

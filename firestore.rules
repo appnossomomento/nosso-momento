@@ -177,6 +177,14 @@ service cloud.firestore {
       allow create, delete: if false;
     }
 
+    match /eventosCasal/{eid} {
+      // Query client: where('memberUids', 'array-contains', uid)
+      // Não adicionar checks extras (is list / keys.has) — quebram a análise da query.
+      allow get, list: if isAuthenticated()
+        && authUid() in resource.data.memberUids;
+      allow create, update, delete: if false;
+    }
+
     match /momentosMestres/{mid} {
       allow read: if true;
       allow write: if false;

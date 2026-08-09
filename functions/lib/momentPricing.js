@@ -36,6 +36,7 @@ function sanitizeMomentRedeemItems(rawItems) {
       emoji: typeof raw.emoji === "string" ? raw.emoji : "",
       categoria: typeof raw.categoria === "string" ? raw.categoria : "",
       img: typeof raw.img === "string" ? raw.img : "",
+      prazoDias: raw.prazoDias,
     });
 
     if (sanitized.length >= MAX_ITEMS) break;
@@ -128,6 +129,7 @@ function resolveMasterMomentItem(item, mestreData, partnerData) {
       categoria: item.categoria || mestreData.categoria || "",
       img: item.img || mestreData.img || "",
       momentoMestreId: mestreData.id || item.id || "",
+      prazoDias: item.prazoDias,
     },
   };
 }
@@ -177,6 +179,7 @@ function resolveCustomMomentItem(item, partnerUid, pareamentoId, pareamentoData)
       img: custom.img || item.img || "",
       momentoMestreId: "",
       isCustom: true,
+      prazoDias: item.prazoDias,
     },
   };
 }

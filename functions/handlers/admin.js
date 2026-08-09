@@ -64,6 +64,7 @@ exports.createInput = https.onRequest(async (req, res) => {
       "gift",
       "daily_check_in",
       "moment_redeem",
+      "moment_postpone",
       "clima_update",
       "weekly_challenge_seed",
       "weekly_challenge_start",
@@ -82,6 +83,9 @@ exports.createInput = https.onRequest(async (req, res) => {
       "custom_moment_update",
       "custom_moment_delete",
       "custom_moment_block",
+      "calendar_event_create",
+      "calendar_event_update",
+      "calendar_event_delete",
     ];
     if (!input.type || !allowedTypes.includes(input.type)) {
       res.status(400).send({error: "unsupported_type"});
@@ -114,7 +118,10 @@ exports.createInput = https.onRequest(async (req, res) => {
         "type", "fromUid", "partnerUid", "pareamentoId",
       ],
       moment_redeem: [
-        "type", "fromUid", "partnerUid", "pareamentoId", "items",
+        "type", "fromUid", "partnerUid", "pareamentoId", "items", "prazoDias",
+      ],
+      moment_postpone: [
+        "type", "fromUid", "pareamentoId", "tarefaId", "prazoDias",
       ],
       clima_update: [
         "type", "fromUid", "partnerUid", "pareamentoId", "humor",
@@ -173,6 +180,17 @@ exports.createInput = https.onRequest(async (req, res) => {
       ],
       custom_moment_block: [
         "type", "fromUid", "pareamentoId", "itemId", "bloqueado",
+      ],
+      calendar_event_create: [
+        "type", "fromUid", "pareamentoId", "titulo",
+        "dataInicio", "horaInicio", "icone", "notas",
+      ],
+      calendar_event_update: [
+        "type", "fromUid", "pareamentoId", "eventId",
+        "titulo", "dataInicio", "horaInicio", "icone", "notas",
+      ],
+      calendar_event_delete: [
+        "type", "fromUid", "pareamentoId", "eventId",
       ],
     };
 

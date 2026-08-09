@@ -28,6 +28,10 @@ exports.getExtrato = extrato.getExtrato;
 
 exports.handleMomentTaskUpdate = moments.handleMomentTaskUpdate;
 
+const momentDeadlines = require("./handlers/momentDeadlines");
+exports.applyMomentDeadlinePenalties =
+  momentDeadlines.applyMomentDeadlinePenalties;
+
 exports.propagateProfileChange = profile.propagateProfileChange;
 exports.excluirConta = profile.excluirConta;
 exports.exportarMeusDados = profile.exportarMeusDados;

@@ -488,6 +488,7 @@ export default function ParceiroPage() {
             { href: '/loja', icon: 'fa-store', label: 'Catálogo', catalog: true },
             { href: '/personalizar', icon: 'fa-tags', label: 'Personalizar', catalog: false },
             { href: '/momentos', icon: 'fa-heart', label: 'Momentos', catalog: false },
+            { href: '/calendario', icon: 'fa-calendar', label: 'Calendário', catalog: false },
             { href: '/extrato', icon: 'fa-fire', label: 'Extrato', catalog: false },
             { href: '/desafios', icon: 'fa-trophy', label: 'Desafios', catalog: false },
           ].map((a) => (
