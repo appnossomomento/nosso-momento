@@ -281,7 +281,8 @@ export default function PerfilPage() {
 
   const tileBtn = {
     background: TILE,
-    border: '1px solid rgba(255, 255, 255, 0.09)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
   } as const;
 
   const membroLabel = membershipLabel({
@@ -294,7 +295,8 @@ export default function PerfilPage() {
   });
   return (
     <AppHeroShell
-      sheetClassName="space-y-3"
+      bareSheet
+      sheetClassName="space-y-4"
       hero={
         <>
           <div className="relative mb-5">
@@ -356,10 +358,7 @@ export default function PerfilPage() {
         </>
       }
     >
-      <div
-        className="rounded-[24px] p-5 space-y-4"
-        style={tileBtn}
-      >
+      <div className="rounded-[24px] p-5 space-y-4" style={tileBtn}>
           <div>
             <p className="text-xs text-white/50 mb-1">Nome</p>
             {editandoNome ? (
@@ -654,8 +653,9 @@ export default function PerfilPage() {
         onClick={handleLogout}
         className="w-full rounded-2xl p-4 text-red-400 text-sm font-medium transition"
         style={{
-          background: 'rgba(239, 68, 68, 0.1)',
+          background: 'rgba(239, 68, 68, 0.12)',
           border: '1px solid rgba(239, 68, 68, 0.3)',
+          boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
         }}
       >
         <i className="fas fa-sign-out-alt mr-2" />Sair da conta
@@ -663,10 +663,10 @@ export default function PerfilPage() {
 
       <button
         onClick={handleExcluirConta}
-        className="w-full mt-5 rounded-xl py-2 px-3 text-white/30 text-[11px] hover:text-red-500/60 transition text-center"
+        className="w-full mt-2 rounded-xl py-2 px-3 text-white/30 text-[11px] hover:text-red-500/60 transition text-center"
         style={{
           background: 'transparent',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid rgba(255,255,255,0.1)',
         }}
       >
         Excluir minha conta

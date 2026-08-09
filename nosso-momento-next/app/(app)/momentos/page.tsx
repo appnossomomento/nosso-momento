@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
@@ -67,6 +68,7 @@ type Tab = 'recebidos' | 'enviados';
 
 export default function MomentosPage() {
   const { usuario, idPareamentoAmigavel } = useAppStore();
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState<Tab>('recebidos');
   const [momentos, setMomentos] = useState<TarefaMomento[]>([]);
   const [carregando, setCarregando] = useState(false);
@@ -80,6 +82,11 @@ export default function MomentosPage() {
   const fotoInputRef = useRef<HTMLInputElement>(null);
 
   const uid = usuario?.uid ?? null;
+
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t === 'enviados' || t === 'recebidos') setTab(t);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!uid || !idPareamentoAmigavel) return;

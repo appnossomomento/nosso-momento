@@ -86,6 +86,10 @@ exports.createInput = https.onRequest(async (req, res) => {
       "calendar_event_create",
       "calendar_event_update",
       "calendar_event_delete",
+      "gasto_create",
+      "gasto_update",
+      "gasto_delete",
+      "financas_limite_set",
     ];
     if (!input.type || !allowedTypes.includes(input.type)) {
       res.status(400).send({error: "unsupported_type"});
@@ -191,6 +195,20 @@ exports.createInput = https.onRequest(async (req, res) => {
       ],
       calendar_event_delete: [
         "type", "fromUid", "pareamentoId", "eventId",
+      ],
+      gasto_create: [
+        "type", "fromUid", "pareamentoId", "titulo",
+        "valorCentavos", "categoria", "data", "pagoPorUid", "notas",
+      ],
+      gasto_update: [
+        "type", "fromUid", "pareamentoId", "gastoId", "titulo",
+        "valorCentavos", "categoria", "data", "pagoPorUid", "notas",
+      ],
+      gasto_delete: [
+        "type", "fromUid", "pareamentoId", "gastoId",
+      ],
+      financas_limite_set: [
+        "type", "fromUid", "pareamentoId", "limiteMensalCentavos",
       ],
     };
 

@@ -128,6 +128,7 @@ export default function NotificacoesPage() {
 
   return (
     <AppHeroShell
+      bareSheet
       sheetClassName="space-y-4"
       hero={
         <>
@@ -205,8 +206,8 @@ export default function NotificacoesPage() {
                 style={
                   lida
                     ? {
-                        background: TILE,
-                        border: '1px solid rgba(255,255,255,0.06)',
+                        background: '#222222',
+                        border: '1px solid rgba(255,255,255,0.1)',
                       }
                     : {
                         background: 'rgba(244, 63, 94, 0.1)',

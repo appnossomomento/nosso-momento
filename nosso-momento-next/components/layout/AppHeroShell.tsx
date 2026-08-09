@@ -50,6 +50,11 @@ type Props = {
   showBack?: boolean;
   /** Hero mais baixo (ex.: só seletor de mês no calendário). */
   compactHero?: boolean;
+  /**
+   * Sem o container preto arredondado — conteúdo direto no gradiente.
+   * Útil em telas de utilidade com cards claros (calendário, etc.).
+   */
+  bareSheet?: boolean;
 };
 
 export default function AppHeroShell({
@@ -58,6 +63,7 @@ export default function AppHeroShell({
   sheetClassName = 'space-y-3',
   showBack = true,
   compactHero = false,
+  bareSheet = false,
 }: Props) {
   const router = useRouter();
 
@@ -75,15 +81,16 @@ export default function AppHeroShell({
       }}
     >
       {/*
-        Gradient começa ABAIXO da safe-area, alinhado ao header preto do /parceiro.
-        Assim o fade entre telas não quebra por faixa vermelha vs preta no topo.
+        Gradient ancorado na viewport (não na altura do conteúdo).
+        Assim trocar abas/listas curtas vs longas não “esticam” o vermelho.
       */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-0 right-0 bottom-0"
+        className="pointer-events-none absolute left-0 right-0"
         style={{
           ...PAGE_BG,
           top: 'env(safe-area-inset-top, 0px)',
+          height: 'calc(100dvh - env(safe-area-inset-top, 0px))',
           zIndex: 0,
         }}
       />
@@ -114,12 +121,16 @@ export default function AppHeroShell({
         </section>
 
         <section className="px-3.5 pb-8">
-          <div
-            className={clsx('rounded-[36px] p-3.5', sheetClassName)}
-            style={PANEL_STYLE}
-          >
-            {children}
-          </div>
+          {bareSheet ? (
+            <div className={sheetClassName}>{children}</div>
+          ) : (
+            <div
+              className={clsx('rounded-[36px] p-3.5', sheetClassName)}
+              style={PANEL_STYLE}
+            >
+              {children}
+            </div>
+          )}
         </section>
       </div>
     </div>

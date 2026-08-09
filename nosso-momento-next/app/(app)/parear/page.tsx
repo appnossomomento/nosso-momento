@@ -280,6 +280,7 @@ export default function ParearPage() {
 
   return (
     <AppHeroShell
+      bareSheet
       sheetClassName="space-y-4"
       hero={
         <>

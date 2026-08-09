@@ -384,6 +384,18 @@ select:focus {
   transform: scale(0.92);
 }
 
+/* Cards do resumo — branco sobre bloco rosado (vence text-white do AppHeroShell) */
+.nm-cal-card {
+  background-color: #ffffff !important;
+  color: #1a1214;
+}
+.nm-cal-card-title {
+  color: #1a1214 !important;
+}
+.nm-cal-card-meta {
+  color: #8b6b73 !important;
+}
+
 @keyframes logoPulse {
   0%, 100% {
     opacity: 1;

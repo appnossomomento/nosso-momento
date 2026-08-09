@@ -185,6 +185,25 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    match /gastosCasal/{gid} {
+      allow get, list: if isAuthenticated()
+        && authUid() in resource.data.memberUids;
+      allow create, update, delete: if false;
+    }
+
+    match /financasCasal/{pid} {
+      // Doc pode não existir até o casal definir limite — get sem resource
+      // não pode cair em permission-denied (mesmo padrão de /pareamentos).
+      allow get: if isAuthenticated() && (
+        resource == null ||
+        authUid() in resource.data.memberUids
+      );
+      allow list: if isAuthenticated()
+        && resource != null
+        && authUid() in resource.data.memberUids;
+      allow create, update, delete: if false;
+    }
+
     match /momentosMestres/{mid} {
       allow read: if true;
       allow write: if false;
