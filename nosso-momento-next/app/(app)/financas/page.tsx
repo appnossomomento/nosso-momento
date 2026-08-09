@@ -101,15 +101,20 @@ function CategoryDonut({
   const total = parts.reduce((s, p) => s + p.value, 0);
   if (total <= 0 || parts.length === 0) return null;
 
-  let acc = 0;
   const stops = parts
-    .map((p) => {
-      const start = (acc / total) * 100;
-      acc += p.value;
-      const end = (acc / total) * 100;
-      return `${p.color} ${start}% ${end}%`;
-    })
-    .join(', ');
+    .reduce<{ list: string[]; acc: number }>(
+      (state, p) => {
+        const start = (state.acc / total) * 100;
+        const nextAcc = state.acc + p.value;
+        const end = (nextAcc / total) * 100;
+        return {
+          acc: nextAcc,
+          list: [...state.list, `${p.color} ${start}% ${end}%`],
+        };
+      },
+      { list: [], acc: 0 },
+    )
+    .list.join(', ');
 
   return (
     <div
