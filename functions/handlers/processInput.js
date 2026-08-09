@@ -13,6 +13,10 @@ const {
   toSaoPauloDateStr,
 } = require("../lib/time");
 const {
+  isValidPrazoDias,
+  computeDataLimiteDate,
+} = require("../lib/momentPrazo");
+const {
   normalizeChallengeAnswer,
   parsePayloadJson,
 } = require("../lib/normalize");
@@ -1301,6 +1305,7 @@ exports.processInput = onDocumentCreated(
           const partnerUid = input.partnerUid;
           const pareamentoId = input.pareamentoId || null;
           const sanitizedRaw = sanitizeMomentRedeemItems(input.items);
+          const fallbackPrazo = Math.floor(Number(input.prazoDias));
 
           if (!fromUid || !partnerUid || sanitizedRaw.length === 0) {
             await inputRef.update({
@@ -1308,6 +1313,20 @@ exports.processInput = onDocumentCreated(
               processed: false,
             });
             return;
+          }
+
+          for (const raw of sanitizedRaw) {
+            const pd = isValidPrazoDias(raw.prazoDias) ?
+              Math.floor(Number(raw.prazoDias)) :
+              (isValidPrazoDias(fallbackPrazo) ? fallbackPrazo : null);
+            if (!isValidPrazoDias(pd)) {
+              await inputRef.update({
+                error: "invalid_prazo_dias",
+                processed: false,
+              });
+              return;
+            }
+            raw.prazoDias = pd;
           }
 
           const partnerSnap = await admin
@@ -1453,6 +1472,12 @@ exports.processInput = onDocumentCreated(
             }
 
             sanitizedItems.forEach((item) => {
+              const itemPrazo = isValidPrazoDias(item.prazoDias) ?
+                Math.floor(Number(item.prazoDias)) :
+                (isValidPrazoDias(fallbackPrazo) ? fallbackPrazo : 7);
+              const dataLimiteTs = admin.firestore.Timestamp.fromDate(
+                  computeDataLimiteDate(itemPrazo),
+              );
               const tarefaRef = admin
                   .firestore()
                   .collection("tarefasMomentos")
@@ -1466,6 +1491,13 @@ exports.processInput = onDocumentCreated(
                 status: "Pendente",
                 dataResgate: admin.firestore.FieldValue.serverTimestamp(),
                 dataConclusao: null,
+                prazoDias: itemPrazo,
+                dataLimite: dataLimiteTs,
+                dataLimiteOriginal: dataLimiteTs,
+                postergadoEm: null,
+                postergadoPorUid: null,
+                penalidadeAplicadaAt: null,
+                penalidadeValor: null,
                 idPareamento: effectivePareamentoId,
                 resgatadoPorUid: fromUid,
                 resgatadoPorNome: senderData.nome || "",
@@ -2254,6 +2286,367 @@ exports.processInput = onDocumentCreated(
           });
           console.log("processInput: moment_complete processado", inputId,
               comFoto ? `(+${2} foguinhos com foto)` : "(sem foto, sem bônus)");
+        } else if (input.type === "moment_postpone") {
+          const fromUid = input.fromUid;
+          const tarefaId = typeof input.tarefaId === "string" ?
+            input.tarefaId.trim() : "";
+          const prazoDias = Math.floor(Number(input.prazoDias));
+
+          if (!fromUid) {
+            await inputRef.update({error: "missing_uid", processed: false});
+            return;
+          }
+          if (!tarefaId) {
+            await inputRef.update({
+              error: "missing_tarefaId", processed: false,
+            });
+            return;
+          }
+          if (!isValidPrazoDias(prazoDias)) {
+            await inputRef.update({
+              error: "invalid_prazo_dias", processed: false,
+            });
+            return;
+          }
+
+          const dataLimiteDate = computeDataLimiteDate(prazoDias);
+          const dataLimiteTs =
+            admin.firestore.Timestamp.fromDate(dataLimiteDate);
+          const tarefaRef = admin.firestore()
+              .collection("tarefasMomentos").doc(tarefaId);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const tarefaSnap = await tx.get(tarefaRef);
+            if (!tarefaSnap.exists) {
+              tx.update(inputRef, {
+                error: "tarefa_not_found", processed: false,
+              });
+              return;
+            }
+            const tarefaData = tarefaSnap.data() || {};
+            if (tarefaData.resgatadoPorUid !== fromUid) {
+              tx.update(inputRef, {
+                error: "tarefa_wrong_user", processed: false,
+              });
+              return;
+            }
+            if (tarefaData.status !== "Pendente") {
+              tx.update(inputRef, {
+                error: "tarefa_not_pending", processed: false,
+              });
+              return;
+            }
+
+            tx.update(tarefaRef, {
+              prazoDias,
+              dataLimite: dataLimiteTs,
+              postergadoEm: admin.firestore.FieldValue.serverTimestamp(),
+              postergadoPorUid: fromUid,
+            });
+
+            const executorUid = tarefaData.executadoPorUid;
+            if (executorUid) {
+              const notifRef = admin.firestore()
+                  .collection("notificacoes").doc();
+              tx.set(notifRef, {
+                userId: executorUid,
+                titulo: "Prazo postergado",
+                // eslint-disable-next-line max-len
+                mensagem: `O prazo de "${tarefaData.momentoNome || "momento"}" foi estendido em ${prazoDias} dia(s).`,
+                icone: "fa-calendar-plus",
+                tipo: "momento_postergado",
+                redirectTo: "momentos",
+                lida: false,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              });
+            }
+
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: moment_postpone processado", inputId);
+        } else if (input.type === "calendar_event_create") {
+          const fromUid = input.fromUid;
+          const pareamentoId = typeof input.pareamentoId === "string" ?
+            input.pareamentoId.trim() : "";
+          const titulo = typeof input.titulo === "string" ?
+            input.titulo.trim() : "";
+          const dataInicio = typeof input.dataInicio === "string" ?
+            input.dataInicio.trim() : "";
+          const horaInicioRaw = typeof input.horaInicio === "string" ?
+            input.horaInicio.trim() : "";
+          const iconeRaw = typeof input.icone === "string" ?
+            input.icone.trim() : "";
+          const notas = typeof input.notas === "string" ?
+            input.notas.trim().slice(0, 500) : "";
+          const allowedIcones = [
+            "fa-calendar-day", "fa-utensils", "fa-heart", "fa-plane",
+            "fa-film", "fa-gift", "fa-house", "fa-music",
+          ];
+          const icone = allowedIcones.includes(iconeRaw) ?
+            iconeRaw : "fa-calendar-day";
+
+          if (!fromUid || !pareamentoId) {
+            await inputRef.update({
+              error: "missing_calendar_info", processed: false,
+            });
+            return;
+          }
+          if (!titulo || titulo.length > 80) {
+            await inputRef.update({
+              error: "invalid_titulo", processed: false,
+            });
+            return;
+          }
+          // YYYY-MM-DD
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(dataInicio)) {
+            await inputRef.update({
+              error: "invalid_data_inicio", processed: false,
+            });
+            return;
+          }
+          let horaInicio = null;
+          let diaInteiro = true;
+          if (horaInicioRaw) {
+            if (!/^\d{2}:\d{2}$/.test(horaInicioRaw)) {
+              await inputRef.update({
+                error: "invalid_hora_inicio", processed: false,
+              });
+              return;
+            }
+            const hh = Number(horaInicioRaw.slice(0, 2));
+            const mm = Number(horaInicioRaw.slice(3, 5));
+            if (hh > 23 || mm > 59) {
+              await inputRef.update({
+                error: "invalid_hora_inicio", processed: false,
+              });
+              return;
+            }
+            horaInicio = horaInicioRaw;
+            diaInteiro = false;
+          }
+
+          const pareamentoRef = admin.firestore()
+              .collection("pareamentos").doc(pareamentoId);
+          const pareamentoSnap = await pareamentoRef.get();
+          if (!pareamentoSnap.exists) {
+            await inputRef.update({
+              error: "pareamento_nao_encontrado", processed: false,
+            });
+            return;
+          }
+          const pareamentoData = pareamentoSnap.data() || {};
+          if (!isUserPareamentoMember(pareamentoData, fromUid)) {
+            await inputRef.update({
+              error: "not_pair_member", processed: false,
+            });
+            return;
+          }
+          const uidA = pareamentoData.pessoa1Uid || null;
+          const uidB = pareamentoData.pessoa2Uid || null;
+          const memberUids = [uidA, uidB].filter(Boolean);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const eventRef = admin.firestore()
+                .collection("eventosCasal").doc();
+            tx.set(eventRef, {
+              idPareamento: pareamentoId,
+              memberUids,
+              titulo,
+              dataInicio,
+              horaInicio,
+              diaInteiro,
+              icone,
+              notas: notas || null,
+              criadoPorUid: fromUid,
+              criadoEm: admin.firestore.FieldValue.serverTimestamp(),
+              atualizadoEm: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            tx.update(inputRef, {
+              processed: true,
+              eventId: eventRef.id,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: calendar_event_create processado", inputId);
+        } else if (input.type === "calendar_event_update") {
+          const fromUid = input.fromUid;
+          const pareamentoId = typeof input.pareamentoId === "string" ?
+            input.pareamentoId.trim() : "";
+          const eventId = typeof input.eventId === "string" ?
+            input.eventId.trim() : "";
+          const titulo = typeof input.titulo === "string" ?
+            input.titulo.trim() : "";
+          const dataInicio = typeof input.dataInicio === "string" ?
+            input.dataInicio.trim() : "";
+          const horaInicioRaw = typeof input.horaInicio === "string" ?
+            input.horaInicio.trim() : "";
+          const iconeRaw = typeof input.icone === "string" ?
+            input.icone.trim() : "";
+          const notas = typeof input.notas === "string" ?
+            input.notas.trim().slice(0, 500) : "";
+          const allowedIcones = [
+            "fa-calendar-day", "fa-utensils", "fa-heart", "fa-plane",
+            "fa-film", "fa-gift", "fa-house", "fa-music",
+          ];
+          const icone = allowedIcones.includes(iconeRaw) ?
+            iconeRaw : "fa-calendar-day";
+
+          if (!fromUid || !pareamentoId || !eventId) {
+            await inputRef.update({
+              error: "missing_calendar_info", processed: false,
+            });
+            return;
+          }
+          if (!titulo || titulo.length > 80) {
+            await inputRef.update({
+              error: "invalid_titulo", processed: false,
+            });
+            return;
+          }
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(dataInicio)) {
+            await inputRef.update({
+              error: "invalid_data_inicio", processed: false,
+            });
+            return;
+          }
+          let horaInicio = null;
+          let diaInteiro = true;
+          if (horaInicioRaw) {
+            if (!/^\d{2}:\d{2}$/.test(horaInicioRaw)) {
+              await inputRef.update({
+                error: "invalid_hora_inicio", processed: false,
+              });
+              return;
+            }
+            const hh = Number(horaInicioRaw.slice(0, 2));
+            const mm = Number(horaInicioRaw.slice(3, 5));
+            if (hh > 23 || mm > 59) {
+              await inputRef.update({
+                error: "invalid_hora_inicio", processed: false,
+              });
+              return;
+            }
+            horaInicio = horaInicioRaw;
+            diaInteiro = false;
+          }
+
+          const eventRef = admin.firestore()
+              .collection("eventosCasal").doc(eventId);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const eventSnap = await tx.get(eventRef);
+            if (!eventSnap.exists) {
+              tx.update(inputRef, {
+                error: "event_not_found", processed: false,
+              });
+              return;
+            }
+            const eventData = eventSnap.data() || {};
+            if (eventData.idPareamento !== pareamentoId) {
+              tx.update(inputRef, {
+                error: "event_wrong_pair", processed: false,
+              });
+              return;
+            }
+            const members = Array.isArray(eventData.memberUids) ?
+              eventData.memberUids : [];
+            if (!members.includes(fromUid)) {
+              tx.update(inputRef, {
+                error: "not_pair_member", processed: false,
+              });
+              return;
+            }
+
+            tx.update(eventRef, {
+              titulo,
+              dataInicio,
+              horaInicio,
+              diaInteiro,
+              icone,
+              notas: notas || null,
+              atualizadoEm: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: calendar_event_update processado", inputId);
+        } else if (input.type === "calendar_event_delete") {
+          const fromUid = input.fromUid;
+          const pareamentoId = typeof input.pareamentoId === "string" ?
+            input.pareamentoId.trim() : "";
+          const eventId = typeof input.eventId === "string" ?
+            input.eventId.trim() : "";
+
+          if (!fromUid || !pareamentoId || !eventId) {
+            await inputRef.update({
+              error: "missing_calendar_info", processed: false,
+            });
+            return;
+          }
+
+          const eventRef = admin.firestore()
+              .collection("eventosCasal").doc(eventId);
+
+          await admin.firestore().runTransaction(async (tx) => {
+            const inSnap = await tx.get(inputRef);
+            if (!inSnap.exists) throw new Error("input não existe");
+            if (inSnap.data().processed) return;
+
+            const eventSnap = await tx.get(eventRef);
+            if (!eventSnap.exists) {
+              tx.update(inputRef, {processed: true,
+                processedAt: admin.firestore.FieldValue.serverTimestamp(),
+                processedBy: "functions.processInput"});
+              return;
+            }
+            const eventData = eventSnap.data() || {};
+            if (eventData.idPareamento !== pareamentoId) {
+              tx.update(inputRef, {
+                error: "event_wrong_pair", processed: false,
+              });
+              return;
+            }
+            const members = Array.isArray(eventData.memberUids) ?
+              eventData.memberUids : [];
+            if (!members.includes(fromUid)) {
+              tx.update(inputRef, {
+                error: "not_pair_member", processed: false,
+              });
+              return;
+            }
+
+            tx.delete(eventRef);
+            tx.update(inputRef, {
+              processed: true,
+              processedAt: admin.firestore.FieldValue.serverTimestamp(),
+              processedBy: "functions.processInput",
+            });
+          });
+
+          console.log("processInput: calendar_event_delete processado", inputId);
         } else if (input.type === "profile_photo_upload") {
           const fromUid = input.fromUid;
           if (!fromUid) {
