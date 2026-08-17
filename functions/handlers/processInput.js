@@ -17,6 +17,9 @@ const {
   computeDataLimiteDate,
 } = require("../lib/momentPrazo");
 const {
+  RANKING_KEY_DESAFIO_ACERTO,
+} = require("../lib/rankingScore");
+const {
   normalizeChallengeAnswer,
   parsePayloadJson,
 } = require("../lib/normalize");
@@ -1957,6 +1960,10 @@ exports.processInput = onDocumentCreated(
                       });
 
                       // --- Extrato: desafio semanal ---
+                      // rankingEventoId é o mesmo nas duas entradas: o
+                      // agregador conta eventos distintos, não lançamentos.
+                      const rankingEventoId =
+                        `${challengeRef.id}_c${challengeData.cycleIndex || 0}`;
                       const extratoRef1 = challengePareamentoRef
                           .collection("extrato").doc();
                       tx.set(extratoRef1, {
@@ -1966,6 +1973,8 @@ exports.processInput = onDocumentCreated(
                         beneficiarioUid: responderUid,
                         autorUid: responderUid,
                         autorNome: input.responderName || "Parceiro",
+                        rankingKey: RANKING_KEY_DESAFIO_ACERTO,
+                        rankingEventoId,
                         timestamp:
                           admin.firestore.FieldValue.serverTimestamp(),
                         createdAtMs: Date.now(),
@@ -1979,6 +1988,8 @@ exports.processInput = onDocumentCreated(
                         beneficiarioUid: partnerUid,
                         autorUid: partnerUid,
                         autorNome: "",
+                        rankingKey: RANKING_KEY_DESAFIO_ACERTO,
+                        rankingEventoId,
                         timestamp:
                           admin.firestore.FieldValue.serverTimestamp(),
                         createdAtMs: Date.now(),
@@ -3718,12 +3729,18 @@ exports.processInput = onDocumentCreated(
                       [f2]: admin.firestore.FieldValue.increment(pChReward),
                       desafiosConcluidos: admin.firestore.FieldValue.increment(1),
                     });
+                    // Mesmo rankingEventoId nas duas entradas: o agregador
+                    // conta eventos distintos, não lançamentos.
+                    const pChEventoId =
+                      `${pChRef.id}_c${pChData.cycleIndex || 0}`;
                     tx.set(pChPareamentoRef.collection("extrato").doc(), {
                       tipo: "desafio",
                       descricao: "Prefer\u00eancias: escolha igual!",
                       valor: pChReward, beneficiarioUid: pChUid,
                       autorUid: pChUid,
                       autorNome: input.responderName || "Parceiro",
+                      rankingKey: RANKING_KEY_DESAFIO_ACERTO,
+                      rankingEventoId: pChEventoId,
                       timestamp: admin.firestore.FieldValue.serverTimestamp(),
                       createdAtMs: Date.now(),
                     });
@@ -3732,6 +3749,8 @@ exports.processInput = onDocumentCreated(
                       descricao: "Prefer\u00eancias: escolha igual!",
                       valor: pChReward, beneficiarioUid: pChPartnerUid,
                       autorUid: pChPartnerUid, autorNome: "",
+                      rankingKey: RANKING_KEY_DESAFIO_ACERTO,
+                      rankingEventoId: pChEventoId,
                       timestamp: admin.firestore.FieldValue.serverTimestamp(),
                       createdAtMs: Date.now(),
                     });

@@ -29,11 +29,17 @@ export type RankingCouplePublic = {
 
 export type GetRankingRequest = {
   period: RankingPeriod;
+  /** Conexão a considerar quando o usuário tem mais de um pareamento. */
+  pareamentoId?: string;
 };
 
 export type GetRankingResponse = {
   period: RankingPeriod;
+  /** Identificador do período no backend: "2026-W34" ou "2026-08". */
+  periodId?: string;
   /** epoch ms do fim do período (countdown). */
   periodEndsAt: number;
   entries: RankingCouplePublic[]; // até 10
+  /** Casal do caller, presente mesmo quando ele está fora do top 10. */
+  caller?: RankingCouplePublic | null;
 };

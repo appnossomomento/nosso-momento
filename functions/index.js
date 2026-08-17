@@ -1,4 +1,4 @@
-﻿/* eslint-disable require-jsdoc */
+/* eslint-disable require-jsdoc */
 // Inicializa Firebase Admin e define opcoes globais primeiro
 require("./lib/config");
 
@@ -58,6 +58,10 @@ exports.verificarTelefone = inviteHandler.verificarTelefone;
 
 const partnerHandler = require("./handlers/partner");
 exports.getParceiroPerfil = partnerHandler.getParceiroPerfil;
+
+const rankingHandler = require("./handlers/ranking");
+exports.aggregateRanking = rankingHandler.aggregateRanking;
+exports.getRanking = rankingHandler.getRanking;
 
 const dailyHumorHandler = require("./handlers/dailyHumor");
 exports.lembreteHumorManha = dailyHumorHandler.lembreteHumorManha;
