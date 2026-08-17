@@ -25,6 +25,7 @@ export const FUNCTIONS = {
   uploadCustomMomentImage: cfUrl('uploadCustomMomentImage'),
   resolveMediaUrls: cfUrl('resolveMediaUrls'),
   getExtrato: cfUrl('getExtrato'),
+  getRanking: cfUrl('getRanking'),
   getParceiroPerfil: cfUrl('getParceiroPerfil'),
   gerarConvite: cfUrl('gerarConvite'),
   verificarTelefone: cfUrl('verificarTelefone'),
