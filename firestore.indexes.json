@@ -1,0 +1,42 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "notificacoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "tarefasMomentos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "executadoPorUid", "order": "ASCENDING" },
+        { "fieldPath": "idPareamento", "order": "ASCENDING" },
+        { "fieldPath": "dataResgate", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "tarefasMomentos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "idPareamento", "order": "ASCENDING" },
+        { "fieldPath": "resgatadoPorUid", "order": "ASCENDING" },
+        { "fieldPath": "dataResgate", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "rankingPeriodos",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "periodId", "order": "ASCENDING" },
+        { "fieldPath": "pos", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
