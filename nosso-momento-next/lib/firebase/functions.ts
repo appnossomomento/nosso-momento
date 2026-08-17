@@ -11,8 +11,10 @@ function cfUrl(path: string): string {
 }
 
 async function appCheckHeaders(): Promise<Record<string, string>> {
-  const waitMs = process.env.NODE_ENV === 'development' ? 2000 : 6000;
-  const token = (await waitForAppCheckToken(waitMs)) ?? (await getAppCheckToken(false));
+  const cached = await getAppCheckToken(false);
+  if (cached) return { 'X-Firebase-AppCheck': cached };
+  const waitMs = process.env.NODE_ENV === 'development' ? 2000 : 2500;
+  const token = (await waitForAppCheckToken(waitMs)) ?? (await getAppCheckToken(true));
   return token ? { 'X-Firebase-AppCheck': token } : {};
 }
 

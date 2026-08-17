@@ -4,7 +4,14 @@ const {admin} = require("../lib/config");
 const {setCorsHeaders, rateLimitFirestore} = require("../lib/http");
 const {requireAppCheck} = require("../lib/appCheck");
 
-exports.createInput = https.onRequest(async (req, res) => {
+const CREATE_INPUT_OPTS = {
+  region: "southamerica-east1",
+  minInstances: 1,
+  memory: "256MiB",
+  maxInstances: 5,
+};
+
+exports.createInput = https.onRequest(CREATE_INPUT_OPTS, async (req, res) => {
   setCorsHeaders(req, res);
 
   if (req.method === "OPTIONS") {

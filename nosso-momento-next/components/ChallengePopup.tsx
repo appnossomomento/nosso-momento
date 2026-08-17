@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getDoc, doc } from 'firebase/firestore';
-import { db, waitForAppCheckToken } from '@/lib/firebase/client';
+import { onSnapshot, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/client';
 import { useAppStore } from '@/lib/store/appStore';
 import { sendInput } from '@/lib/firebase/functions';
 import { showToast } from '@/components/ui/Toast';
@@ -32,14 +32,7 @@ function advanceQueue(set: (p: object) => void, onQueueFinished?: () => void) {
 }
 
 const CHALLENGE_SECONDS = 60;
-
-async function submitChallengeInput(
-  type: string,
-  fields: Record<string, unknown> = {},
-): Promise<{ ok: boolean; id: string }> {
-  await waitForAppCheckToken(process.env.NODE_ENV === 'development' ? 3000 : 12000);
-  return sendInput(type, fields);
-}
+const CLOSE_DELAY_MS = 400;
 
 export default function ChallengePopup() {
   const router = useRouter();
@@ -79,7 +72,7 @@ export default function ChallengePopup() {
     }
   }
 
-  function closeAfterDelay(ms = 5000) {
+  function closeAfterDelay(ms = CLOSE_DELAY_MS) {
     clearCloseTimer();
     closeTimerRef.current = setTimeout(() => {
       closeTimerRef.current = null;
@@ -124,17 +117,17 @@ export default function ChallengePopup() {
       try {
         if (tipoAtual === 'pergunta') {
           const pareamentoIdAtual = useAppStore.getState().idPareamentoAmigavel;
-          await submitChallengeInput('weekly_challenge_answer', {
+          await sendInput('weekly_challenge_answer', {
             answer: '__TIMEOUT__',
             challengeId: idAtual,
             challengeDocId: idAtual,
             ...(pareamentoIdAtual ? { pareamentoId: pareamentoIdAtual } : {}),
           });
         } else if (tipoAtual === 'escolha') {
-          await submitChallengeInput('preference_challenge_answer', { answer: '__TIMEOUT__', challengeId: idAtual, challengeDocId: idAtual });
+          await sendInput('preference_challenge_answer', { answer: '__TIMEOUT__', challengeId: idAtual, challengeDocId: idAtual });
         } else if (tipoAtual === 'roleta') {
           const pareamentoIdAtual = useAppStore.getState().idPareamentoAmigavel;
-          await submitChallengeInput('roulette_spin', {
+          await sendInput('roulette_spin', {
             challengeId: idAtual,
             challengeDocId: idAtual,
             ...(pareamentoIdAtual ? { pareamentoId: pareamentoIdAtual } : {}),
@@ -159,13 +152,13 @@ export default function ChallengePopup() {
     setEnviando(true);
     try {
       const pareamentoIdAtual = useAppStore.getState().idPareamentoAmigavel;
-      await submitChallengeInput('weekly_challenge_answer', {
+      await sendInput('weekly_challenge_answer', {
         answer: resposta.trim(),
         challengeId: pendingChallenge!.id,
         challengeDocId: pendingChallenge!.id,
         ...(pareamentoIdAtual ? { pareamentoId: pareamentoIdAtual } : {}),
       });
-      closeAfterDelay(5000);
+      closeAfterDelay();
     } catch {
       showToast('Erro ao enviar resposta.', 'erro');
       setEnviando(false);
@@ -177,12 +170,12 @@ export default function ChallengePopup() {
     if (enviando || !selectedOption || esgotado) return;
     setEnviando(true);
     try {
-      await submitChallengeInput('preference_challenge_answer', {
+      await sendInput('preference_challenge_answer', {
         answer: selectedOption,
         challengeId: pendingChallenge!.id,
         challengeDocId: pendingChallenge!.id,
       });
-      closeAfterDelay(5000);
+      closeAfterDelay();
     } catch {
       showToast('Erro ao enviar escolha.', 'erro');
       setEnviando(false);
@@ -203,7 +196,7 @@ export default function ChallengePopup() {
 
     setSpinning(true);
     try {
-      await submitChallengeInput('roulette_spin', {
+      await sendInput('roulette_spin', {
         challengeId,
         challengeDocId: challengeId,
         ...(idPareamentoAmigavel ? { pareamentoId: idPareamentoAmigavel } : {}),
@@ -214,42 +207,50 @@ export default function ChallengePopup() {
       return;
     }
 
-    // Backend define o valor — só então giramos para o segmento certo
+    // Backend define o valor — listener em tempo real substitui polling
     const uid = useAppStore.getState().usuario?.uid;
-    let resultadoEncontrado = false;
-    const autoCloseTimeout = setTimeout(() => {
-      if (!resultadoEncontrado) {
+    let resolved = false;
+    let unsub: (() => void) | undefined;
+
+    const autoCloseTimeout = window.setTimeout(() => {
+      if (!resolved) {
+        unsub?.();
         setSpinning(false);
         showToast('Não foi possível ler o resultado. Tente de novo.', 'erro');
       }
     }, 14000);
 
-    const finishWithValor = (val: number) => {
-      resultadoEncontrado = true;
-      clearTimeout(autoCloseTimeout);
-      const nextRot = rotationToLandOnValor(wheelRotation, val, 5);
-      setWheelRotation(nextRot);
-      // Espera a animação CSS (~3.5s) e só então mostra o placar
-      window.setTimeout(() => {
-        setSpunResult(val);
-        setSpinning(false);
-        closeAfterDelay(5000);
-      }, 3600);
+    const finishListening = () => {
+      if (resolved) return;
+      resolved = true;
+      window.clearTimeout(autoCloseTimeout);
+      unsub?.();
     };
 
-    const readResult = async (attempt = 0): Promise<void> => {
-      try {
-        const snap = await getDoc(doc(db, 'weeklyChallenges', challengeId));
-        const respostas = (snap.data()?.['respostas'] as Record<string, number>) ?? {};
+    unsub = onSnapshot(
+      doc(db, 'weeklyChallenges', challengeId),
+      (snap) => {
+        if (!snap.exists()) return;
+        const respostas = (snap.data()?.respostas as Record<string, number>) ?? {};
         const val = uid ? respostas[uid] : undefined;
-        if (val !== undefined) {
-          finishWithValor(val);
-          return;
+        if (val === undefined) return;
+        finishListening();
+        const nextRot = rotationToLandOnValor(wheelRotation, val, 5);
+        setWheelRotation(nextRot);
+        window.setTimeout(() => {
+          setSpunResult(val);
+          setSpinning(false);
+          closeAfterDelay();
+        }, 3600);
+      },
+      () => {
+        if (!resolved) {
+          finishListening();
+          setSpinning(false);
+          showToast('Erro ao ler resultado da roleta.', 'erro');
         }
-      } catch { /* silencioso */ }
-      if (attempt < 20) setTimeout(() => readResult(attempt + 1), 400);
-    };
-    setTimeout(() => readResult(), 400);
+      },
+    );
   }
 
   return (

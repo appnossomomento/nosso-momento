@@ -186,45 +186,62 @@ export default function MomentosPage() {
   async function confirmarRealizado() {
     if (!realizandoMomento || realizandoEnviando) return;
     setRealizandoEnviando(true);
+
+    const momento = realizandoMomento;
+    const foto = realizandoFoto;
+    const tarefaId = momento.id;
+
     try {
-      // Converte a foto para base64 — o Admin SDK na CF faz o upload no Storage.
-      // O client nunca escreve diretamente no Storage.
       let fotoBase64: string | null = null;
       let fotoContentType: string | null = null;
       let fotoFileName: string | null = null;
-      if (realizandoFoto) {
-        fotoBase64 = await fileToBase64(realizandoFoto);
-        fotoContentType = realizandoFoto.type || 'image/jpeg';
-        fotoFileName = realizandoFoto.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      if (foto) {
+        fotoBase64 = await fileToBase64(foto);
+        fotoContentType = foto.type || 'image/jpeg';
+        fotoFileName = foto.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       }
 
       await sendInput('moment_complete', {
         pareamentoId: idPareamentoAmigavel,
-        tarefaId: realizandoMomento.id,
+        tarefaId,
         comFoto: !!fotoBase64,
       });
       trackAction('momento_realizado', { com_foto: !!fotoBase64 });
 
+      // UI otimista — não bloqueia no upload da memória
+      setMomentos((prev) =>
+        prev.map((m) => (m.id === tarefaId ? { ...m, status: 'realizado' } : m))
+      );
+      showToast(
+        fotoBase64
+          ? '🔥 Momento realizado! Enviando foto...'
+          : '🔥 Momento marcado como realizado!',
+        'sucesso',
+      );
+      fecharConfirmacao();
+      setRealizandoEnviando(false);
+
       if (fotoBase64) {
-        // Campos exatos esperados pela CF createMemoriaPhoto:
-        // tarefaId (obrigatório), base64 (obrigatório), contentType, fileName
-        await callFunction(FUNCTIONS.createMemoriaPhoto, {
-          tarefaId: realizandoMomento.id,
+        void callFunction(FUNCTIONS.createMemoriaPhoto, {
+          tarefaId,
           base64: fotoBase64,
           contentType: fotoContentType,
           fileName: fotoFileName,
-        });
+        })
+          .then(() => {
+            showToast('📸 Memória registrada!', 'sucesso');
+          })
+          .catch((err) => {
+            console.error('[MomentosPage] createMemoriaPhoto erro:', err);
+            showToast(
+              'Momento salvo, mas a foto não subiu. Tente de novo em Memórias.',
+              'erro',
+            );
+          });
       }
-
-      setMomentos((prev) =>
-        prev.map((m) => (m.id === realizandoMomento.id ? { ...m, status: 'realizado' } : m))
-      );
-      showToast(fotoBase64 ? '🔥 Momento realizado e memória registrada!' : '🔥 Momento marcado como realizado!', 'sucesso');
-      fecharConfirmacao();
     } catch (err) {
       console.error('[MomentosPage] confirmarRealizado erro:', err);
       showToast('Erro ao confirmar momento.', 'erro');
-    } finally {
       setRealizandoEnviando(false);
     }
   }
