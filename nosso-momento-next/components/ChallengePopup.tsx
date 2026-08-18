@@ -210,31 +210,22 @@ export default function ChallengePopup() {
     // Backend define o valor — listener em tempo real substitui polling
     const uid = useAppStore.getState().usuario?.uid;
     let resolved = false;
-    let unsub: (() => void) | undefined;
 
-    const autoCloseTimeout = window.setTimeout(() => {
-      if (!resolved) {
-        unsub?.();
-        setSpinning(false);
-        showToast('Não foi possível ler o resultado. Tente de novo.', 'erro');
-      }
-    }, 14000);
-
-    const finishListening = () => {
+    function finishListening(unsubFn: () => void, timeoutId: ReturnType<typeof window.setTimeout>) {
       if (resolved) return;
       resolved = true;
-      window.clearTimeout(autoCloseTimeout);
-      unsub?.();
-    };
+      window.clearTimeout(timeoutId);
+      unsubFn();
+    }
 
-    unsub = onSnapshot(
+    const unsub = onSnapshot(
       doc(db, 'weeklyChallenges', challengeId),
       (snap) => {
         if (!snap.exists()) return;
         const respostas = (snap.data()?.respostas as Record<string, number>) ?? {};
         const val = uid ? respostas[uid] : undefined;
         if (val === undefined) return;
-        finishListening();
+        finishListening(unsub, autoCloseTimeout);
         const nextRot = rotationToLandOnValor(wheelRotation, val, 5);
         setWheelRotation(nextRot);
         window.setTimeout(() => {
@@ -245,12 +236,20 @@ export default function ChallengePopup() {
       },
       () => {
         if (!resolved) {
-          finishListening();
+          finishListening(unsub, autoCloseTimeout);
           setSpinning(false);
           showToast('Erro ao ler resultado da roleta.', 'erro');
         }
       },
     );
+
+    const autoCloseTimeout = window.setTimeout(() => {
+      if (!resolved) {
+        finishListening(unsub, autoCloseTimeout);
+        setSpinning(false);
+        showToast('Não foi possível ler o resultado. Tente de novo.', 'erro');
+      }
+    }, 14000);
   }
 
   return (
