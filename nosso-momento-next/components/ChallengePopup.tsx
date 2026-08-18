@@ -211,7 +211,7 @@ export default function ChallengePopup() {
     const uid = useAppStore.getState().usuario?.uid;
     let resolved = false;
 
-    function finishListening(unsubFn: () => void, timeoutId: ReturnType<typeof window.setTimeout>) {
+    function finishListening(unsubFn: () => void, timeoutId: ReturnType<typeof setTimeout>) {
       if (resolved) return;
       resolved = true;
       window.clearTimeout(timeoutId);
@@ -243,7 +243,7 @@ export default function ChallengePopup() {
       },
     );
 
-    const autoCloseTimeout = window.setTimeout(() => {
+    const autoCloseTimeout = setTimeout(() => {
       if (!resolved) {
         finishListening(unsub, autoCloseTimeout);
         setSpinning(false);
