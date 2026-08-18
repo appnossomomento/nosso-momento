@@ -180,7 +180,7 @@ export async function getAppCheckToken(force = false): Promise<string | null> {
 /** Aguarda token App Check por até maxMs (útil antes de CFs com enforce). */
 export async function waitForAppCheckToken(maxMs = APP_CHECK_WAIT_MS): Promise<string | null> {
   const deadline = Date.now() + maxMs;
-  const pollMs = isDevEnv ? 500 : 1500;
+  const pollMs = isDevEnv ? 400 : 500;
   while (Date.now() < deadline) {
     const token = await getAppCheckToken(false);
     if (token) return token;

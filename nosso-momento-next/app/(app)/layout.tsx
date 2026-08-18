@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store/appStore';
 import clsx from 'clsx';
+import { ensureAppCheckReady } from '@/lib/firebase/client';
 import AppLoadingScreen from '@/components/ui/AppLoadingScreen';
 import SoftRouteShell from '@/components/layout/SoftRouteShell';
 import { softPush } from '@/components/layout/softRouteNav';
@@ -41,6 +42,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.replace('/login');
     }
   }, [authInitialized, usuario, router]);
+
+  // Token App Check quente antes de ações críticas (desafio, momento, CF).
+  useEffect(() => {
+    if (!usuario) return;
+    void ensureAppCheckReady();
+  }, [usuario]);
 
   if (!authInitialized || !usuario) {
     return (

@@ -49,10 +49,19 @@ const {
   planFundadorGrant,
 } = require("../lib/fundadores");
 
+const PROCESS_INPUT_OPTS = {
+  document: "inputs/{inputId}",
+  region: "southamerica-east1",
+  minInstances: 1,
+  memory: "512MiB",
+  timeoutSeconds: 120,
+  maxInstances: 5,
+};
+
 // Processa documentos criados em 'inputs/{inputId}'
 // e aplica a ação no usuário destino
 exports.processInput = onDocumentCreated(
-    "inputs/{inputId}",
+    PROCESS_INPUT_OPTS,
     async (event) => {
       const snapshot = event.data;
       if (!snapshot) {
