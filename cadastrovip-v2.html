@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nosso Momento | Vocês se amam. Só que a rotina tá ganhando.</title>
+  <meta name="description" content="A gente marca e nunca faz. A noite vira série de novo. Não é falta de amor, é o modo automático. O Nosso Momento ajuda vocês a voltar a viver momentos juntos. 50 vagas gratuitas de casal fundador." />
+
+  <!-- Open Graph / compartilhamento (WhatsApp, Instagram, Facebook) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Nosso Momento" />
+  <meta property="og:title" content="Vocês se amam. Só que a rotina tá ganhando." />
+  <meta property="og:description" content="Saiam do modo automático e voltem a viver momentos juntos. Garantam uma das 50 vagas gratuitas de casal fundador." />
+  <meta property="og:url" content="https://nossomomento.app/cadastrovip-v2.html" />
+  <meta property="og:image" content="https://nossomomento.app/assets/icons/iconprincipal.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Vocês se amam. Só que a rotina tá ganhando." />
+  <meta name="twitter:description" content="Saiam do modo automático e voltem a viver momentos juntos. Garantam uma das 50 vagas gratuitas de casal fundador." />
+  <meta name="twitter:image" content="https://nossomomento.app/assets/icons/iconprincipal.png" />
+
+  <!-- GA4 / Meta Pixel só após consentimento (ver script no final) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check-compat.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="assets/icons/iconprincipal.png" />
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0a0a0a; color: #e5e5e5; }
+    .glow-text { text-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+    .glow-button { box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); }
+    .glow-button:hover { box-shadow: 0 0 35px rgba(239, 68, 68, 0.8); }
+    .glass-card { background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    .phone-mockup {
+      box-sizing: content-box;
+      width: 148px;
+      aspect-ratio: 828 / 1792; /* iPhone 11 (828×1792) */
+      background: linear-gradient(to bottom, #1a1a1a, #050505);
+      border: 6px solid #2a2a2a;
+      border-radius: 2rem;
+      overflow: hidden;
+      position: relative;
+    }
+    /* Ícone da dobra "Isso acontece com vocês?": quadrado com borda em gradiente */
+    .espelho-icon {
+      width: 2.75rem;
+      height: 2.75rem;
+      padding: 2px;
+      border-radius: 0.875rem;
+      background: linear-gradient(135deg, #f43f5e, #ef4444, #f97316);
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.18);
+    }
+    .espelho-icon > div {
+      width: 100%;
+      height: 100%;
+      border-radius: 0.75rem;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .espelho-icon svg {
+      width: 1.5rem;
+      height: 1.5rem;
+      color: #f87171;
+    }
+    .phone-mockup img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+    }
+    /* Honeypot anti-spam: invisível para humanos */
+    .hp-field {
+      position: absolute;
+      left: -9999px;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+    @keyframes contador-spin {
+      to { transform: rotate(360deg); }
+    }
+    .contador-spinner {
+      display: inline-block;
+      width: 2.25rem;
+      height: 2.25rem;
+      border: 3px solid rgba(255, 255, 255, 0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: contador-spin 0.7s linear infinite;
+    }
+    .contador-spinner--dark {
+      border-color: rgba(24, 24, 27, 0.15);
+      border-top-color: #18181b;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-red-500/30">
+
+  <!-- HEADER MOBILE (apenas mobile) -->
+  <header class="md:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-600 via-rose-500 to-orange-500 shadow-lg">
+    <div class="flex items-center justify-center py-1.5">
+      <img src="assets/icons/logo-topdown-white-txt.png" alt="Nosso Momento" class="h-12 w-auto drop-shadow-[0_1px_6px_rgba(0,0,0,0.35)]" />
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="relative pt-24 pb-16 md:pb-24 overflow-hidden">
+    <!-- Casal ao fundo (direita), bem sutil -->
+    <div class="hidden md:block absolute inset-y-0 right-0 w-1/2 pointer-events-none opacity-[0.28] z-0" style="background-image: url('assets/prints/casal-hero.png'); background-size: auto 145%; background-position: center top; background-repeat: no-repeat; -webkit-mask-image: linear-gradient(to left, black 25%, transparent 95%), linear-gradient(to top, transparent 0%, black 22%); -webkit-mask-composite: source-in; mask-image: linear-gradient(to left, black 25%, transparent 95%), linear-gradient(to top, transparent 0%, black 22%); mask-composite: intersect;"></div>
+    <!-- Background Glow -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-red-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+    
+    <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center relative z-10">
+      <!-- Left Content -->
+      <div class="max-w-xl mx-auto text-center md:mx-0 md:text-left">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-semibold tracking-wider mb-6">
+          🔥 RESTAM POUCAS VAGAS · 100% GRATUITO
+        </div>
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] mb-6">
+          Vocês se amam. <span class="bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-500">Só que a rotina tá ganhando.</span>
+        </h1>
+        <p class="text-zinc-400 text-lg mb-8 leading-relaxed">
+          A gente marca e nunca faz. A noite vira série de novo. Não é falta de amor, é o modo automático. O <span class="font-bold text-white">Nosso Momento</span> ajuda vocês a saírem dele e <span class="font-bold text-white">voltarem a viver momentos juntos, de verdade.</span>
+        </p>
+        <a href="#form" data-lp-cta="hero_principal_v2" class="inline-block bg-gradient-to-r from-red-500 to-rose-500 text-white font-bold px-8 py-4 rounded-full glow-button transition-all hover:scale-105">
+          Quero minha vaga gratuita
+        </a>
+        <!-- Microcopy (apenas desktop) -->
+        <p class="hidden md:flex text-zinc-500 text-sm mt-4 items-center justify-start gap-2">
+          <span class="text-green-400">✓</span> Acesso antecipado <span class="text-white font-semibold">100% gratuito</span> para os casais fundadores.
+        </p>
+        <!-- Seta de scroll (apenas mobile: no lugar do microcopy) -->
+        <div class="md:hidden mt-6 flex justify-center">
+          <a href="#espelho" class="inline-flex flex-col items-center gap-1 text-zinc-500 hover:text-rose-400 transition-colors text-sm">
+            <span>Isso acontece com vocês?</span>
+            <span class="animate-bounce text-lg leading-none">↓</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Right Content (Phones) -->
+      <div class="relative h-[500px] flex items-center justify-center">
+        <!-- Glow behind phones -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-orange-500/20 blur-[80px] rounded-full"></div>
+        
+        <!-- Phone 1 (Back) -->
+        <div class="absolute left-1/2 top-1/2 -translate-x-[80%] -translate-y-[55%] w-[220px] h-[450px] bg-[#111] rounded-[2.5rem] border-[6px] border-[#222] shadow-2xl transform -rotate-12 scale-90 opacity-60 overflow-hidden">
+          <img src="assets/prints/Fundoheader.png" alt="Tela inicial do app Nosso Momento" class="w-full h-full object-cover object-top" />
+        </div>
+
+        <!-- Phone 2 (Front) -->
+        <div class="absolute left-1/2 top-1/2 -translate-x-[30%] -translate-y-[45%] w-[240px] h-[490px] bg-[#111] rounded-[2.5rem] border-[8px] border-[#2a2a2a] shadow-[0_0_50px_rgba(0,0,0,0.8)] transform rotate-6 overflow-hidden z-10">
+          <img src="assets/prints/tela-login.png" alt="Tela de login do app Nosso Momento" class="w-full h-full object-cover" />
+          <!-- Dynamic Island / notch -->
+          <div class="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-[22px] bg-black rounded-full z-20 flex items-center justify-center gap-2 shadow-[inset_0_0_2px_rgba(255,255,255,0.15)]">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#1a1a1a]"></span>
+            <span class="w-6 h-1.5 rounded-full bg-[#111]"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Indicador de scroll (apenas desktop, um pouco mais abaixo) -->
+    <div class="relative z-10 mt-8 md:mt-10 hidden md:flex justify-center">
+      <a href="#espelho" class="inline-flex flex-col items-center gap-1 text-zinc-500 hover:text-rose-400 transition-colors text-sm">
+        <span>Isso acontece com vocês?</span>
+        <span class="animate-bounce text-lg leading-none">↓</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ESPELHO: a dor que o casal reconhece -->
+  <section id="espelho" class="py-16 md:py-20 border-y border-white/5 relative overflow-hidden" style="background: radial-gradient(circle at 50% 0%, rgba(239,68,68,0.14), transparent 60%), radial-gradient(circle at 85% 90%, rgba(249,115,22,0.10), transparent 55%), #0f0f0f;">
+    <div class="max-w-5xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-8 md:mb-10">
+        <p class="text-rose-500 text-sm font-medium mb-2">Sem julgamento</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Isso acontece com vocês?</h2>
+        <p class="text-zinc-400">Se você se reconheceu em uma dessas frases, continua lendo.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+        <!-- Calendário com X: marcado, mas não aconteceu -->
+        <div class="glass-card rounded-2xl p-6 hover:border-rose-500/30 transition-colors">
+          <div class="espelho-icon" aria-hidden="true">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 13.5l4.5 4.5m0-4.5l-4.5 4.5" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-white font-semibold text-lg mt-4 leading-snug">"A gente marca e nunca faz."</p>
+        </div>
+
+        <!-- Mão levantada: sempre o mesmo que se oferece -->
+        <div class="glass-card rounded-2xl p-6 hover:border-rose-500/30 transition-colors">
+          <div class="espelho-icon" aria-hidden="true">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.05 4.575a1.575 1.575 0 1 0-3.15 0v3m3.15-3v-1.5a1.575 1.575 0 0 1 3.15 0v1.5m-3.15 0 .075 5.925m3.075.75V4.575m0 0a1.575 1.575 0 0 1 3.15 0V15M6.9 7.575a1.575 1.575 0 1 0-3.15 0v8.175a6.75 6.75 0 0 0 6.75 6.75h2.018a5.25 5.25 0 0 0 3.712-1.538l1.732-1.732a5.25 5.25 0 0 0 1.538-3.712l.003-2.024a.668.668 0 0 1 .198-.471 1.575 1.575 0 1 0-2.228-2.228 3.818 3.818 0 0 0-1.12 2.687M6.9 7.575V12m6.27 4.318A4.49 4.49 0 0 1 16.35 15m.002 0h-.002" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-white font-semibold text-lg mt-4 leading-snug">"Sempre sou eu que puxo o encontro."</p>
+        </div>
+
+        <!-- TV: a noite no sofá -->
+        <div class="glass-card rounded-2xl p-6 hover:border-rose-500/30 transition-colors">
+          <div class="espelho-icon" aria-hidden="true">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125Z" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-white font-semibold text-lg mt-4 leading-snug">"A noite vira série no sofá de novo."</p>
+        </div>
+
+        <!-- Bolo: a data que passou -->
+        <div class="glass-card rounded-2xl p-6 hover:border-rose-500/30 transition-colors">
+          <div class="espelho-icon" aria-hidden="true">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75-1.5.75a3.354 3.354 0 0 1-3 0 3.354 3.354 0 0 0-3 0 3.354 3.354 0 0 1-3 0 3.354 3.354 0 0 0-3 0 3.354 3.354 0 0 1-3 0L3 16.5m15-3.379a48.474 48.474 0 0 0-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 0 1 3 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 0 1 6 13.12M12.265 3.11a.375.375 0 1 1-.53 0L12 2.845l.265.265Zm-3 0a.375.375 0 1 1-.53 0L9 2.845l.265.265Zm6 0a.375.375 0 1 1-.53 0L15 2.845l.265.265Z" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-white font-semibold text-lg mt-4 leading-snug">"Data importante passa batido."</p>
+        </div>
+
+        <!-- Cédulas: a conta do mês -->
+        <div class="glass-card rounded-2xl p-6 hover:border-rose-500/30 transition-colors">
+          <div class="espelho-icon" aria-hidden="true">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-white font-semibold text-lg mt-4 leading-snug">"Conta do mês vira discussão."</p>
+        </div>
+
+        <!-- Casa: colegas de casa -->
+        <div class="glass-card rounded-2xl p-6 hover:border-rose-500/30 transition-colors">
+          <div class="espelho-icon" aria-hidden="true">
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-white font-semibold text-lg mt-4 leading-snug">"Parece que viramos colegas de casa."</p>
+        </div>
+      </div>
+
+      <!-- VIRADA -->
+      <div class="mt-10 md:mt-12 max-w-3xl mx-auto text-center">
+        <p class="text-rose-500 text-sm font-medium mb-2">Não é culpa de vocês</p>
+        <h2 class="text-2xl md:text-3xl font-bold text-white mb-5 leading-tight">O problema não é o amor. É o automático.</h2>
+        <p class="text-zinc-400 text-base md:text-lg leading-relaxed">
+          Ninguém decide virar colega de casa. A rotina vai empurrando: o cansaço, o celular, o "depois a gente vê". O que falta não é vontade. <span class="text-white font-semibold">É um combinado que saia do papel</span>: com data, com os dois puxando, com registro do que vocês viveram.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOLUÇÃO: dor por dor -->
+  <section id="como-funciona" class="py-16 md:py-20 bg-[#0a0a0a] relative overflow-hidden">
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-8 md:mb-12">
+        <p class="text-rose-500 text-sm font-medium mb-2">Como o Nosso Momento tira vocês disso</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Um combinado que sai do papel</h2>
+        <p class="text-zinc-400">Cada parte do app nasceu de uma dessas frases.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Card 1: catálogo -->
+        <div class="glass-card rounded-2xl p-8 hover:border-red-500/30 transition-colors text-center flex flex-col items-center">
+          <div class="phone-mockup mx-auto mb-6 shadow-[0_0_30px_rgba(239,68,68,0.18)]">
+            <span class="absolute inset-0 flex items-center justify-center text-5xl opacity-40 pointer-events-none">📚</span>
+            <img src="assets/prints/tela-catalogo.jpeg" alt="Tela de catálogo privado do app Nosso Momento" onerror="this.style.display='none'" />
+          </div>
+          <p class="text-rose-400 text-xs font-semibold uppercase tracking-wider mb-2">"Os desejos ficam só na cabeça"</p>
+          <h3 class="text-xl font-bold text-white mb-3">Um catálogo só de vocês</h3>
+          <p class="text-zinc-400 text-sm leading-relaxed">Cada um coloca no app o que quer viver com o outro: um date, uma surpresa, algo mais quente. E resgata com foguinhos, a moeda do casal. O desejo deixa de ser "um dia a gente faz".</p>
+        </div>
+
+        <!-- Card 2: prazo -->
+        <div class="glass-card rounded-2xl p-8 hover:border-rose-500/30 transition-colors text-center flex flex-col items-center">
+          <div class="phone-mockup mx-auto mb-6 shadow-[0_0_30px_rgba(244,63,94,0.18)]">
+            <span class="absolute inset-0 flex items-center justify-center text-5xl opacity-40 pointer-events-none">⏳</span>
+            <img src="assets/prints/tela-prazo.jpg" alt="Tela de momento com prazo do app Nosso Momento" onerror="this.style.display='none'" />
+          </div>
+          <p class="text-rose-400 text-xs font-semibold uppercase tracking-wider mb-2">"O combinado morre no WhatsApp"</p>
+          <h3 class="text-xl font-bold text-white mb-3">Momento com prazo</h3>
+          <p class="text-zinc-400 text-sm leading-relaxed">Ao resgatar, vocês escolhem em quantos dias ele acontece: 1, 3, 7, 14 ou 30. Fica visível para os dois até virar realidade. Se atrasar, tem um custo em foguinhos: leve, mas suficiente para ninguém esquecer.</p>
+        </div>
+
+        <!-- Card 3: desafios + ranking -->
+        <div class="glass-card rounded-2xl p-8 hover:border-orange-500/30 transition-colors text-center flex flex-col items-center">
+          <div class="phone-mockup mx-auto mb-6 shadow-[0_0_30px_rgba(249,115,22,0.18)]">
+            <span class="absolute inset-0 flex items-center justify-center text-5xl opacity-40 pointer-events-none">🏆</span>
+            <img src="assets/prints/tela-ranking.jpg" alt="Desafio da semana do app Nosso Momento, em que os dois respondem juntos" onerror="this.style.display='none'" />
+          </div>
+          <p class="text-rose-400 text-xs font-semibold uppercase tracking-wider mb-2">"Só um dos dois puxa"</p>
+          <h3 class="text-xl font-bold text-white mb-3">Desafios e Disputa de Casais</h3>
+          <p class="text-zinc-400 text-sm leading-relaxed">Desafios semanais para os dois jogarem, e um ranking com Pontos de Conexão: momento vivido, desafio acertado e check-in de humor somam. Competir com carinho, lado a lado.</p>
+        </div>
+      </div>
+
+      <!-- CTA intermediário (dobra de decisão) -->
+      <div class="mt-8 md:mt-10 flex justify-center">
+        <a href="#form" data-lp-cta="meio_casal_fundador_v2" class="inline-block bg-gradient-to-r from-red-500 to-rose-500 text-white font-bold px-8 py-4 rounded-full glow-button transition-all hover:scale-105">
+          Seja um Casal Fundador
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ALÉM DISSO: organização do relacionamento -->
+  <section id="organizar" class="py-16 md:py-20 border-y border-white/5 relative overflow-hidden" style="background: radial-gradient(circle at 15% 20%, rgba(244,63,94,0.12), transparent 55%), radial-gradient(circle at 85% 85%, rgba(249,115,22,0.10), transparent 55%), #0f0f0f;">
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-8 md:mb-12">
+        <p class="text-rose-500 text-sm font-medium mb-2">Além disso…</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Vocês organizam o relacionamento</h2>
+        <p class="text-zinc-400">Romance com organização. Do jeito que a vida a dois pede.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        <!-- Card: calendário -->
+        <div class="glass-card rounded-2xl p-8 hover:border-rose-500/30 transition-colors text-center flex flex-col items-center">
+          <div class="phone-mockup mx-auto mb-6 shadow-[0_0_30px_rgba(244,63,94,0.18)]">
+            <span class="absolute inset-0 flex items-center justify-center text-5xl opacity-40 pointer-events-none">📅</span>
+            <img src="assets/prints/tela-calendario.jpg" alt="Tela do calendário do casal do app Nosso Momento" onerror="this.style.display='none'" />
+          </div>
+          <p class="text-rose-400 text-xs font-semibold uppercase tracking-wider mb-2">"Data importante passa batido"</p>
+          <h3 class="text-xl font-bold text-white mb-3">Calendário do casal</h3>
+          <p class="text-zinc-400 text-sm leading-relaxed">Os momentos com prazo e as datas de vocês (aniversário, viagem, jantar marcado) no mesmo lugar. Os dois veem. Ninguém depende de memória.</p>
+        </div>
+
+        <!-- Card: finanças -->
+        <div class="glass-card rounded-2xl p-8 hover:border-orange-500/30 transition-colors text-center flex flex-col items-center">
+          <div class="phone-mockup mx-auto mb-6 shadow-[0_0_30px_rgba(249,115,22,0.18)]">
+            <span class="absolute inset-0 flex items-center justify-center text-5xl opacity-40 pointer-events-none">💸</span>
+            <img src="assets/prints/tela-financas.jpg" alt="Tela de finanças a dois do app Nosso Momento" onerror="this.style.display='none'" />
+          </div>
+          <p class="text-rose-400 text-xs font-semibold uppercase tracking-wider mb-2">"Conta do mês vira discussão"</p>
+          <h3 class="text-xl font-bold text-white mb-3">Finanças a dois</h3>
+          <p class="text-zinc-400 text-sm leading-relaxed">Gastos do casal por categoria, limite do mês e quem pagou o quê. Transparência leve, sem planilha chata. Saibam juntos para onde vai o dinheiro do mês.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROVA SOCIAL - O QUE MUDA NO DIA A DIA -->
+  <section class="py-16 md:py-20 border-y border-white/5 relative overflow-hidden" style="background: radial-gradient(circle at 50% 0%, rgba(239,68,68,0.12), transparent 58%), radial-gradient(circle at 85% 90%, rgba(249,115,22,0.08), transparent 50%), #0a0a0a;">
+    <div class="max-w-5xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-8 md:mb-12">
+        <p class="text-rose-500 text-sm font-medium mb-2">O resultado</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">O que muda no dia a dia</h2>
+        <p class="text-zinc-400">Para todos os casais, do jeito que o amor de vocês for.</p>
+      </div>
+
+      <div class="flex flex-col md:flex-row items-center justify-center gap-5 md:gap-6 w-full">
+        <!-- Texto Esquerda -->
+        <div class="w-[240px] shrink-0 text-left hidden md:block">
+          <blockquote class="glass-card rounded-2xl p-6 text-zinc-300 text-base leading-relaxed">
+            "Voltamos a sair às quintas. Não porque alguém cobrou: estava marcado, com data, e os dois viam."
+            <footer class="text-rose-400 font-semibold mt-4 not-italic text-sm">O combinado que sai do papel</footer>
+          </blockquote>
+        </div>
+
+        <!-- Retratos -->
+        <div class="flex flex-row gap-4 md:gap-6 justify-center">
+          <figure class="relative flex flex-col items-center">
+            <div class="absolute -inset-2 rounded-3xl blur-2xl opacity-25 pointer-events-none" style="background:linear-gradient(135deg,#e40303,#ff8c00,#ffed00,#008026,#004dff,#750787);"></div>
+            <div class="relative rounded-2xl p-[2px]" style="background:linear-gradient(135deg,#e40303,#ff8c00,#ffed00,#008026,#004dff,#750787);">
+              <div class="w-[150px] h-[230px] md:w-[220px] md:h-[320px] rounded-[14px] bg-[#111] overflow-hidden">
+                <img src="https://img.freepik.com/fotos-premium/casal-de-lesbicas-juntos-dentro-de-casa-conceito_53876-34145.jpg?semt=ais_hybrid&w=740&q=80" alt="Casal LGBTQIA+ sorrindo" class="w-full h-full object-cover" />
+              </div>
+            </div>
+          </figure>
+          <figure class="relative flex flex-col items-center">
+            <div class="absolute -inset-2 rounded-3xl bg-rose-500/20 blur-2xl pointer-events-none"></div>
+            <div class="relative w-[150px] h-[230px] md:w-[220px] md:h-[320px] rounded-2xl bg-[#111] border border-rose-500/40 shadow-[0_0_24px_rgba(244,63,94,0.22)] overflow-hidden">
+              <img src="https://img.freepik.com/fotos-premium/casal-feliz-deitada-na-cama-carinhos-em-casa-no-quarto_13339-274153.jpg?semt=ais_user_personalization&w=740&q=80" alt="Casal sorrindo" class="w-full h-full object-cover" />
+            </div>
+          </figure>
+        </div>
+
+        <!-- Texto Direita -->
+        <div class="w-[240px] shrink-0 text-right hidden md:block">
+          <blockquote class="glass-card rounded-2xl p-6 text-zinc-300 text-base leading-relaxed">
+            "Parei de ser a única que puxa. Agora o app lembra, o desafio chama, e o outro lado também vem com ideia."
+            <footer class="text-rose-400 font-semibold mt-4 not-italic text-sm">Os dois puxam, não só um</footer>
+          </blockquote>
+        </div>
+      </div>
+
+      <!-- Mobile: textos abaixo dos retratos -->
+      <div class="md:hidden flex flex-col gap-4 mt-8">
+        <blockquote class="glass-card rounded-2xl p-6 text-zinc-300 text-base leading-relaxed text-center">
+          "Voltamos a sair às quintas. Não porque alguém cobrou: estava marcado, com data, e os dois viam."
+          <footer class="text-rose-400 font-semibold mt-3 not-italic text-sm">O combinado que sai do papel</footer>
+        </blockquote>
+        <blockquote class="glass-card rounded-2xl p-6 text-zinc-300 text-base leading-relaxed text-center">
+          "Parei de ser a única que puxa. Agora o app lembra, o desafio chama, e o outro lado também vem com ideia."
+          <footer class="text-rose-400 font-semibold mt-3 not-italic text-sm">Os dois puxam, não só um</footer>
+        </blockquote>
+      </div>
+      <p class="text-center text-zinc-600 text-xs mt-10">Imagens e depoimentos ilustrativos da proposta do app.</p>
+    </div>
+  </section>
+
+  <!-- FORM SECTION -->
+  <section id="form" class="py-16 md:py-20 bg-[#000000] border-y border-white/5">
+    <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-10 lg:gap-14 items-start">
+      <div class="text-center md:text-left">
+        <h2 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-red-500 mb-6 leading-tight">
+          Preencha o formulário<br><span class="text-white">Atente-se as vagas...</span>
+        </h2>
+        <p class="text-zinc-400 leading-relaxed">
+          Nome, WhatsApp e e-mail. É o suficiente para garantir a vaga entre os <span class="font-bold text-white">50 primeiros casais</span>. O acesso será liberado em breve.
+        </p>
+        <div class="flex flex-row items-start justify-center md:justify-start gap-6 mt-6 mb-2 select-none">
+          <div class="rounded-2xl bg-gradient-to-br from-rose-500 to-red-500 shadow-lg px-8 py-4 flex flex-col items-center">
+            <span id="contador-casais" class="text-4xl md:text-5xl font-extrabold text-white tracking-widest transition-all duration-300 min-h-[3.5rem] flex items-center justify-center" aria-busy="true" aria-label="Carregando casais cadastrados">
+              <span class="contador-spinner" aria-hidden="true"></span>
+            </span>
+            <span class="text-white text-xs font-semibold mt-1 tracking-wide uppercase opacity-80">Casais já cadastrados</span>
+          </div>
+          <div class="rounded-2xl bg-white shadow-lg px-8 py-4 flex flex-col items-center">
+            <span id="contador-vagas" class="text-4xl md:text-5xl font-extrabold text-zinc-900 tracking-widest transition-all duration-300 min-h-[3.5rem] flex items-center justify-center" aria-busy="true" aria-label="Carregando vagas disponíveis">
+              <span class="contador-spinner contador-spinner--dark" aria-hidden="true"></span>
+            </span>
+            <span class="text-zinc-500 text-xs font-semibold mt-1 tracking-wide uppercase opacity-80">Vagas Disponíveis</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-3xl p-8 shadow-2xl">
+        <form id="form-vip" class="space-y-4 relative" novalidate>
+          <!-- Honeypot: bots preenchem; humanos não veem -->
+          <input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" class="hp-field">
+          <input type="text" name="nome" placeholder="Nome" required class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-5 py-4 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all">
+          <input type="tel" name="whatsapp" placeholder="WhatsApp" required class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-5 py-4 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all">
+          <input type="email" name="email" placeholder="Email" required class="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-5 py-4 text-white placeholder-zinc-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all">
+
+          <label class="flex items-start gap-3 text-zinc-400 text-xs leading-relaxed cursor-pointer">
+            <input type="checkbox" name="consent" id="consent" required class="mt-0.5 w-4 h-4 accent-red-500 shrink-0">
+            <span>Autorizo o contato pelo WhatsApp/e-mail informados. Li e aceito os <a href="#" data-legal="terms" class="text-rose-400 underline">Termos de Uso</a> e a <a href="#" data-legal="privacy" class="text-rose-400 underline">Política de Privacidade</a>.</span>
+          </label>
+
+          <p id="form-erro" class="text-red-400 text-sm min-h-[20px]" role="alert" aria-live="polite"></p>
+
+          <button type="submit" data-lp-cta="form_enviar_v2" class="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-lg py-4 rounded-xl mt-1 glow-button transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed">
+            Garantir nossa vaga gratuita
+          </button>
+          <p class="text-center text-zinc-600 text-xs">🔒 Seus dados são usados apenas para o acesso ao beta. Nada de spam.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ SECTION -->
+  <section class="py-16 md:py-20 bg-[#0a0a0a] border-t border-white/5">
+    <div class="max-w-3xl mx-auto px-6">
+      <h2 class="text-3xl font-bold text-white text-center mb-12">Perguntas Frequentes</h2>
+
+      <div class="space-y-4">
+        <!-- FAQ 1 -->
+        <details class="group glass-card rounded-2xl overflow-hidden">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <div class="flex items-center gap-4">
+              <span class="text-red-500">❤️</span>
+              <span class="text-white font-medium">O que é o Nosso Momento?</span>
+            </div>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="px-6 pb-6 pt-2 text-zinc-400 text-sm border-t border-white/5 mt-2">
+            É um app para casais que se amam, mas sentem a rotina ganhando. Ele transforma o "um dia a gente faz" em combinado com data, lembra os dois e guarda o que vocês viveram. Sem virar mais uma tela: o objetivo é tirar vocês dela.
+          </div>
+        </details>
+
+        <!-- FAQ 2 -->
+        <details class="group glass-card rounded-2xl overflow-hidden">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <div class="flex items-center gap-4">
+              <span class="text-rose-500">🎯</span>
+              <span class="text-white font-medium">Qual o objetivo do Nosso Momento?</span>
+            </div>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="px-6 pb-6 pt-2 text-zinc-400 text-sm border-t border-white/5 mt-2">
+            Fazer vocês viverem mais momentos juntos, de verdade. O app só organiza: quem propõe, quando acontece, o que foi vivido. O resto é de vocês dois, fora da tela.
+          </div>
+        </details>
+
+        <!-- FAQ 3 -->
+        <details class="group glass-card rounded-2xl overflow-hidden">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <div class="flex items-center gap-4">
+              <span class="text-orange-500">💏</span>
+              <span class="text-white font-medium">Para quem é o Nosso Momento?</span>
+            </div>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="px-6 pb-6 pt-2 text-zinc-400 text-sm border-t border-white/5 mt-2">
+            Para o casal que marca e não faz, que sente que só um puxa, que vê a noite virar série de novo. E também para quem quer organizar a vida a dois, agenda e gastos, sem planilha.
+          </div>
+        </details>
+
+        <!-- FAQ: prazo -->
+        <details class="group glass-card rounded-2xl overflow-hidden">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <div class="flex items-center gap-4">
+              <span class="text-rose-500">⏳</span>
+              <span class="text-white font-medium">E se a gente não cumprir o prazo?</span>
+            </div>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="px-6 pb-6 pt-2 text-zinc-400 text-sm border-t border-white/5 mt-2">
+            O prazo é um combinado, não uma cobrança. Vocês escolhem de 1 a 30 dias e podem adiar se a semana apertar. Se passar e ninguém mexer, quem ficou de realizar perde alguns foguinhos: o suficiente para ninguém esquecer, leve o bastante para não virar briga.
+          </div>
+        </details>
+
+        <!-- FAQ: organização -->
+        <details class="group glass-card rounded-2xl overflow-hidden">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <div class="flex items-center gap-4">
+              <span class="text-orange-500">📅</span>
+              <span class="text-white font-medium">Serve para organizar a vida a dois também?</span>
+            </div>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="px-6 pb-6 pt-2 text-zinc-400 text-sm border-t border-white/5 mt-2">
+            Serve. O calendário do casal junta os momentos com prazo e as datas de vocês num só lugar. E em Finanças a dois, vocês registram os gastos do mês por categoria, definem um limite e veem quem pagou o quê.
+          </div>
+        </details>
+
+        <!-- FAQ 4 -->
+        <details class="group glass-card rounded-2xl overflow-hidden">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <div class="flex items-center gap-4">
+              <span class="text-green-500">💸</span>
+              <span class="text-white font-medium">O acesso é gratuito?</span>
+            </div>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="px-6 pb-6 pt-2 text-zinc-400 text-sm border-t border-white/5 mt-2">
+            Sim! Os 50 primeiros casais fundadores têm acesso antecipado 100% gratuito ao beta. Em troca, contamos com o feedback de vocês para deixar o app ainda melhor.
+          </div>
+        </details>
+
+        <!-- FAQ 5 -->
+        <details class="group glass-card rounded-2xl overflow-hidden">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <div class="flex items-center gap-4">
+              <span class="text-rose-500">⏰</span>
+              <span class="text-white font-medium">Quando vou receber o acesso?</span>
+            </div>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="px-6 pb-6 pt-2 text-zinc-400 text-sm border-t border-white/5 mt-2">
+            Assim que as vagas forem preenchidas e o beta estiver liberado, enviaremos o convite com o passo a passo pelo WhatsApp e e-mail que você cadastrou. Fique de olho!
+          </div>
+        </details>
+
+        <!-- FAQ 6 -->
+        <details class="group glass-card rounded-2xl overflow-hidden">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <div class="flex items-center gap-4">
+              <span class="text-orange-500">🔒</span>
+              <span class="text-white font-medium">Meus dados estão seguros?</span>
+            </div>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="px-6 pb-6 pt-2 text-zinc-400 text-sm border-t border-white/5 mt-2">
+            Totalmente. Usamos seus dados apenas para liberar o acesso ao beta e enviar as instruções — nada de spam ou compartilhamento com terceiros. Tudo em conformidade com a LGPD.
+          </div>
+        </details>
+
+        <!-- FAQ 7 -->
+        <details class="group glass-card rounded-2xl overflow-hidden">
+          <summary class="flex items-center justify-between p-6 cursor-pointer list-none">
+            <div class="flex items-center gap-4">
+              <span class="text-lg">🏳️‍🌈</span>
+              <span class="text-white font-medium">O Nosso Momento é para todos os casais?</span>
+            </div>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="px-6 pb-6 pt-2 text-zinc-400 text-sm border-t border-white/5 mt-2">
+            Com certeza. O Nosso Momento é de todo mundo que ama: casais héteros, LGBTQIA+, de qualquer idade, jeito ou fase da relação. Aqui vocês têm um espaço seguro, privado e livre de julgamentos para viverem o amor de vocês do jeito de vocês.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="py-12 bg-black border-t border-white/5">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col items-center justify-center text-center">
+      <img src="assets/icons/logo-white-txt-v2.png" alt="Nosso Momento" class="h-12 w-auto mb-5" />
+      <p class="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-red-500 to-orange-400 mb-5" style="filter: drop-shadow(0 0 14px rgba(239,68,68,0.55));">
+        Saiam do modo automático. Vivam mais momentos juntos.
+      </p>
+      <p class="text-zinc-600 text-sm">Copyright © 2026 Nosso Momento</p>
+      <div class="flex items-center gap-4 mt-3 text-zinc-600 text-xs">
+        <a href="#" data-legal="privacy" class="hover:text-zinc-400 transition-colors">Política de Privacidade</a>
+        <span>·</span>
+        <a href="#" data-legal="terms" class="hover:text-zinc-400 transition-colors">Termos de Uso</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cookie consent banner -->
+  <div id="cookie-banner" class="fixed inset-x-0 bottom-0 z-[200] p-4 sm:p-6 pointer-events-none hidden" role="dialog" aria-label="Consentimento de cookies">
+    <div class="pointer-events-auto mx-auto max-w-xl rounded-2xl border border-white/10 bg-[#120b16]/95 text-white shadow-2xl backdrop-blur-md p-4 sm:p-5">
+      <p class="text-sm font-semibold text-white/90">Cookies e privacidade</p>
+      <p class="mt-2 text-xs leading-relaxed text-white/60">
+        Usamos cookies de medição (Google Analytics e Meta Pixel) para entender o uso da página.
+        Você pode aceitar ou recusar. O envio do formulário não depende disso.
+      </p>
+      <div class="mt-4 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+        <button type="button" id="cookie-decline" class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 transition">Recusar</button>
+        <button type="button" id="cookie-accept" class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-500 transition">Aceitar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var COOKIE_KEY = 'nm_cookie_consent';
+      var MIN_SUBMIT_MS = 3000;
+      var META_VAGAS = 50;
+      var formLoadedAt = Date.now();
+      var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid'];
+      var publicConfig = null;
+      var appCheckReady = null;
+
+      function getConsent() {
+        try {
+          var v = localStorage.getItem(COOKIE_KEY);
+          return (v === 'accepted' || v === 'declined') ? v : null;
+        } catch (e) { return null; }
+      }
+
+      function setConsent(value) {
+        try { localStorage.setItem(COOKIE_KEY, value); } catch (e) {}
+        var banner = document.getElementById('cookie-banner');
+        if (banner) banner.classList.add('hidden');
+        if (value === 'accepted') loadMarketingPixels();
+      }
+
+      function loadMarketingPixels() {
+        if (window.__nmPixelsLoaded) return;
+        window.__nmPixelsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { dataLayer.push(arguments); };
+        var ga = document.createElement('script');
+        ga.async = true;
+        ga.src = 'https://www.googletagmanager.com/gtag/js?id=G-556FY0WV3Q';
+        document.head.appendChild(ga);
+        gtag('js', new Date());
+        gtag('config', 'G-556FY0WV3Q');
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1883535982201745');
+        fbq('track', 'PageView');
+      }
+
+      (function initCookieBanner() {
+        var consent = getConsent();
+        if (consent === 'accepted') {
+          loadMarketingPixels();
+          return;
+        }
+        if (consent === 'declined') return;
+        var banner = document.getElementById('cookie-banner');
+        if (banner) banner.classList.remove('hidden');
+        var accept = document.getElementById('cookie-accept');
+        var decline = document.getElementById('cookie-decline');
+        if (accept) accept.addEventListener('click', function () { setConsent('accepted'); });
+        if (decline) decline.addEventListener('click', function () { setConsent('declined'); });
+      })();
+
+      function capturarUtms_() {
+        var params = new URLSearchParams(window.location.search);
+        var stored = {};
+        try { stored = JSON.parse(sessionStorage.getItem('nm_lp_utm_v2') || '{}'); } catch (e) {}
+        if (!stored || typeof stored !== 'object') stored = {};
+        UTM_KEYS.forEach(function (k) {
+          var v = params.get(k);
+          if (v) stored[k] = v;
+        });
+        var temUtmNaUrl = UTM_KEYS.some(function (k) { return !!params.get(k); });
+        if (temUtmNaUrl || !stored.landing_url) {
+          stored.landing_url = window.location.href.split('#')[0];
+        }
+        try { sessionStorage.setItem('nm_lp_utm_v2', JSON.stringify(stored)); } catch (e) {}
+        return stored;
+      }
+      capturarUtms_();
+
+      function setContadorErro(el) {
+        if (!el) return;
+        el.textContent = '?';
+        el.removeAttribute('aria-busy');
+        el.setAttribute('aria-label', 'Indisponível');
+      }
+
+      function setContadorValores(casais, vagas) {
+        var elCasais = document.getElementById('contador-casais');
+        var elVagas = document.getElementById('contador-vagas');
+        if (elCasais) {
+          elCasais.textContent = casais;
+          elCasais.removeAttribute('aria-busy');
+          elCasais.setAttribute('aria-label', casais + ' casais cadastrados');
+        }
+        if (elVagas) {
+          elVagas.textContent = vagas;
+          elVagas.removeAttribute('aria-busy');
+          elVagas.setAttribute('aria-label', vagas + ' vagas disponíveis');
+        }
+      }
+
+      function loadPublicConfig() {
+        if (publicConfig) return Promise.resolve(publicConfig);
+        var urls = ['/api/public-config', 'https://nossomomento.app/api/public-config'];
+        function tryNext(i) {
+          if (i >= urls.length) return Promise.reject(new Error('public_config_failed'));
+          return fetch(urls[i], { cache: 'no-store' })
+            .then(function (r) {
+              if (!r.ok) throw new Error('bad_status');
+              return r.json();
+            })
+            .then(function (cfg) {
+              publicConfig = cfg;
+              if (typeof cfg.waitlistMeta === 'number') META_VAGAS = cfg.waitlistMeta;
+              return cfg;
+            })
+            .catch(function () { return tryNext(i + 1); });
+        }
+        return tryNext(0);
+      }
+
+      function ensureAppCheck() {
+        if (appCheckReady) return appCheckReady;
+        appCheckReady = loadPublicConfig().then(function (cfg) {
+          if (!cfg.firebase || !cfg.firebase.apiKey || !cfg.recaptchaSiteKey) {
+            throw new Error('public_config_incomplete');
+          }
+          if (!firebase.apps.length) {
+            firebase.initializeApp(cfg.firebase);
+          }
+          var appCheck = firebase.appCheck();
+          appCheck.activate(cfg.recaptchaSiteKey, true);
+          return appCheck;
+        });
+        return appCheckReady;
+      }
+
+      function getAppCheckToken() {
+        return ensureAppCheck().then(function (appCheck) {
+          return appCheck.getToken(false).then(function (result) {
+            return result && result.token ? result.token : '';
+          });
+        }).catch(function () { return ''; });
+      }
+
+      function carregarContador() {
+        var elCasais = document.getElementById('contador-casais');
+        var elVagas = document.getElementById('contador-vagas');
+        Promise.all([loadPublicConfig(), getAppCheckToken()])
+          .then(function (pair) {
+            var cfg = pair[0];
+            var token = pair[1];
+            var url = (cfg.joinWaitlistUrl || '') + '?action=count';
+            var headers = {};
+            if (token) headers['X-Firebase-AppCheck'] = token;
+            return fetch(url, { headers: headers, cache: 'no-store' });
+          })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && typeof data.count === 'number') {
+              var meta = (typeof data.meta === 'number') ? data.meta : META_VAGAS;
+              setContadorValores(data.count, Math.max(0, meta - data.count));
+            } else {
+              setContadorErro(elCasais);
+              setContadorErro(elVagas);
+            }
+          })
+          .catch(function () {
+            setContadorErro(elCasais);
+            setContadorErro(elVagas);
+          });
+      }
+      carregarContador();
+
+      var form = document.getElementById('form-vip');
+      if (!form) return;
+      var erro = document.getElementById('form-erro');
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (erro) erro.textContent = '';
+
+        var consent = document.getElementById('consent');
+        if (!form.checkValidity()) {
+          if (erro) erro.textContent = 'Preencha todos os campos para garantir sua vaga.';
+          form.reportValidity();
+          return;
+        }
+        if (consent && !consent.checked) {
+          if (erro) erro.textContent = 'Confirme o aceite para continuar.';
+          return;
+        }
+
+        var honeypot = form.querySelector('[name="website"]');
+        var elapsed = Date.now() - formLoadedAt;
+        var pareceBot = (honeypot && honeypot.value.trim()) || elapsed < MIN_SUBMIT_MS;
+
+        var btn = form.querySelector('button[type="submit"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+        var dados = Object.fromEntries(new FormData(form).entries());
+        delete dados.website;
+
+        function irParaObrigado() {
+          window.location.href = 'obrigado.html';
+        }
+
+        if (pareceBot) {
+          irParaObrigado();
+          return;
+        }
+
+        var utm = capturarUtms_();
+        Object.keys(utm).forEach(function (k) {
+          if (utm[k]) dados[k] = utm[k];
+        });
+        dados.consent = true;
+
+        Promise.all([loadPublicConfig(), getAppCheckToken()])
+          .then(function (pair) {
+            var cfg = pair[0];
+            var token = pair[1];
+            if (!cfg.joinWaitlistUrl) throw new Error('missing_waitlist_url');
+            var headers = { 'Content-Type': 'application/json' };
+            if (token) headers['X-Firebase-AppCheck'] = token;
+            return fetch(cfg.joinWaitlistUrl, {
+              method: 'POST',
+              headers: headers,
+              body: JSON.stringify(dados)
+            });
+          })
+          .then(function (r) {
+            if (!r.ok) throw new Error('submit_failed');
+            irParaObrigado();
+          })
+          .catch(function () {
+            if (btn) { btn.disabled = false; btn.textContent = 'Garantir minha vaga'; }
+            if (erro) erro.textContent = 'Não foi possível enviar. Tente novamente em instantes.';
+          });
+      });
+    })();
+  </script>
+
+  <!-- LEGAL MODAL (Termos de Uso / Política de Privacidade) -->
+  <div id="legal-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="legal-title">
+    <div id="legal-overlay" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <div class="relative w-full max-w-lg bg-[#120b16] text-white border border-white/10 rounded-2xl p-6 flex flex-col max-h-[85vh] shadow-2xl">
+      <div class="flex items-start justify-between shrink-0">
+        <div>
+          <p class="text-xs uppercase tracking-widest text-white/60">Consentimento</p>
+          <h3 id="legal-title" class="text-2xl font-semibold mt-1">Termos de Uso</h3>
+        </div>
+        <button type="button" data-legal-close aria-label="Fechar" class="text-white/70 hover:text-white transition text-3xl leading-none -mt-1">&times;</button>
+      </div>
+      <div id="legal-body" class="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4 text-xs text-white/80 leading-relaxed overflow-y-auto flex-1"></div>
+      <div class="mt-4 shrink-0">
+        <button type="button" data-legal-close class="w-full rounded-xl bg-white/10 py-3 text-white/80 font-semibold hover:bg-white/20 transition">Entendi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conteúdo dos Termos de Uso (template oculto) -->
+  <template id="legal-terms-content">
+    <p class="font-semibold text-white mb-2">Versão 1.0 — Vigente a partir de 19/05/2026</p>
+    <p class="mb-3">Bem-vindo ao <strong>Nosso Momento</strong>. Ao se cadastrar e utilizar o aplicativo, você declara que leu, compreendeu e concorda integralmente com estes Termos de Uso, em conformidade com a Lei Federal nº 12.965/2014 (Marco Civil da Internet) e a Lei Federal nº 13.709/2018 (LGPD).</p>
+    <p class="font-semibold text-white mt-4 mb-1">1. Descrição do Serviço</p>
+    <p class="mb-3">O Nosso Momento é um aplicativo web destinado a casais, que oferece funcionalidades de check-in emocional diário, catálogo de momentos a dois, desafios semanais, conquistas, memórias compartilhadas e notificações push. O serviço é disponibilizado exclusivamente via internet, em dispositivos compatíveis.</p>
+    <p class="font-semibold text-white mt-4 mb-1">2. Elegibilidade</p>
+    <p class="mb-3">O uso do aplicativo é permitido apenas a maiores de 18 anos. Ao se cadastrar, você declara ter capacidade civil plena para aceitar estes termos. Contas de menores de idade serão encerradas imediatamente ao serem identificadas.</p>
+    <p class="font-semibold text-white mt-4 mb-1">3. Cadastro e Responsabilidades do Usuário</p>
+    <p class="mb-3">Você é responsável pela veracidade e atualização das informações fornecidas no cadastro (nome, e-mail, telefone, dados de perfil e personalização da loja). Seu login e senha são pessoais e intransferíveis. O compartilhamento de credenciais é proibido, e o Nosso Momento não se responsabiliza por acessos indevidos decorrentes de negligência do usuário. Você se compromete a não utilizar o aplicativo para fins ilícitos, discriminatórios ou que violem direitos de terceiros.</p>
+    <p class="font-semibold text-white mt-4 mb-1">4. Propriedade Intelectual</p>
+    <p class="mb-3">Todo o conteúdo do aplicativo — incluindo textos, design, ícones, funcionalidades e código-fonte — é propriedade do Nosso Momento e está protegido por lei. É vedada a reprodução, distribuição ou modificação sem autorização expressa e por escrito.</p>
+    <p class="font-semibold text-white mt-4 mb-1">5. Limitação de Responsabilidade</p>
+    <p class="mb-3">O Nosso Momento não se responsabiliza por danos decorrentes de: (a) falhas de conexão ou dispositivos do usuário; (b) uso indevido das credenciais de acesso; (c) conteúdo enviado por outros usuários; (d) indisponibilidade temporária dos serviços de terceiros (Google Firebase, Vercel). O serviço é fornecido &ldquo;no estado em que se encontra&rdquo;, sem garantias de funcionamento ininterrupto.</p>
+    <p class="font-semibold text-white mt-4 mb-1">6. Cookies e Rastreamento</p>
+    <p class="mb-3">O Nosso Momento utiliza cookies e tecnologias similares para: (a) manter sua sessão autenticada; (b) analisar o uso do aplicativo via Google Analytics (GA4) e Meta Pixel (Facebook); (c) melhorar a experiência do usuário. Os dados coletados por essas ferramentas são pseudonimizados e utilizados de forma agregada para fins estatísticos e de marketing.</p>
+    <p class="font-semibold text-white mt-4 mb-1">7. Encerramento de Conta</p>
+    <p class="mb-3">Você pode solicitar a exclusão completa da sua conta a qualquer momento, diretamente no aplicativo, em &ldquo;Meu Perfil → Excluir minha conta&rdquo;. Todos os seus dados serão removidos conforme descrito na Política de Privacidade.</p>
+    <p class="font-semibold text-white mt-4 mb-1">8. Alterações nos Termos</p>
+    <p class="mb-3">O Nosso Momento reserva-se o direito de modificar estes Termos a qualquer momento. Alterações relevantes serão comunicadas por e-mail ou notificação no app. O uso continuado do serviço após a comunicação implica aceitação das novas condições.</p>
+    <p class="font-semibold text-white mt-4 mb-1">9. Foro</p>
+    <p class="mb-3">Eventuais disputas serão regidas pelas leis brasileiras e processadas no foro da comarca de São Paulo/SP, com renúncia a qualquer outro, por mais privilegiado que seja.</p>
+    <p class="font-semibold text-white mt-4 mb-1">10. Contato</p>
+    <p>Dúvidas e solicitações: <span class="text-pink-400">faleconosco@nossomomento.app</span></p>
+  </template>
+
+  <!-- Conteúdo da Política de Privacidade (template oculto) -->
+  <template id="legal-privacy-content">
+    <p class="font-semibold text-white mb-2">Versão 1.0 — Vigente a partir de 19/05/2026</p>
+    <p class="mb-3">Esta Política de Privacidade descreve como o <strong>Nosso Momento</strong> coleta, usa, armazena e protege seus dados pessoais, em conformidade com a Lei Federal nº 13.709/2018 (LGPD).</p>
+    <p class="font-semibold text-white mt-4 mb-1">1. Controlador dos Dados</p>
+    <p class="mb-3"><strong>Nosso Momento App</strong> — faleconosco@nossomomento.app</p>
+    <p class="font-semibold text-white mt-4 mb-1">2. Dados Coletados e Finalidade</p>
+    <p class="mb-3">Coletamos os dados necessários ao serviço e, quando informados no cadastro, dados de perfil (data de nascimento, localização, gênero, orientação sexual, estado civil) para fins analíticos internos e melhoria do produto. Também coletamos e-mail, telefone, apelido no card (opcional), personalização da loja de momentos, foto de perfil (opcional), token FCM, dados de uso (check-ins, desafios, conquistas, memórias) e dados de dispositivo para segurança. Dados sensíveis de perfil não são exibidos publicamente a outros usuários, exceto o necessário para o funcionamento do catálogo entre parceiros pareados.</p>
+    <p class="font-semibold text-white mt-4 mb-1">3. Base Legal</p>
+    <p class="mb-3">O tratamento dos seus dados é realizado com base no <strong>consentimento livre e informado</strong> (LGPD Art. 7º, I), manifestado no ato do cadastro.</p>
+    <p class="font-semibold text-white mt-4 mb-1">4. Operadores (Terceiros)</p>
+    <p class="mb-3">Google Firebase (Firestore, Auth, Storage, Cloud Functions, FCM), Vercel Inc., Google Analytics (GA4) e Meta Platforms (Facebook Pixel). Seus dados <strong>não são vendidos</strong> a terceiros.</p>
+    <p class="font-semibold text-white mt-4 mb-1">5. Cookies e Rastreamento</p>
+    <p class="mb-3">Utilizamos cookies para manter sua sessão autenticada, coletar métricas de uso via Google Analytics e medir eficácia de campanhas via Meta Pixel. Dados analíticos são pseudonimizados.</p>
+    <p class="font-semibold text-white mt-4 mb-1">6. Retenção dos Dados</p>
+    <p class="mb-3">Seus dados são mantidos enquanto sua conta estiver ativa. Após exclusão, são removidos em até <strong>30 dias</strong>, exceto registros de acesso (6 meses, conforme Marco Civil Art. 15).</p>
+    <p class="font-semibold text-white mt-4 mb-1">7. Segurança</p>
+    <p class="mb-3">Criptografia em trânsito (HTTPS/TLS), autenticação segura via Firebase Auth e regras de acesso ao banco de dados (Firestore Security Rules).</p>
+    <p class="font-semibold text-white mt-4 mb-1">8. Seus Direitos (LGPD Art. 18)</p>
+    <ul class="list-disc pl-5 mb-3 space-y-1">
+      <li><strong>Confirmação e acesso</strong> aos seus dados</li>
+      <li><strong>Retificação</strong> de dados incompletos ou incorretos</li>
+      <li><strong>Eliminação</strong> — disponível em &ldquo;Meu Perfil → Excluir minha conta&rdquo;</li>
+      <li><strong>Portabilidade</strong> dos seus dados</li>
+      <li><strong>Revogação do consentimento</strong> a qualquer momento</li>
+    </ul>
+    <p class="mb-3">Contato: <span class="text-pink-400">faleconosco@nossomomento.app</span>. Você também pode reclamar à <strong>ANPD</strong>.</p>
+    <p class="font-semibold text-white mt-4 mb-1">9. Transferência Internacional</p>
+    <p class="mb-3">Seus dados podem ser processados em servidores no EUA (Google, Vercel), que adotam salvaguardas conforme LGPD Art. 33.</p>
+    <p class="font-semibold text-white mt-4 mb-1">10. Alterações</p>
+    <p class="mb-3">Esta Política pode ser atualizada. Alterações relevantes serão comunicadas com antecedência mínima de 15 dias.</p>
+    <p class="font-semibold text-white mt-4 mb-1">11. Contato e DPO</p>
+    <p>Dúvidas: <span class="text-pink-400">faleconosco@nossomomento.app</span></p>
+  </template>
+
+  <script>
+    (function () {
+      var modal = document.getElementById('legal-modal');
+      if (!modal) return;
+      var titleEl = document.getElementById('legal-title');
+      var bodyEl = document.getElementById('legal-body');
+      var termsTpl = document.getElementById('legal-terms-content');
+      var privacyTpl = document.getElementById('legal-privacy-content');
+
+      function openLegal(type) {
+        var isTerms = type === 'terms';
+        titleEl.textContent = isTerms ? 'Termos de Uso' : 'Política de Privacidade';
+        bodyEl.innerHTML = (isTerms ? termsTpl : privacyTpl).innerHTML;
+        bodyEl.scrollTop = 0;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeLegal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+      }
+
+      document.addEventListener('click', function (e) {
+        var trigger = e.target.closest('[data-legal]');
+        if (trigger) { e.preventDefault(); openLegal(trigger.getAttribute('data-legal')); return; }
+        if (e.target.closest('[data-legal-close]') || e.target.id === 'legal-overlay') { closeLegal(); }
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeLegal();
+      });
+    })();
+  </script>
+
+  <!-- Tracking de cliques nos botões da LP (GA4 + Meta Pixel) -->
+  <script>
+    (function () {
+      function cliqueBotaoLP(label) {
+        try { if (typeof gtag !== 'undefined') gtag('event', 'clique_botao_lp', { botao: label, acao: 'CliqueBotaoLP' }); } catch (e) {}
+        try { if (typeof fbq !== 'undefined') fbq('trackCustom', 'CliqueBotaoLP', { botao: label }); } catch (e) {}
+      }
+      document.addEventListener('click', function (e) {
+        var cta = e.target.closest('[data-lp-cta]');
+        if (cta) { cliqueBotaoLP(cta.getAttribute('data-lp-cta')); }
+      });
+    })();
+  </script>
+
+</body>
+</html>

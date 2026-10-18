@@ -122,10 +122,6 @@ exports.joinWaitlist = https.onRequest(async (req, res) => {
       res.status(400).send({error: "invalid_telefone_whatsapp"});
       return;
     }
-    if (!nomeParceiro) {
-      res.status(400).send({error: "missing_nome_parceiro"});
-      return;
-    }
     if (!consentimento) {
       res.status(400).send({error: "missing_consent"});
       return;
@@ -152,7 +148,7 @@ exports.joinWaitlist = https.onRequest(async (req, res) => {
       nome,
       email,
       telefoneWhatsapp,
-      nomeParceiro,
+      nomeParceiro: nomeParceiro || null,
       telefoneWhatsappParceiro: telefoneWhatsappParceiro || null,
       cidade: cidade || null,
       estado: estado || null,
