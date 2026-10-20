@@ -12,7 +12,6 @@ import AppHeroShell, {
   TILE,
 } from '@/components/layout/AppHeroShell';
 import FoguinhosIcon from '@/components/ui/FoguinhosIcon';
-import { primeiroNome } from '@/lib/utils/displayName';
 
 const CTA_GRAD = `linear-gradient(135deg, ${LP_RED}, ${ACCENT})`;
 const CHIP_IDLE = { background: TILE, color: 'rgba(255,255,255,0.45)' } as const;
@@ -206,76 +205,33 @@ export default function DesafiosPage() {
                   ch.status === 'finalizado' ||
                   ch.status === 'finalizado_sem_recompensa';
                 const respostas = ch.data['respostas'] as Record<string, unknown> | undefined;
-                const pairUids = (ch.data['pairUids'] as string[] | undefined) ?? [];
                 const minhaRespostaRaw = respostas?.[uid ?? ''];
-                const respostaParceiroRaw = respostas?.[pareadoUid ?? ''];
                 const minhaResposta = typeof minhaRespostaRaw === 'string' || typeof minhaRespostaRaw === 'number'
                   ? String(minhaRespostaRaw)
                   : null;
-                const respostaParceiro = typeof respostaParceiroRaw === 'string' || typeof respostaParceiroRaw === 'number'
-                  ? String(respostaParceiroRaw)
-                  : null;
                 const toUpperSafe = (v: unknown) => String(v).toLocaleUpperCase('pt-BR');
-                const formatarResposta = (valor: unknown): string => {
-                  if (!valor) return 'sem resposta';
-                  if (valor === '__TIMEOUT__' || valor === '__timeout__') return 'tempo esgotado';
-                  if (valor === 'A') return toUpperSafe(ch.opcaoA ?? 'A');
-                  if (valor === 'B') return toUpperSafe(ch.opcaoB ?? 'B');
-                  return toUpperSafe(valor);
-                };
                 const respostaEscolha = minhaResposta === 'A'
                   ? toUpperSafe(ch.opcaoA ?? 'A')
                   : minhaResposta === 'B'
                     ? toUpperSafe(ch.opcaoB ?? 'B')
                     : (minhaResposta ? toUpperSafe(minhaResposta) : null);
 
-                const nomeDoUid = (targetUid: string | undefined): string => {
-                  if (!targetUid) return 'Usuário';
-                  if (targetUid === uid) return usuario?.nome ?? usuario?.apelido ?? 'Usuário';
-                  const parceiro = useAppStore.getState().parceirosAtivos.find((p) => p.uid === targetUid);
-                  if (parceiro?.nome) return parceiro.nome;
-                  if (targetUid === pareadoUid) return useAppStore.getState().parceiroNome ?? 'Parceiro';
-                  return 'Usuário';
-                };
-
-                const nomeA = nomeDoUid(pairUids[0]);
-                const nomeB = nomeDoUid(pairUids[1]);
-                const respostaA = ch.tipo === 'roleta' ? null : formatarResposta(
-                  respostas?.[pairUids[0] ?? ''] ?? null,
-                );
-                const respostaB = ch.tipo === 'roleta' ? null : formatarResposta(
-                  respostas?.[pairUids[1] ?? ''] ?? null,
-                );
                 const recompensaBase = Number(
                   (ch.data['reward'] as number | undefined) ?? (ch.tipo === 'escolha' ? 2 : 1),
                 );
+                const fraseAlmaGemea = ch.status === 'finalizado'
+                  ? 'Nesta semana os dois estão sintonizados! ❤️'
+                  : 'Vocês não estão em sintonia... 💔';
                 const resumoConcluido =
                   ch.status === 'finalizado' || ch.status === 'finalizado_sem_recompensa'
                     ? (
-                      <div className="space-y-0.5 mt-0.5">
-                        <p className="text-xs leading-snug">
-                          <span className="font-bold text-white">{primeiroNome(nomeA)}: </span>
-                          <span className="font-extrabold" style={{ color: ACCENT }}>
-                            {respostaA ?? 'SEM RESPOSTA'}
-                          </span>
-                        </p>
-                        <p className="text-xs leading-snug">
-                          <span className="font-bold text-white">{primeiroNome(nomeB)}: </span>
-                          <span className="font-extrabold" style={{ color: ACCENT }}>
-                            {respostaB ?? 'SEM RESPOSTA'}
-                          </span>
-                        </p>
-                        <p
-                          className="text-xs leading-snug font-semibold flex items-center gap-1"
-                          style={{ color: ACCENT_SOFT }}
-                        >
-                          {ch.status === 'finalizado' ? (
-                            <>Vocês ganharam +{recompensaBase} <FoguinhosIcon size={14} /> foguinhos cada.</>
-                          ) : (
-                            <>Vocês perderam 1 <FoguinhosIcon size={14} /> foguinho cada.</>
-                          )}
-                        </p>
-                      </div>
+                      <p className="text-xs leading-snug text-white/75 mt-0.5">
+                        {ch.tipo === 'pergunta'
+                          ? fraseAlmaGemea
+                          : ch.status === 'finalizado'
+                            ? `Iguais · +${recompensaBase} cada`
+                            : 'Diferentes · −1 cada'}
+                      </p>
                     )
                     : null;
                 return (

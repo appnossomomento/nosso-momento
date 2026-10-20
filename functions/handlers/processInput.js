@@ -2025,14 +2025,12 @@ exports.processInput = onDocumentCreated(
             const responderName = input.responderName || "Seu parceiro";
             if (concluido) {
               if (status === "finalizado") {
-                const rewardN = Number(challengeData.reward || 2);
                 const notifR = admin.firestore()
                     .collection("notificacoes").doc();
                 tx.set(notifR, {
                   userId: responderUid,
-                  titulo: "Vocês acertaram juntos! 🏆",
-                  mensagem: `+${rewardN} foguinho(s) para` +
-                    ` cada um. Continuem assim! 🔥`,
+                  titulo: "Nesta semana os dois estão sintonizados! ❤️",
+                  mensagem: "",
                   icone: "fa-trophy",
                   tipo: "desafio",
                   redirectTo: "achievementsPopup",
@@ -2044,9 +2042,8 @@ exports.processInput = onDocumentCreated(
                     .collection("notificacoes").doc();
                 tx.set(notifP, {
                   userId: partnerUid,
-                  titulo: "Voc\u00eas acertaram juntos! \uD83C\uDFC6",
-                  mensagem: `+${rewardN} foguinho(s) para` +
-                    ` cada um. Continuem assim! 🔥`,
+                  titulo: "Nesta semana os dois estão sintonizados! ❤️",
+                  mensagem: "",
                   icone: "fa-trophy",
                   tipo: "desafio",
                   redirectTo: "achievementsPopup",
@@ -2059,9 +2056,8 @@ exports.processInput = onDocumentCreated(
                     .collection("notificacoes").doc();
                 tx.set(notifR2, {
                   userId: responderUid,
-                  titulo: "Quase lá... 😅",
-                  mensagem: "As respostas foram diferentes" +
-                    " desta vez. Na próxima vocês acertam!",
+                  titulo: "Vocês não estão em sintonia... 💔",
+                  mensagem: "",
                   icone: "fa-trophy",
                   tipo: "desafio",
                   redirectTo: "achievementsPopup",
@@ -2073,9 +2069,8 @@ exports.processInput = onDocumentCreated(
                     .collection("notificacoes").doc();
                 tx.set(notifP2, {
                   userId: partnerUid,
-                  titulo: "Quase lá... 😅",
-                  mensagem: "As respostas foram diferentes" +
-                    " desta vez. Na próxima vocês acertam!",
+                  titulo: "Vocês não estão em sintonia... 💔",
+                  mensagem: "",
                   icone: "fa-trophy",
                   tipo: "desafio",
                   redirectTo: "achievementsPopup",
@@ -3773,15 +3768,15 @@ exports.processInput = onDocumentCreated(
               }
               if (pChA === pChB && !pChBothTimeout) {
                 tx.set(admin.firestore().collection("notificacoes").doc(), {
-                  userId: pChUid, titulo: "Mesma prefer\u00eancia! \uD83C\uDF89",
-                  mensagem: `+${pChReward} foguinho(s)! Sintonia total!`,
+                  userId: pChUid, titulo: "Desafio da semana",
+                  mensagem: `Mesma escolha. +${pChReward} para cada.`,
                   icone: "fa-trophy", tipo: "desafio",
                   redirectTo: "achievementsPopup", lida: false,
                   timestamp: admin.firestore.FieldValue.serverTimestamp(),
                 });
                 tx.set(admin.firestore().collection("notificacoes").doc(), {
-                  userId: pChPartnerUid, titulo: "Mesma prefer\u00eancia! \uD83C\uDF89",
-                  mensagem: `+${pChReward} foguinho(s)! Sintonia total!`,
+                  userId: pChPartnerUid, titulo: "Desafio da semana",
+                  mensagem: `Mesma escolha. +${pChReward} para cada.`,
                   icone: "fa-trophy", tipo: "desafio",
                   redirectTo: "achievementsPopup", lida: false,
                   timestamp: admin.firestore.FieldValue.serverTimestamp(),
@@ -3796,15 +3791,15 @@ exports.processInput = onDocumentCreated(
                 });
                 pChRewarded = false;
                 tx.set(admin.firestore().collection("notificacoes").doc(), {
-                  userId: pChUid, titulo: "Prefer\u00eancias diferentes \uD83D\uDE05",
-                  mensagem: "Escolhas diferentes. -1 foguinho para cada um.",
+                  userId: pChUid, titulo: "Desafio da semana",
+                  mensagem: "Escolhas diferentes. −1 para cada.",
                   icone: "fa-trophy", tipo: "desafio",
                   redirectTo: "achievementsPopup", lida: false,
                   timestamp: admin.firestore.FieldValue.serverTimestamp(),
                 });
                 tx.set(admin.firestore().collection("notificacoes").doc(), {
-                  userId: pChPartnerUid, titulo: "Prefer\u00eancias diferentes \uD83D\uDE05",
-                  mensagem: "Escolhas diferentes. -1 foguinho para cada um.",
+                  userId: pChPartnerUid, titulo: "Desafio da semana",
+                  mensagem: "Escolhas diferentes. −1 para cada.",
                   icone: "fa-trophy", tipo: "desafio",
                   redirectTo: "achievementsPopup", lida: false,
                   timestamp: admin.firestore.FieldValue.serverTimestamp(),

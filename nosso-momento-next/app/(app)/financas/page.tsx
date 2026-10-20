@@ -77,19 +77,6 @@ function formatDiaCurto(dateStr: string): string {
   return `${d} de ${mes}.`;
 }
 
-function saudacaoSP(): string {
-  const hour = Number(
-    new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Sao_Paulo',
-      hour: 'numeric',
-      hour12: false,
-    }).format(new Date()),
-  );
-  if (hour < 12) return 'Bom dia';
-  if (hour < 18) return 'Boa tarde';
-  return 'Boa noite';
-}
-
 /** Donut via conic-gradient — funciona com 1 fatia (SVG arc de 360° some). */
 function CategoryDonut({
   parts,
@@ -447,43 +434,34 @@ export default function FinancasPage() {
   }
 
   const financasHero = (
-    <div className="w-full max-w-sm text-left">
-      <div className="flex items-start justify-between gap-2 pl-10 pr-1">
-        <div className="min-w-0 flex-1">
-          <p className="text-[12px] font-medium text-white/80 leading-none">
-            {saudacaoSP()}
-          </p>
-          <h1 className="mt-1 text-[15px] font-bold text-white leading-snug">
-            {meuNome} & {partnerFirst}
-          </h1>
-        </div>
-        <div className="flex items-center gap-0.5 shrink-0 pt-0.5">
-          <button
-            type="button"
-            onClick={() => goMonth(-1)}
-            className="flex h-8 w-8 items-center justify-center rounded-full transition active:scale-95"
-            style={{ color: 'rgba(255,255,255,0.9)' }}
-            aria-label="Mês anterior"
-          >
-            <i className="fas fa-chevron-left text-xs" />
-          </button>
-          <p className="min-w-[4.8rem] text-center text-[11px] font-semibold text-white/90">
-            {MESES[selectedMonth].slice(0, 3)} {selectedYear}
-          </p>
-          <button
-            type="button"
-            onClick={() => goMonth(1)}
-            className="flex h-8 w-8 items-center justify-center rounded-full transition active:scale-95"
-            style={{ color: 'rgba(255,255,255,0.9)' }}
-            aria-label="Próximo mês"
-          >
-            <i className="fas fa-chevron-right text-xs" />
-          </button>
-        </div>
-      </div>
+    <div className="flex w-full max-w-sm items-center justify-center gap-5 px-10">
+      <button
+        type="button"
+        onClick={() => goMonth(-1)}
+        className="flex h-9 w-9 items-center justify-center rounded-full transition active:scale-95"
+        style={{ color: 'rgba(255,255,255,0.9)' }}
+        aria-label="Mês anterior"
+      >
+        <i className="fas fa-chevron-left text-sm" />
+      </button>
+      <p className="min-w-[9.5rem] text-center text-[17px] font-semibold tracking-wide text-white">
+        {MESES[selectedMonth]} {selectedYear}
+      </p>
+      <button
+        type="button"
+        onClick={() => goMonth(1)}
+        className="flex h-9 w-9 items-center justify-center rounded-full transition active:scale-95"
+        style={{ color: 'rgba(255,255,255,0.9)' }}
+        aria-label="Próximo mês"
+      >
+        <i className="fas fa-chevron-right text-sm" />
+      </button>
+    </div>
+  );
 
+  const totalCard = (
       <div
-        className="relative mt-4 mx-1 rounded-[28px] px-5 pt-4 pb-4 text-left"
+        className="rounded-[28px] px-5 pt-4 pb-4 text-left"
         style={{
           background: '#FFFFFF',
           boxShadow: '0 12px 28px rgba(0,0,0,0.22)',
@@ -582,12 +560,12 @@ export default function FinancasPage() {
           </button>
         )}
       </div>
-    </div>
   );
 
   if (!pareado || !idPareamentoAmigavel) {
     return (
-      <AppHeroShell bareSheet hero={financasHero}>
+      <AppHeroShell compactHero bareSheet sheetClassName="space-y-3" hero={financasHero}>
+        {totalCard}
         <div
           className="rounded-2xl p-6 text-center"
           style={{
@@ -612,7 +590,8 @@ export default function FinancasPage() {
 
   return (
     <>
-      <AppHeroShell bareSheet sheetClassName="space-y-3" hero={financasHero}>
+      <AppHeroShell compactHero bareSheet sheetClassName="space-y-3" hero={financasHero}>
+        {totalCard}
         <div className="flex items-center justify-between px-0.5">
           <h2 className="text-[16px] font-bold text-white">Finanças do casal</h2>
           <button
